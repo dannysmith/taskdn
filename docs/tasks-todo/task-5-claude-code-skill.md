@@ -8,6 +8,9 @@ Claude Code skill and commands for AI-native task management.
 - Custom slash commands for common operations
 - Integration guidance for Claude Code sessions
 - Optimized prompts for task creation/management
+- Shipped as a Claude Plugin
+- Skill for working with the system using the CLI
+- Commands for creating new tasks and projects
 
 ## Notes
 

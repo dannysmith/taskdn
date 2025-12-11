@@ -4,10 +4,10 @@ Templates, bases, and web clipper configurations.
 
 ## Scope
 
-- Task/Project/Area templates
-- Dataview bases for querying tasks
-- Web Clipper templates for capturing tasks from browsers
-- Example vault structure documentation
+- Obsidian Template for "converting" normal notes into a task in the inbox.
+- Obsidian templates for new Project and Area
+- Obsidian Webclipper Template for creating new tasks
+- Bases for showing tasks, areas and projects
 
 ## Notes
 

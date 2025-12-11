@@ -9,6 +9,7 @@ Lightweight Obsidian plugin for task integration.
 - Command to create new task from selection
 - Command to convert checklist item to task file
 - Minimal footprint - not a full task manager
+- Obsidian Plugin for rendering tasks insteadof normal page links, and converting a checklist item into a task
 
 ## Notes
 

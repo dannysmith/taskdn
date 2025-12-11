@@ -5,10 +5,9 @@ Cross-platform Tauri desktop application.
 ## Scope
 
 - Things-like UI/UX for day-to-day task management
-- Quick capture (global hotkey)
-- Views: Inbox, Today, Upcoming, Projects, Areas
-- Drag-and-drop organization
-- Keyboard-driven navigation
+- Cross-platform Tauri app which uses the Rust SDK
+- URL Scheme support
+- Global Keyboard shortcut for creating a new task. Uses Apple Intelligence where supported to enrich/correct tasks ([a la Handy](https://github.com/cjpais/Handy/pull/391/files))
 - Native notifications and reminders
 
 ## Notes
