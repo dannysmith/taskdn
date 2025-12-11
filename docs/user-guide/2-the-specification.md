@@ -326,7 +326,17 @@ This specification is designed to be broadly compatible with:
 - [TaskNotes](https://tasknotes.dev/) for Obsidian
 - [Obsidian](https://obsidian.md/) properties and WikiLinks
 
-### 7.3 Future Considerations
+### 7.3 JSON Schemas
+
+Machine-readable JSON Schema files are available for validation:
+
+- [task.schema.json](../schemas/task.schema.json) - Task frontmatter validation
+- [project.schema.json](../schemas/project.schema.json) - Project frontmatter validation
+- [area.schema.json](../schemas/area.schema.json) - Area frontmatter validation
+
+These schemas can be used by editors (e.g., VS Code) for autocomplete and inline validation, or by implementations for programmatic validation.
+
+### 7.4 Future Considerations
 
 The following features are intentionally omitted from v1.0 but may be considered for future versions:
 

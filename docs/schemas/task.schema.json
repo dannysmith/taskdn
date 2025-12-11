@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://taskdn.dev/schemas/task.schema.json",
+  "title": "Taskdn Task",
+  "description": "Schema for Taskdn task file frontmatter. A Task represents a single actionable item.",
+  "type": "object",
+  "required": ["title", "status", "created-at", "updated-at"],
+  "additionalProperties": true,
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The title of the task."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["inbox", "icebox", "ready", "in-progress", "blocked", "dropped", "done"],
+      "description": "The workflow status of the task. Values are case-sensitive and must be lowercase."
+    },
+    "created-at": {
+      "$ref": "#/$defs/dateOrDatetime",
+      "description": "When the task was created."
+    },
+    "updated-at": {
+      "$ref": "#/$defs/dateOrDatetime",
+      "description": "When the task was last modified."
+    },
+    "completed-at": {
+      "$ref": "#/$defs/dateOrDatetime",
+      "description": "When the task was completed or dropped. Should be set when status changes to 'done' or 'dropped'."
+    },
+    "area": {
+      "$ref": "#/$defs/fileReference",
+      "description": "Reference to an Area file."
+    },
+    "projects": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "$ref": "#/$defs/fileReference"
+      },
+      "description": "Reference to a Project file. Must be an array with exactly one element. Array format is used for compatibility with other systems."
+    },
+    "due": {
+      "$ref": "#/$defs/dateOrDatetime",
+      "description": "Hard deadline for the task."
+    },
+    "scheduled": {
+      "$ref": "#/$defs/date",
+      "description": "The date the task is planned to be worked on. Used for calendar-based planning."
+    },
+    "defer-until": {
+      "$ref": "#/$defs/date",
+      "description": "Hide the task until this date. The task will not appear in active views until this date."
+    }
+  },
+  "$defs": {
+    "date": {
+      "type": "string",
+      "pattern": "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])$",
+      "description": "ISO 8601 date in YYYY-MM-DD format."
+    },
+    "datetime": {
+      "type": "string",
+      "pattern": "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])[T ](?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d)?(?:Z|[+-](?:[01]\\d|2[0-3]):[0-5]\\d)?$",
+      "description": "ISO 8601 datetime. Supports both 'T' and space separators, optional seconds, and optional timezone."
+    },
+    "dateOrDatetime": {
+      "oneOf": [
+        { "$ref": "#/$defs/date" },
+        { "$ref": "#/$defs/datetime" }
+      ],
+      "description": "Either an ISO 8601 date (YYYY-MM-DD) or datetime."
+    },
+    "fileReference": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A reference to another file: WikiLink ([[Page Name]]), relative path (./path/file.md), or filename (file.md)."
+    }
+  }
+}

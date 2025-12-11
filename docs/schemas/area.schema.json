@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://taskdn.dev/schemas/area.schema.json",
+  "title": "Taskdn Area",
+  "description": "Schema for Taskdn area file frontmatter. An Area represents an ongoing area of responsibility that is never 'finished'.",
+  "type": "object",
+  "required": ["title"],
+  "additionalProperties": true,
+  "properties": {
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The title of the area."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["active", "archived"],
+      "description": "Visibility status of the area. Areas with 'active' or no status are displayed; areas with 'archived' (or other values) are hidden from default views. Values are case-sensitive and must be lowercase."
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Allows differentiation between area types (e.g., 'client', 'life-area')."
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 500,
+      "description": "A short description of the area. Should be under 500 characters."
+    },
+    "taskdn-type": {
+      "type": "string",
+      "const": "area",
+      "description": "Explicit type marker for mixed-content directories. If any area file has this field, files without it will be ignored."
+    }
+  }
+}

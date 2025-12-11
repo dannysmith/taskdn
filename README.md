@@ -27,6 +27,7 @@ This is structured as a monorepo. Each `taskdn-*` is a self-contained project wh
 |- .github/                   # Github Actions, workflows etc
 |- demo-vault/                # Reference obsidian vault for testing
 |- docs/user-guide/           # Overarching user documentation for the project, including specification
+|- docs/schemas/              # JSON Schema files for validation
 |- docs/tasks-todo/           # High-level plan, as seperate tasks
 |- docs/tasks-done/           # Completed Phases
 |- taskdn-rust/               # Rust Library
