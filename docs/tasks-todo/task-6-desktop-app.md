@@ -13,3 +13,5 @@ Cross-platform Tauri desktop application.
 ## Notes
 
 Depends on Phase 3 (TypeScript SDK). Tauri for native performance with web technologies. This is the flagship interface.
+
+- I could use some of Astro Editor's codebase (YAML, Editor etc) to help with reading and writing files here?
