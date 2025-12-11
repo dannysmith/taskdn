@@ -1,40 +1,57 @@
 # Taskdn
 
-## Goal
+A task-management system for **individuals** that feels as slick as [Things](https://culturedcode.com/things/) while storing data as markdown files (with YAML frontmatter) on disk. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
 
-This project aims to provide a task-management system for **individuals** which feels as slick as [Things](https://culturedcode.com/things/) while storing its data as markdown files (with YAML frontmatter) on disk, so they can **also** be read and manipulated via text editors (eg. Obsidian, VSCode), command line tools and AI coding tools.
+**The core idea:** provide the right user interface in the right context.
 
-It also aims to provide simple Developer SDKs and a CLI tool for efficiently interacting with tasks, along with other helpful tools like a Claude Code Skill and a minimal Obsidian plugin.
+## Documentation
 
-Ultimately, this is all about **providing the right user interface in the right context**
+- [Philosophy & Core Principles](docs/user-guide/1-philosophy.md) – Why this project exists and design decisions
+- [The Specification](docs/user-guide/2-the-specification.md) – Formal spec for task/project/area file formats
 
 ## The Suite of Tools
 
-- **Specification** – As simple, unambiguous specification for what task files should look like so other tools can consume them.
-- **Rust SDK** - A rust library package for querying and interacting with tasks efficiently and safely.
-- **Typescript SDK** - A typescrpt wrapper around the Rust package.
-- **CLI** - A CLI designed for both humans and AI agents to interact with tasks via the command line.
-- **Desktop App** - A cross-platform desktop app for working with tasks day-to-day.
-- **Obsidian Plugin** - A lightweight obsidian plugin that renders links to task docs as "checkable" tasks, and makes it easy to create such links or convert a checklist item to a task.
-- **Obsidian Bits** - Bases, Templates & Webclipper Templates designed to work with the specification.
-- **Agent Skill** - A Claude Skill and commands designed to work with the system in Claude Code or other Agentic coding tools.
+| Tool | Description | Directory |
+|------|-------------|-----------|
+| **Specification** | File format spec with JSON schemas for validation | `docs/` |
+| **Rust SDK** | Core library for parsing and manipulating tasks | `taskdn-rust/` |
+| **TypeScript SDK** | Node.js bindings to the Rust SDK | `taskdn-ts/` |
+| **CLI** | Command-line interface for humans and AI agents | `taskdn-cli/` |
+| **Desktop App** | Cross-platform Tauri app for day-to-day use | `taskdn-desktop/` |
+| **Obsidian Plugin** | Lightweight task integration for Obsidian | `taskdn-obsidian-plugin/` |
+| **Claude Code Skill** | AI-assisted task management | `taskdn-claude-code-skill/` |
+| **Website** | Marketing and documentation site | `taskdn-website/` |
 
 ## Project Structure
 
-This is structured as a monorepo. Each `taskdn-*` is a self-contained project which should contain its own `docs/` directory for developer documentation, task management etc. The top-level `docs/` directory should only be used to store the core documentation and high-level phased plan docs.
+This is a **monorepo**. Each `taskdn-*` directory is a self-contained project with its own documentation, tests, and build configuration.
 
 ```
-|- .github/                   # Github Actions, workflows etc
-|- demo-vault/                # Reference obsidian vault for testing
-|- docs/user-guide/           # Overarching user documentation for the project, including specification
-|- docs/schemas/              # JSON Schema files for validation
-|- docs/tasks-todo/           # High-level plan, as seperate tasks
-|- docs/tasks-done/           # Completed Phases
-|- taskdn-rust/               # Rust Library
-|- taskdn-ts/                 # Typescript Library
-|- taskdn-cli/                # CLI Application
-|- taskdn-obsidian-plugin/    # Obsidian Plugin
-|- taskdn-desktop/            # Tauri Desktop app
-|- taskdn-claude-code-skill/  # Claude code Skill
-|- taskdn-website/            # Marketing website
+taskdn/
+├── .github/                      # CI/CD workflows
+├── demo-vault/                   # Reference Obsidian vault for testing
+├── docs/
+│   ├── user-guide/               # Specification and philosophy docs
+│   ├── schemas/                  # JSON Schema files
+│   ├── tasks-todo/               # Project-wide task tracking
+│   └── tasks-done/               # Completed tasks
+├── taskdn-rust/                  # Rust SDK
+├── taskdn-ts/                    # TypeScript SDK
+├── taskdn-cli/                   # CLI tool
+├── taskdn-desktop/               # Tauri desktop app
+├── taskdn-obsidian-plugin/       # Obsidian plugin
+├── taskdn-claude-code-skill/     # Claude Code skill
+└── taskdn-website/               # Marketing website
 ```
+
+## Development
+
+Most work happens in individual sub-projects. Each has its own README with setup instructions.
+
+**Working on a specific tool:**
+```bash
+cd taskdn-rust    # or taskdn-cli, taskdn-desktop, etc.
+# Follow that project's README
+```
+
+**Top-level tasks** (cross-project coordination, spec changes) are tracked in `docs/tasks-todo/`.
