@@ -36,7 +36,9 @@ A link format originating from wiki software, used by tools like [Obsidian](http
 An international standard for date and time representation. This specification uses:
 
 - **Date:** `YYYY-MM-DD` (e.g., `2025-01-15`)
-- **DateTime:** `YYYY-MM-DDTHH:MM:SS` or `YYYY-MM-DD HH:MM` (e.g., `2025-01-15T14:30:00` or `2025-01-15 14:30`)
+- **DateTime:** `YYYY-MM-DDTHH:MM` or `YYYY-MM-DDTHH:MM:SS` (e.g., `2025-01-15T14:30` or `2025-01-15T14:30:00`). The space-separated form `YYYY-MM-DD HH:MM` or `YYYY-MM-DD HH:MM:SS` is also valid.
+
+Datetime values SHOULD be interpreted as local time. Timezone suffixes (`Z`, `+HH:MM`, `-HH:MM`) MAY be present and SHOULD be preserved by implementations, but implementations MAY ignore timezone information when displaying or processing dates.
 
 ### File Reference
 
@@ -59,6 +61,8 @@ A reference to another file, expressed as one of:
 4. The Markdown body MAY be empty.
 5. Implementations MUST ignore unknown frontmatter fields. This allows users to add custom metadata without breaking compatibility.
 6. All date and datetime values MUST use ISO 8601 format.
+7. All enum values (such as `status`) are case-sensitive and MUST be lowercase.
+8. Empty or null field values SHOULD be treated as if the field were absent.
 
 ---
 
@@ -68,10 +72,12 @@ A Task represents a single actionable item.
 
 ### 3.1 File Location
 
-- Task files MUST be stored in a designated `tasks` directory.
+- Task files MUST be stored in a designated tasks directory.
 - Task files in subdirectories SHALL NOT be read during normal operation.
 - Implementations SHOULD move completed or dropped tasks to a `tasks/archive` subdirectory.
 - Implementations MAY provide separate functionality to query archived tasks.
+
+The location of the tasks directory is implementation-defined. Implementations MUST provide configuration options for `tasks_dir`, `projects_dir`, and `areas_dir` to allow users to specify these paths.
 
 ### 3.2 Filename
 
@@ -92,7 +98,7 @@ Any valid filename. Implementations SHOULD NOT impose filename conventions.
 | -------------- | ------------------------ | --------------------------------------------------------------------------------------------------- |
 | `completed-at` | date or datetime         | When the task was completed or dropped. SHOULD be set when `status` changes to `done` or `dropped`. |
 | `area`         | file reference           | Reference to an Area file.                                                                          |
-| `projects`     | array of file references | References to Project files. Expressed as an array for compatibility with other systems.            |
+| `projects`     | array of file references | Reference to a Project file. MUST be an array with exactly one element. Array format is used for compatibility with other systems. |
 | `due`          | date or datetime         | Hard deadline for the task.                                                                         |
 | `scheduled`    | date                     | The date the task is planned to be worked on. Used for calendar-based planning.                     |
 | `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.            |
@@ -165,7 +171,9 @@ Any valid filename.
 | `start-date`  | date                     | When work on the project began or will begin.                                                                                                     |
 | `end-date`    | date                     | When the project was completed or is expected to complete.                                                                                        |
 | `blocked-by`  | array of file references | Projects that must be completed before this one can start.                                                                                        |
-| `taskdn-type` | literal `project`        | If present in any project file in a directory, implementations SHOULD ignore files without this field. Useful for directories with mixed content. |
+| `taskdn-type` | literal `project`        | See note below on mixed-content directories. |
+
+**Note on `taskdn-type`:** This field enables explicit opt-in for directories where Taskdn project files coexist with unrelated Markdown files. If ANY project file in a directory contains `taskdn-type: project`, implementations SHOULD ignore all files in that directory that lack this field. Use with caution: adding this field to a single file will cause all other files without it to be excluded.
 
 ### 4.5 Status Values
 
@@ -177,6 +185,8 @@ Any valid filename.
 | `in-progress` | Active work is happening.                            |
 | `paused`      | Temporarily on hold.                                 |
 | `done`        | Completed.                                           |
+
+If `status` is absent, implementations SHOULD treat the project as having no defined workflow state and MAY display it in all project views.
 
 ### 4.6 Example
 
@@ -221,11 +231,17 @@ Any valid filename.
 | `status`      | enum           | Recommended values: `active` or `archived`. See note below.                                                                                    |
 | `type`        | string         | Allows differentiation between area types (e.g., "client", "life-area").                                                                       |
 | `description` | string         | A short description, SHOULD be under 500 characters.                                                                                           |
-| `taskdn-type` | literal `area` | If present in any area file in a directory, implementations SHOULD ignore files without this field. Useful for directories with mixed content. |
+| `taskdn-type` | literal `area` | See note below on mixed-content directories. |
+
+**Note on `taskdn-type`:** This field enables explicit opt-in for directories where Taskdn area files coexist with unrelated Markdown files. If ANY area file in a directory contains `taskdn-type: area`, implementations SHOULD ignore all files in that directory that lack this field. Use with caution: adding this field to a single file will cause all other files without it to be excluded.
 
 ### 5.5 Note on Area Status
 
-Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting them. If any area file in a directory contains a `status` field, implementations SHOULD only display areas with `status: active` by default.
+Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting them.
+
+When displaying areas, implementations SHOULD:
+- Display areas with `status: active` or with no `status` field.
+- Hide areas with any other `status` value (e.g., `archived`).
 
 ### 5.6 Example
 
