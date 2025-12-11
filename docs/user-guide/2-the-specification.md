@@ -65,7 +65,7 @@ Project files should usually be kept in specific `projects` directory, but this 
 
 ## Task
 
-Represent a single actionable task.
+Represent a single actionable task. Designed to be somewhat compatible with the [TaskNotes](https://tasknotes.dev/core-concepts/) obsidian plugin.
 
 ### Filename
 

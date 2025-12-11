@@ -1,0 +1,19 @@
+# Phase 1: Setup, Specification, Research & Planning
+
+Foundation work for the Taskdn project.
+
+## Scope
+
+- [x] Set up monorepo boilerplate
+- [x] Write up philosophy and specification
+- [ ] Finalize the task/project/area specification in `docs/user-guide/`
+- [ ] Clean up and improve README, CLAUDE.md and `docs/user-guide/`
+- [ ] Research key dependencies and architectural decisions
+- [ ] Set up monorepo structure and tooling
+- [ ] Create architecture guide for Rust SDK
+- [ ] Set up `taskdn-rust` directory with boilerplate, AI tooling, task system etc.
+- [ ] Set up demo-vault for testing
+
+## Notes
+
+This phase must be completed before any SDK work begins, as the specification drives all implementations.
