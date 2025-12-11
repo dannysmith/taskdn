@@ -1,0 +1,9 @@
+{
+  "name": "taskdn",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "task:complete": "node scripts/complete-task.js",
+    "task:rename-done": "node scripts/complete-task.js --rename-existing"
+  }
+}
