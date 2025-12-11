@@ -1,111 +1,120 @@
-# The Specification
+# The Taskdn Specification
 
-This specification is deliberatly simple and opinionated. Files which conform to this standard will be compatable with software which implements it.
+**Version:** 1.0.0-draft
+**Last Updated:** 2025-12-11
 
-## General
+This specification defines a file format for storing tasks, projects, and areas as Markdown files with YAML frontmatter. It is deliberately simple and opinionated.
 
-1. All files must contain valid, UTF-encoded markdown with optional YAML frontmatter.
-2. If frontmatter is present:
-   1. It must be valid YAML
-   2. The first line of the file must be `---`
-   3. The YAML block must be terminated with `---` followed by a newline
-3. Frontmatter fields may appear in anny order.
-4. The body may be empty.
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
-## Area Files
-
-Represent an ongoing area of responsibility.
-
-### Filename
-
-Any valid filename.
-
-### File Location
-
-Area files should usually be kept in specific `areas` directory, but this is not a requirement of the specification.
-
-### Required Frontmatter Fields
-
-- `title` - Title of the Project
-
-### Optional Frontmatter Fields
-
-- `status (active || <any>)` – Status of the area. If present in any area file, files without `status: active` will be ignored. Recommended values: `active` or `archived` only.
-- `type: <enum of strings>` - Allows users to differentiate between different types of Area (eg "Client" or "Life Area").
-- `description <string>` - A short description of the area, < 500 characters.
-- `taskdn-type: area` - if present in any area file, other files will be ignored. This can be useful for implementations where area files are in a directory of mixed content.
-
-## Project
-
-Represent a project.
-
-### Filename
-
-Any valid filename.
-
-### File Location
-
-Project files should usually be kept in specific `projects` directory, but this is not a requirement of the specification.
-
-### Required Frontmatter Fields
-
-- `title` - Title of the Project
-
-### Optional Frontmatter Fields
-
-- `unique-id` - An optional unique ID for the project.
-- `area` - Reference to one Area file as either a WikiLink, relative path or filename.
-- `status (planning || ready || blocked || active || paused || done)` – Status of the project.
-- `type: <enum of strings>` - Allows users to differentiate between different types of Project.
-- `description <string>` - A short description of the project, < 500 characters.
-- `taskdn-type: project` - if present in any project file, other files will be ignored. This can be useful for implementations where project files are in a directory of mixed content.
-- `start-date` -
-- `end-date` -
-- `blocked-by` - An array of projects which are blocking this one and must be completed before it can be started, as either a WikiLink, relative path or filename.
-
-## Task
-
-Represent a single actionable task. Designed to be somewhat compatible with the [TaskNotes](https://tasknotes.dev/core-concepts/) obsidian plugin.
-
-### Filename
-
-Any valid filename.
-
-### File Location
-
-- Task files **must** be kept in a specific `tasks` directory.
-- Archived tasks may be left in place or moved to a `tasks/archive` directory.
-- Task files in subdirectories will not be read.
-
-### Required Frontmatter Fields
-
-- `title` - Title of the Project
-- `status (inbox || icebox || ready || in-progress || blocked || dropped || done)` – Status of the task.
-- `tags: [task]` - Must be included.
-- `createdat` -
-- `updatedat` -
-- `Completedat` - datetime at which the status was last set to dropped or done
-
-### Optional Frontmatter Fields
-
-- `area` - Reference to one Area file as either a WikiLink, relative path or filename.
-- `projects` - Array. Rreference to one Project file as either a WikiLink, relative path or filename. Included as an array for compatibility with other systems.
-- `due <date or datetime>` - HArd deadline for the project.
-- `ticker-date` (hides until that date, reminds me on it - delegate tasks to future self)
-- `scheduled` - Date the task is scheduled for.
-
-### Example
-
-```
 ---
-tags:
-  - task
+
+## 1. Terminology
+
+### Markdown
+A lightweight markup language. This specification uses [CommonMark](https://spec.commonmark.org/) as the authoritative Markdown specification.
+
+### YAML
+A human-readable data serialization language. This specification uses [YAML 1.2](https://yaml.org/spec/1.2.2/) as the authoritative YAML specification.
+
+### Frontmatter
+A block of YAML metadata at the beginning of a Markdown file, delimited by `---` lines.
+
+### WikiLink
+A link format originating from wiki software, used by tools like [Obsidian](https://help.obsidian.md/links). The format is:
+- Basic: `[[Page Name]]`
+- With display text: `[[Page Name|Display Text]]`
+- With heading: `[[Page Name#Heading]]`
+
+### ISO 8601
+An international standard for date and time representation. This specification uses:
+- **Date:** `YYYY-MM-DD` (e.g., `2025-01-15`)
+- **DateTime:** `YYYY-MM-DDTHH:MM:SS` or `YYYY-MM-DD HH:MM` (e.g., `2025-01-15T14:30:00` or `2025-01-15 14:30`)
+
+### File Reference
+A reference to another file, expressed as one of:
+- A WikiLink: `[[Project Name]]`
+- A relative path: `./projects/my-project.md`
+- A filename: `my-project.md`
+
+---
+
+## 2. General Rules
+
+1. All files MUST contain valid UTF-8 encoded Markdown, optionally with YAML frontmatter.
+
+2. If frontmatter is present:
+   1. It MUST be valid YAML 1.2.
+   2. The file MUST begin with a line containing exactly `---`.
+   3. The YAML block MUST be terminated with a line containing exactly `---`, followed by a newline.
+
+3. Frontmatter fields MAY appear in any order.
+
+4. The Markdown body MAY be empty.
+
+5. Implementations MUST ignore unknown frontmatter fields. This allows users to add custom metadata without breaking compatibility.
+
+6. All date and datetime values MUST use ISO 8601 format.
+
+---
+
+## 3. Task Files
+
+A Task represents a single actionable item.
+
+### 3.1 File Location
+
+- Task files MUST be stored in a designated `tasks` directory.
+- Task files in subdirectories SHALL NOT be read during normal operation.
+- Implementations SHOULD move completed or dropped tasks to a `tasks/archive` subdirectory.
+- Implementations MAY provide separate functionality to query archived tasks.
+
+### 3.2 Filename
+
+Any valid filename. Implementations SHOULD NOT impose filename conventions.
+
+### 3.3 Required Frontmatter Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | The title of the task. |
+| `status` | enum | One of: `inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done`. |
+| `created-at` | date or datetime | When the task was created. |
+| `updated-at` | date or datetime | When the task was last modified. |
+
+### 3.4 Optional Frontmatter Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `completed-at` | date or datetime | When the task was completed or dropped. SHOULD be set when `status` changes to `done` or `dropped`. |
+| `area` | file reference | Reference to an Area file. |
+| `projects` | array of file references | References to Project files. Expressed as an array for compatibility with other systems. |
+| `due` | date or datetime | Hard deadline for the task. |
+| `scheduled` | date | The date the task is planned to be worked on. Used for calendar-based planning. |
+| `defer-until` | date | Hide the task until this date. The task will not appear in active views until this date. |
+
+### 3.5 Status Values
+
+| Status | Description |
+|--------|-------------|
+| `inbox` | Newly captured, not yet processed. |
+| `icebox` | Intentionally deferred indefinitely. Not actionable now, but kept for future consideration. |
+| `ready` | Processed and ready to be worked on. |
+| `in-progress` | Currently being worked on. |
+| `blocked` | Cannot proceed due to external dependency. |
+| `dropped` | Abandoned. Will not be completed. |
+| `done` | Completed successfully. |
+
+### 3.6 Example
+
+```yaml
+---
 title: Review quarterly report
 status: in-progress
+created-at: 2025-01-10
+updated-at: 2025-01-14
 due: 2025-01-15
 scheduled: 2025-01-14
-createdat:
-updatedat:
 projects:
   - "[[Q1 Planning]]"
 ---
@@ -121,6 +130,186 @@ Key points to review:
 Discussion with finance team on 2025-01-10...
 ```
 
-## Implementations
+---
 
-Software implementing this standard must...
+## 4. Project Files
+
+A Project represents a collection of related tasks with a defined end goal. Projects are "finishable"—they have a clear completion state.
+
+### 4.1 File Location
+
+Project files SHOULD be stored in a designated `projects` directory, but this is not required.
+
+### 4.2 Filename
+
+Any valid filename.
+
+### 4.3 Required Frontmatter Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | The title of the project. |
+
+### 4.4 Optional Frontmatter Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `unique-id` | string | A unique identifier for the project. |
+| `area` | file reference | Reference to an Area file. |
+| `status` | enum | One of: `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`. |
+| `description` | string | A short description, SHOULD be under 500 characters. |
+| `start-date` | date | When work on the project began or will begin. |
+| `end-date` | date | When the project was completed or is expected to complete. |
+| `blocked-by` | array of file references | Projects that must be completed before this one can start. |
+| `taskdn-type` | literal `project` | If present in any project file in a directory, implementations SHOULD ignore files without this field. Useful for directories with mixed content. |
+
+### 4.5 Status Values
+
+| Status | Description |
+|--------|-------------|
+| `planning` | Still being scoped or planned. |
+| `ready` | Planned and ready to begin. |
+| `blocked` | Cannot proceed due to dependency on another project. |
+| `in-progress` | Active work is happening. |
+| `paused` | Temporarily on hold. |
+| `done` | Completed. |
+
+### 4.6 Example
+
+```yaml
+---
+title: Q1 Planning
+status: in-progress
+area: "[[Work]]"
+start-date: 2025-01-01
+end-date: 2025-03-31
+description: Quarterly planning and budget review for Q1 2025.
+---
+
+## Overview
+
+This project covers all Q1 planning activities...
+```
+
+---
+
+## 5. Area Files
+
+An Area represents an ongoing area of responsibility. Unlike projects, areas are never "finished"—they represent continuous commitments (e.g., "Health", "Finances", "Client: Acme Corp").
+
+### 5.1 File Location
+
+Area files SHOULD be stored in a designated `areas` directory, but this is not required.
+
+### 5.2 Filename
+
+Any valid filename.
+
+### 5.3 Required Frontmatter Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | The title of the area. |
+
+### 5.4 Optional Frontmatter Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | enum | Recommended values: `active` or `archived`. See note below. |
+| `type` | string | Allows differentiation between area types (e.g., "client", "life-area"). |
+| `description` | string | A short description, SHOULD be under 500 characters. |
+| `taskdn-type` | literal `area` | If present in any area file in a directory, implementations SHOULD ignore files without this field. Useful for directories with mixed content. |
+
+### 5.5 Note on Area Status
+
+Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting them. If any area file in a directory contains a `status` field, implementations SHOULD only display areas with `status: active` by default.
+
+### 5.6 Example
+
+```yaml
+---
+title: Acme Corp
+type: client
+status: active
+description: Ongoing client relationship with Acme Corporation.
+---
+
+## Context
+
+Key contacts, agreements, and background information...
+```
+
+---
+
+## 6. Implementation Requirements
+
+This section defines requirements for software implementing this specification.
+
+### 6.1 Conformance Levels
+
+Implementations MUST support:
+- Reading and parsing task files according to Section 3.
+- All required frontmatter fields for tasks.
+- The task status enum values defined in Section 3.5.
+
+Implementations SHOULD support:
+- Project and area files (Sections 4 and 5).
+- All optional frontmatter fields.
+- Moving completed tasks to an archive directory.
+
+Implementations MAY support:
+- Additional custom frontmatter fields.
+- Alternative file reference formats beyond WikiLinks.
+
+### 6.2 Error Handling
+
+- If a file cannot be parsed as valid YAML, implementations SHOULD skip the file and MAY emit a warning.
+- If a required field is missing, implementations SHOULD treat the file as invalid and MAY emit a warning.
+- If a status value is not recognized, implementations SHOULD treat it as invalid.
+- Implementations MUST NOT modify files that fail validation without explicit user consent.
+
+### 6.3 Timestamps
+
+- Implementations SHOULD automatically set `created-at` when a task is created.
+- Implementations SHOULD automatically update `updated-at` when a task is modified.
+- Implementations SHOULD automatically set `completed-at` when `status` changes to `done` or `dropped`.
+
+### 6.4 Interoperability
+
+- Implementations MUST preserve unknown frontmatter fields when modifying files.
+- Implementations MUST preserve the Markdown body when modifying frontmatter.
+- Implementations SHOULD preserve YAML formatting (comments, ordering) where possible.
+
+---
+
+## 7. Appendix
+
+### 7.1 Design Rationale
+
+**Why one file per task?**
+Individual files allow tasks to be edited with any text editor, processed by command-line tools, and managed by AI coding assistants. They also enable rich note-taking within each task.
+
+**Why require a `tasks` directory?**
+A dedicated directory simplifies discovery and prevents implementations from scanning entire file systems. It also clearly separates actionable items from other content.
+
+**Why YAML frontmatter?**
+YAML frontmatter is widely supported by static site generators, note-taking apps (Obsidian, Logseq), and developer tools. It balances human readability with machine parseability.
+
+**Why these specific status values?**
+The status values are designed to support common task management workflows (GTD-inspired inbox processing, blocking dependencies, intentional deferral) while remaining simple enough for quick triage.
+
+### 7.2 Compatibility Notes
+
+This specification is designed to be broadly compatible with:
+- [TaskNotes](https://tasknotes.dev/) for Obsidian
+- [Obsidian](https://obsidian.md/) properties and WikiLinks
+- YAML frontmatter conventions used by Jekyll, Hugo, and other static site generators
+
+### 7.3 Future Considerations
+
+The following features are intentionally omitted from v1.0 but may be considered for future versions:
+- Priority levels
+- Time estimates
+- Recurring tasks
+- Subtasks as separate files
+- Tags beyond `task`
