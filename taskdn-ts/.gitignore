@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Rust build artifacts
+target/
+
+# Native binaries (generated)
+*.node
+
+# Generated JS/TS files
+index.js
+index.d.ts
+
+# Platform-specific npm packages (for publishing)
+npm/
+
+# Lockfiles are checked in
+# bun.lock
+# Cargo.lock
