@@ -2,6 +2,8 @@
 
 This is the **TypeScript SDK** for Taskdn - NAPI-RS bindings exposing the Rust SDK to Node.js/Bun environments.
 
+See @docs/tasks.md for task management.
+
 ## Project Overview
 
 - **Purpose:** Thin TypeScript wrapper around the Rust SDK via NAPI-RS
@@ -11,6 +13,7 @@ This is the **TypeScript SDK** for Taskdn - NAPI-RS bindings exposing the Rust S
 ## Key Principle: Thin Wrapper
 
 All business logic lives in the Rust SDK (`taskdn-rust/`). This package only:
+
 - Exposes the Rust API to JavaScript
 - Converts types between Rust and JavaScript
 - Generates TypeScript type definitions
@@ -57,6 +60,7 @@ bun test
 See `../docs/tasks-todo/task-3-typescript-sdk.md` for the full API surface to expose.
 
 Key patterns:
+
 - Rust `Result<T, Error>` becomes JavaScript exceptions
 - All file operations are synchronous (matches Rust SDK design)
 - Status enums exposed as string literal unions
@@ -64,6 +68,7 @@ Key patterns:
 ## Testing
 
 Test against the demo vault:
+
 ```bash
 # Reset the dummy vault first
 ../scripts/reset-dummy-vault.sh

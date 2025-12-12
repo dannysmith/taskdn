@@ -23,7 +23,9 @@
     "build:debug": "napi build --platform",
     "prepublishOnly": "napi prepublish -t npm",
     "test": "bun test",
-    "version": "napi version"
+    "version": "napi version",
+    "task:complete": "node scripts/complete-task.js",
+    "task:rename-done": "node scripts/complete-task.js --rename-existing"
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0-alpha.62"
