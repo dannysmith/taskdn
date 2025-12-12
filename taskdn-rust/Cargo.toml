@@ -2,11 +2,26 @@
 name = "taskdn"
 version = "0.1.0"
 edition = "2021"
+rust-version = "1.70"
+authors = ["Danny Smith"]
 description = "Rust library for parsing, querying, and manipulating Taskdn task files"
 license = "MIT"
 repository = "https://github.com/dannysmith/taskdn"
+documentation = "https://docs.rs/taskdn"
+readme = "README.md"
 keywords = ["tasks", "markdown", "frontmatter", "productivity"]
 categories = ["parsing", "data-structures"]
+exclude = [
+    ".cursor/",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "GEMINI.md",
+    "docs/tasks-done/",
+    "docs/tasks-todo/",
+    "docs/tasks.md",
+    "docs/developer/phase2-doc-copy.md",
+    "justfile",
+]
 
 [features]
 default = []
