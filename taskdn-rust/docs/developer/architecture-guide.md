@@ -727,6 +727,167 @@ This separation ensures that `Task` always represents a file on disk with a vali
 
 ---
 
+## File Change Processing
+
+The SDK provides tools to help consumers handle file system changes. The core processing logic is always available; an optional bundled watcher is behind a feature flag.
+
+### Design Rationale
+
+Most consumers already have file watching infrastructure:
+- **Tauri**: `tauri-plugin-fs-watch`
+- **Obsidian**: `vault.on('modify', ...)` API
+- **Node.js bindings**: `chokidar`, `fs.watch`
+
+The SDK's value is **making sense of changes**, not raw file watching:
+- Is this file in a relevant directory?
+- Is it a valid `.md` file?
+- What type of entity is it?
+- What's the parsed content?
+
+### Core API (always available)
+
+```rust
+/// What kind of change occurred (from your watcher)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FileChangeKind {
+    Created,
+    Modified,
+    Deleted,
+}
+
+/// Typed vault events with parsed content
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum VaultEvent {
+    TaskCreated(Task),
+    TaskUpdated(Task),
+    TaskDeleted { path: PathBuf },
+    ProjectCreated(Project),
+    ProjectUpdated(Project),
+    ProjectDeleted { path: PathBuf },
+    AreaCreated(Area),
+    AreaUpdated(Area),
+    AreaDeleted { path: PathBuf },
+}
+
+impl Taskdn {
+    /// Process a file change into a typed vault event.
+    ///
+    /// Returns `Ok(None)` if the file isn't relevant:
+    /// - Not in tasks/projects/areas directory
+    /// - Not a `.md` file
+    /// - Not a valid Taskdn entity (for Created/Modified)
+    ///
+    /// Returns `Err` if parsing fails for a relevant file.
+    pub fn process_file_change(
+        &self,
+        path: impl AsRef<Path>,
+        kind: FileChangeKind,
+    ) -> Result<Option<VaultEvent>, Error>;
+
+    /// Returns paths that should be watched (tasks_dir, projects_dir, areas_dir).
+    /// Useful for setting up your own file watcher.
+    pub fn watched_paths(&self) -> Vec<PathBuf>;
+}
+```
+
+### Usage with External Watcher
+
+```rust
+let taskdn = Taskdn::new(config)?;
+let paths = taskdn.watched_paths();
+
+// Set up your preferred file watcher (tauri, chokidar, etc.)
+for path in &paths {
+    my_watcher.watch(path)?;
+}
+
+// Handle events from your watcher
+my_watcher.on_event(|path, kind| {
+    let kind = match kind {
+        MyEventKind::Create => FileChangeKind::Created,
+        MyEventKind::Modify => FileChangeKind::Modified,
+        MyEventKind::Remove => FileChangeKind::Deleted,
+    };
+
+    match taskdn.process_file_change(&path, kind)? {
+        Some(event) => handle_vault_event(event),
+        None => {} // File wasn't relevant (not .md, wrong directory, etc.)
+    }
+    Ok(())
+});
+```
+
+### Optional Bundled Watcher
+
+For consumers without their own file watching infrastructure, an optional watcher is available behind the `watch` feature flag.
+
+**Cargo.toml:**
+```toml
+[features]
+default = []
+watch = ["dep:notify", "dep:notify-debouncer-mini"]
+
+[dependencies]
+notify = { version = "8", optional = true }
+notify-debouncer-mini = { version = "0.5", optional = true }
+```
+
+**API:**
+```rust
+#[cfg(feature = "watch")]
+pub struct FileWatcher { /* ... */ }
+
+#[cfg(feature = "watch")]
+pub struct WatchConfig {
+    /// Debounce duration (default: 500ms)
+    pub debounce: Duration,
+}
+
+#[cfg(feature = "watch")]
+impl Taskdn {
+    /// Start watching for file changes.
+    /// The callback receives fully typed `VaultEvent`s.
+    pub fn watch<F>(&self, callback: F) -> Result<FileWatcher, Error>
+    where
+        F: Fn(VaultEvent) + Send + 'static;
+
+    /// Start watching with custom configuration.
+    pub fn watch_with_config<F>(
+        &self,
+        config: WatchConfig,
+        callback: F,
+    ) -> Result<FileWatcher, Error>
+    where
+        F: Fn(VaultEvent) + Send + 'static;
+}
+
+#[cfg(feature = "watch")]
+impl FileWatcher {
+    /// Stop watching and clean up resources.
+    pub fn stop(self);
+}
+```
+
+**Usage:**
+```rust
+let taskdn = Taskdn::new(config)?;
+
+let watcher = taskdn.watch(|event| {
+    match event {
+        VaultEvent::TaskCreated(task) => println!("New: {}", task.title),
+        VaultEvent::TaskUpdated(task) => println!("Updated: {}", task.title),
+        VaultEvent::TaskDeleted { path } => println!("Deleted: {:?}", path),
+        // ...
+    }
+})?;
+
+// Later...
+watcher.stop();
+```
+
+---
+
 ## Error Handling
 
 ### Error Type
@@ -900,6 +1061,8 @@ src/
 ├── parser.rs       # Frontmatter parsing (gray_matter)
 ├── writer.rs       # File writing with preservation
 ├── resolve.rs      # Reference resolution
+├── events.rs       # FileChangeKind, VaultEvent, process_file_change()
+├── watcher.rs      # FileWatcher (behind "watch" feature)
 ├── utils.rs        # Filename generation utilities
 ├── validation.rs   # ValidationWarning enum
 └── operations/     # SDK operations (impl Taskdn)

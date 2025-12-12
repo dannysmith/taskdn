@@ -23,6 +23,7 @@
 
 mod config;
 mod error;
+mod events;
 mod filter;
 mod operations;
 mod parser;
@@ -30,6 +31,8 @@ mod resolve;
 pub mod types;
 mod utils;
 pub mod validation;
+#[cfg(feature = "watch")]
+mod watcher;
 mod writer;
 
 // Re-export configuration
@@ -38,8 +41,15 @@ pub use config::TaskdnConfig;
 // Re-export error types
 pub use error::{BatchResult, Error, Result};
 
+// Re-export event types (always available)
+pub use events::{FileChangeKind, VaultEvent};
+
 // Re-export filter types
 pub use filter::{AreaFilter, ProjectFilter, TaskFilter};
+
+// Re-export watcher types (only with "watch" feature)
+#[cfg(feature = "watch")]
+pub use watcher::{FileWatcher, WatchConfig};
 
 // Re-export all entity types
 pub use types::{

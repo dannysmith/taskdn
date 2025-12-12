@@ -5,6 +5,7 @@ Final quality pass: robustness, documentation, performance validation.
 ## Scope
 
 ### Robustness
+
 - [ ] Review all error handling paths
 - [ ] Ensure no panics in library code (all errors are `Result`)
 - [ ] Test edge cases and malformed input
@@ -12,6 +13,7 @@ Final quality pass: robustness, documentation, performance validation.
 - [ ] Ensure thread safety where needed
 
 ### Documentation
+
 - [ ] Complete rustdoc for all public items
 - [ ] Add usage examples to rustdoc
 - [ ] Update README with comprehensive usage guide
@@ -19,6 +21,7 @@ Final quality pass: robustness, documentation, performance validation.
 - [ ] Add CHANGELOG.md
 
 ### Performance Validation
+
 - [ ] Benchmark single file parse (target: <1ms)
 - [ ] Benchmark full vault scan with 5000 files (target: 200-500ms)
 - [ ] Benchmark query operations (target: <5ms)
@@ -26,6 +29,7 @@ Final quality pass: robustness, documentation, performance validation.
 - [ ] Document performance characteristics
 
 ### Code Quality
+
 - [ ] Run clippy with strict settings, fix all warnings
 - [ ] Ensure consistent code style (rustfmt)
 - [ ] Review public API for ergonomics
@@ -33,9 +37,9 @@ Final quality pass: robustness, documentation, performance validation.
 - [ ] Review `Debug`, `Display`, `Clone`, `PartialEq` implementations
 
 ### Testing
+
 - [ ] Ensure test coverage is comprehensive
 - [ ] Add property-based tests if beneficial (proptest/quickcheck)
-- [ ] Test on multiple platforms if possible
 
 ## Acceptance Criteria
 
