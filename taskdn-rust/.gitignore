@@ -1,2 +1,18 @@
+# Rust build artifacts
+/target/
+Cargo.lock
+
+# IDE/Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Local/private files
 *.local
 *.local.*
