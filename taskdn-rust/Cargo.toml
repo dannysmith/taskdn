@@ -12,6 +12,10 @@ categories = ["parsing", "data-structures"]
 # Frontmatter parsing (includes yaml-rust2)
 gray_matter = "0.3"
 serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+
+# Date/time handling
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 
 # Utilities
 thiserror = "1"

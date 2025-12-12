@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! ```ignore
-//! use taskdn::{Taskdn, TaskdnConfig};
+//! use taskdn::{Taskdn, TaskdnConfig, TaskFilter, TaskStatus};
 //! use std::path::PathBuf;
 //!
 //! let config = TaskdnConfig::new(
@@ -17,20 +17,32 @@
 //! );
 //!
 //! let sdk = Taskdn::new(config)?;
-//! let tasks = sdk.list_tasks()?;
+//! let filter = TaskFilter::new().with_status(TaskStatus::Ready);
+//! let tasks = sdk.list_tasks(filter)?;
 //! ```
 
-mod area;
 mod config;
 mod error;
+mod filter;
 mod parser;
-mod project;
-mod reference;
-mod task;
+pub mod types;
 mod writer;
 
+// Re-export configuration
 pub use config::TaskdnConfig;
-pub use error::{Error, Result};
+
+// Re-export error types
+pub use error::{BatchResult, Error, Result};
+
+// Re-export filter types
+pub use filter::{AreaFilter, ProjectFilter, TaskFilter};
+
+// Re-export all entity types
+pub use types::{
+    Area, AreaStatus, AreaUpdates, DateTimeValue, FileReference, NewArea, NewProject, NewTask,
+    ParsedArea, ParsedProject, ParsedTask, Project, ProjectStatus, ProjectUpdates, Task,
+    TaskStatus, TaskUpdates,
+};
 
 /// The main entry point for the Taskdn SDK.
 ///
@@ -50,13 +62,19 @@ impl Taskdn {
     pub fn new(config: TaskdnConfig) -> Result<Self> {
         // Validate that directories exist
         if !config.tasks_dir.exists() {
-            return Err(Error::PathNotFound(config.tasks_dir));
+            return Err(Error::DirectoryNotFound {
+                path: config.tasks_dir,
+            });
         }
         if !config.projects_dir.exists() {
-            return Err(Error::PathNotFound(config.projects_dir));
+            return Err(Error::DirectoryNotFound {
+                path: config.projects_dir,
+            });
         }
         if !config.areas_dir.exists() {
-            return Err(Error::PathNotFound(config.areas_dir));
+            return Err(Error::DirectoryNotFound {
+                path: config.areas_dir,
+            });
         }
 
         Ok(Self { config })
