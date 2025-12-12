@@ -21,6 +21,15 @@ pub enum FileReference {
 }
 
 impl FileReference {
+    /// Strips a `#heading` suffix from a `WikiLink` target.
+    fn strip_heading(s: &str) -> String {
+        if let Some(hash_pos) = s.find('#') {
+            s[..hash_pos].trim().to_string()
+        } else {
+            s.to_string()
+        }
+    }
+
     /// Parse a string into a `FileReference`.
     ///
     /// Detection rules:
@@ -37,7 +46,7 @@ impl FileReference {
 
             // Check for display text separator
             if let Some(pipe_pos) = inner.find('|') {
-                let target = inner[..pipe_pos].trim().to_string();
+                let target = Self::strip_heading(inner[..pipe_pos].trim());
                 let display = inner[pipe_pos + 1..].trim().to_string();
                 return Self::WikiLink {
                     target,
@@ -46,7 +55,7 @@ impl FileReference {
             }
 
             return Self::WikiLink {
-                target: inner.trim().to_string(),
+                target: Self::strip_heading(inner.trim()),
                 display: None,
             };
         }
@@ -171,6 +180,26 @@ mod tests {
             reference,
             FileReference::WikiLink { target, display: Some(d) }
             if target == "my-project" && d == "My Project"
+        ));
+    }
+
+    #[test]
+    fn parse_wikilink_with_heading_strips_heading() {
+        let reference = FileReference::parse("[[Page Name#Heading]]");
+        assert!(matches!(
+            reference,
+            FileReference::WikiLink { target, display: None }
+            if target == "Page Name"
+        ));
+    }
+
+    #[test]
+    fn parse_wikilink_with_heading_and_display() {
+        let reference = FileReference::parse("[[page#section|Display Text]]");
+        assert!(matches!(
+            reference,
+            FileReference::WikiLink { target, display: Some(d) }
+            if target == "page" && d == "Display Text"
         ));
     }
 
