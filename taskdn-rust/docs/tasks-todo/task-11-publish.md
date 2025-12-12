@@ -5,6 +5,7 @@ Set up everything needed to publish as a proper crate on crates.io.
 ## Scope
 
 ### Cargo.toml Metadata
+
 - [ ] Set proper `name` (taskdn? taskdn-core? taskdn-rust?)
 - [ ] Set `version` (0.1.0 for initial release)
 - [ ] Add `description`
@@ -17,6 +18,7 @@ Set up everything needed to publish as a proper crate on crates.io.
 - [ ] Set `edition = "2021"`
 
 ### Pre-publish Checks
+
 - [ ] Run `cargo publish --dry-run`
 - [ ] Verify all files are included (check `.gitignore` vs `Cargo.toml` exclude)
 - [ ] Ensure no large unnecessary files are included
@@ -24,11 +26,12 @@ Set up everything needed to publish as a proper crate on crates.io.
 - [ ] Check that docs.rs will build correctly
 
 ### CI/CD Setup
+
 - [ ] Set up GitHub Actions for CI (test, clippy, fmt)
 - [ ] Consider automated publishing on tag/release
-- [ ] Add badges to README (crates.io, docs.rs, CI status)
 
 ### Versioning Strategy
+
 - [ ] Document versioning approach (semver)
 - [ ] Set up CHANGELOG.md format
 - [ ] Consider using `cargo-release` or similar
