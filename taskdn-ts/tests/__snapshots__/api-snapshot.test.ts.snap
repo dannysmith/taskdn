@@ -30,6 +30,155 @@ export declare class Taskdn {
   get projectsDir(): string
   /** Returns the configured areas directory path. */
   get areasDir(): string
+  /**
+   * Get a single task by path.
+   *
+   * # Arguments
+   * * \`path\` - Path to the task file (absolute or relative to tasks_dir)
+   *
+   * # Errors
+   * Returns an error if the file doesn't exist or cannot be parsed.
+   */
+  getTask(path: string): Task
+  /**
+   * List tasks matching a filter.
+   *
+   * Invalid files are silently skipped.
+   *
+   * # Arguments
+   * * \`filter\` - Optional filter criteria for matching tasks
+   *
+   * # Errors
+   * Returns an error if the tasks directory cannot be read.
+   */
+  listTasks(filter?: TaskFilter | undefined | null): Array<Task>
+  /**
+   * Count tasks matching a filter (more efficient than list).
+   *
+   * # Arguments
+   * * \`filter\` - Optional filter criteria for matching tasks
+   *
+   * # Errors
+   * Returns an error if the tasks directory cannot be read.
+   */
+  countTasks(filter?: TaskFilter | undefined | null): number
+  /**
+   * Create a new task, returns the path where it was created.
+   *
+   * # Arguments
+   * * \`task\` - The task data to create
+   *
+   * # Errors
+   * Returns an error if the file cannot be created.
+   */
+  createTask(task: NewTask): string
+  /**
+   * Quick capture: create an inbox task with just a title.
+   *
+   * # Arguments
+   * * \`title\` - The task title
+   *
+   * # Returns
+   * The path where the task was created.
+   *
+   * # Errors
+   * Returns an error if the file cannot be created.
+   */
+  createInboxTask(title: string): string
+  /**
+   * Update a task with partial changes.
+   *
+   * Automatically updates \`updatedAt\` and sets \`completedAt\` when
+   * transitioning to Done or Dropped.
+   *
+   * # Arguments
+   * * \`path\` - Path to the task file
+   * * \`updates\` - Partial updates to apply
+   *
+   * # Errors
+   * Returns an error if the file cannot be read or written.
+   */
+  updateTask(path: string, updates: TaskUpdates): void
+  /**
+   * Mark a task as done (sets \`completedAt\` automatically).
+   *
+   * # Errors
+   * Returns an error if the file cannot be read or written.
+   */
+  completeTask(path: string): void
+  /**
+   * Mark a task as dropped (sets \`completedAt\` automatically).
+   *
+   * # Errors
+   * Returns an error if the file cannot be read or written.
+   */
+  dropTask(path: string): void
+  /**
+   * Start working on a task (status -> InProgress).
+   *
+   * # Errors
+   * Returns an error if the file cannot be read or written.
+   */
+  startTask(path: string): void
+  /**
+   * Block a task (status -> Blocked).
+   *
+   * # Errors
+   * Returns an error if the file cannot be read or written.
+   */
+  blockTask(path: string): void
+  /**
+   * Move a task to the archive subdirectory.
+   *
+   * # Arguments
+   * * \`path\` - Path to the task file
+   *
+   * # Returns
+   * The new path in the archive directory.
+   *
+   * # Errors
+   * Returns an error if the file cannot be moved.
+   */
+  archiveTask(path: string): string
+  /**
+   * Restore a task from the archive.
+   *
+   * # Arguments
+   * * \`path\` - Path to the archived task file
+   *
+   * # Returns
+   * The new path in the tasks directory.
+   *
+   * # Errors
+   * Returns an error if the file cannot be moved.
+   */
+  unarchiveTask(path: string): string
+  /**
+   * Permanently delete a task file.
+   *
+   * # Arguments
+   * * \`path\` - Path to the task file
+   *
+   * # Errors
+   * Returns an error if the file cannot be deleted.
+   */
+  deleteTask(path: string): void
+  /**
+   * Get validation warnings for a task.
+   *
+   * Validation warnings are advisory - they indicate the task may not fully
+   * comply with the Taskdn specification, but is still usable.
+   *
+   * # Arguments
+   * * \`path\` - Path to the task file
+   *
+   * # Returns
+   * A list of validation warnings. Empty if the task fully complies.
+   *
+   * # Errors
+   * Returns an error if the file cannot be read.
+   */
+  getTaskWarnings(path: string): Array<ValidationWarning>
 }
 
 /**
@@ -64,6 +213,28 @@ export interface FileReference {
   name?: string
 }
 
+/** Data for creating a new task. */
+export interface NewTask {
+  /** The task title (required). */
+  title: string
+  /** Initial status (defaults to "inbox"). */
+  status?: TaskStatus
+  /** When the task is due (ISO string). */
+  due?: string
+  /** Date the task is scheduled (ISO date string). */
+  scheduled?: string
+  /** Date until which the task is deferred (ISO date string). */
+  deferUntil?: string
+  /** Reference to the project this task belongs to. */
+  project?: FileReference
+  /** Reference to the area this task belongs to. */
+  area?: FileReference
+  /** Markdown body content. */
+  body?: string
+  /** Optional custom filename (generated from title if not provided). */
+  filename?: string
+}
+
 /**
  * Status of a project.
  *
@@ -81,6 +252,58 @@ export declare const enum ProjectStatus {
   InProgress = 'in-progress',
   Paused = 'paused',
   Done = 'done'
+}
+
+/** A parsed task from a markdown file. */
+export interface Task {
+  /** Absolute path to the task file. */
+  path: string
+  /** The task title. */
+  title: string
+  /** Current status of the task. */
+  status: TaskStatus
+  /** When the task was created (ISO string). */
+  createdAt: string
+  /** When the task was last updated (ISO string). */
+  updatedAt: string
+  /** When the task was completed (ISO string, if completed). */
+  completedAt?: string
+  /** When the task is due (ISO string). */
+  due?: string
+  /** Date the task is scheduled to be worked on (ISO date string). */
+  scheduled?: string
+  /** Date until which the task is deferred (ISO date string). */
+  deferUntil?: string
+  /** Reference to the project this task belongs to. */
+  project?: FileReference
+  /** Reference to the area this task belongs to. */
+  area?: FileReference
+  /** Markdown body (everything after frontmatter). */
+  body: string
+  /** Whether this task is in the archive subdirectory. */
+  isArchived: boolean
+  /** Whether this task is active (not completed and not archived). */
+  isActive: boolean
+}
+
+/** Filter criteria for querying tasks. */
+export interface TaskFilter {
+  /** Include only tasks with one of these statuses. */
+  statuses?: Array<TaskStatus>
+  /** Tasks assigned to this project. */
+  project?: FileReference
+  /** Tasks directly assigned to this area. */
+  area?: FileReference
+  /** Filter by whether task has a project assigned. */
+  hasProject?: boolean
+  /** Filter by whether task has an area assigned. */
+  hasArea?: boolean
+  /** Tasks due before this date (ISO date string). */
+  dueBefore?: string
+  /** Tasks due after this date (ISO date string). */
+  dueAfter?: string
+  /** Include tasks from the archive subdirectory (default: false). */
+  includeArchive?: boolean
 }
 
 /**
@@ -102,6 +325,38 @@ export declare const enum TaskStatus {
   Blocked = 'blocked',
   Dropped = 'dropped',
   Done = 'done'
+}
+
+/**
+ * Partial updates for a task.
+ *
+ * - \`undefined\` or field omitted = don't change
+ * - \`null\` = clear the field
+ * - \`value\` = set to value
+ */
+export interface TaskUpdates {
+  /** New title. */
+  title?: string
+  /** New status. */
+  status?: TaskStatus
+  /** New due date (ISO string, or null to clear). */
+  due?: string
+  /** New scheduled date (ISO date string, or null to clear). */
+  scheduled?: string
+  /** New defer until date (ISO date string, or null to clear). */
+  deferUntil?: string
+  /** New project reference (or null to clear). */
+  project?: FileReference
+  /** New area reference (or null to clear). */
+  area?: FileReference
+}
+
+/** A validation warning about spec compliance. */
+export interface ValidationWarning {
+  /** Human-readable warning message. */
+  message: string
+  /** Optional field name related to the warning. */
+  field?: string
 }
 "
 `;
