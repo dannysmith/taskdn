@@ -80,8 +80,24 @@ impl FromStr for DateTimeValue {
     type Err = String;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        // Try datetime first (more specific)
+        // Try datetime formats (more specific first)
+        // ISO format with seconds: YYYY-MM-DDTHH:MM:SS
         if let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S") {
+            return Ok(Self::DateTime(dt));
+        }
+
+        // ISO format without seconds: YYYY-MM-DDTHH:MM
+        if let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M") {
+            return Ok(Self::DateTime(dt));
+        }
+
+        // Space-separated format with seconds: YYYY-MM-DD HH:MM:SS
+        if let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M:%S") {
+            return Ok(Self::DateTime(dt));
+        }
+
+        // Space-separated format without seconds: YYYY-MM-DD HH:MM
+        if let Ok(dt) = NaiveDateTime::parse_from_str(s, "%Y-%m-%d %H:%M") {
             return Ok(Self::DateTime(dt));
         }
 
@@ -145,6 +161,32 @@ mod tests {
         assert!(!value.is_date_only());
         assert_eq!(value.date(), NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
         assert!(value.datetime().is_some());
+    }
+
+    #[test]
+    fn parse_datetime_without_seconds() {
+        let value: DateTimeValue = "2025-01-15T14:30".parse().unwrap();
+        assert!(!value.is_date_only());
+        assert_eq!(value.date(), NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
+        let dt = value.datetime().unwrap();
+        assert_eq!(dt.format("%H:%M").to_string(), "14:30");
+    }
+
+    #[test]
+    fn parse_datetime_space_separated() {
+        let value: DateTimeValue = "2025-01-15 14:30:00".parse().unwrap();
+        assert!(!value.is_date_only());
+        assert_eq!(value.date(), NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
+        assert!(value.datetime().is_some());
+    }
+
+    #[test]
+    fn parse_datetime_space_separated_without_seconds() {
+        let value: DateTimeValue = "2025-01-15 14:30".parse().unwrap();
+        assert!(!value.is_date_only());
+        assert_eq!(value.date(), NaiveDate::from_ymd_opt(2025, 1, 15).unwrap());
+        let dt = value.datetime().unwrap();
+        assert_eq!(dt.format("%H:%M").to_string(), "14:30");
     }
 
     #[test]

@@ -14,6 +14,10 @@ pub enum Error {
     #[error("failed to parse {}: {message}", path.display())]
     Parse { path: PathBuf, message: String },
 
+    /// Failed to parse content (no file path context).
+    #[error("failed to parse content: {message}")]
+    ContentParse { message: String },
+
     /// Validation error in file content.
     #[error("validation error in {}: {message}", path.display())]
     Validation { path: PathBuf, message: String },
@@ -22,10 +26,21 @@ pub enum Error {
     #[error("missing required field '{field}' in {}", path.display())]
     MissingField { path: PathBuf, field: &'static str },
 
+    /// A required field is missing from the content (no file path context).
+    #[error("missing required field '{field}'")]
+    ContentMissingField { field: &'static str },
+
     /// A field has an invalid value.
     #[error("invalid value for '{field}' in {}: {message}", path.display())]
     InvalidField {
         path: PathBuf,
+        field: &'static str,
+        message: String,
+    },
+
+    /// A field has an invalid value (no file path context).
+    #[error("invalid value for '{field}': {message}")]
+    ContentInvalidField {
         field: &'static str,
         message: String,
     },
