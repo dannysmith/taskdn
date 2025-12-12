@@ -2,72 +2,73 @@
 
 Implement the main `Taskdn` struct with CRUD operations and query capabilities.
 
+**Reference:** See `docs/developer/architecture-guide.md` for complete API specification.
+
 ## Scope
 
 ### Main Entry Point (`src/lib.rs`)
-- [ ] Write failing integration tests for full workflows
 - [ ] Implement `Taskdn::new(config: TaskdnConfig) -> Result<Self, Error>`
-- [ ] Implement task CRUD operations
-- [ ] Implement project CRUD operations
-- [ ] Implement area CRUD operations
-- [ ] Implement query/filter API
-- [ ] Implement batch operations with rayon for parallelism
-- [ ] Implement archiving (move completed/dropped tasks to archive)
+- [ ] Validate directories exist and are readable
+- [ ] Store config for use in operations
 
-## CRUD Operations
+### Task Operations
+- [ ] `get_task(&self, path: impl AsRef<Path>) -> Result<Task, Error>`
+- [ ] `list_tasks(&self, filter: TaskFilter) -> Result<Vec<Task>, Error>`
+- [ ] `count_tasks(&self, filter: TaskFilter) -> Result<usize, Error>`
+- [ ] `create_task(&self, task: NewTask) -> Result<PathBuf, Error>`
+- [ ] `create_inbox_task(&self, title: impl AsRef<str>) -> Result<PathBuf, Error>`
+- [ ] `update_task(&self, path: impl AsRef<Path>, updates: TaskUpdates) -> Result<(), Error>`
+- [ ] `update_tasks_matching(&self, filter: TaskFilter, updates: TaskUpdates) -> BatchResult<PathBuf>`
+- [ ] `complete_task(&self, path: impl AsRef<Path>) -> Result<(), Error>`
+- [ ] `drop_task(&self, path: impl AsRef<Path>) -> Result<(), Error>`
+- [ ] `start_task(&self, path: impl AsRef<Path>) -> Result<(), Error>`
+- [ ] `block_task(&self, path: impl AsRef<Path>) -> Result<(), Error>`
+- [ ] `archive_task(&self, path: impl AsRef<Path>) -> Result<PathBuf, Error>`
+- [ ] `unarchive_task(&self, path: impl AsRef<Path>) -> Result<PathBuf, Error>`
+- [ ] `delete_task(&self, path: impl AsRef<Path>) -> Result<(), Error>`
 
-### Tasks
-```rust
-impl Taskdn {
-    pub fn list_tasks(&self) -> Result<Vec<Task>, Error>;
-    pub fn get_task(&self, path: &Path) -> Result<Task, Error>;
-    pub fn create_task(&self, task: &Task) -> Result<PathBuf, Error>;
-    pub fn update_task(&self, path: &Path, updates: TaskUpdates) -> Result<(), Error>;
-    pub fn delete_task(&self, path: &Path) -> Result<(), Error>;
-    pub fn archive_task(&self, path: &Path) -> Result<PathBuf, Error>;
-}
-```
+### Project Operations
+- [ ] `get_project`, `list_projects`, `create_project`, `update_project`, `delete_project`
+- [ ] `get_tasks_for_project(&self, project: impl AsRef<Path>) -> Result<Vec<Task>, Error>`
 
-### Projects & Areas
-Similar CRUD for projects and areas.
+### Area Operations
+- [ ] `get_area`, `list_areas`, `create_area`, `update_area`, `delete_area`
+- [ ] `get_projects_for_area(&self, area: impl AsRef<Path>) -> Result<Vec<Project>, Error>`
+- [ ] `get_tasks_for_area(&self, area: impl AsRef<Path>) -> Result<Vec<Task>, Error>`
 
-## Query API
+### Validation
+- [ ] `validate_task(&self, path: impl AsRef<Path>) -> Result<(), Error>`
+- [ ] `validate_all_tasks(&self) -> Vec<(PathBuf, Error)>`
 
-- [ ] Design and implement filtering by status
-- [ ] Filter by project reference
-- [ ] Filter by area reference
-- [ ] Filter by date ranges (due, scheduled, defer-until)
-- [ ] Filter by custom predicates
+### Filtering Implementation
+- [ ] Implement `TaskFilter` matching logic
+- [ ] Handle `area_via_project` (join through projects)
+- [ ] Date comparison (extract date portion from datetime)
+- [ ] Archive directory handling (`include_archive_dir`)
 
-```rust
-impl Taskdn {
-    pub fn query_tasks(&self) -> TaskQuery;
-}
-
-impl TaskQuery {
-    pub fn status(self, status: TaskStatus) -> Self;
-    pub fn project(self, project: &Path) -> Self;
-    pub fn due_before(self, date: Date) -> Self;
-    pub fn execute(self) -> Result<Vec<Task>, Error>;
-}
-```
+### Filename Generation
+- [ ] Generate filename from title (lowercase, spaces to hyphens, special chars removed)
+- [ ] Use provided filename if specified in `NewTask`
+- [ ] Handle collisions (append number or fail?)
 
 ## Integration Tests
 
 - [ ] Full workflow: create task → update → query → archive
 - [ ] Batch operations with many files
 - [ ] Error handling for invalid files in directory
+- [ ] `get_tasks_for_area` returns tasks directly in area + via projects
 - [ ] Performance test: 5000 tasks under target times
 
-## Performance Targets
+## Performance
 
-From phase2 doc:
+Use `rayon` for parallel file operations:
 - Single file parse: <1ms
-- Full vault scan (5000 tasks, parallel): ~200-500ms
+- 5000 file scan (parallel): ~200-500ms
 - Query by status (in-memory filter): <5ms
 
 ## Notes
 
-- Use rayon for parallel file operations
-- Consider lazy loading vs eager loading for large vaults
-- Invalid files should be skipped with warnings, not fail the whole operation
+- Invalid files are skipped during `list_tasks()`, not errors
+- Use `validate_all_tasks()` for strict validation
+- `BatchResult<T>` for partial success in batch operations
+- All path parameters use `impl AsRef<Path>` for flexibility

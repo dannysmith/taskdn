@@ -2,55 +2,52 @@
 
 Implement spec-compliant validation for Task, Project, and Area entities.
 
+**Reference:** See `docs/developer/architecture-guide.md` for error types.
+
 ## Scope
 
-### Task Validation (`src/task.rs`)
-- [ ] Write failing tests for valid tasks
-- [ ] Write failing tests for invalid tasks (missing required fields, invalid status, etc.)
-- [ ] Validate required fields: `title`, `status`, `created-at`, `updated-at`
-- [ ] Validate `status` is one of the allowed values
+### Task Validation
+- [ ] Validate required fields: `title`, `status`, `created_at`, `updated_at`
+- [ ] Validate `status` is a valid `TaskStatus` value
 - [ ] Validate date/datetime formats (ISO 8601)
 - [ ] Validate `projects` is an array with exactly one element (if present)
-- [ ] Validate file references in `area` and `projects` fields
+- [ ] Validate `FileReference` format in `area` and `project` fields
+- [ ] Return `Error::MissingField` or `Error::InvalidField` as appropriate
 
-### Project Validation (`src/project.rs`)
-- [ ] Write failing tests for valid/invalid projects
+### Project Validation
 - [ ] Validate required field: `title`
-- [ ] Validate optional `status` is one of allowed values
-- [ ] Validate date formats for `start-date`, `end-date`
-- [ ] Handle `taskdn-type: project` opt-in behavior
+- [ ] Validate optional `status` is a valid `ProjectStatus` value
+- [ ] Validate date formats for `start_date`, `end_date`
+- [ ] Handle `taskdn-type: project` opt-in behavior (if one file has it, all others without are ignored)
 
-### Area Validation (`src/area.rs`)
-- [ ] Write failing tests for valid/invalid areas
+### Area Validation
 - [ ] Validate required field: `title`
+- [ ] Validate optional `status` is a valid `AreaStatus` value
 - [ ] Handle `taskdn-type: area` opt-in behavior
 
 ## Validation Rules from Spec
 
 ### Dates
-- Must be ISO 8601: `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS`
-- Space-separated datetime is also valid: `YYYY-MM-DD HH:MM`
+- ISO 8601: `YYYY-MM-DD` or `YYYY-MM-DDTHH:MM:SS`
+- Space-separated: `YYYY-MM-DD HH:MM`
 - Timezone suffixes may be present and should be preserved
 
-### Task Status Values
-`inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done`
+### Status Values
+- **Task:** `inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done`
+- **Project:** `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`
+- **Area:** `active`, `archived`
 
-### Project Status Values
-`planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`
+## Error Types
 
-## Error Reporting
-
-Validation errors should be informative:
 ```rust
-Error::ValidationError {
-    file: PathBuf,
-    field: String,
-    message: String,
-}
+Error::MissingField { path: PathBuf, field: &'static str }
+Error::InvalidField { path: PathBuf, field: &'static str, message: String }
+Error::Validation { path: PathBuf, message: String }
 ```
 
 ## Notes
 
 - Validation happens after parsing
-- Invalid files should return `Result::Err`, not panic
+- Invalid files return `Result::Err`, never panic
 - Per spec: "empty or null field values SHOULD be treated as if the field were absent"
+- The `ParsedTask::with_path()` method should validate before returning `Task`

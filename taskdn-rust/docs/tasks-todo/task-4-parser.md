@@ -2,56 +2,58 @@
 
 Implement frontmatter parsing using `gray_matter`.
 
+**Reference:** See `docs/developer/architecture-guide.md` for `ParsedTask` type.
+
 ## Scope
 
 ### Parser Module (`src/parser.rs`)
-- [ ] Write failing tests for frontmatter extraction
-- [ ] Write failing tests for YAML parsing into structs
-- [ ] Write failing tests for edge cases (no frontmatter, empty frontmatter, malformed YAML)
-- [ ] Implement `parse_frontmatter()` function using gray_matter
-- [ ] Handle the `---` delimiter detection
-- [ ] Extract raw YAML and markdown body separately
-- [ ] Implement serde deserialization into Task/Project/Area structs
-- [ ] Preserve unknown fields (store as `HashMap<String, Value>` or similar)
-- [ ] Preserve the raw markdown body
+- [ ] Implement `ParsedTask::parse(content: &str) -> Result<Self, Error>`
+- [ ] Implement `ParsedProject::parse()` and `ParsedArea::parse()`
+- [ ] Use `gray_matter` for frontmatter extraction
+- [ ] Preserve unknown fields in `extra: HashMap<String, serde_yaml::Value>`
+- [ ] Preserve markdown body exactly
+- [ ] Handle `DateTimeValue` parsing (preserve date vs datetime format)
 
-## Test Cases
+### Test Cases
 
-### Valid files
-- Task with all required fields
-- Task with all optional fields
-- Task with unknown custom fields (must be preserved)
-- Project and Area files
+**Valid files:**
+- [ ] Task with all required fields
+- [ ] Task with all optional fields
+- [ ] Task with unknown custom fields (must be preserved)
+- [ ] Project and Area files
+- [ ] Date-only values (`2025-01-15`)
+- [ ] DateTime values (`2025-01-15T14:30`)
+- [ ] Space-separated datetime (`2025-01-15 14:30`)
 
-### Edge cases
-- File with no frontmatter (just markdown)
-- File with empty frontmatter (`---\n---`)
-- File with only frontmatter (no body)
-- Frontmatter with comments
-- Multi-line string values
+**Edge cases:**
+- [ ] File with no frontmatter (just markdown) → error for tasks
+- [ ] File with empty frontmatter (`---\n---`)
+- [ ] File with only frontmatter (no body)
+- [ ] Frontmatter with comments
+- [ ] Multi-line string values
+- [ ] WikiLink parsing in project/area fields
 
-### Invalid files
-- Malformed YAML (should return error, not panic)
-- Missing `---` delimiter
-- Invalid UTF-8
+**Invalid files:**
+- [ ] Malformed YAML → `Error::Parse`
+- [ ] Missing `---` delimiter → `Error::Parse`
+- [ ] Invalid UTF-8 → `Error::Io`
 
-## Key Implementation Details
+## Key Implementation
 
 ```rust
-pub struct ParsedFile {
-    /// Known fields deserialized into struct
-    pub frontmatter: Frontmatter,
-    /// Unknown fields preserved for round-tripping
-    pub extra_fields: HashMap<String, serde_yaml::Value>,
-    /// Raw markdown body (everything after second ---)
-    pub body: String,
+impl ParsedTask {
+    pub fn parse(content: &str) -> Result<Self, Error>;
+    pub fn with_path(self, path: impl Into<PathBuf>) -> Task;
 }
 
-pub fn parse_file(content: &str) -> Result<ParsedFile, Error>;
+impl Task {
+    pub fn to_string(&self) -> String;  // Serialize back to file content
+}
 ```
 
 ## Notes
 
-- gray_matter handles the delimiter detection
-- Use serde's `#[serde(flatten)]` for extra fields if needed
-- The parser should NOT validate - that's task 5
+- `gray_matter` handles delimiter detection
+- Parser extracts but does NOT validate (validation is task 5)
+- Use `serde_yaml::Value` for unknown fields
+- Preserve the original date/datetime format for round-tripping
