@@ -6,8 +6,8 @@ Foundation work for the Taskdn project.
 
 - [x] Set up monorepo boilerplate
 - [x] Write up philosophy and specification
-- [ ] Finalize the task/project/area specification in `docs/user-guide/`
-- [ ] Clean up and improve README, CLAUDE.md and `docs/user-guide/`
+- [x] Finalize the task/project/area specification in `docs/user-guide/`
+- [x] Clean up and improve README, CLAUDE.md and `docs/user-guide/`
 - [ ] Research key dependencies and architectural decisions
 - [ ] Set up monorepo structure and tooling
 - [ ] Create architecture guide for Rust SDK
