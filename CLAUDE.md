@@ -17,21 +17,21 @@ This is a **monorepo root**. Most work sessions should happen in a specific sub-
 
 - `docs/user-guide/1-philosophy.md` – Core principles and design decisions
 - `docs/user-guide/2-the-specification.md` – **The authoritative spec** for task/project/area file formats
-- `docs/schemas/` – JSON Schema files for validation
+- `docs/developer/architecture-guide.md` – Overall system architecture, monorepo structure
+- `docs/schemas/` – JSON Schema files for the specification.
 - `docs/tasks-todo/` – Project-wide task tracking (phases)
-- `docs/tasks.md` – How task management works in this repo
 
 ## Sub-Projects
 
-| Directory                   | What it is          | Language/Stack    |
-| --------------------------- | ------------------- | ----------------- |
-| `taskdn-rust/`              | Core SDK            | Rust              |
-| `taskdn-ts/`                | TypeScript bindings | TypeScript, NAPI  |
-| `taskdn-cli/`               | CLI tool            | TBD               |
-| `taskdn-desktop/`           | Desktop app         | Tauri, TypeScript |
-| `taskdn-obsidian-plugin/`   | Obsidian plugin     | TypeScript        |
-| `taskdn-claude-code-skill/` | Claude Code skill   | Markdown          |
-| `taskdn-website/`           | Marketing site      | TBD               |
+| Directory                   | What it is          | Language/Stack      |
+| --------------------------- | ------------------- | ------------------- |
+| `taskdn-rust/`              | Core SDK            | Rust                |
+| `taskdn-ts/`                | TypeScript bindings | Rust + NAPI-RS      |
+| `taskdn-cli/`               | CLI tool            | TypeScript + Bun    |
+| `taskdn-desktop/`           | Desktop app         | Tauri v2 + Rust SDK |
+| `taskdn-obsidian-plugin/`   | Obsidian plugin     | TypeScript          |
+| `taskdn-claude-code-skill/` | Claude Code skill   | Markdown            |
+| `taskdn-website/`           | Marketing site      | TBD                 |
 
 ## Important: "Tasks" in This Project
 
