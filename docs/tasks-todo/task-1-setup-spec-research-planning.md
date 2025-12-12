@@ -9,10 +9,9 @@ Foundation work for the Taskdn project.
 - [x] Finalize the task/project/area specification in `docs/user-guide/`
 - [x] Clean up and improve README, CLAUDE.md and `docs/user-guide/`
 - [x] Research key dependencies and architectural decisions
-- [ ] Set up monorepo structure and tooling
-- [ ] Create architecture guide for Rust SDK
-- [ ] Set up `taskdn-rust` directory with boilerplate, AI tooling, task system etc.
-- [ ] Set up demo-vault for testing
+- [x] Create architecture guide for Rust SDK
+- [x] Set up `taskdn-rust` directory with boilerplate, AI tooling, task system etc.
+- [x] Set up demo-vault for testing
 
 ## Notes
 

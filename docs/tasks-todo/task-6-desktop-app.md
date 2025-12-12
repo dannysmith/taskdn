@@ -198,6 +198,46 @@ Inspired by Things:
 
 ---
 
+## Task Ordering & Reordering
+
+Planning views (today, project planning) need manual task reordering. This is a UI concern, not a task property—the same task might be #1 in "today" but #5 in its project view.
+
+### Approach: Separate Ordering File
+
+Store ordering in a dedicated file in the vault (not in task frontmatter):
+
+```
+.taskdn/ordering.json
+```
+
+```json
+{
+  "version": 1,
+  "contexts": {
+    "today:2025-01-15": ["task-a.md", "task-b.md"],
+    "project:Q1 Planning": ["task-c.md", "task-a.md"]
+  }
+}
+```
+
+### Why This Approach
+
+- **Context-flexible**: Different orderings per view without polluting task files
+- **Portable**: Syncs with vault (survives reinstalls, works across machines)
+- **Spec-clean**: Keeps task file format minimal; ordering is implementation-defined
+- **Graceful degradation**: No ordering data = default sort (by date, alphabetical, etc.)
+
+### Implementation Notes
+
+- **Task identifier**: Use filename (already unique within `tasks/`)
+- **Orphaned entries**: If task renamed/deleted, entry becomes stale—just ignore or clean up
+- **"Today" ordering**: May be more ephemeral (reset daily) vs project ordering (persists)
+- **Location**: `.taskdn/ordering.json` in vault root, or `tasks/.taskdn/` if preferred
+
+This file format is **not part of the Taskdn spec**—it's desktop-app-specific. Other tools can ignore it.
+
+---
+
 ## Permissions (Tauri v2)
 
 ```json
