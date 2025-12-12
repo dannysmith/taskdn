@@ -337,6 +337,170 @@ impl ProjectFilter {
     }
 }
 
+impl TaskFilter {
+    /// Check if a task matches this filter.
+    ///
+    /// Note: `area_via_project` is NOT checked here because it requires
+    /// looking up the project file. This should be handled at the SDK level.
+    ///
+    /// # Arguments
+    /// * `task` - The task to check
+    ///
+    /// # Returns
+    /// `true` if the task matches all filter criteria, `false` otherwise
+    #[must_use]
+    #[allow(clippy::too_many_lines)]
+    pub fn matches(&self, task: &crate::Task) -> bool {
+        self.matches_archive(task)
+            && self.matches_status(task)
+            && self.matches_assignment(task)
+            && self.matches_dates(task)
+    }
+
+    fn matches_archive(&self, task: &crate::Task) -> bool {
+        // Archive handling - skip archived tasks unless explicitly included
+        self.include_archive_dir || !task.is_archived()
+    }
+
+    fn matches_status(&self, task: &crate::Task) -> bool {
+        // Status filtering (OR within statuses, AND with other fields)
+        if let Some(ref statuses) = self.status {
+            if !statuses.contains(&task.status) {
+                return false;
+            }
+        }
+
+        if let Some(ref excluded) = self.exclude_status {
+            if excluded.contains(&task.status) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    fn matches_assignment(&self, task: &crate::Task) -> bool {
+        // Project assignment filtering
+        if let Some(ref filter_project) = self.project {
+            match &task.project {
+                Some(task_project) if task_project == filter_project => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(has_project) = self.has_project {
+            if has_project && task.project.is_none() {
+                return false;
+            }
+            if !has_project && task.project.is_some() {
+                return false;
+            }
+        }
+
+        // Area assignment filtering (direct area only, not via project)
+        if let Some(ref filter_area) = self.area {
+            match &task.area {
+                Some(task_area) if task_area == filter_area => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(has_area) = self.has_area {
+            if has_area && task.area.is_none() {
+                return false;
+            }
+            if !has_area && task.area.is_some() {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    #[allow(clippy::too_many_lines)]
+    fn matches_dates(&self, task: &crate::Task) -> bool {
+        // Date filtering - compare by date portion
+        if let Some(before) = self.due_before {
+            match &task.due {
+                Some(due) if due.date() < before => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(after) = self.due_after {
+            match &task.due {
+                Some(due) if due.date() > after => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(on) = self.due_on {
+            match &task.due {
+                Some(due) if due.date() == on => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(before) = self.scheduled_before {
+            match task.scheduled {
+                Some(scheduled) if scheduled < before => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(after) = self.scheduled_after {
+            match task.scheduled {
+                Some(scheduled) if scheduled > after => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(on) = self.scheduled_on {
+            match task.scheduled {
+                Some(scheduled) if scheduled == on => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(before) = self.created_before {
+            // and_hms_opt with valid hours/mins/secs always returns Some
+            let task_created = task.created_at.datetime().unwrap_or_else(|| {
+                task.created_at
+                    .date()
+                    .and_hms_opt(0, 0, 0)
+                    .unwrap_or_default()
+            });
+            if task_created >= before {
+                return false;
+            }
+        }
+
+        if let Some(after) = self.created_after {
+            // and_hms_opt with valid hours/mins/secs always returns Some
+            let task_created = task.created_at.datetime().unwrap_or_else(|| {
+                task.created_at
+                    .date()
+                    .and_hms_opt(23, 59, 59)
+                    .unwrap_or_default()
+            });
+            if task_created <= after {
+                return false;
+            }
+        }
+
+        // visible_as_of: task is visible if defer_until is None or defer_until <= date
+        if let Some(visible_date) = self.visible_as_of {
+            if let Some(defer_until) = task.defer_until {
+                if defer_until > visible_date {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+}
+
 /// Filter criteria for querying areas.
 #[derive(Debug, Clone, Default)]
 pub struct AreaFilter {
@@ -373,6 +537,57 @@ impl AreaFilter {
     #[must_use]
     pub fn active() -> Self {
         Self::new().with_status(AreaStatus::Active)
+    }
+}
+
+impl ProjectFilter {
+    /// Check if a project matches this filter.
+    #[must_use]
+    pub fn matches(&self, project: &crate::Project) -> bool {
+        // Status filtering
+        if let Some(ref statuses) = self.status {
+            match &project.status {
+                Some(project_status) if statuses.contains(project_status) => {}
+                None if statuses.is_empty() => {} // No status required
+                _ => return false,
+            }
+        }
+
+        // Area filtering
+        if let Some(ref filter_area) = self.area {
+            match &project.area {
+                Some(project_area) if project_area == filter_area => {}
+                _ => return false,
+            }
+        }
+
+        if let Some(has_area) = self.has_area {
+            if has_area && project.area.is_none() {
+                return false;
+            }
+            if !has_area && project.area.is_some() {
+                return false;
+            }
+        }
+
+        true
+    }
+}
+
+impl AreaFilter {
+    /// Check if an area matches this filter.
+    #[must_use]
+    pub fn matches(&self, area: &crate::Area) -> bool {
+        // Status filtering
+        if let Some(ref statuses) = self.status {
+            // Default to Active if no status is set
+            let area_status = area.status.unwrap_or(AreaStatus::Active);
+            if !statuses.contains(&area_status) {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
@@ -502,6 +717,343 @@ mod tests {
         fn preset_active() {
             let filter = AreaFilter::active();
             assert_eq!(filter.status, Some(vec![AreaStatus::Active]));
+        }
+    }
+
+    mod task_filter_matches {
+        use super::*;
+        use crate::Task;
+        use std::collections::HashMap;
+        use std::path::PathBuf;
+
+        fn sample_task() -> Task {
+            Task {
+                path: PathBuf::from("/tasks/test.md"),
+                title: "Test Task".to_string(),
+                status: TaskStatus::Ready,
+                created_at: "2025-01-01".parse().unwrap(),
+                updated_at: "2025-01-02".parse().unwrap(),
+                completed_at: None,
+                due: None,
+                scheduled: None,
+                defer_until: None,
+                project: None,
+                area: None,
+                body: String::new(),
+                extra: HashMap::new(),
+                projects_count: None,
+            }
+        }
+
+        #[test]
+        fn empty_filter_matches_all() {
+            let filter = TaskFilter::new();
+            let task = sample_task();
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn status_filter_matches() {
+            let filter = TaskFilter::new().with_status(TaskStatus::Ready);
+            let task = sample_task();
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn status_filter_no_match() {
+            let filter = TaskFilter::new().with_status(TaskStatus::Done);
+            let task = sample_task();
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn multiple_statuses_match_any() {
+            let filter = TaskFilter::new().with_statuses([TaskStatus::Inbox, TaskStatus::Ready]);
+            let task = sample_task();
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn exclude_status_filters_out() {
+            let filter = TaskFilter::new().excluding_status(TaskStatus::Ready);
+            let task = sample_task();
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn archived_tasks_excluded_by_default() {
+            let filter = TaskFilter::new();
+            let mut task = sample_task();
+            task.path = PathBuf::from("/tasks/archive/test.md");
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn archived_tasks_included_when_requested() {
+            let filter = TaskFilter::new().include_archive_dir();
+            let mut task = sample_task();
+            task.path = PathBuf::from("/tasks/archive/test.md");
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn project_filter_matches() {
+            let filter = TaskFilter::new().in_project("[[My Project]]");
+            let mut task = sample_task();
+            task.project = Some(FileReference::wiki_link("My Project"));
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn project_filter_no_match_different_project() {
+            let filter = TaskFilter::new().in_project("[[My Project]]");
+            let mut task = sample_task();
+            task.project = Some(FileReference::wiki_link("Other Project"));
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn project_filter_no_match_no_project() {
+            let filter = TaskFilter::new().in_project("[[My Project]]");
+            let task = sample_task();
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn has_project_filter() {
+            let filter = TaskFilter::new().with_project();
+            let mut task = sample_task();
+            assert!(!filter.matches(&task));
+
+            task.project = Some(FileReference::wiki_link("Any"));
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn without_project_filter() {
+            let filter = TaskFilter::new().without_project();
+            let task = sample_task();
+            assert!(filter.matches(&task));
+
+            let mut task_with_proj = sample_task();
+            task_with_proj.project = Some(FileReference::wiki_link("Any"));
+            assert!(!filter.matches(&task_with_proj));
+        }
+
+        #[test]
+        fn due_before_matches() {
+            let filter =
+                TaskFilter::new().due_before(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.due = Some("2025-06-14".parse().unwrap());
+            assert!(filter.matches(&task));
+
+            task.due = Some("2025-06-15".parse().unwrap());
+            assert!(!filter.matches(&task));
+
+            task.due = None;
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn due_after_matches() {
+            let filter = TaskFilter::new().due_after(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.due = Some("2025-06-16".parse().unwrap());
+            assert!(filter.matches(&task));
+
+            task.due = Some("2025-06-15".parse().unwrap());
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn due_on_matches() {
+            let filter = TaskFilter::new().due_on(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.due = Some("2025-06-15".parse().unwrap());
+            assert!(filter.matches(&task));
+
+            task.due = Some("2025-06-14".parse().unwrap());
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn scheduled_on_matches() {
+            let filter =
+                TaskFilter::new().scheduled_on(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.scheduled = Some(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            assert!(filter.matches(&task));
+
+            task.scheduled = Some(NaiveDate::from_ymd_opt(2025, 6, 14).unwrap());
+            assert!(!filter.matches(&task));
+
+            task.scheduled = None;
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn visible_as_of_no_defer() {
+            let filter =
+                TaskFilter::new().visible_as_of(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let task = sample_task(); // No defer_until
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn visible_as_of_defer_passed() {
+            let filter =
+                TaskFilter::new().visible_as_of(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.defer_until = Some(NaiveDate::from_ymd_opt(2025, 6, 10).unwrap());
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn visible_as_of_defer_exact() {
+            let filter =
+                TaskFilter::new().visible_as_of(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.defer_until = Some(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            assert!(filter.matches(&task));
+        }
+
+        #[test]
+        fn visible_as_of_defer_future() {
+            let filter =
+                TaskFilter::new().visible_as_of(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+            let mut task = sample_task();
+            task.defer_until = Some(NaiveDate::from_ymd_opt(2025, 6, 20).unwrap());
+            assert!(!filter.matches(&task));
+        }
+
+        #[test]
+        fn combined_filters_and_logic() {
+            let filter = TaskFilter::new()
+                .with_status(TaskStatus::Ready)
+                .visible_as_of(NaiveDate::from_ymd_opt(2025, 6, 15).unwrap());
+
+            // Matches both criteria
+            let task = sample_task();
+            assert!(filter.matches(&task));
+
+            // Wrong status
+            let mut wrong_status = sample_task();
+            wrong_status.status = TaskStatus::Done;
+            assert!(!filter.matches(&wrong_status));
+
+            // Not visible yet
+            let mut deferred = sample_task();
+            deferred.defer_until = Some(NaiveDate::from_ymd_opt(2025, 6, 20).unwrap());
+            assert!(!filter.matches(&deferred));
+        }
+    }
+
+    mod project_filter_matches {
+        use super::*;
+        use crate::Project;
+        use std::collections::HashMap;
+        use std::path::PathBuf;
+
+        fn sample_project() -> Project {
+            Project {
+                path: PathBuf::from("/projects/test.md"),
+                title: "Test Project".to_string(),
+                unique_id: None,
+                status: Some(ProjectStatus::InProgress),
+                description: None,
+                area: None,
+                start_date: None,
+                end_date: None,
+                blocked_by: Vec::new(),
+                body: String::new(),
+                extra: HashMap::new(),
+            }
+        }
+
+        #[test]
+        fn empty_filter_matches_all() {
+            let filter = ProjectFilter::new();
+            let project = sample_project();
+            assert!(filter.matches(&project));
+        }
+
+        #[test]
+        fn status_filter_matches() {
+            let filter = ProjectFilter::new().with_status(ProjectStatus::InProgress);
+            let project = sample_project();
+            assert!(filter.matches(&project));
+        }
+
+        #[test]
+        fn status_filter_no_match() {
+            let filter = ProjectFilter::new().with_status(ProjectStatus::Done);
+            let project = sample_project();
+            assert!(!filter.matches(&project));
+        }
+
+        #[test]
+        fn area_filter_matches() {
+            let filter = ProjectFilter::new().in_area("[[Work]]");
+            let mut project = sample_project();
+            project.area = Some(FileReference::wiki_link("Work"));
+            assert!(filter.matches(&project));
+        }
+
+        #[test]
+        fn area_filter_no_match() {
+            let filter = ProjectFilter::new().in_area("[[Work]]");
+            let project = sample_project();
+            assert!(!filter.matches(&project));
+        }
+    }
+
+    mod area_filter_matches {
+        use super::*;
+        use crate::Area;
+        use std::collections::HashMap;
+        use std::path::PathBuf;
+
+        fn sample_area() -> Area {
+            Area {
+                path: PathBuf::from("/areas/test.md"),
+                title: "Test Area".to_string(),
+                status: Some(AreaStatus::Active),
+                area_type: None,
+                description: None,
+                body: String::new(),
+                extra: HashMap::new(),
+            }
+        }
+
+        #[test]
+        fn empty_filter_matches_all() {
+            let filter = AreaFilter::new();
+            let area = sample_area();
+            assert!(filter.matches(&area));
+        }
+
+        #[test]
+        fn status_filter_matches() {
+            let filter = AreaFilter::active();
+            let area = sample_area();
+            assert!(filter.matches(&area));
+        }
+
+        #[test]
+        fn status_filter_no_match() {
+            let filter = AreaFilter::active();
+            let mut area = sample_area();
+            area.status = Some(AreaStatus::Archived);
+            assert!(!filter.matches(&area));
+        }
+
+        #[test]
+        fn no_status_defaults_to_active() {
+            let filter = AreaFilter::active();
+            let mut area = sample_area();
+            area.status = None; // Should default to Active
+            assert!(filter.matches(&area));
         }
     }
 }

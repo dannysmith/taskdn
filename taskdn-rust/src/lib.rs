@@ -24,9 +24,11 @@
 mod config;
 mod error;
 mod filter;
+mod operations;
 mod parser;
 mod resolve;
 pub mod types;
+mod utils;
 pub mod validation;
 mod writer;
 
