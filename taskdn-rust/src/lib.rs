@@ -4,22 +4,78 @@
 //! task management system. It handles parsing files with YAML frontmatter, validating
 //! against the specification, and performing CRUD operations.
 //!
-//! # Example
+//! # Features
+//!
+//! - **Parse** markdown files with YAML frontmatter into typed entities
+//! - **Query** tasks, projects, and areas with flexible filters
+//! - **Create/Update/Delete** entities with automatic timestamp management
+//! - **Validate** files against the Taskdn specification
+//! - **Preserve** unknown frontmatter fields during round-trip serialization
+//! - **Process** file system events into typed vault events
+//! - **Watch** directories for changes (with the `watch` feature)
+//!
+//! # Quick Start
 //!
 //! ```ignore
-//! use taskdn::{Taskdn, TaskdnConfig, TaskFilter, TaskStatus};
+//! use taskdn::{Taskdn, TaskdnConfig, TaskFilter, TaskStatus, NewTask};
 //! use std::path::PathBuf;
 //!
+//! // Initialize the SDK with your vault directories
 //! let config = TaskdnConfig::new(
 //!     PathBuf::from("./tasks"),
 //!     PathBuf::from("./projects"),
 //!     PathBuf::from("./areas"),
 //! );
-//!
 //! let sdk = Taskdn::new(config)?;
-//! let filter = TaskFilter::new().with_status(TaskStatus::Ready);
-//! let tasks = sdk.list_tasks(filter)?;
+//!
+//! // Create a new task
+//! let path = sdk.create_task(NewTask::new("My new task"))?;
+//!
+//! // List tasks by status
+//! let ready_tasks = sdk.list_tasks(&TaskFilter::new().with_status(TaskStatus::Ready))?;
+//!
+//! // Complete a task (automatically sets completed_at)
+//! sdk.complete_task(&path)?;
+//! # Ok::<(), taskdn::Error>(())
 //! ```
+//!
+//! # Core Types
+//!
+//! - [`Taskdn`] - The main SDK entry point
+//! - [`Task`], [`Project`], [`Area`] - Parsed entity types
+//! - [`NewTask`], [`NewProject`], [`NewArea`] - Builder types for creating entities
+//! - [`TaskFilter`], [`ProjectFilter`], [`AreaFilter`] - Query filters
+//! - [`TaskStatus`], [`ProjectStatus`], [`AreaStatus`] - Status enums
+//!
+//! # File Watching
+//!
+//! Enable the `watch` feature to use the built-in file watcher:
+//!
+//! ```toml
+//! [dependencies]
+//! taskdn = { version = "0.1", features = ["watch"] }
+//! ```
+//!
+//! Or process file changes manually using [`Taskdn::process_file_change`]:
+//!
+//! ```ignore
+//! use taskdn::{Taskdn, FileChangeKind, VaultEvent};
+//!
+//! // When your file watcher reports a change:
+//! if let Some(event) = sdk.process_file_change(&path, FileChangeKind::Modified)? {
+//!     match event {
+//!         VaultEvent::TaskUpdated(task) => println!("Updated: {}", task.title),
+//!         VaultEvent::TaskCreated(task) => println!("Created: {}", task.title),
+//!         _ => {}
+//!     }
+//! }
+//! # Ok::<(), taskdn::Error>(())
+//! ```
+//!
+//! # Modules
+//!
+//! - [`types`] - All entity types, status enums, and builder types
+//! - [`validation`] - Spec compliance warnings
 
 mod config;
 mod error;

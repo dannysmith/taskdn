@@ -228,7 +228,11 @@ impl Taskdn {
 
             // Watch all paths
             for path in &[tasks_dir, projects_dir, areas_dir] {
-                if debouncer.watcher().watch(path, RecursiveMode::Recursive).is_err() {
+                if debouncer
+                    .watcher()
+                    .watch(path, RecursiveMode::Recursive)
+                    .is_err()
+                {
                     return;
                 }
             }
