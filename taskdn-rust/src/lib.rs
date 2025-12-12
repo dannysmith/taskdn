@@ -26,6 +26,7 @@ mod error;
 mod filter;
 mod parser;
 pub mod types;
+pub mod validation;
 mod writer;
 
 // Re-export configuration
@@ -43,6 +44,9 @@ pub use types::{
     ParsedArea, ParsedProject, ParsedTask, Project, ProjectStatus, ProjectUpdates, Task,
     TaskStatus, TaskUpdates,
 };
+
+// Re-export validation types
+pub use validation::ValidationWarning;
 
 /// The main entry point for the Taskdn SDK.
 ///

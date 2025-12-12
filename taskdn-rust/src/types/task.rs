@@ -1,6 +1,7 @@
 //! Task entity and related types.
 
 use super::{DateTimeValue, FileReference};
+use crate::validation::ValidationWarning;
 use chrono::NaiveDate;
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -117,6 +118,12 @@ pub struct Task {
     pub body: String,
     /// Unknown frontmatter fields (preserved on write).
     pub extra: HashMap<String, serde_yaml::Value>,
+
+    // Validation metadata
+    /// Number of elements in the `projects` array (if used).
+    /// `None` if `project` field was used instead of `projects` array.
+    /// Used for validation - spec says exactly one project per task.
+    pub projects_count: Option<usize>,
 }
 
 impl Task {
@@ -136,6 +143,33 @@ impl Task {
     #[must_use]
     pub fn is_active(&self) -> bool {
         !self.status.is_completed() && !self.is_archived()
+    }
+
+    /// Validate the task against spec recommendations.
+    ///
+    /// Returns a list of warnings for spec violations. An empty list means
+    /// the task fully complies with the specification.
+    ///
+    /// Checks performed:
+    /// - `projects` array should have exactly one element (warns if >1)
+    /// - Completed tasks (done/dropped) should have `completed-at` set
+    #[must_use]
+    pub fn validate(&self) -> Vec<ValidationWarning> {
+        let mut warnings = Vec::new();
+
+        // Check for multiple projects
+        if let Some(count) = self.projects_count {
+            if count > 1 {
+                warnings.push(ValidationWarning::MultipleProjects { count });
+            }
+        }
+
+        // Check for missing completed_at on completed tasks
+        if self.status.is_completed() && self.completed_at.is_none() {
+            warnings.push(ValidationWarning::MissingCompletedAt);
+        }
+
+        warnings
     }
 }
 
@@ -168,6 +202,8 @@ pub struct ParsedTask {
     pub body: String,
     /// Unknown frontmatter fields.
     pub extra: HashMap<String, serde_yaml::Value>,
+    /// Number of elements in the `projects` array (if used).
+    pub projects_count: Option<usize>,
 }
 
 impl ParsedTask {
@@ -188,7 +224,35 @@ impl ParsedTask {
             area: self.area,
             body: self.body,
             extra: self.extra,
+            projects_count: self.projects_count,
         }
+    }
+
+    /// Validate the parsed task against spec recommendations.
+    ///
+    /// Returns a list of warnings for spec violations. An empty list means
+    /// the task fully complies with the specification.
+    ///
+    /// Checks performed:
+    /// - `projects` array should have exactly one element (warns if >1)
+    /// - Completed tasks (done/dropped) should have `completed-at` set
+    #[must_use]
+    pub fn validate(&self) -> Vec<ValidationWarning> {
+        let mut warnings = Vec::new();
+
+        // Check for multiple projects
+        if let Some(count) = self.projects_count {
+            if count > 1 {
+                warnings.push(ValidationWarning::MultipleProjects { count });
+            }
+        }
+
+        // Check for missing completed_at on completed tasks
+        if self.status.is_completed() && self.completed_at.is_none() {
+            warnings.push(ValidationWarning::MissingCompletedAt);
+        }
+
+        warnings
     }
 }
 
@@ -497,6 +561,7 @@ mod tests {
                 area: None,
                 body: String::new(),
                 extra: HashMap::new(),
+                projects_count: None,
             }
         }
 
@@ -578,6 +643,117 @@ mod tests {
             let due: DateTimeValue = "2025-06-01".parse().unwrap();
             let updates = TaskUpdates::new().due(due.clone());
             assert_eq!(updates.due, Some(Some(due)));
+        }
+    }
+
+    mod validation {
+        use super::*;
+        use std::path::Path;
+
+        fn sample_task(path: impl AsRef<Path>) -> Task {
+            Task {
+                path: path.as_ref().to_path_buf(),
+                title: "Test Task".to_string(),
+                status: TaskStatus::Ready,
+                created_at: "2025-01-01".parse().unwrap(),
+                updated_at: "2025-01-01".parse().unwrap(),
+                completed_at: None,
+                due: None,
+                scheduled: None,
+                defer_until: None,
+                project: None,
+                area: None,
+                body: String::new(),
+                extra: HashMap::new(),
+                projects_count: None,
+            }
+        }
+
+        #[test]
+        fn valid_task_has_no_warnings() {
+            let task = sample_task("/test/task.md");
+            assert!(task.validate().is_empty());
+        }
+
+        #[test]
+        fn single_project_has_no_warning() {
+            let mut task = sample_task("/test/task.md");
+            task.projects_count = Some(1);
+            assert!(task.validate().is_empty());
+        }
+
+        #[test]
+        fn multiple_projects_warns() {
+            let mut task = sample_task("/test/task.md");
+            task.projects_count = Some(3);
+
+            let warnings = task.validate();
+            assert_eq!(warnings.len(), 1);
+            assert!(matches!(
+                warnings[0],
+                ValidationWarning::MultipleProjects { count: 3 }
+            ));
+        }
+
+        #[test]
+        fn done_task_without_completed_at_warns() {
+            let mut task = sample_task("/test/task.md");
+            task.status = TaskStatus::Done;
+
+            let warnings = task.validate();
+            assert_eq!(warnings.len(), 1);
+            assert!(matches!(warnings[0], ValidationWarning::MissingCompletedAt));
+        }
+
+        #[test]
+        fn dropped_task_without_completed_at_warns() {
+            let mut task = sample_task("/test/task.md");
+            task.status = TaskStatus::Dropped;
+
+            let warnings = task.validate();
+            assert_eq!(warnings.len(), 1);
+            assert!(matches!(warnings[0], ValidationWarning::MissingCompletedAt));
+        }
+
+        #[test]
+        fn done_task_with_completed_at_has_no_warning() {
+            let mut task = sample_task("/test/task.md");
+            task.status = TaskStatus::Done;
+            task.completed_at = Some("2025-01-15".parse().unwrap());
+
+            assert!(task.validate().is_empty());
+        }
+
+        #[test]
+        fn multiple_warnings_accumulated() {
+            let mut task = sample_task("/test/task.md");
+            task.status = TaskStatus::Done;
+            task.projects_count = Some(2);
+
+            let warnings = task.validate();
+            assert_eq!(warnings.len(), 2);
+        }
+
+        #[test]
+        fn parsed_task_validate_works() {
+            let parsed = ParsedTask {
+                title: "Test".to_string(),
+                status: TaskStatus::Done,
+                created_at: "2025-01-01".parse().unwrap(),
+                updated_at: "2025-01-01".parse().unwrap(),
+                completed_at: None,
+                due: None,
+                scheduled: None,
+                defer_until: None,
+                project: None,
+                area: None,
+                body: String::new(),
+                extra: HashMap::new(),
+                projects_count: Some(2),
+            };
+
+            let warnings = parsed.validate();
+            assert_eq!(warnings.len(), 2);
         }
     }
 }

@@ -46,6 +46,11 @@ Implement the main `Taskdn` struct with CRUD operations and query capabilities.
 - [ ] Date comparison (extract date portion from datetime)
 - [ ] Archive directory handling (`include_archive_dir`)
 
+### Directory Scanning Opt-in (from Task 5)
+- [ ] Handle `taskdn-type: project` opt-in behavior
+  - If ANY project in a directory has `taskdn-type: project`, ignore files without it
+- [ ] Handle `taskdn-type: area` opt-in behavior (same logic as projects)
+
 ### Filename Generation
 - [ ] Generate filename from title (lowercase, spaces to hyphens, special chars removed)
 - [ ] Use provided filename if specified in `NewTask`

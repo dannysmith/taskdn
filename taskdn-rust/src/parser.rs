@@ -167,10 +167,13 @@ impl ParsedTask {
             })?;
 
         // Handle project: prefer "projects" array (per spec), fall back to "project"
-        let project = if let Some(projects) = raw.projects {
-            projects.first().map(|s| FileReference::parse(s))
+        // Track the count for validation (spec says exactly one project per task)
+        let (project, projects_count) = if let Some(projects) = raw.projects {
+            let count = projects.len();
+            let first_project = projects.first().map(|s| FileReference::parse(s));
+            (first_project, Some(count))
         } else {
-            raw.project.as_deref().map(FileReference::parse)
+            (raw.project.as_deref().map(FileReference::parse), None)
         };
 
         let area = raw.area.as_deref().map(FileReference::parse);
@@ -188,6 +191,7 @@ impl ParsedTask {
             area,
             body,
             extra: raw.extra,
+            projects_count,
         })
     }
 }
@@ -402,6 +406,8 @@ projects:
             } else {
                 panic!("expected WikiLink");
             }
+            // Verify projects_count is tracked
+            assert_eq!(task.projects_count, Some(1));
         }
 
         #[test]
@@ -416,6 +422,48 @@ project: "[[My Project]]"
 "#;
             let task = ParsedTask::parse(content).unwrap();
             assert!(task.project.is_some());
+            // project field (not projects array) should have None for projects_count
+            assert_eq!(task.projects_count, None);
+        }
+
+        #[test]
+        fn parse_task_with_multiple_projects() {
+            let content = r#"---
+title: Multi Project Task
+status: inbox
+created-at: 2025-01-01
+updated-at: 2025-01-01
+projects:
+  - "[[Project A]]"
+  - "[[Project B]]"
+  - "[[Project C]]"
+---
+"#;
+            let task = ParsedTask::parse(content).unwrap();
+            // Should take the first project
+            assert!(task.project.is_some());
+            if let Some(FileReference::WikiLink { target, .. }) = &task.project {
+                assert_eq!(target, "Project A");
+            } else {
+                panic!("expected WikiLink");
+            }
+            // Should track count for validation
+            assert_eq!(task.projects_count, Some(3));
+        }
+
+        #[test]
+        fn parse_task_with_empty_projects_array() {
+            let content = r#"---
+title: Empty Projects Task
+status: inbox
+created-at: 2025-01-01
+updated-at: 2025-01-01
+projects: []
+---
+"#;
+            let task = ParsedTask::parse(content).unwrap();
+            assert!(task.project.is_none());
+            assert_eq!(task.projects_count, Some(0));
         }
 
         #[test]
