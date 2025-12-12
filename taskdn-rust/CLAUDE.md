@@ -25,6 +25,16 @@ Rust library for parsing, querying, and manipulating Taskdn task files.
 2. **Follow Established Patterns**: Use patterns from this file and `docs/developer`
 3. **Senior Architect Mindset**: Consider performance, maintainability, testability
 
+### Commands
+
+```bash
+just check    # Run all checks (fmt, lint, test)
+cargo build   # Build
+cargo test    # Run tests
+cargo clippy -- -D warnings  # Lint
+cargo fmt --check            # Check formatting
+```
+
 ---
 
 ## Rust Code Standards
