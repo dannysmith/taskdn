@@ -524,10 +524,10 @@ impl Taskdn {
     pub fn get_task(&self, path: impl AsRef<Path>) -> Result<Task, Error>;
 
     /// List tasks matching a filter
-    pub fn list_tasks(&self, filter: TaskFilter) -> Result<Vec<Task>, Error>;
+    pub fn list_tasks(&self, filter: &TaskFilter) -> Result<Vec<Task>, Error>;
 
     /// Count tasks matching a filter (more efficient than list)
-    pub fn count_tasks(&self, filter: TaskFilter) -> Result<usize, Error>;
+    pub fn count_tasks(&self, filter: &TaskFilter) -> Result<usize, Error>;
 
     // === Create ===
 
@@ -549,8 +549,8 @@ impl Taskdn {
     /// Update all tasks matching a filter
     pub fn update_tasks_matching(
         &self,
-        filter: TaskFilter,
-        updates: TaskUpdates,
+        filter: &TaskFilter,
+        updates: &TaskUpdates,
     ) -> BatchResult<PathBuf>;
 
     // === Status Transitions (convenience) ===
@@ -587,7 +587,7 @@ impl Taskdn {
 ```rust
 impl Taskdn {
     pub fn get_project(&self, path: impl AsRef<Path>) -> Result<Project, Error>;
-    pub fn list_projects(&self, filter: ProjectFilter) -> Result<Vec<Project>, Error>;
+    pub fn list_projects(&self, filter: &ProjectFilter) -> Result<Vec<Project>, Error>;
     pub fn create_project(&self, project: NewProject) -> Result<PathBuf, Error>;
     pub fn update_project(
         &self,
@@ -609,7 +609,7 @@ impl Taskdn {
 ```rust
 impl Taskdn {
     pub fn get_area(&self, path: impl AsRef<Path>) -> Result<Area, Error>;
-    pub fn list_areas(&self, filter: AreaFilter) -> Result<Vec<Area>, Error>;
+    pub fn list_areas(&self, filter: &AreaFilter) -> Result<Vec<Area>, Error>;
     pub fn create_area(&self, area: NewArea) -> Result<PathBuf, Error>;
     pub fn update_area(
         &self,
@@ -654,11 +654,32 @@ impl Taskdn {
 
 ```rust
 impl Taskdn {
-    /// Validate a single task file against the spec
+    /// Validate a single task file against the spec (returns error for hard failures)
     pub fn validate_task(&self, path: impl AsRef<Path>) -> Result<(), Error>;
 
     /// Validate all tasks, returning a list of errors
     pub fn validate_all_tasks(&self) -> Vec<(PathBuf, Error)>;
+
+    /// Get validation warnings for a task (non-fatal issues)
+    pub fn get_task_warnings(
+        &self,
+        path: impl AsRef<Path>
+    ) -> Result<Vec<ValidationWarning>, Error>;
+}
+```
+
+**ValidationWarning** represents non-fatal validation issues:
+
+```rust
+pub enum ValidationWarning {
+    /// Task is done/dropped but missing completed_at
+    MissingCompletedAt,
+    /// Task has multiple projects assigned (unusual but valid)
+    MultipleProjects { count: usize },
+}
+
+impl ValidationWarning {
+    pub fn message(&self) -> &'static str;
 }
 ```
 
@@ -788,6 +809,30 @@ The SDK never modifies:
 
 ---
 
+## Directory Scanning Opt-in
+
+For projects and areas, the SDK supports opt-in behavior via the `taskdn-type` field:
+
+**Behavior:**
+- If ANY file in the projects directory has `taskdn-type: project` in its frontmatter, only files with that field are included in `list_projects()`
+- If ANY file in the areas directory has `taskdn-type: area` in its frontmatter, only files with that field are included in `list_areas()`
+- If no files have the `taskdn-type` field, all `.md` files are included (default behavior)
+
+**Use case:** This allows users to have mixed content in their project/area directories (e.g., meeting notes alongside project files) without those files being treated as projects/areas.
+
+**Example:**
+```yaml
+---
+title: My Project
+taskdn-type: project
+status: in-progress
+---
+```
+
+Files without `taskdn-type: project` will be ignored when any file has it.
+
+---
+
 ## Conventions
 
 ### Naming
@@ -843,7 +888,7 @@ If the spec adds new fields (e.g., `priority`, `tags`), we would:
 src/
 ├── lib.rs          # Re-exports, Taskdn struct
 ├── config.rs       # TaskdnConfig
-├── error.rs        # Error enum
+├── error.rs        # Error enum, BatchResult
 ├── types/
 │   ├── mod.rs
 │   ├── task.rs     # Task, TaskStatus, NewTask, TaskUpdates, ParsedTask
@@ -851,10 +896,18 @@ src/
 │   ├── area.rs     # Area, AreaStatus, NewArea, AreaUpdates
 │   ├── datetime.rs # DateTimeValue
 │   └── reference.rs # FileReference
-├── filter.rs       # TaskFilter, ProjectFilter, AreaFilter
+├── filter.rs       # TaskFilter, ProjectFilter, AreaFilter + matching logic
 ├── parser.rs       # Frontmatter parsing (gray_matter)
 ├── writer.rs       # File writing with preservation
-└── resolve.rs      # Reference resolution
+├── resolve.rs      # Reference resolution
+├── utils.rs        # Filename generation utilities
+├── validation.rs   # ValidationWarning enum
+└── operations/     # SDK operations (impl Taskdn)
+    ├── mod.rs
+    ├── tasks.rs    # Task CRUD, status transitions, archive
+    ├── projects.rs # Project CRUD, get_tasks_for_project
+    ├── areas.rs    # Area CRUD, get_projects_for_area, get_tasks_for_area
+    └── validation.rs # validate_task, validate_all_tasks, get_task_warnings
 ```
 
 ---
@@ -867,7 +920,7 @@ src/
 | 5,000 file scan (parallel) | 200-500ms |
 | In-memory filter | < 5ms |
 
-Use `rayon` for parallel file operations. Avoid allocations in hot paths.
+**Implementation:** The SDK uses `rayon` for parallel file operations in `list_tasks()`, `list_projects()`, and `list_areas()`. File paths are collected first, then parsed in parallel using `par_iter()`. Avoid allocations in hot paths.
 
 ---
 

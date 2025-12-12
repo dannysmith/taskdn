@@ -6,6 +6,7 @@ use crate::types::{DateTimeValue, NewTask, ParsedTask, Task, TaskStatus, TaskUpd
 use crate::utils::generate_filename;
 use crate::writer::{write_task, write_task_with_updates};
 use crate::Taskdn;
+use rayon::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -379,50 +380,45 @@ impl Taskdn {
 
     /// Scan the tasks directory and return tasks matching the filter.
     fn scan_tasks(&self, filter: &TaskFilter) -> Result<Vec<Task>> {
-        let mut tasks = Vec::new();
+        let mut all_paths = Vec::new();
 
-        // Scan main tasks directory
-        self.scan_directory(&self.config.tasks_dir, filter, &mut tasks, false)?;
+        // Collect paths from main tasks directory
+        self.collect_md_paths(&self.config.tasks_dir, &mut all_paths)?;
 
-        // Scan archive if requested
+        // Collect paths from archive if requested
         if filter.include_archive_dir {
             let archive_dir = self.config.tasks_dir.join("archive");
             if archive_dir.exists() {
-                self.scan_directory(&archive_dir, filter, &mut tasks, true)?;
+                self.collect_md_paths(&archive_dir, &mut all_paths)?;
             }
         }
+
+        // Parse all tasks in parallel and apply filter
+        let tasks: Vec<Task> = all_paths
+            .par_iter()
+            .filter_map(|path| self.get_task(path).ok())
+            .filter(|task| filter.matches(task))
+            .collect();
 
         Ok(tasks)
     }
 
-    /// Scan a single directory for tasks.
-    fn scan_directory(
-        &self,
-        dir: &Path,
-        filter: &TaskFilter,
-        tasks: &mut Vec<Task>,
-        _is_archive: bool,
-    ) -> Result<()> {
+    /// Collect all .md file paths from a directory.
+    #[allow(clippy::unused_self)]
+    fn collect_md_paths(&self, dir: &Path, paths: &mut Vec<PathBuf>) -> Result<()> {
         let entries = fs::read_dir(dir)?;
 
         for entry in entries.flatten() {
             let path = entry.path();
 
-            // Skip directories (except archive which we handle separately)
+            // Skip directories
             if path.is_dir() {
-                // Skip archive dir here - it's handled explicitly if include_archive_dir is set
                 continue;
             }
 
             // Only process .md files
             if path.extension().is_some_and(|e| e == "md") {
-                // Try to parse the task, skip if invalid
-                if let Ok(task) = self.get_task(&path) {
-                    // Apply filter
-                    if filter.matches(&task) {
-                        tasks.push(task);
-                    }
-                }
+                paths.push(path);
             }
         }
 

@@ -6,6 +6,7 @@ use crate::types::{Area, AreaUpdates, NewArea, ParsedArea, Project, Task};
 use crate::utils::generate_filename;
 use crate::writer::write_area;
 use crate::Taskdn;
+use rayon::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -49,35 +50,65 @@ impl Taskdn {
 
     /// List areas matching a filter.
     ///
+    /// If any area in the directory has `taskdn-type: area` in its frontmatter,
+    /// only files with that field will be included (opt-in behavior).
+    ///
     /// # Arguments
     /// * `filter` - Filter criteria for matching areas
     ///
     /// # Errors
     /// Returns an error if the areas directory cannot be read.
     pub fn list_areas(&self, filter: &AreaFilter) -> Result<Vec<Area>> {
-        let mut areas = Vec::new();
         let entries = fs::read_dir(&self.config.areas_dir)?;
 
-        for entry in entries.flatten() {
-            let path = entry.path();
-
-            // Skip directories
-            if path.is_dir() {
-                continue;
-            }
-
-            // Only process .md files
-            if path.extension().is_some_and(|e| e == "md") {
-                // Try to parse the area, skip if invalid
-                if let Ok(area) = self.get_area(&path) {
-                    if filter.matches(&area) {
-                        areas.push(area);
-                    }
+        // Collect paths first for parallel processing
+        let paths: Vec<PathBuf> = entries
+            .flatten()
+            .filter_map(|entry| {
+                let path = entry.path();
+                if path.is_file() && path.extension().is_some_and(|e| e == "md") {
+                    Some(path)
+                } else {
+                    None
                 }
-            }
-        }
+            })
+            .collect();
+
+        // Parse all areas in parallel
+        let all_areas: Vec<Area> = paths
+            .par_iter()
+            .filter_map(|path| self.get_area(path).ok())
+            .collect();
+
+        // Check for opt-in behavior: if any has taskdn-type: area, filter to those only
+        let has_opt_in = all_areas
+            .iter()
+            .any(|a| Self::has_taskdn_type_area(&a.extra, "area"));
+
+        let areas: Vec<Area> = if has_opt_in {
+            all_areas
+                .into_iter()
+                .filter(|a| Self::has_taskdn_type_area(&a.extra, "area"))
+                .filter(|a| filter.matches(a))
+                .collect()
+        } else {
+            all_areas
+                .into_iter()
+                .filter(|a| filter.matches(a))
+                .collect()
+        };
 
         Ok(areas)
+    }
+
+    /// Check if extra fields contain `taskdn-type` with the specified value.
+    fn has_taskdn_type_area(
+        extra: &std::collections::HashMap<String, serde_yaml::Value>,
+        expected: &str,
+    ) -> bool {
+        extra
+            .get("taskdn-type")
+            .is_some_and(|v| v.as_str().is_some_and(|s| s.eq_ignore_ascii_case(expected)))
     }
 
     // ==========================================================================
@@ -418,6 +449,57 @@ Area body.
             let areas = sdk.list_areas(&AreaFilter::active()).unwrap();
             assert_eq!(areas.len(), 1);
             assert_eq!(areas[0].title, "Area 1");
+        }
+
+        #[test]
+        fn opt_in_filters_to_typed_areas_only() {
+            let (_temp, sdk) = setup_test_env();
+
+            // Regular area without taskdn-type
+            create_area_file(
+                &sdk.config.areas_dir,
+                "regular.md",
+                &sample_area_content("Regular Area", None),
+            );
+
+            // Area with taskdn-type: area
+            create_area_file(
+                &sdk.config.areas_dir,
+                "typed.md",
+                r#"---
+title: Typed Area
+taskdn-type: area
+---
+
+Body.
+"#,
+            );
+
+            // Because one has taskdn-type, only that one should be returned
+            let areas = sdk.list_areas(&AreaFilter::new()).unwrap();
+            assert_eq!(areas.len(), 1);
+            assert_eq!(areas[0].title, "Typed Area");
+        }
+
+        #[test]
+        fn no_opt_in_returns_all_areas() {
+            let (_temp, sdk) = setup_test_env();
+
+            // Two regular areas without taskdn-type
+            create_area_file(
+                &sdk.config.areas_dir,
+                "area1.md",
+                &sample_area_content("Area 1", None),
+            );
+            create_area_file(
+                &sdk.config.areas_dir,
+                "area2.md",
+                &sample_area_content("Area 2", None),
+            );
+
+            // No opt-in, so both should be returned
+            let areas = sdk.list_areas(&AreaFilter::new()).unwrap();
+            assert_eq!(areas.len(), 2);
         }
     }
 

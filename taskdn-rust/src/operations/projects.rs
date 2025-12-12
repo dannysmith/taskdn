@@ -6,6 +6,7 @@ use crate::types::{NewProject, ParsedProject, Project, ProjectUpdates, Task};
 use crate::utils::generate_filename;
 use crate::writer::write_project;
 use crate::Taskdn;
+use rayon::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -49,35 +50,65 @@ impl Taskdn {
 
     /// List projects matching a filter.
     ///
+    /// If any project in the directory has `taskdn-type: project` in its frontmatter,
+    /// only files with that field will be included (opt-in behavior).
+    ///
     /// # Arguments
     /// * `filter` - Filter criteria for matching projects
     ///
     /// # Errors
     /// Returns an error if the projects directory cannot be read.
     pub fn list_projects(&self, filter: &ProjectFilter) -> Result<Vec<Project>> {
-        let mut projects = Vec::new();
         let entries = fs::read_dir(&self.config.projects_dir)?;
 
-        for entry in entries.flatten() {
-            let path = entry.path();
-
-            // Skip directories
-            if path.is_dir() {
-                continue;
-            }
-
-            // Only process .md files
-            if path.extension().is_some_and(|e| e == "md") {
-                // Try to parse the project, skip if invalid
-                if let Ok(project) = self.get_project(&path) {
-                    if filter.matches(&project) {
-                        projects.push(project);
-                    }
+        // Collect paths first for parallel processing
+        let paths: Vec<PathBuf> = entries
+            .flatten()
+            .filter_map(|entry| {
+                let path = entry.path();
+                if path.is_file() && path.extension().is_some_and(|e| e == "md") {
+                    Some(path)
+                } else {
+                    None
                 }
-            }
-        }
+            })
+            .collect();
+
+        // Parse all projects in parallel
+        let all_projects: Vec<Project> = paths
+            .par_iter()
+            .filter_map(|path| self.get_project(path).ok())
+            .collect();
+
+        // Check for opt-in behavior: if any has taskdn-type: project, filter to those only
+        let has_opt_in = all_projects
+            .iter()
+            .any(|p| Self::has_taskdn_type(&p.extra, "project"));
+
+        let projects: Vec<Project> = if has_opt_in {
+            all_projects
+                .into_iter()
+                .filter(|p| Self::has_taskdn_type(&p.extra, "project"))
+                .filter(|p| filter.matches(p))
+                .collect()
+        } else {
+            all_projects
+                .into_iter()
+                .filter(|p| filter.matches(p))
+                .collect()
+        };
 
         Ok(projects)
+    }
+
+    /// Check if extra fields contain `taskdn-type` with the specified value.
+    fn has_taskdn_type(
+        extra: &std::collections::HashMap<String, serde_yaml::Value>,
+        expected: &str,
+    ) -> bool {
+        extra
+            .get("taskdn-type")
+            .is_some_and(|v| v.as_str().is_some_and(|s| s.eq_ignore_ascii_case(expected)))
     }
 
     // ==========================================================================
@@ -362,6 +393,57 @@ Project body.
                 .unwrap();
             assert_eq!(projects.len(), 1);
             assert_eq!(projects[0].title, "Project 1");
+        }
+
+        #[test]
+        fn opt_in_filters_to_typed_projects_only() {
+            let (_temp, sdk) = setup_test_env();
+
+            // Regular project without taskdn-type
+            create_project_file(
+                &sdk.config.projects_dir,
+                "regular.md",
+                &sample_project_content("Regular Project", None),
+            );
+
+            // Project with taskdn-type: project
+            create_project_file(
+                &sdk.config.projects_dir,
+                "typed.md",
+                r#"---
+title: Typed Project
+taskdn-type: project
+---
+
+Body.
+"#,
+            );
+
+            // Because one has taskdn-type, only that one should be returned
+            let projects = sdk.list_projects(&ProjectFilter::new()).unwrap();
+            assert_eq!(projects.len(), 1);
+            assert_eq!(projects[0].title, "Typed Project");
+        }
+
+        #[test]
+        fn no_opt_in_returns_all_projects() {
+            let (_temp, sdk) = setup_test_env();
+
+            // Two regular projects without taskdn-type
+            create_project_file(
+                &sdk.config.projects_dir,
+                "project1.md",
+                &sample_project_content("Project 1", None),
+            );
+            create_project_file(
+                &sdk.config.projects_dir,
+                "project2.md",
+                &sample_project_content("Project 2", None),
+            );
+
+            // No opt-in, so both should be returned
+            let projects = sdk.list_projects(&ProjectFilter::new()).unwrap();
+            assert_eq!(projects.len(), 2);
         }
     }
 
