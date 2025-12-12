@@ -6,30 +6,22 @@ Implement WikiLink and path resolution for file references.
 
 ## Scope
 
-### Reference Module (`src/resolve.rs`)
-- [ ] Implement `FileReference::parse(s: &str) -> Self`
+### FileReference Parsing (in `src/types/reference.rs`) - MOSTLY DONE
+- [x] Implement `FileReference::parse(s: &str) -> Self`
+- [x] `FileReference` enum with `WikiLink`, `RelativePath`, `Filename` variants
+- [x] `[[Page Name]]` → `WikiLink { target: "Page Name", display: None }`
+- [x] `[[Page Name|Display]]` → `WikiLink { target: "Page Name", display: Some("Display") }`
+- [ ] `[[Page Name#Heading]]` → strip `#Heading` from target (currently NOT stripped)
+- [x] `./path/to/file.md` → `RelativePath("./path/to/file.md")`
+- [x] `file.md` → `Filename("file.md")`
+- [x] `Error::UnresolvedReference` variant exists in `src/error.rs`
+
+### Resolution Module (`src/resolve.rs`) - NOT STARTED
+- [ ] Create `src/resolve.rs` module
 - [ ] Implement `Taskdn::resolve_project_reference(&self, reference: &FileReference) -> Result<PathBuf, Error>`
 - [ ] Implement `Taskdn::resolve_area_reference(&self, reference: &FileReference) -> Result<PathBuf, Error>`
 - [ ] Search configured directories for matches
 - [ ] Handle case sensitivity (match filesystem behavior)
-- [ ] Return `Error::UnresolvedReference` for missing files
-
-### FileReference Parsing
-
-```rust
-pub enum FileReference {
-    WikiLink { target: String, display: Option<String> },
-    RelativePath(String),
-    Filename(String),
-}
-```
-
-**Parsing rules:**
-- `[[Page Name]]` → `WikiLink { target: "Page Name", display: None }`
-- `[[Page Name|Display]]` → `WikiLink { target: "Page Name", display: Some("Display") }`
-- `[[Page Name#Heading]]` → `WikiLink { target: "Page Name", display: None }` (ignore heading)
-- `./path/to/file.md` → `RelativePath("./path/to/file.md")`
-- `file.md` → `Filename("file.md")`
 
 ### Resolution Logic
 
@@ -47,17 +39,17 @@ pub enum FileReference {
 
 ### Test Cases
 
-**WikiLink parsing:**
-- [ ] `[[Project Name]]` → extract "Project Name"
-- [ ] `[[Project Name|Display]]` → extract "Project Name", preserve display
+**WikiLink parsing:** (tests in `src/types/reference.rs`)
+- [x] `[[Project Name]]` → extract "Project Name"
+- [x] `[[Project Name|Display]]` → extract "Project Name", preserve display
 - [ ] `[[Project Name#Heading]]` → extract "Project Name", ignore heading
 
-**Path resolution:**
+**Path resolution:** (not started)
 - [ ] `[[Q1 Planning]]` → find `Q1 Planning.md` in projects_dir
 - [ ] `./projects/foo.md` → resolve relative path
 - [ ] `foo.md` → find in appropriate directory
 
-**Edge cases:**
+**Edge cases:** (not started)
 - [ ] Reference to non-existent file → `Error::UnresolvedReference`
 - [ ] WikiLink with special characters
 - [ ] Case-insensitive matching (platform-dependent)
