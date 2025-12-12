@@ -1,0 +1,224 @@
+{
+  "main": {
+    "id": "8304df095b840454",
+    "type": "split",
+    "children": [
+      {
+        "id": "34fec0794e716662",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "8eb1c8157520658d",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "tasks/review-pr-47.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "review-pr-47"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "febbafc70af3dd5e",
+    "type": "split",
+    "children": [
+      {
+        "id": "3ad619a6300d8f66",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "890990bd699cd2f8",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "aec99bed4a90d7f5",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "2b4470cea7dc3e66",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "c0e9cdd5bd0ffda9",
+    "type": "split",
+    "children": [
+      {
+        "id": "c01beca98cc00146",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "3d5ce6e91c133a2c",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "tasks/review-pr-47.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for review-pr-47"
+            }
+          },
+          {
+            "id": "630011a2a488e7a7",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "tasks/review-pr-47.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from review-pr-47"
+            }
+          },
+          {
+            "id": "c1f33b30c4eaee29",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "d44bc367e7e89916",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "31801bc39171defb",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "tasks/review-pr-47.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline of review-pr-47"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "8eb1c8157520658d",
+  "lastOpenFiles": [
+    "tasks/review-client-proposal.md",
+    "tasks/research-backup-solutions.md",
+    "tasks/learn-rust.md",
+    "tasks/implement-auth-endpoint.md",
+    "tasks/draft-typescript-post.md",
+    "tasks/deploy-api-production.md",
+    "tasks/build-custom-cms.md",
+    "tasks/attend-networking-event.md",
+    "projects/mobile-app-techstart.md",
+    "projects/home-office-setup.md",
+    "projects/fitness-challenge.md",
+    "projects/blog-relaunch.md",
+    "projects/api-migration-techstart.md",
+    "areas/techstart.md",
+    "areas/side-projects.md",
+    "areas/old-client-inc.md",
+    "areas/home.md",
+    "areas/health.md",
+    "areas/finances.md",
+    "areas/acme-corp.md",
+    "README.md",
+    "tasks/archive/setup-ci-pipeline.md",
+    "tasks/archive/setup-ci-pipeline.md.tmp.80319.1765502857170",
+    "tasks/archive/review-api-docs.md",
+    "tasks/archive/file-quarterly-taxes.md",
+    "tasks/review-pr-47.md",
+    "tasks/schedule-dentist.md",
+    "tasks/review-quarterly-report.md.tmp.80319.1765502837462",
+    "projects/home-office-setup.md.tmp.80319.1765502760868",
+    "projects/api-migration-techstart.md.tmp.80319.1765502760676",
+    "areas/acme-corp.md.tmp.80319.1765502715503",
+    "tasks/archive",
+    "tasks",
+    "projects",
+    "areas"
+  ]
+}

@@ -1,6 +1,7 @@
 .local
 *.local.*
 .DS_Store
+dummy-demo-vault/
 .idea
 .vscode
 .env

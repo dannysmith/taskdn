@@ -62,3 +62,29 @@ If you're making changes here (not in a sub-project):
 - **Philosophy/docs**: Update `docs/user-guide/` files
 - **Cross-project tasks**: Use `docs/tasks-todo/` for tracking
 - **Demo vault**: `demo-vault/` is for testing – add example task/project/area files there
+
+## Demo Vault
+
+Two vaults exist for testing:
+
+| Vault | Purpose | In Git? |
+|-------|---------|---------|
+| `demo-vault/` | Canonical "golden" copy | Yes |
+| `dummy-demo-vault/` | Disposable copy for testing | No (gitignored) |
+
+**Always test against `dummy-demo-vault/`** so you don't corrupt the canonical version.
+
+Reset the dummy vault with:
+```bash
+./scripts/reset-dummy-vault.sh
+```
+
+Structure (same in both):
+| Path | Contents |
+|------|----------|
+| `*/tasks/` | Active task files (18 files covering all 7 statuses) |
+| `*/tasks/archive/` | Archived completed tasks |
+| `*/projects/` | Project files (9 files covering all 6 statuses) |
+| `*/areas/` | Area files (7 files, including one archived) |
+
+See `demo-vault/README.md` for full details on spec coverage.
