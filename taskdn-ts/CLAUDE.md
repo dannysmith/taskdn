@@ -29,7 +29,9 @@ taskdn-ts/
 ├── build.rs            # NAPI build setup
 ├── package.json        # npm package config
 ├── index.js            # Generated JS bindings (after build)
-└── index.d.ts          # Generated TS types (after build)
+├── index.d.ts          # Generated TS types (after build)
+└── tests/              # Bun tests
+    └── api-snapshot.test.ts  # Snapshot test for generated types
 ```
 
 ## Commands
@@ -76,6 +78,16 @@ Test against the demo vault:
 # Then run tests against dummy-demo-vault/
 bun test
 ```
+
+## API Consistency
+
+The generated `index.d.ts` is snapshot-tested to catch unintended API changes.
+
+If you change the NAPI bindings:
+1. Run `bun test` - it will fail if types changed
+2. Review the diff in the test output
+3. If intentional: `bun test --update-snapshots`
+4. Commit the updated snapshot
 
 ## Spec Reference
 
