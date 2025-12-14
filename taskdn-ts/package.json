@@ -1,6 +1,6 @@
 {
   "name": "taskdn-sdk",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "TypeScript SDK for Taskdn - bindings to the Rust library",
   "main": "index.js",
   "types": "index.d.ts",
