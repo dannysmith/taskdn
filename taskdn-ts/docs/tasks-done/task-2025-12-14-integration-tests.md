@@ -47,48 +47,48 @@ tests/
 
 ### Task Operations
 
-- [ ] `getTask` - returns task, throws on missing
-- [ ] `listTasks` - returns all tasks
-- [ ] `listTasks` with filter - filters correctly
-- [ ] `countTasks` - returns correct count
-- [ ] `createTask` - creates file, returns path
-- [ ] `createInboxTask` - creates with inbox status
-- [ ] `updateTask` - modifies frontmatter
-- [ ] `completeTask` - sets status and completed_at
-- [ ] `dropTask` - sets status and completed_at
-- [ ] `startTask` - sets in-progress status
-- [ ] `blockTask` - sets blocked status
-- [ ] `archiveTask` - moves to archive, returns new path
-- [ ] `unarchiveTask` - moves from archive
-- [ ] `deleteTask` - removes file
+- [x] `getTask` - returns task, throws on missing
+- [x] `listTasks` - returns all tasks
+- [x] `listTasks` with filter - filters correctly
+- [x] `countTasks` - returns correct count
+- [x] `createTask` - creates file, returns path
+- [x] `createInboxTask` - creates with inbox status
+- [x] `updateTask` - modifies frontmatter
+- [x] `completeTask` - sets status and completed_at
+- [x] `dropTask` - sets status and completed_at
+- [x] `startTask` - sets in-progress status
+- [x] `blockTask` - sets blocked status
+- [x] `archiveTask` - moves to archive, returns new path
+- [x] `unarchiveTask` - moves from archive
+- [x] `deleteTask` - removes file
 
 ### Project Operations
 
-- [ ] `getProject` - returns project
-- [ ] `listProjects` - returns all projects
-- [ ] `listProjects` with filter
-- [ ] `createProject` - creates file
-- [ ] `updateProject` - modifies frontmatter
-- [ ] `deleteProject` - removes file
-- [ ] `getTasksForProject` - returns linked tasks
+- [x] `getProject` - returns project
+- [x] `listProjects` - returns all projects
+- [x] `listProjects` with filter
+- [x] `createProject` - creates file
+- [x] `updateProject` - modifies frontmatter
+- [x] `deleteProject` - removes file
+- [x] `getTasksForProject` - returns linked tasks
 
 ### Area Operations
 
-- [ ] `getArea` - returns area
-- [ ] `listAreas` - returns all areas
-- [ ] `listAreas` with filter
-- [ ] `createArea` - creates file
-- [ ] `updateArea` - modifies frontmatter
-- [ ] `deleteArea` - removes file
-- [ ] `getTasksForArea` - returns linked tasks
-- [ ] `getProjectsForArea` - returns linked projects
+- [x] `getArea` - returns area
+- [x] `listAreas` - returns all areas
+- [x] `listAreas` with filter
+- [x] `createArea` - creates file
+- [x] `updateArea` - modifies frontmatter
+- [x] `deleteArea` - removes file
+- [x] `getTasksForArea` - returns linked tasks
+- [x] `getProjectsForArea` - returns linked projects
 
 ### Event Processing
 
-- [ ] `processFileChange` with created task
-- [ ] `processFileChange` with modified task
-- [ ] `processFileChange` with deleted task
-- [ ] `processFileChange` with non-task file returns null
+- [x] `processFileChange` with created task
+- [x] `processFileChange` with modified task
+- [x] `processFileChange` with deleted task
+- [x] `processFileChange` with non-task file returns null
 
 ## Example Test
 
