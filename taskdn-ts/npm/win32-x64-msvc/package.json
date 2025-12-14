@@ -1,5 +1,5 @@
 {
-  "name": "@taskdn/sdk-win32-x64-msvc",
+  "name": "taskdn-sdk-win32-x64-msvc",
   "version": "0.1.0",
   "cpu": [
     "x64"
@@ -16,9 +16,6 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/dannysmith/taskdn"
-  },
-  "publishConfig": {
-    "access": "public"
   },
   "os": [
     "win32"

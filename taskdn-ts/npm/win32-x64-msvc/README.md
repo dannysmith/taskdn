@@ -1,3 +1,3 @@
-# `@taskdn/sdk-win32-x64-msvc`
+# `taskdn-sdk-win32-x64-msvc`
 
-This is the **x86_64-pc-windows-msvc** binary for `@taskdn/sdk`
+This is the **x86_64-pc-windows-msvc** binary for `taskdn-sdk`
