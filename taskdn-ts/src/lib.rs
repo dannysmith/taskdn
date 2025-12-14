@@ -7,7 +7,14 @@
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::path::PathBuf;
-use taskdn::{TaskdnConfig, Taskdn as CoreTaskdn, TaskFilter as CoreTaskFilter};
+use taskdn::{
+    TaskdnConfig, Taskdn as CoreTaskdn,
+    TaskFilter as CoreTaskFilter,
+    ProjectFilter as CoreProjectFilter,
+    AreaFilter as CoreAreaFilter,
+    FileChangeKind as CoreFileChangeKind,
+    VaultEvent as CoreVaultEvent,
+};
 use taskdn::types::{
     TaskStatus as CoreTaskStatus,
     ProjectStatus as CoreProjectStatus,
@@ -17,6 +24,12 @@ use taskdn::types::{
     Task as CoreTask,
     NewTask as CoreNewTask,
     TaskUpdates as CoreTaskUpdates,
+    Project as CoreProject,
+    NewProject as CoreNewProject,
+    ProjectUpdates as CoreProjectUpdates,
+    Area as CoreArea,
+    NewArea as CoreNewArea,
+    AreaUpdates as CoreAreaUpdates,
 };
 use taskdn::validation::ValidationWarning as CoreValidationWarning;
 
@@ -572,6 +585,512 @@ impl From<CoreValidationWarning> for ValidationWarning {
 }
 
 // =============================================================================
+// Project Types
+// =============================================================================
+
+/// A parsed project from a markdown file.
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct Project {
+    /// Absolute path to the project file.
+    pub path: String,
+    /// The project title.
+    pub title: String,
+    /// Current status of the project.
+    pub status: Option<ProjectStatus>,
+    /// Optional unique ID for the project.
+    #[napi(js_name = "uniqueId")]
+    pub unique_id: Option<String>,
+    /// Project description.
+    pub description: Option<String>,
+    /// When the project starts (ISO date string).
+    #[napi(js_name = "startDate")]
+    pub start_date: Option<String>,
+    /// When the project ends (ISO date string).
+    #[napi(js_name = "endDate")]
+    pub end_date: Option<String>,
+    /// Reference to the area this project belongs to.
+    pub area: Option<FileReference>,
+    /// References to projects blocking this one.
+    #[napi(js_name = "blockedBy")]
+    pub blocked_by: Vec<FileReference>,
+    /// Markdown body (everything after frontmatter).
+    pub body: String,
+}
+
+impl From<CoreProject> for Project {
+    fn from(project: CoreProject) -> Self {
+        Project {
+            path: project.path.to_string_lossy().to_string(),
+            title: project.title,
+            status: project.status.map(|s| s.into()),
+            unique_id: project.unique_id,
+            description: project.description,
+            start_date: project.start_date.map(|d| d.format("%Y-%m-%d").to_string()),
+            end_date: project.end_date.map(|d| d.format("%Y-%m-%d").to_string()),
+            area: project.area.map(|a| a.into()),
+            blocked_by: project.blocked_by.into_iter().map(|r| r.into()).collect(),
+            body: project.body,
+        }
+    }
+}
+
+/// Data for creating a new project.
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct NewProject {
+    /// The project title (required).
+    pub title: String,
+    /// Initial status.
+    pub status: Option<ProjectStatus>,
+    /// Project description.
+    pub description: Option<String>,
+    /// When the project starts (ISO date string).
+    #[napi(js_name = "startDate")]
+    pub start_date: Option<String>,
+    /// When the project ends (ISO date string).
+    #[napi(js_name = "endDate")]
+    pub end_date: Option<String>,
+    /// Reference to the area this project belongs to.
+    pub area: Option<FileReference>,
+    /// Markdown body content.
+    pub body: Option<String>,
+    /// Optional custom filename (generated from title if not provided).
+    pub filename: Option<String>,
+}
+
+impl TryFrom<NewProject> for CoreNewProject {
+    type Error = Error;
+
+    fn try_from(project: NewProject) -> std::result::Result<Self, Self::Error> {
+        let mut new_project = CoreNewProject::new(&project.title);
+
+        if let Some(status) = project.status {
+            new_project = new_project.with_status(status.into());
+        }
+
+        if let Some(description) = project.description {
+            new_project = new_project.with_description(description);
+        }
+
+        if let Some(start_str) = project.start_date {
+            let start = chrono::NaiveDate::parse_from_str(&start_str, "%Y-%m-%d")
+                .map_err(|e| Error::from_reason(format!("invalid start_date: {}", e)))?;
+            new_project = new_project.with_start_date(start);
+        }
+
+        if let Some(end_str) = project.end_date {
+            let end = chrono::NaiveDate::parse_from_str(&end_str, "%Y-%m-%d")
+                .map_err(|e| Error::from_reason(format!("invalid end_date: {}", e)))?;
+            new_project = new_project.with_end_date(end);
+        }
+
+        if let Some(area) = project.area {
+            new_project = new_project.in_area(CoreFileReference::from(area));
+        }
+
+        if let Some(body) = project.body {
+            new_project = new_project.with_body(body);
+        }
+
+        if let Some(filename) = project.filename {
+            new_project = new_project.with_filename(filename);
+        }
+
+        Ok(new_project)
+    }
+}
+
+/// Partial updates for a project.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct ProjectUpdates {
+    /// New title.
+    pub title: Option<String>,
+    /// New status.
+    pub status: Option<ProjectStatus>,
+    /// New description.
+    pub description: Option<String>,
+    /// New start date (ISO date string).
+    #[napi(js_name = "startDate")]
+    pub start_date: Option<String>,
+    /// New end date (ISO date string).
+    #[napi(js_name = "endDate")]
+    pub end_date: Option<String>,
+    /// New area reference.
+    pub area: Option<FileReference>,
+}
+
+fn project_updates_to_core(updates: &ProjectUpdates) -> std::result::Result<CoreProjectUpdates, Error> {
+    let mut core = CoreProjectUpdates::new();
+
+    if let Some(ref title) = updates.title {
+        core = core.title(title);
+    }
+
+    if let Some(status) = updates.status {
+        core = core.status(status.into());
+    }
+
+    if let Some(ref description) = updates.description {
+        core = core.description(description);
+    }
+
+    if let Some(ref start_str) = updates.start_date {
+        let start = chrono::NaiveDate::parse_from_str(start_str, "%Y-%m-%d")
+            .map_err(|e| Error::from_reason(format!("invalid start_date: {}", e)))?;
+        core = core.start_date(start);
+    }
+
+    if let Some(ref end_str) = updates.end_date {
+        let end = chrono::NaiveDate::parse_from_str(end_str, "%Y-%m-%d")
+            .map_err(|e| Error::from_reason(format!("invalid end_date: {}", e)))?;
+        core = core.end_date(end);
+    }
+
+    if let Some(ref area) = updates.area {
+        core = core.area(CoreFileReference::from(area.clone()));
+    }
+
+    Ok(core)
+}
+
+/// Filter criteria for querying projects.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct ProjectFilter {
+    /// Include only projects with one of these statuses.
+    pub statuses: Option<Vec<ProjectStatus>>,
+    /// Projects assigned to this area.
+    pub area: Option<FileReference>,
+    /// Filter by whether project has an area assigned.
+    #[napi(js_name = "hasArea")]
+    pub has_area: Option<bool>,
+}
+
+fn project_filter_to_core(filter: &ProjectFilter) -> std::result::Result<CoreProjectFilter, Error> {
+    let mut core = CoreProjectFilter::new();
+
+    if let Some(ref statuses) = filter.statuses {
+        let core_statuses: Vec<CoreProjectStatus> = statuses.iter()
+            .map(|s| (*s).into())
+            .collect();
+        core = core.with_statuses(core_statuses);
+    }
+
+    if let Some(ref area) = filter.area {
+        core = core.in_area(CoreFileReference::from(area.clone()));
+    }
+
+    if let Some(has_area) = filter.has_area {
+        if has_area {
+            core = core.with_area();
+        } else {
+            core = core.without_area();
+        }
+    }
+
+    Ok(core)
+}
+
+// =============================================================================
+// Area Types
+// =============================================================================
+
+/// A parsed area from a markdown file.
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct Area {
+    /// Absolute path to the area file.
+    pub path: String,
+    /// The area title.
+    pub title: String,
+    /// Current status of the area.
+    pub status: Option<AreaStatus>,
+    /// The type of area (from `type` field in spec).
+    #[napi(js_name = "areaType")]
+    pub area_type: Option<String>,
+    /// Area description.
+    pub description: Option<String>,
+    /// Markdown body (everything after frontmatter).
+    pub body: String,
+}
+
+impl From<CoreArea> for Area {
+    fn from(area: CoreArea) -> Self {
+        Area {
+            path: area.path.to_string_lossy().to_string(),
+            title: area.title,
+            status: area.status.map(|s| s.into()),
+            area_type: area.area_type,
+            description: area.description,
+            body: area.body,
+        }
+    }
+}
+
+/// Data for creating a new area.
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct NewArea {
+    /// The area title (required).
+    pub title: String,
+    /// Initial status.
+    pub status: Option<AreaStatus>,
+    /// The type of area.
+    #[napi(js_name = "areaType")]
+    pub area_type: Option<String>,
+    /// Area description.
+    pub description: Option<String>,
+    /// Markdown body content.
+    pub body: Option<String>,
+    /// Optional custom filename (generated from title if not provided).
+    pub filename: Option<String>,
+}
+
+impl TryFrom<NewArea> for CoreNewArea {
+    type Error = Error;
+
+    fn try_from(area: NewArea) -> std::result::Result<Self, Self::Error> {
+        let mut new_area = CoreNewArea::new(&area.title);
+
+        if let Some(status) = area.status {
+            new_area = new_area.with_status(status.into());
+        }
+
+        if let Some(area_type) = area.area_type {
+            new_area = new_area.with_area_type(area_type);
+        }
+
+        if let Some(description) = area.description {
+            new_area = new_area.with_description(description);
+        }
+
+        if let Some(body) = area.body {
+            new_area = new_area.with_body(body);
+        }
+
+        if let Some(filename) = area.filename {
+            new_area = new_area.with_filename(filename);
+        }
+
+        Ok(new_area)
+    }
+}
+
+/// Partial updates for an area.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct AreaUpdates {
+    /// New title.
+    pub title: Option<String>,
+    /// New status.
+    pub status: Option<AreaStatus>,
+    /// New area type.
+    #[napi(js_name = "areaType")]
+    pub area_type: Option<String>,
+    /// New description.
+    pub description: Option<String>,
+}
+
+fn area_updates_to_core(updates: &AreaUpdates) -> CoreAreaUpdates {
+    let mut core = CoreAreaUpdates::new();
+
+    if let Some(ref title) = updates.title {
+        core = core.title(title);
+    }
+
+    if let Some(status) = updates.status {
+        core = core.status(status.into());
+    }
+
+    if let Some(ref area_type) = updates.area_type {
+        core = core.area_type(area_type);
+    }
+
+    if let Some(ref description) = updates.description {
+        core = core.description(description);
+    }
+
+    core
+}
+
+/// Filter criteria for querying areas.
+#[napi(object)]
+#[derive(Debug, Clone, Default)]
+pub struct AreaFilter {
+    /// Include only areas with one of these statuses.
+    pub statuses: Option<Vec<AreaStatus>>,
+}
+
+fn area_filter_to_core(filter: &AreaFilter) -> CoreAreaFilter {
+    let mut core = CoreAreaFilter::new();
+
+    if let Some(ref statuses) = filter.statuses {
+        let core_statuses: Vec<CoreAreaStatus> = statuses.iter()
+            .map(|s| (*s).into())
+            .collect();
+        core = core.with_statuses(core_statuses);
+    }
+
+    core
+}
+
+// =============================================================================
+// Event Types
+// =============================================================================
+
+/// The kind of file system change that occurred.
+#[napi(string_enum)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FileChangeKind {
+    /// A new file was created.
+    #[napi(value = "created")]
+    Created,
+    /// An existing file was modified.
+    #[napi(value = "modified")]
+    Modified,
+    /// A file was deleted.
+    #[napi(value = "deleted")]
+    Deleted,
+}
+
+impl From<FileChangeKind> for CoreFileChangeKind {
+    fn from(kind: FileChangeKind) -> Self {
+        match kind {
+            FileChangeKind::Created => CoreFileChangeKind::Created,
+            FileChangeKind::Modified => CoreFileChangeKind::Modified,
+            FileChangeKind::Deleted => CoreFileChangeKind::Deleted,
+        }
+    }
+}
+
+/// Parse a string into FileChangeKind.
+fn parse_file_change_kind(s: &str) -> std::result::Result<CoreFileChangeKind, Error> {
+    match s.to_lowercase().as_str() {
+        "created" => Ok(CoreFileChangeKind::Created),
+        "modified" => Ok(CoreFileChangeKind::Modified),
+        "deleted" => Ok(CoreFileChangeKind::Deleted),
+        _ => Err(Error::from_reason(format!(
+            "invalid file change kind: '{}'. Expected 'created', 'modified', or 'deleted'",
+            s
+        ))),
+    }
+}
+
+/// A typed event representing a change in the vault.
+///
+/// This is a discriminated union - check the `type` field to determine
+/// which entity fields are populated:
+///
+/// - `taskCreated`, `taskUpdated`: `task` is defined
+/// - `taskDeleted`: `path` is defined
+/// - `projectCreated`, `projectUpdated`: `project` is defined
+/// - `projectDeleted`: `path` is defined
+/// - `areaCreated`, `areaUpdated`: `area` is defined
+/// - `areaDeleted`: `path` is defined
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct VaultEvent {
+    /// The type of event.
+    /// One of: "taskCreated", "taskUpdated", "taskDeleted",
+    /// "projectCreated", "projectUpdated", "projectDeleted",
+    /// "areaCreated", "areaUpdated", "areaDeleted"
+    #[napi(js_name = "type")]
+    pub event_type: String,
+
+    /// The task (for task events).
+    pub task: Option<Task>,
+
+    /// The project (for project events).
+    pub project: Option<Project>,
+
+    /// The area (for area events).
+    pub area: Option<Area>,
+
+    /// The path of the deleted file (for delete events).
+    pub path: Option<String>,
+}
+
+impl From<CoreVaultEvent> for VaultEvent {
+    fn from(event: CoreVaultEvent) -> Self {
+        match event {
+            CoreVaultEvent::TaskCreated(task) => VaultEvent {
+                event_type: "taskCreated".to_string(),
+                task: Some(Task::from(task)),
+                project: None,
+                area: None,
+                path: None,
+            },
+            CoreVaultEvent::TaskUpdated(task) => VaultEvent {
+                event_type: "taskUpdated".to_string(),
+                task: Some(Task::from(task)),
+                project: None,
+                area: None,
+                path: None,
+            },
+            CoreVaultEvent::TaskDeleted { path } => VaultEvent {
+                event_type: "taskDeleted".to_string(),
+                task: None,
+                project: None,
+                area: None,
+                path: Some(path.to_string_lossy().to_string()),
+            },
+            CoreVaultEvent::ProjectCreated(project) => VaultEvent {
+                event_type: "projectCreated".to_string(),
+                task: None,
+                project: Some(Project::from(project)),
+                area: None,
+                path: None,
+            },
+            CoreVaultEvent::ProjectUpdated(project) => VaultEvent {
+                event_type: "projectUpdated".to_string(),
+                task: None,
+                project: Some(Project::from(project)),
+                area: None,
+                path: None,
+            },
+            CoreVaultEvent::ProjectDeleted { path } => VaultEvent {
+                event_type: "projectDeleted".to_string(),
+                task: None,
+                project: None,
+                area: None,
+                path: Some(path.to_string_lossy().to_string()),
+            },
+            CoreVaultEvent::AreaCreated(area) => VaultEvent {
+                event_type: "areaCreated".to_string(),
+                task: None,
+                project: None,
+                area: Some(Area::from(area)),
+                path: None,
+            },
+            CoreVaultEvent::AreaUpdated(area) => VaultEvent {
+                event_type: "areaUpdated".to_string(),
+                task: None,
+                project: None,
+                area: Some(Area::from(area)),
+                path: None,
+            },
+            CoreVaultEvent::AreaDeleted { path } => VaultEvent {
+                event_type: "areaDeleted".to_string(),
+                task: None,
+                project: None,
+                area: None,
+                path: Some(path.to_string_lossy().to_string()),
+            },
+            // Handle future variants
+            _ => VaultEvent {
+                event_type: "unknown".to_string(),
+                task: None,
+                project: None,
+                area: None,
+                path: None,
+            },
+        }
+    }
+}
+
+// =============================================================================
 // DateTimeValue helpers
 // =============================================================================
 
@@ -901,5 +1420,302 @@ impl Taskdn {
             .map_err(|e| Error::from_reason(e.to_string()))?;
 
         Ok(task.validate().into_iter().map(ValidationWarning::from).collect())
+    }
+
+    // =========================================================================
+    // Project Read Operations
+    // =========================================================================
+
+    /// Get a single project by path.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the project file (absolute or relative to projects_dir)
+    ///
+    /// # Errors
+    /// Returns an error if the file doesn't exist or cannot be parsed.
+    #[napi(js_name = "getProject")]
+    pub fn get_project(&self, path: String) -> Result<Project> {
+        self.inner
+            .get_project(&path)
+            .map(Project::from)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    /// List projects matching a filter.
+    ///
+    /// # Arguments
+    /// * `filter` - Optional filter criteria for matching projects
+    ///
+    /// # Errors
+    /// Returns an error if the projects directory cannot be read.
+    #[napi(js_name = "listProjects")]
+    pub fn list_projects(&self, filter: Option<ProjectFilter>) -> Result<Vec<Project>> {
+        let core_filter = match filter {
+            Some(f) => project_filter_to_core(&f)?,
+            None => CoreProjectFilter::new(),
+        };
+
+        self.inner
+            .list_projects(&core_filter)
+            .map(|projects| projects.into_iter().map(Project::from).collect())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Project Create Operations
+    // =========================================================================
+
+    /// Create a new project, returns the path where it was created.
+    ///
+    /// # Arguments
+    /// * `project` - The project data to create
+    ///
+    /// # Errors
+    /// Returns an error if the file cannot be created.
+    #[napi(js_name = "createProject")]
+    pub fn create_project(&self, project: NewProject) -> Result<String> {
+        let core_project = CoreNewProject::try_from(project)?;
+
+        self.inner
+            .create_project(core_project)
+            .map(|path| path.to_string_lossy().to_string())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Project Update Operations
+    // =========================================================================
+
+    /// Update a project with partial changes.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the project file
+    /// * `updates` - Partial updates to apply
+    ///
+    /// # Errors
+    /// Returns an error if the file cannot be read or written.
+    #[napi(js_name = "updateProject")]
+    pub fn update_project(&self, path: String, updates: ProjectUpdates) -> Result<()> {
+        let core_updates = project_updates_to_core(&updates)?;
+
+        self.inner
+            .update_project(&path, core_updates)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Project Delete Operations
+    // =========================================================================
+
+    /// Permanently delete a project file.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the project file
+    ///
+    /// # Errors
+    /// Returns an error if the file cannot be deleted.
+    #[napi(js_name = "deleteProject")]
+    pub fn delete_project(&self, path: String) -> Result<()> {
+        self.inner
+            .delete_project(&path)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Project Related Entity Operations
+    // =========================================================================
+
+    /// Get all tasks assigned to a project.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the project file
+    ///
+    /// # Errors
+    /// Returns an error if the tasks directory cannot be read.
+    #[napi(js_name = "getTasksForProject")]
+    pub fn get_tasks_for_project(&self, path: String) -> Result<Vec<Task>> {
+        self.inner
+            .get_tasks_for_project(&path)
+            .map(|tasks| tasks.into_iter().map(Task::from).collect())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Area Read Operations
+    // =========================================================================
+
+    /// Get a single area by path.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the area file (absolute or relative to areas_dir)
+    ///
+    /// # Errors
+    /// Returns an error if the file doesn't exist or cannot be parsed.
+    #[napi(js_name = "getArea")]
+    pub fn get_area(&self, path: String) -> Result<Area> {
+        self.inner
+            .get_area(&path)
+            .map(Area::from)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    /// List areas matching a filter.
+    ///
+    /// # Arguments
+    /// * `filter` - Optional filter criteria for matching areas
+    ///
+    /// # Errors
+    /// Returns an error if the areas directory cannot be read.
+    #[napi(js_name = "listAreas")]
+    pub fn list_areas(&self, filter: Option<AreaFilter>) -> Result<Vec<Area>> {
+        let core_filter = match filter {
+            Some(f) => area_filter_to_core(&f),
+            None => CoreAreaFilter::new(),
+        };
+
+        self.inner
+            .list_areas(&core_filter)
+            .map(|areas| areas.into_iter().map(Area::from).collect())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Area Create Operations
+    // =========================================================================
+
+    /// Create a new area, returns the path where it was created.
+    ///
+    /// # Arguments
+    /// * `area` - The area data to create
+    ///
+    /// # Errors
+    /// Returns an error if the file cannot be created.
+    #[napi(js_name = "createArea")]
+    pub fn create_area(&self, area: NewArea) -> Result<String> {
+        let core_area = CoreNewArea::try_from(area)?;
+
+        self.inner
+            .create_area(core_area)
+            .map(|path| path.to_string_lossy().to_string())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Area Update Operations
+    // =========================================================================
+
+    /// Update an area with partial changes.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the area file
+    /// * `updates` - Partial updates to apply
+    ///
+    /// # Errors
+    /// Returns an error if the file cannot be read or written.
+    #[napi(js_name = "updateArea")]
+    pub fn update_area(&self, path: String, updates: AreaUpdates) -> Result<()> {
+        let core_updates = area_updates_to_core(&updates);
+
+        self.inner
+            .update_area(&path, core_updates)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Area Delete Operations
+    // =========================================================================
+
+    /// Permanently delete an area file.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the area file
+    ///
+    /// # Errors
+    /// Returns an error if the file cannot be deleted.
+    #[napi(js_name = "deleteArea")]
+    pub fn delete_area(&self, path: String) -> Result<()> {
+        self.inner
+            .delete_area(&path)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Area Related Entity Operations
+    // =========================================================================
+
+    /// Get all tasks assigned to an area (directly or via projects).
+    ///
+    /// # Arguments
+    /// * `path` - Path to the area file
+    ///
+    /// # Errors
+    /// Returns an error if the tasks/projects directories cannot be read.
+    #[napi(js_name = "getTasksForArea")]
+    pub fn get_tasks_for_area(&self, path: String) -> Result<Vec<Task>> {
+        self.inner
+            .get_tasks_for_area(&path)
+            .map(|tasks| tasks.into_iter().map(Task::from).collect())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    /// Get all projects assigned to an area.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the area file
+    ///
+    /// # Errors
+    /// Returns an error if the projects directory cannot be read.
+    #[napi(js_name = "getProjectsForArea")]
+    pub fn get_projects_for_area(&self, path: String) -> Result<Vec<Project>> {
+        self.inner
+            .get_projects_for_area(&path)
+            .map(|projects| projects.into_iter().map(Project::from).collect())
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    // =========================================================================
+    // Event Processing
+    // =========================================================================
+
+    /// Process a file change and return the corresponding vault event.
+    ///
+    /// This method takes a raw file system event and returns a typed `VaultEvent`
+    /// if the file is relevant to the vault (i.e., a `.md` file in a watched directory).
+    ///
+    /// Returns `null` if the file is not a recognized task/project/area.
+    ///
+    /// # Arguments
+    /// * `path` - The path to the changed file
+    /// * `kind` - The type of change: "created", "modified", or "deleted"
+    ///
+    /// # Example
+    ///
+    /// ```typescript
+    /// const event = sdk.processFileChange('./tasks/my-task.md', 'modified');
+    /// if (event?.type === 'taskUpdated') {
+    ///     console.log('Task updated:', event.task.title);
+    /// }
+    /// ```
+    #[napi(js_name = "processFileChange")]
+    pub fn process_file_change(&self, path: String, kind: String) -> Result<Option<VaultEvent>> {
+        let core_kind = parse_file_change_kind(&kind)?;
+
+        self.inner
+            .process_file_change(&path, core_kind)
+            .map(|opt| opt.map(VaultEvent::from))
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    /// Returns the paths that should be watched for file changes.
+    ///
+    /// Returns the configured `tasksDir`, `projectsDir`, and `areasDir`.
+    /// Consumers should set up their file watchers to recursively watch these directories.
+    #[napi(js_name = "watchedPaths")]
+    pub fn watched_paths(&self) -> Vec<String> {
+        self.inner
+            .watched_paths()
+            .into_iter()
+            .map(|p| p.to_string_lossy().to_string())
+            .collect()
     }
 }
