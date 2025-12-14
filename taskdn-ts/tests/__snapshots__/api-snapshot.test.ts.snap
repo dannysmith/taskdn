@@ -180,6 +180,44 @@ export declare class Taskdn {
    */
   getTaskWarnings(path: string): Array<ValidationWarning>
   /**
+   * Validate a task file for spec compliance.
+   *
+   * This method checks for hard validation errors (e.g., completed tasks
+   * missing \`completed-at\`). Use \`getTaskWarnings\` for advisory warnings.
+   *
+   * # Arguments
+   * * \`path\` - Path to the task file
+   *
+   * # Errors
+   * Returns an error if the task fails validation or cannot be read.
+   */
+  validateTask(path: string): void
+  /**
+   * Validate all task files in the vault.
+   *
+   * Returns a list of validation errors. An empty list means all tasks are valid.
+   * This includes archived tasks.
+   *
+   * # Returns
+   * A list of validation errors, one per invalid task.
+   */
+  validateAllTasks(): Array<ValidationError>
+  /**
+   * Update all tasks matching a filter.
+   *
+   * This is a bulk operation that applies the same updates to multiple tasks.
+   * Unlike \`updateTask\`, this method does not throw on individual failures -
+   * instead it returns a result indicating which tasks succeeded and which failed.
+   *
+   * # Arguments
+   * * \`filter\` - Filter criteria for selecting tasks to update
+   * * \`updates\` - Updates to apply to matching tasks
+   *
+   * # Returns
+   * A \`BatchResult\` with lists of succeeded and failed paths.
+   */
+  updateTasksMatching(filter: TaskFilter, updates: TaskUpdates): BatchResult
+  /**
    * Get a single project by path.
    *
    * # Arguments
@@ -385,6 +423,14 @@ export interface AreaUpdates {
   areaType?: string
   /** New description. */
   description?: string
+}
+
+/** Result of a batch operation. */
+export interface BatchResult {
+  /** Paths of items that were successfully processed. */
+  succeeded: Array<string>
+  /** Items that failed processing. */
+  failed: Array<ValidationError>
 }
 
 /** The kind of file system change that occurred. */
@@ -640,6 +686,14 @@ export interface TaskUpdates {
   project?: FileReference
   /** New area reference (or null to clear). */
   area?: FileReference
+}
+
+/** A validation error for a specific file. */
+export interface ValidationError {
+  /** Path to the file that failed validation. */
+  path: string
+  /** Human-readable error message. */
+  message: string
 }
 
 /** A validation warning about spec compliance. */

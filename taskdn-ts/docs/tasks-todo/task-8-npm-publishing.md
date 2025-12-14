@@ -5,6 +5,7 @@ Set up multi-platform builds and npm publishing.
 ## Multi-Platform Builds
 
 NAPI-RS native bindings need to be built for each target platform:
+
 - `aarch64-apple-darwin` (macOS Apple Silicon)
 - `x86_64-apple-darwin` (macOS Intel)
 - `x86_64-unknown-linux-gnu` (Linux x64)
@@ -51,7 +52,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: bindings-${{ matrix.target }}
-          path: "*.node"
+          path: '*.node'
 
   test:
     needs: build
@@ -113,6 +114,7 @@ NAPI-RS generates platform-specific packages in `npm/` directory. Each needs its
 ## Version Management
 
 Options:
+
 1. **Manual** - Update version in package.json, tag, push
 2. **Changesets** - Automated versioning and changelogs
 3. **Release Please** - Google's automated release tool
@@ -132,7 +134,6 @@ git push --follow-tags
 ## Pre-publish Checklist
 
 - [ ] Version bumped appropriately
-- [ ] CHANGELOG updated (if maintaining one)
 - [ ] All tests pass
 - [ ] README has correct version references
 - [ ] `npm pack` produces expected files

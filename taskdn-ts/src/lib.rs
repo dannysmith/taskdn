@@ -584,6 +584,26 @@ impl From<CoreValidationWarning> for ValidationWarning {
     }
 }
 
+/// A validation error for a specific file.
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct ValidationError {
+    /// Path to the file that failed validation.
+    pub path: String,
+    /// Human-readable error message.
+    pub message: String,
+}
+
+/// Result of a batch operation.
+#[napi(object)]
+#[derive(Debug, Clone)]
+pub struct BatchResult {
+    /// Paths of items that were successfully processed.
+    pub succeeded: Vec<String>,
+    /// Items that failed processing.
+    pub failed: Vec<ValidationError>,
+}
+
 // =============================================================================
 // Project Types
 // =============================================================================
@@ -1420,6 +1440,78 @@ impl Taskdn {
             .map_err(|e| Error::from_reason(e.to_string()))?;
 
         Ok(task.validate().into_iter().map(ValidationWarning::from).collect())
+    }
+
+    /// Validate a task file for spec compliance.
+    ///
+    /// This method checks for hard validation errors (e.g., completed tasks
+    /// missing `completed-at`). Use `getTaskWarnings` for advisory warnings.
+    ///
+    /// # Arguments
+    /// * `path` - Path to the task file
+    ///
+    /// # Errors
+    /// Returns an error if the task fails validation or cannot be read.
+    #[napi(js_name = "validateTask")]
+    pub fn validate_task(&self, path: String) -> Result<()> {
+        self.inner
+            .validate_task(&path)
+            .map_err(|e| Error::from_reason(e.to_string()))
+    }
+
+    /// Validate all task files in the vault.
+    ///
+    /// Returns a list of validation errors. An empty list means all tasks are valid.
+    /// This includes archived tasks.
+    ///
+    /// # Returns
+    /// A list of validation errors, one per invalid task.
+    #[napi(js_name = "validateAllTasks")]
+    pub fn validate_all_tasks(&self) -> Vec<ValidationError> {
+        self.inner
+            .validate_all_tasks()
+            .into_iter()
+            .map(|(path, error)| ValidationError {
+                path: path.to_string_lossy().to_string(),
+                message: error.to_string(),
+            })
+            .collect()
+    }
+
+    // =========================================================================
+    // Task Bulk Operations
+    // =========================================================================
+
+    /// Update all tasks matching a filter.
+    ///
+    /// This is a bulk operation that applies the same updates to multiple tasks.
+    /// Unlike `updateTask`, this method does not throw on individual failures -
+    /// instead it returns a result indicating which tasks succeeded and which failed.
+    ///
+    /// # Arguments
+    /// * `filter` - Filter criteria for selecting tasks to update
+    /// * `updates` - Updates to apply to matching tasks
+    ///
+    /// # Returns
+    /// A `BatchResult` with lists of succeeded and failed paths.
+    #[napi(js_name = "updateTasksMatching")]
+    pub fn update_tasks_matching(&self, filter: TaskFilter, updates: TaskUpdates) -> Result<BatchResult> {
+        let core_filter = task_filter_to_core(&filter)?;
+        let core_updates = task_updates_to_core(&updates)?;
+
+        let result = self.inner.update_tasks_matching(&core_filter, &core_updates);
+
+        Ok(BatchResult {
+            succeeded: result.succeeded.into_iter()
+                .map(|p| p.to_string_lossy().to_string())
+                .collect(),
+            failed: result.failed.into_iter()
+                .map(|(path, error)| ValidationError {
+                    path: path.to_string_lossy().to_string(),
+                    message: error.to_string(),
+                })
+                .collect(),
+        })
     }
 
     // =========================================================================

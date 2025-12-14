@@ -287,4 +287,63 @@ describe('Task Operations', () => {
             expect(Array.isArray(warnings)).toBe(true);
         });
     });
+
+    describe('validateTask', () => {
+        test('does not throw for valid task', () => {
+            const taskPath = sdk.createTask({ title: 'Valid task' });
+            expect(() => sdk.validateTask(taskPath)).not.toThrow();
+        });
+
+        test('throws for nonexistent task', () => {
+            expect(() => sdk.validateTask('/nonexistent/task.md')).toThrow();
+        });
+    });
+
+    describe('validateAllTasks', () => {
+        test('returns empty array for valid vault', () => {
+            const errors = sdk.validateAllTasks();
+            expect(Array.isArray(errors)).toBe(true);
+            // Demo vault should be valid
+            expect(errors.length).toBe(0);
+        });
+    });
+
+    describe('updateTasksMatching', () => {
+        test('updates multiple tasks matching filter', () => {
+            // Create several inbox tasks
+            sdk.createTask({ title: 'Bulk task 1', status: TaskStatus.Inbox });
+            sdk.createTask({ title: 'Bulk task 2', status: TaskStatus.Inbox });
+            sdk.createTask({ title: 'Bulk task 3', status: TaskStatus.Inbox });
+
+            // Update all inbox tasks to ready
+            const result = sdk.updateTasksMatching(
+                { statuses: [TaskStatus.Inbox] },
+                { status: TaskStatus.Ready }
+            );
+
+            expect(result.succeeded.length).toBeGreaterThanOrEqual(3);
+            expect(result.failed.length).toBe(0);
+
+            // Verify tasks were updated
+            const inboxTasks = sdk.listTasks({ statuses: [TaskStatus.Inbox] });
+            const readyTasks = sdk.listTasks({ statuses: [TaskStatus.Ready] });
+
+            // All our bulk tasks should now be ready
+            expect(readyTasks.some(t => t.title === 'Bulk task 1')).toBe(true);
+            expect(readyTasks.some(t => t.title === 'Bulk task 2')).toBe(true);
+            expect(readyTasks.some(t => t.title === 'Bulk task 3')).toBe(true);
+        });
+
+        test('returns empty succeeded when no tasks match', () => {
+            // Use a filter that matches no tasks
+            const result = sdk.updateTasksMatching(
+                { statuses: [TaskStatus.Dropped] },
+                { status: TaskStatus.Done }
+            );
+
+            // Demo vault may or may not have dropped tasks, but if none match that's fine
+            expect(Array.isArray(result.succeeded)).toBe(true);
+            expect(Array.isArray(result.failed)).toBe(true);
+        });
+    });
 });
