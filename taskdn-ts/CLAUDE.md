@@ -24,14 +24,22 @@ All business logic lives in the Rust SDK (`taskdn-rust/`). This package only:
 
 ```
 taskdn-ts/
-├── src/lib.rs          # NAPI bindings (the thin wrapper)
-├── Cargo.toml          # Rust dependencies
-├── build.rs            # NAPI build setup
-├── package.json        # npm package config
-├── index.js            # Generated JS bindings (after build)
-├── index.d.ts          # Generated TS types (after build)
-└── tests/              # Bun tests
-    └── api-snapshot.test.ts  # Snapshot test for generated types
+├── src/lib.rs              # NAPI bindings (the thin wrapper)
+├── Cargo.toml              # Rust dependencies
+├── build.rs                # NAPI build setup
+├── package.json            # npm package config
+├── index.js                # Generated JS bindings (after build)
+├── index.d.ts              # Generated TS types (after build)
+├── README.md               # User-facing documentation
+├── CLAUDE.md               # Developer instructions (this file)
+└── tests/
+    ├── setup.ts            # Test utilities (resetTestVault, TEST_VAULT paths)
+    ├── api-snapshot.test.ts    # Snapshot test for generated types
+    ├── taskdn.test.ts      # SDK initialization tests
+    ├── tasks.test.ts       # Task operation tests
+    ├── projects.test.ts    # Project operation tests
+    ├── areas.test.ts       # Area operation tests
+    └── events.test.ts      # Event processing tests
 ```
 
 ## Commands
@@ -48,6 +56,9 @@ bun run build
 
 # Run tests
 bun test
+
+# Run specific test file
+bun test tests/tasks.test.ts
 ```
 
 ## Development Rules
@@ -59,25 +70,37 @@ bun test
 
 ## API Design
 
-See `../docs/tasks-todo/task-3-typescript-sdk.md` for the full API surface to expose.
-
 Key patterns:
 
 - Rust `Result<T, Error>` becomes JavaScript exceptions
 - All file operations are synchronous (matches Rust SDK design)
-- Status enums exposed as string literal unions
+- Status enums exposed as string literal unions (`TaskStatus.Ready` = `'ready'`)
+- Optional fields use `Option<T>` in Rust, `T | undefined | null` in TypeScript
+- File references use a tagged union with `type` field: `'wikilink'`, `'relativePath'`, `'filename'`
 
 ## Testing
 
-Test against the demo vault:
+Tests run against a copy of the demo vault to avoid corrupting the canonical version.
 
 ```bash
-# Reset the dummy vault first
+# Reset the dummy vault (automatically done in beforeEach)
 ../scripts/reset-dummy-vault.sh
 
-# Then run tests against dummy-demo-vault/
+# Run all tests
 bun test
+
+# Run with verbose output
+bun test --verbose
 ```
+
+### Test Structure
+
+- **setup.ts** - `resetTestVault()` copies demo-vault to dummy-demo-vault
+- **taskdn.test.ts** - Constructor, config getters, watchedPaths
+- **tasks.test.ts** - CRUD, status transitions, archive/unarchive
+- **projects.test.ts** - CRUD, filtering, getTasksForProject
+- **areas.test.ts** - CRUD, filtering, getTasksForArea, getProjectsForArea
+- **events.test.ts** - processFileChange for all entity types
 
 ## API Consistency
 
@@ -89,7 +112,30 @@ If you change the NAPI bindings:
 3. If intentional: `bun test --update-snapshots`
 4. Commit the updated snapshot
 
+## Common Issues
+
+### Build failures
+
+```bash
+# Clean and rebuild
+rm -f *.node index.js index.d.ts
+bun run build:debug
+```
+
+### Test failures after Rust SDK changes
+
+If the Rust SDK API changes, update the NAPI bindings in `src/lib.rs` to match, then rebuild.
+
+### Type snapshot mismatch
+
+This is expected when you intentionally change the API. Review the diff and update:
+
+```bash
+bun test --update-snapshots
+```
+
 ## Spec Reference
 
 - Frontmatter fields: `../docs/user-guide/2-the-specification.md`
 - Rust SDK API: `../taskdn-rust/src/lib.rs`
+- JSON Schema: `../docs/schemas/`
