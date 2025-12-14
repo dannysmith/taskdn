@@ -8,31 +8,19 @@ use napi::bindgen_prelude::*;
 use napi_derive::napi;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use taskdn::{
-    TaskdnConfig, Taskdn as CoreTaskdn,
-    TaskFilter as CoreTaskFilter,
-    ProjectFilter as CoreProjectFilter,
-    AreaFilter as CoreAreaFilter,
-    FileChangeKind as CoreFileChangeKind,
-    VaultEvent as CoreVaultEvent,
-};
 use taskdn::types::{
-    TaskStatus as CoreTaskStatus,
-    ProjectStatus as CoreProjectStatus,
-    AreaStatus as CoreAreaStatus,
-    FileReference as CoreFileReference,
-    DateTimeValue as CoreDateTimeValue,
-    Task as CoreTask,
-    NewTask as CoreNewTask,
-    TaskUpdates as CoreTaskUpdates,
-    Project as CoreProject,
-    NewProject as CoreNewProject,
-    ProjectUpdates as CoreProjectUpdates,
-    Area as CoreArea,
-    NewArea as CoreNewArea,
-    AreaUpdates as CoreAreaUpdates,
+    Area as CoreArea, AreaStatus as CoreAreaStatus, AreaUpdates as CoreAreaUpdates,
+    DateTimeValue as CoreDateTimeValue, FileReference as CoreFileReference, NewArea as CoreNewArea,
+    NewProject as CoreNewProject, NewTask as CoreNewTask, Project as CoreProject,
+    ProjectStatus as CoreProjectStatus, ProjectUpdates as CoreProjectUpdates, Task as CoreTask,
+    TaskStatus as CoreTaskStatus, TaskUpdates as CoreTaskUpdates,
 };
 use taskdn::validation::ValidationWarning as CoreValidationWarning;
+use taskdn::{
+    AreaFilter as CoreAreaFilter, FileChangeKind as CoreFileChangeKind,
+    ProjectFilter as CoreProjectFilter, TaskFilter as CoreTaskFilter, Taskdn as CoreTaskdn,
+    TaskdnConfig, VaultEvent as CoreVaultEvent,
+};
 
 // =============================================================================
 // Helper: YAML to JSON conversion
@@ -66,9 +54,7 @@ fn yaml_to_json(value: &serde_yaml::Value) -> serde_json::Value {
         serde_yaml::Value::Mapping(map) => {
             let obj: serde_json::Map<String, serde_json::Value> = map
                 .iter()
-                .filter_map(|(k, v)| {
-                    k.as_str().map(|key| (key.to_string(), yaml_to_json(v)))
-                })
+                .filter_map(|(k, v)| k.as_str().map(|key| (key.to_string(), yaml_to_json(v))))
                 .collect();
             serde_json::Value::Object(obj)
         }
@@ -78,7 +64,10 @@ fn yaml_to_json(value: &serde_yaml::Value) -> serde_json::Value {
 
 /// Convert extra fields HashMap to JSON-compatible HashMap.
 fn convert_extra(extra: &HashMap<String, serde_yaml::Value>) -> HashMap<String, serde_json::Value> {
-    extra.iter().map(|(k, v)| (k.clone(), yaml_to_json(v))).collect()
+    extra
+        .iter()
+        .map(|(k, v)| (k.clone(), yaml_to_json(v)))
+        .collect()
 }
 
 // =============================================================================
@@ -290,15 +279,15 @@ impl From<FileReference> for CoreFileReference {
                 target: reference.target.unwrap_or_default(),
                 display: reference.display,
             },
-            "relativePath" => {
-                CoreFileReference::RelativePath(reference.path.unwrap_or_default())
-            }
-            "filename" => {
-                CoreFileReference::Filename(reference.name.unwrap_or_default())
-            }
+            "relativePath" => CoreFileReference::RelativePath(reference.path.unwrap_or_default()),
+            "filename" => CoreFileReference::Filename(reference.name.unwrap_or_default()),
             // Default to filename if unknown type
             _ => CoreFileReference::Filename(
-                reference.name.or(reference.path).or(reference.target).unwrap_or_default()
+                reference
+                    .name
+                    .or(reference.path)
+                    .or(reference.target)
+                    .unwrap_or_default(),
             ),
         }
     }
@@ -412,7 +401,8 @@ impl TryFrom<NewTask> for CoreNewTask {
         }
 
         if let Some(due_str) = task.due {
-            let due = due_str.parse::<CoreDateTimeValue>()
+            let due = due_str
+                .parse::<CoreDateTimeValue>()
                 .map_err(|e| Error::from_reason(format!("invalid due date: {}", e)))?;
             new_task = new_task.with_due(due);
         }
@@ -491,7 +481,8 @@ fn task_updates_to_core(updates: &TaskUpdates) -> std::result::Result<CoreTaskUp
     }
 
     if let Some(ref due_str) = updates.due {
-        let due = due_str.parse::<CoreDateTimeValue>()
+        let due = due_str
+            .parse::<CoreDateTimeValue>()
             .map_err(|e| Error::from_reason(format!("invalid due date: {}", e)))?;
         core = core.due(due);
     }
@@ -550,9 +541,7 @@ fn task_filter_to_core(filter: &TaskFilter) -> std::result::Result<CoreTaskFilte
     let mut core = CoreTaskFilter::new();
 
     if let Some(ref statuses) = filter.statuses {
-        let core_statuses: Vec<CoreTaskStatus> = statuses.iter()
-            .map(|s| (*s).into())
-            .collect();
+        let core_statuses: Vec<CoreTaskStatus> = statuses.iter().map(|s| (*s).into()).collect();
         core = core.with_statuses(core_statuses);
     }
 
@@ -797,7 +786,9 @@ pub struct ProjectUpdates {
     pub area: Option<FileReference>,
 }
 
-fn project_updates_to_core(updates: &ProjectUpdates) -> std::result::Result<CoreProjectUpdates, Error> {
+fn project_updates_to_core(
+    updates: &ProjectUpdates,
+) -> std::result::Result<CoreProjectUpdates, Error> {
     let mut core = CoreProjectUpdates::new();
 
     if let Some(ref title) = updates.title {
@@ -848,9 +839,7 @@ fn project_filter_to_core(filter: &ProjectFilter) -> std::result::Result<CorePro
     let mut core = CoreProjectFilter::new();
 
     if let Some(ref statuses) = filter.statuses {
-        let core_statuses: Vec<CoreProjectStatus> = statuses.iter()
-            .map(|s| (*s).into())
-            .collect();
+        let core_statuses: Vec<CoreProjectStatus> = statuses.iter().map(|s| (*s).into()).collect();
         core = core.with_statuses(core_statuses);
     }
 
@@ -1007,9 +996,7 @@ fn area_filter_to_core(filter: &AreaFilter) -> CoreAreaFilter {
     let mut core = CoreAreaFilter::new();
 
     if let Some(ref statuses) = filter.statuses {
-        let core_statuses: Vec<CoreAreaStatus> = statuses.iter()
-            .map(|s| (*s).into())
-            .collect();
+        let core_statuses: Vec<CoreAreaStatus> = statuses.iter().map(|s| (*s).into()).collect();
         core = core.with_statuses(core_statuses);
     }
 
@@ -1223,8 +1210,7 @@ impl Taskdn {
             PathBuf::from(projects_dir),
             PathBuf::from(areas_dir),
         );
-        let inner = CoreTaskdn::new(config)
-            .map_err(|e| Error::from_reason(e.to_string()))?;
+        let inner = CoreTaskdn::new(config).map_err(|e| Error::from_reason(e.to_string()))?;
         Ok(Self { inner })
     }
 
@@ -1237,7 +1223,11 @@ impl Taskdn {
     /// Returns the configured projects directory path.
     #[napi(getter)]
     pub fn projects_dir(&self) -> String {
-        self.inner.config().projects_dir.to_string_lossy().to_string()
+        self.inner
+            .config()
+            .projects_dir
+            .to_string_lossy()
+            .to_string()
     }
 
     /// Returns the configured areas directory path.
@@ -1495,11 +1485,16 @@ impl Taskdn {
     /// Returns an error if the file cannot be read.
     #[napi(js_name = "getTaskWarnings")]
     pub fn get_task_warnings(&self, path: String) -> Result<Vec<ValidationWarning>> {
-        let task = self.inner
+        let task = self
+            .inner
             .get_task(&path)
             .map_err(|e| Error::from_reason(e.to_string()))?;
 
-        Ok(task.validate().into_iter().map(ValidationWarning::from).collect())
+        Ok(task
+            .validate()
+            .into_iter()
+            .map(ValidationWarning::from)
+            .collect())
     }
 
     /// Validate a task file for spec compliance.
@@ -1555,17 +1550,27 @@ impl Taskdn {
     /// # Returns
     /// A `BatchResult` with lists of succeeded and failed paths.
     #[napi(js_name = "updateTasksMatching")]
-    pub fn update_tasks_matching(&self, filter: TaskFilter, updates: TaskUpdates) -> Result<BatchResult> {
+    pub fn update_tasks_matching(
+        &self,
+        filter: TaskFilter,
+        updates: TaskUpdates,
+    ) -> Result<BatchResult> {
         let core_filter = task_filter_to_core(&filter)?;
         let core_updates = task_updates_to_core(&updates)?;
 
-        let result = self.inner.update_tasks_matching(&core_filter, &core_updates);
+        let result = self
+            .inner
+            .update_tasks_matching(&core_filter, &core_updates);
 
         Ok(BatchResult {
-            succeeded: result.succeeded.into_iter()
+            succeeded: result
+                .succeeded
+                .into_iter()
                 .map(|p| p.to_string_lossy().to_string())
                 .collect(),
-            failed: result.failed.into_iter()
+            failed: result
+                .failed
+                .into_iter()
                 .map(|(path, error)| ValidationError {
                     path: path.to_string_lossy().to_string(),
                     message: error.to_string(),
