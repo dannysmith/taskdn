@@ -1,19 +1,21 @@
-# @taskdn/sdk
+# taskdn-sdk
 
 TypeScript SDK for the Taskdn task management system. Provides NAPI-RS bindings to the Rust library for Node.js and Bun environments.
+
+[![npm version](https://img.shields.io/npm/v/taskdn-sdk.svg)](https://www.npmjs.com/package/taskdn-sdk)
 
 ## Installation
 
 ```bash
-bun add @taskdn/sdk
+npm install taskdn-sdk
 # or
-npm install @taskdn/sdk
+bun add taskdn-sdk
 ```
 
 ## Quick Start
 
 ```typescript
-import { Taskdn, TaskStatus, ProjectStatus, AreaStatus } from '@taskdn/sdk';
+import { Taskdn, TaskStatus, ProjectStatus, AreaStatus } from 'taskdn-sdk';
 
 // Initialize with paths to your vault directories
 const sdk = new Taskdn('./tasks', './projects', './areas');

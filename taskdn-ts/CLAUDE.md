@@ -32,6 +32,11 @@ taskdn-ts/
 ├── index.d.ts              # Generated TS types (after build)
 ├── README.md               # User-facing documentation
 ├── CLAUDE.md               # Developer instructions (this file)
+├── npm/                    # Platform-specific packages for npm publishing
+│   ├── darwin-arm64/       # macOS Apple Silicon
+│   ├── darwin-x64/         # macOS Intel
+│   ├── linux-x64-gnu/      # Linux x64
+│   └── win32-x64-msvc/     # Windows x64
 └── tests/
     ├── setup.ts            # Test utilities (resetTestVault, TEST_VAULT paths)
     ├── api-snapshot.test.ts    # Snapshot test for generated types
@@ -133,6 +138,31 @@ This is expected when you intentionally change the API. Review the diff and upda
 ```bash
 bun test --update-snapshots
 ```
+
+## Publishing
+
+The package is published to npm as `taskdn-sdk` with platform-specific native binaries.
+
+### How It Works
+
+1. GitHub Actions builds native binaries for all platforms (see `../.github/workflows/publish-ts-package.yml`)
+2. Each platform binary is published as a separate optional dependency (e.g., `taskdn-sdk-darwin-arm64`)
+3. The main `taskdn-sdk` package includes `index.js` which auto-detects the platform and loads the correct binary
+
+### To Publish a New Version
+
+```bash
+npm version patch  # or minor, major
+git push --follow-tags
+```
+
+The CI workflow publishes automatically when the commit message matches a version pattern (e.g., `0.1.1`).
+
+### Trusted Publishing
+
+This package uses npm's OIDC-based trusted publishing - no NPM_TOKEN secret needed. The GitHub Actions workflow authenticates directly with npm via OIDC.
+
+See `docs/developer/npm-publishing.md` for detailed publishing documentation.
 
 ## Spec Reference
 
