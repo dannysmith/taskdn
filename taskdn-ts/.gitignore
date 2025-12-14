@@ -7,9 +7,9 @@ target/
 # Native binaries (generated)
 *.node
 
-# Generated JS/TS files
-index.js
-index.d.ts
+# Generated JS/TS files are committed for CI compatibility
+# index.js
+# index.d.ts
 
 # Lockfiles are checked in
 # bun.lock
