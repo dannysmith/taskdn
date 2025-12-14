@@ -11,9 +11,6 @@ target/
 index.js
 index.d.ts
 
-# Platform-specific npm packages (for publishing)
-npm/
-
 # Lockfiles are checked in
 # bun.lock
 # Cargo.lock

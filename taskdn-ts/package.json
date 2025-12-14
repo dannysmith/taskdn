@@ -15,7 +15,13 @@
       "x86_64-apple-darwin",
       "x86_64-unknown-linux-gnu",
       "x86_64-pc-windows-msvc"
-    ]
+    ],
+    "package": {
+      "name": "@taskdn/sdk"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "artifacts": "napi artifacts",
@@ -29,6 +35,12 @@
   },
   "devDependencies": {
     "@napi-rs/cli": "^3.0.0-alpha.62"
+  },
+  "optionalDependencies": {
+    "@taskdn/sdk-darwin-arm64": "0.1.0",
+    "@taskdn/sdk-darwin-x64": "0.1.0",
+    "@taskdn/sdk-linux-x64-gnu": "0.1.0",
+    "@taskdn/sdk-win32-x64-msvc": "0.1.0"
   },
   "engines": {
     "node": ">= 18"

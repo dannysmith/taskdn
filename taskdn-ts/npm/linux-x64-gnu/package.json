@@ -1,0 +1,29 @@
+{
+  "name": "@taskdn/sdk-linux-x64-gnu",
+  "version": "0.1.0",
+  "cpu": [
+    "x64"
+  ],
+  "main": "taskdn.linux-x64-gnu.node",
+  "files": [
+    "taskdn.linux-x64-gnu.node"
+  ],
+  "description": "TypeScript SDK for Taskdn - bindings to the Rust library",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 18"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dannysmith/taskdn"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "os": [
+    "linux"
+  ],
+  "libc": [
+    "glibc"
+  ]
+}
