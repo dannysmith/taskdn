@@ -6,6 +6,7 @@
 
 use napi::bindgen_prelude::*;
 use napi_derive::napi;
+use std::collections::HashMap;
 use std::path::PathBuf;
 use taskdn::{
     TaskdnConfig, Taskdn as CoreTaskdn,
@@ -32,6 +33,53 @@ use taskdn::types::{
     AreaUpdates as CoreAreaUpdates,
 };
 use taskdn::validation::ValidationWarning as CoreValidationWarning;
+
+// =============================================================================
+// Helper: YAML to JSON conversion
+// =============================================================================
+
+/// Convert a serde_yaml::Value to serde_json::Value.
+///
+/// This allows us to expose the `extra` field (unknown frontmatter fields)
+/// to JavaScript as a plain object.
+fn yaml_to_json(value: &serde_yaml::Value) -> serde_json::Value {
+    match value {
+        serde_yaml::Value::Null => serde_json::Value::Null,
+        serde_yaml::Value::Bool(b) => serde_json::Value::Bool(*b),
+        serde_yaml::Value::Number(n) => {
+            if let Some(i) = n.as_i64() {
+                serde_json::Value::Number(i.into())
+            } else if let Some(u) = n.as_u64() {
+                serde_json::Value::Number(u.into())
+            } else if let Some(f) = n.as_f64() {
+                serde_json::Number::from_f64(f)
+                    .map(serde_json::Value::Number)
+                    .unwrap_or(serde_json::Value::Null)
+            } else {
+                serde_json::Value::Null
+            }
+        }
+        serde_yaml::Value::String(s) => serde_json::Value::String(s.clone()),
+        serde_yaml::Value::Sequence(seq) => {
+            serde_json::Value::Array(seq.iter().map(yaml_to_json).collect())
+        }
+        serde_yaml::Value::Mapping(map) => {
+            let obj: serde_json::Map<String, serde_json::Value> = map
+                .iter()
+                .filter_map(|(k, v)| {
+                    k.as_str().map(|key| (key.to_string(), yaml_to_json(v)))
+                })
+                .collect();
+            serde_json::Value::Object(obj)
+        }
+        serde_yaml::Value::Tagged(tagged) => yaml_to_json(&tagged.value),
+    }
+}
+
+/// Convert extra fields HashMap to JSON-compatible HashMap.
+fn convert_extra(extra: &HashMap<String, serde_yaml::Value>) -> HashMap<String, serde_json::Value> {
+    extra.iter().map(|(k, v)| (k.clone(), yaml_to_json(v))).collect()
+}
 
 // =============================================================================
 // Status Enums
@@ -298,6 +346,9 @@ pub struct Task {
     /// Whether this task is active (not completed and not archived).
     #[napi(js_name = "isActive")]
     pub is_active: bool,
+    /// Additional frontmatter fields not part of the Taskdn spec.
+    /// These are preserved during round-trips.
+    pub extra: HashMap<String, serde_json::Value>,
 }
 
 impl From<CoreTask> for Task {
@@ -320,6 +371,7 @@ impl From<CoreTask> for Task {
             body: task.body,
             is_archived,
             is_active,
+            extra: convert_extra(&task.extra),
         }
     }
 }
@@ -636,6 +688,9 @@ pub struct Project {
     pub blocked_by: Vec<FileReference>,
     /// Markdown body (everything after frontmatter).
     pub body: String,
+    /// Additional frontmatter fields not part of the Taskdn spec.
+    /// These are preserved during round-trips.
+    pub extra: HashMap<String, serde_json::Value>,
 }
 
 impl From<CoreProject> for Project {
@@ -651,6 +706,7 @@ impl From<CoreProject> for Project {
             area: project.area.map(|a| a.into()),
             blocked_by: project.blocked_by.into_iter().map(|r| r.into()).collect(),
             body: project.body,
+            extra: convert_extra(&project.extra),
         }
     }
 }
@@ -834,6 +890,9 @@ pub struct Area {
     pub description: Option<String>,
     /// Markdown body (everything after frontmatter).
     pub body: String,
+    /// Additional frontmatter fields not part of the Taskdn spec.
+    /// These are preserved during round-trips.
+    pub extra: HashMap<String, serde_json::Value>,
 }
 
 impl From<CoreArea> for Area {
@@ -845,6 +904,7 @@ impl From<CoreArea> for Area {
             area_type: area.area_type,
             description: area.description,
             body: area.body,
+            extra: convert_extra(&area.extra),
         }
     }
 }

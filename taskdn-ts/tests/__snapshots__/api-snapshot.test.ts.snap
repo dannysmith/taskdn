@@ -394,6 +394,11 @@ export interface Area {
   description?: string
   /** Markdown body (everything after frontmatter). */
   body: string
+  /**
+   * Additional frontmatter fields not part of the Taskdn spec.
+   * These are preserved during round-trips.
+   */
+  extra: Record<string, any>
 }
 
 /** Filter criteria for querying areas. */
@@ -544,6 +549,11 @@ export interface Project {
   blockedBy: Array<FileReference>
   /** Markdown body (everything after frontmatter). */
   body: string
+  /**
+   * Additional frontmatter fields not part of the Taskdn spec.
+   * These are preserved during round-trips.
+   */
+  extra: Record<string, any>
 }
 
 /** Filter criteria for querying projects. */
@@ -621,6 +631,11 @@ export interface Task {
   isArchived: boolean
   /** Whether this task is active (not completed and not archived). */
   isActive: boolean
+  /**
+   * Additional frontmatter fields not part of the Taskdn spec.
+   * These are preserved during round-trips.
+   */
+  extra: Record<string, any>
 }
 
 /** Filter criteria for querying tasks. */
