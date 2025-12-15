@@ -27,6 +27,7 @@ Command-line interface for humans and AI agents.
 **Depends on:** TypeScript SDK (Phase 3) must be complete first.
 
 **Consumed by:**
+
 - Human users (terminal)
 - AI coding assistants (Claude Code, Cursor, etc.)
 - Shell scripts and automation
@@ -37,12 +38,12 @@ Command-line interface for humans and AI agents.
 
 The CLI serves two fundamentally different users with different needs:
 
-| Human User | AI Agent |
-|------------|----------|
-| Wants quick, scannable output | Wants structured, complete data |
-| Types short commands | Needs unambiguous identifiers |
-| Tolerates prompts and interaction | Needs single-call efficiency |
-| Values aesthetics (colors, alignment) | Values token efficiency |
+| Human User                               | AI Agent                            |
+| ---------------------------------------- | ----------------------------------- |
+| Wants quick, scannable output            | Wants structured, complete data     |
+| Types short commands                     | Needs unambiguous identifiers       |
+| Tolerates prompts and interaction        | Needs single-call efficiency        |
+| Values aesthetics (colors, alignment)    | Values token efficiency             |
 | Thinks in fuzzy terms ("the login task") | Needs exact references (file paths) |
 
 Rather than compromise, we embrace this split with distinct modes.
@@ -53,19 +54,20 @@ Rather than compromise, we embrace this split with distinct modes.
 
 ### The Flag System
 
-| Flags | Mode | Format | Prompts? |
-|-------|------|--------|----------|
-| (none) | Human | Pretty (colors, tables) | Yes |
-| `--json` | Script | JSON | No |
-| `--ai` | AI | YAML | No |
-| `--ai --json` | AI | JSON | No |
+| Flags         | Mode   | Format                  | Prompts? |
+| ------------- | ------ | ----------------------- | -------- |
+| (none)        | Human  | Pretty (colors, tables) | Yes      |
+| `--json`      | Script | JSON                    | No       |
+| `--ai`        | AI     | YAML                    | No       |
+| `--ai --json` | AI     | JSON                    | No       |
 
-- **`--ai`** is a *mode* that changes behavior: no prompts, always includes file paths, structured errors, YAML output by default
-- **`--json`** is a *format* override that can combine with any mode
+- **`--ai`** is a _mode_ that changes behavior: no prompts, always includes file paths, structured errors, YAML output by default
+- **`--json`** is a _format_ override that can combine with any mode
 
 ### AI Mode Behaviors
 
 When `--ai` is set:
+
 - Output format defaults to YAML (token-efficient, handles nesting well)
 - File paths are always included in output (for follow-up commands)
 - Never prompts for input—either succeeds or fails with clear error
@@ -74,6 +76,7 @@ When `--ai` is set:
 ### Example Output Comparison
 
 **Human mode (default):**
+
 ```
 📋 Tasks (3)
 
@@ -86,6 +89,7 @@ When `--ai` is set:
 ```
 
 **AI mode (`--ai`):**
+
 ```yaml
 tasks:
   - path: ~/tasks/fix-login-bug.md
@@ -123,6 +127,7 @@ taskdn context --ai                   # AI: returns list with paths
 ```
 
 **What context returns (example: `taskdn context area "Work" --ai`):**
+
 ```yaml
 area:
   path: ~/areas/work.md
@@ -244,10 +249,12 @@ taskdn init                              # Interactive setup (creates config)
 ## Identification: Paths vs Fuzzy Search
 
 **For writes (complete, drop, status, update, archive):**
+
 - AI mode: Requires exact file paths. No ambiguity allowed.
 - Human mode: Accepts fuzzy search on title. Prompts if ambiguous.
 
 **For reads (list, search, context, show):**
+
 - Both modes accept fuzzy search where it makes sense.
 - AI mode always returns paths so follow-up commands can use them.
 
@@ -263,13 +270,13 @@ taskdn complete ~/tasks/fix-login-bug.md --ai
 
 ## Completed & Archived Tasks
 
-| State | Default Behavior | Flag to Include |
-|-------|------------------|-----------------|
-| Active statuses | Included | — |
-| `done` | Excluded | `--include-done` |
-| `dropped` | Excluded | `--include-dropped` |
-| Both done + dropped | Excluded | `--include-closed` |
-| Archived (in archive/) | Never included | `--archived` |
+| State                  | Default Behavior | Flag to Include     |
+| ---------------------- | ---------------- | ------------------- |
+| Active statuses        | Included         | —                   |
+| `done`                 | Excluded         | `--include-done`    |
+| `dropped`              | Excluded         | `--include-dropped` |
+| Both done + dropped    | Excluded         | `--include-closed`  |
+| Archived (in archive/) | Never included   | `--archived`        |
 
 Archiving is manual via `taskdn archive <path>`.
 
@@ -278,6 +285,7 @@ Archiving is manual via `taskdn archive <path>`.
 ## Date Handling
 
 **Input:** Natural language accepted in all modes.
+
 ```bash
 taskdn add "Task" --due tomorrow
 taskdn add "Task" --due "next friday"
@@ -294,7 +302,7 @@ taskdn add "Task" --due +3d              # 3 days from now
 ### File Locations
 
 ```
-~/.config/taskdn/config.json    # User config (XDG-compliant)
+~/.taskdn/config.json    # User config
 ./.taskdn.config.json           # Local override (project-specific)
 ```
 
@@ -319,6 +327,7 @@ taskdn add "Task" --due +3d              # 3 days from now
 ### Init Command
 
 `taskdn init` runs an interactive setup:
+
 1. Prompts for tasks directory path
 2. Prompts for projects directory path
 3. Prompts for areas directory path
@@ -362,12 +371,14 @@ taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md --ai
 ### Built with TypeScript/Bun
 
 **Why TypeScript/Bun (not Rust):**
+
 - Faster development iteration
 - Uses the TypeScript SDK directly
 - Bun compiles to standalone executables
 - 50-100ms startup is acceptable for a task management CLI
 
 **Characteristics:**
+
 - Binary size: ~50-100MB (includes Bun runtime)
 - Startup time: ~50-100ms
 - Cross-platform: macOS, Linux, Windows
@@ -450,13 +461,13 @@ taskdn-cli/
 }
 ```
 
-| Library | Purpose |
-|---------|---------|
-| `@taskdn/sdk` | TypeScript SDK (the Rust bindings) |
-| `commander` | CLI argument parsing |
-| `picocolors` | Terminal colors (fastest option) |
-| `cli-table3` | Pretty tables for human output |
-| `yaml` | YAML serialization for AI output |
+| Library          | Purpose                               |
+| ---------------- | ------------------------------------- |
+| `@taskdn/sdk`    | TypeScript SDK (the Rust bindings)    |
+| `commander`      | CLI argument parsing                  |
+| `picocolors`     | Terminal colors (fastest option)      |
+| `cli-table3`     | Pretty tables for human output        |
+| `yaml`           | YAML serialization for AI output      |
 | `@clack/prompts` | Interactive prompts (add, edit, init) |
 
 ---
@@ -535,3 +546,192 @@ Typing `--due tomorrow` or `--due "next friday"` is more ergonomic than calculat
 ### Why `taskdn` with no args shows help (not a dashboard)?
 
 Keep it simple for v1. A dashboard view could be added later as a shorthand command (`taskdn today` or similar), but the default behavior should be predictable and minimal.
+
+---
+
+## Open Questions & Items to Resolve
+
+This section captures items that need further discussion before implementation.
+
+### 1. Deferred Task Handling (High Priority)
+
+The spec has `defer-until` which hides tasks until a date. How should this interact with queries?
+
+**Question:** If a task has `defer-until: 2025-12-20` and `status: ready`, should it appear in `taskdn list --status ready` before December 20th?
+
+**Likely answer:** No—deferred tasks should be auto-hidden until their defer date. This is implicit filtering.
+
+**Needs:**
+- Confirm auto-hide behavior
+- `--include-deferred` flag to override
+- Way to see "tasks deferred until this week" for planning?
+
+### 2. Scheduled Date Queries (High Priority)
+
+We have `--due today`, `--due this-week`. The spec also has `scheduled` (the date you plan to work on something). This is important for daily planning workflows.
+
+**Proposed:**
+```bash
+taskdn list --scheduled today       # What I planned to work on today
+taskdn list --scheduled this-week   # What I planned for this week
+```
+
+### 3. Sorting (Medium Priority)
+
+No sorting specified. Should we have:
+
+```bash
+taskdn list --sort due          # By due date (nulls last?)
+taskdn list --sort created      # By creation date
+taskdn list --sort updated      # By last update
+taskdn list --sort title        # Alphabetical
+taskdn list --sort due --desc   # Descending
+```
+
+**Question:** Is this needed for v1, or over-engineering?
+
+### 4. Activity/History Queries (Medium Priority)
+
+How does someone ask "what did I complete this week"? The spec has `completed-at` field.
+
+**Proposed:**
+```bash
+taskdn list --include-done --completed-after 2025-12-09
+# Or shorthand:
+taskdn list --include-done --completed-this-week
+```
+
+### 5. Unsetting Fields (Medium Priority)
+
+How to remove a value (e.g., remove project from task)?
+
+**Options:**
+```bash
+# Option A: Empty value
+taskdn update ~/tasks/foo.md --data "project: "
+
+# Option B: Explicit null
+taskdn update ~/tasks/foo.md --data "project: null"
+
+# Option C: Dedicated flag (human-friendly)
+taskdn update ~/tasks/foo.md --no-project
+```
+
+**Recommendation:** Support both B (for AI/scripts) and C (for humans).
+
+### 6. Convenience Commands vs Generic Update (Low Priority)
+
+Should there be shortcuts for common date operations?
+
+| Shorthand | Equivalent |
+|-----------|------------|
+| `taskdn defer <path> --until "next week"` | `update --data "defer-until: ..."` |
+| `taskdn schedule <path> tomorrow` | `update --data "scheduled: ..."` |
+| `taskdn due <path> friday` | `update --data "due: ..."` |
+
+**Current decision:** `update --data` is sufficient for v1. Shortcuts could be v2.
+
+### 7. Stats/Summary Command (Low Priority)
+
+Should there be a way to get summary statistics?
+
+```bash
+taskdn stats
+# Output:
+# Tasks: 47 total (12 ready, 3 in-progress, 5 blocked, 15 inbox, 12 icebox)
+# Overdue: 2
+# Due this week: 8
+# Projects: 6 active
+# Areas: 4 active
+```
+
+**Question:** Useful for dashboards and AI overview, but is `context` sufficient?
+
+### 8. Limit/Pagination (Low Priority)
+
+For large task lists:
+```bash
+taskdn list --limit 20
+taskdn list --limit 20 --offset 40   # Page 3
+```
+
+Probably not needed for v1 if most users have <100 active tasks. But AI agents querying archived tasks might hit large numbers.
+
+### 9. Error Behavior (Medium Priority)
+
+We should specify what errors look like in each mode.
+
+**Human mode:**
+```
+Error: Task not found: "login bug"
+
+Did you mean one of these?
+  • Fix login button (~/tasks/fix-login-button.md)
+  • Login page redesign (~/tasks/login-redesign.md)
+```
+
+**AI mode:**
+```yaml
+error:
+  code: NOT_FOUND
+  message: "No task matching 'login bug'"
+  suggestions:
+    - path: ~/tasks/fix-login-button.md
+      title: Fix login button
+    - path: ~/tasks/login-redesign.md
+      title: Login page redesign
+```
+
+**Needs:** Define error codes and structure for common errors.
+
+### 10. Empty Results in Context
+
+If `taskdn context project "Q1"` returns a project with no tasks:
+
+```yaml
+project:
+  path: ~/projects/q1-planning.md
+  title: Q1 Planning
+  status: planning
+
+tasks: []   # Empty array, or omit key entirely?
+```
+
+**Recommendation:** Empty array (consistent, easier to parse).
+
+### 11. Version Flag
+
+Should have `taskdn --version`. Not currently listed but assumed.
+
+### 12. Health Check / Doctor (Low Priority)
+
+```bash
+taskdn doctor
+# Checks:
+# ✓ Config file found
+# ✓ Tasks directory exists (47 tasks)
+# ✓ Projects directory exists (6 projects)
+# ✓ Areas directory exists (4 areas)
+# ⚠ 2 tasks reference non-existent projects
+# ⚠ 1 task has invalid status value
+```
+
+**Question:** Does this overlap too much with `validate`? Maybe `validate` covers file validity and `doctor` covers system health?
+
+---
+
+## Summary: Prioritized Open Items
+
+| Item | Priority | Status |
+|------|----------|--------|
+| Deferred task handling | High | Needs decision |
+| Scheduled date queries (`--scheduled today`) | High | Likely yes |
+| Error structure for AI mode | Medium | Needs spec |
+| Sorting options | Medium | Needs decision |
+| Activity queries (`--completed-this-week`) | Medium | Likely yes |
+| Unsetting fields (`--no-project`) | Medium | Likely yes |
+| Version flag | Low | Assumed yes |
+| Stats command | Low | Maybe v2 |
+| Limit/pagination | Low | Maybe v2 |
+| Doctor command | Low | Maybe v2 |
+| Convenience commands (defer, schedule, due) | Low | v2 |
