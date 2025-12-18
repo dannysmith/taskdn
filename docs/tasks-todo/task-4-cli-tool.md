@@ -7,20 +7,19 @@ Command-line interface for humans and AI agents.
 ```
 ┌─────────────────────┐
 │     Rust SDK        │
-│  (taskdn-rust)      │
+│   (taskdn-rust)     │
 └─────────┬───────────┘
           │
           ▼
 ┌─────────────────────┐
 │  TypeScript SDK     │
-│  (taskdn-ts)        │
+│    (taskdn-ts)      │
 └─────────┬───────────┘
           │
           ▼
 ┌─────────────────────┐
-│       CLI           │  ← You are here
-│   (taskdn-cli)      │
-│   TypeScript/Bun    │
+│       CLI           │  ← This phase
+│    (taskdn-cli)     │
 └─────────────────────┘
 ```
 
@@ -54,24 +53,35 @@ Rather than compromise, we embrace this split with distinct modes.
 
 ### The Flag System
 
-| Flags         | Mode   | Format                  | Prompts? |
-| ------------- | ------ | ----------------------- | -------- |
-| (none)        | Human  | Pretty (colors, tables) | Yes      |
-| `--json`      | Script | JSON                    | No       |
-| `--ai`        | AI     | YAML                    | No       |
-| `--ai --json` | AI     | JSON                    | No       |
+| Flags    | Mode   | Format                  | Prompts? |
+| -------- | ------ | ----------------------- | -------- |
+| (none)   | Human  | Pretty (colors, tables) | Yes      |
+| `--json` | Script | JSON                    | No       |
+| `--ai`   | AI     | Markdown (structured)   | No       |
 
-- **`--ai`** is a _mode_ that changes behavior: no prompts, always includes file paths, structured errors, YAML output by default
-- **`--json`** is a _format_ override that can combine with any mode
+- **`--ai`** is a _mode_ that changes behavior: no prompts, always includes file paths, structured errors, token-efficient Markdown output
+- **`--json`** is a _format_ override for programmatic parsing (scripts, piping to `jq`)
 
 ### AI Mode Behaviors
 
 When `--ai` is set:
 
-- Output format defaults to YAML (token-efficient, handles nesting well)
+- Output is structured Markdown optimized for LLM consumption
 - File paths are always included in output (for follow-up commands)
 - Never prompts for input—either succeeds or fails with clear error
-- Errors are structured (parseable), not human-friendly prose
+- Errors are structured and include actionable information
+- Output degrades gracefully when truncated (e.g., via `head -100`)
+
+### Why Markdown for AI Mode?
+
+AI coding agents (Claude Code, Cursor, etc.) run CLI commands and receive stdout in their next turn. The output format should:
+
+1. **Be token-efficient** — LLMs pay per token; verbose formats waste context
+2. **Degrade gracefully** — Agents often pipe through `head -100`; partial output should still be useful
+3. **Require no parsing** — LLMs can read Markdown directly without code execution
+4. **Be familiar** — LLMs are trained heavily on Markdown (docs, READMEs, etc.)
+
+JSON fails criteria 2 and 3: truncated JSON is invalid, and LLMs must mentally parse structure. YAML is better but still has structure that breaks mid-stream. Markdown is text that happens to be organized.
 
 ### Example Output Comparison
 
@@ -90,21 +100,68 @@ When `--ai` is set:
 
 **AI mode (`--ai`):**
 
-```yaml
-tasks:
-  - path: ~/tasks/fix-login-bug.md
-    title: Fix login bug
-    status: in-progress
-    due: 2025-12-15
-  - path: ~/tasks/write-docs.md
-    title: Write documentation
-    status: ready
-    project: Q1 Planning
+```markdown
+## Tasks (2)
+
+### Fix login bug
+- **Path:** ~/tasks/fix-login-bug.md
+- **Status:** in-progress
+- **Due:** 2025-12-15
+- **Project:** Q1 Planning
+
+### Write documentation
+- **Path:** ~/tasks/write-docs.md
+- **Status:** ready
+- **Project:** Q1 Planning
+```
+
+**JSON mode (`--json`):**
+
+```json
+[
+  {"path": "~/tasks/fix-login-bug.md", "title": "Fix login bug", "status": "in-progress", "due": "2025-12-15"},
+  {"path": "~/tasks/write-docs.md", "title": "Write documentation", "status": "ready", "project": "Q1 Planning"}
+]
 ```
 
 ---
 
 ## Commands
+
+### Command Grammar
+
+Commands follow a verb-first pattern where tasks are the implied default:
+
+```bash
+taskdn list                    # List tasks (implied)
+taskdn list projects           # List projects
+taskdn list areas              # List areas
+taskdn add "Task title"        # Add task (implied)
+taskdn add project "Q1"        # Add project
+taskdn add area "Work"         # Add area
+```
+
+Tasks are 90% of usage, so they get the shortest syntax. Projects and areas require explicit naming.
+
+### Convenience Commands
+
+These shortcuts exist for high-frequency daily operations:
+
+```bash
+taskdn today                   # Tasks due today + scheduled for today
+taskdn inbox                   # Tasks with status: inbox
+taskdn next                    # Smart prioritization (see below)
+```
+
+**`taskdn next`** returns the most actionable tasks, prioritized by:
+- Overdue tasks (highest priority)
+- Due today
+- Due this week
+- Currently in-progress
+- Ready status
+- Has a project (vs orphaned)
+
+This is the "what should I work on?" command.
 
 ### Context Command
 
@@ -128,32 +185,36 @@ taskdn context --ai                   # AI: returns list with paths
 
 **What context returns (example: `taskdn context area "Work" --ai`):**
 
-```yaml
-area:
-  path: ~/areas/work.md
-  title: Work
-  status: active
+```markdown
+## Area: Work
 
-projects:
-  - path: ~/projects/q1-planning.md
-    title: Q1 Planning
-    status: in-progress
-    task_count: 5
-  - path: ~/projects/client-onboarding.md
-    title: Client Onboarding
-    status: ready
-    task_count: 3
+- **Path:** ~/areas/work.md
+- **Status:** active
 
-tasks:
-  - path: ~/tasks/fix-login-bug.md
-    title: Fix login bug
-    status: in-progress
-    project: Q1 Planning
-    due: 2025-12-15
-  - path: ~/tasks/write-docs.md
-    title: Write documentation
-    status: ready
-    project: Q1 Planning
+## Projects in Work (2)
+
+### Q1 Planning
+- **Path:** ~/projects/q1-planning.md
+- **Status:** in-progress
+- **Tasks:** 5
+
+### Client Onboarding
+- **Path:** ~/projects/client-onboarding.md
+- **Status:** ready
+- **Tasks:** 3
+
+## Tasks in Work (8)
+
+### Fix login bug
+- **Path:** ~/tasks/fix-login-bug.md
+- **Status:** in-progress
+- **Project:** Q1 Planning
+- **Due:** 2025-12-15
+
+### Write documentation
+- **Path:** ~/tasks/write-docs.md
+- **Status:** ready
+- **Project:** Q1 Planning
 ```
 
 **Body inclusion:** Task/project/area bodies are NOT included by default. Use `--with-bodies` to include them.
@@ -168,9 +229,12 @@ taskdn show project "Q1 Planning"
 taskdn show area "Work"
 ```
 
-### List Command (Tasks)
+### List Command
+
+List and filter entities. Supports text search via `--query`.
 
 ```bash
+# Tasks (default)
 taskdn list                              # All active tasks
 taskdn list --status ready               # Filter by status
 taskdn list --status ready,in-progress   # Multiple statuses
@@ -180,42 +244,43 @@ taskdn list --due today                  # Due today
 taskdn list --due tomorrow               # Due tomorrow
 taskdn list --due this-week              # Due this week
 taskdn list --overdue                    # Past due date
+taskdn list --scheduled today            # Scheduled for today
+taskdn list --query "login"              # Text search in title/body
+
+# Projects
+taskdn list projects                     # All active projects
+taskdn list projects --area "Work"       # Filter by area
+taskdn list projects --status planning   # Filter by status
+
+# Areas
+taskdn list areas                        # All active areas
 ```
 
-### Projects & Areas Commands
+### Add Command
+
+Create new tasks, projects, or areas.
 
 ```bash
-# List
-taskdn projects                          # List all projects
-taskdn areas                             # List all areas
+# Tasks
+taskdn add "Review quarterly report"                    # Quick add to inbox
+taskdn add "Review report" --project "Q1" --due friday  # With metadata
+taskdn add "Task" --status ready --area "Work"          # With status and area
+taskdn add "Task" --scheduled tomorrow                  # With scheduled date
+taskdn add "Task" --defer-until "next monday"           # Deferred task
+taskdn add                                              # Interactive (human only)
 
-# Create
-taskdn project new "Q1 Planning"
-taskdn project new "Q1 Planning" --area "Work" --status planning
+# Projects
+taskdn add project "Q1 Planning"
+taskdn add project "Q1 Planning" --area "Work" --status planning
 
-taskdn area new "Work"
-taskdn area new "Acme Corp" --type client
+# Areas
+taskdn add area "Work"
+taskdn add area "Acme Corp" --type client
 ```
-
-### Search Command
-
-```bash
-taskdn search "quarterly"                # Alias for search tasks
-taskdn search tasks "quarterly"          # Search task titles and bodies
-taskdn search projects "quarterly"       # Search projects
-taskdn search areas "acme"               # Search areas
-```
-
-Returns matches with paths (for AI to use in follow-up commands).
 
 ### Task Operations
 
 ```bash
-# Create
-taskdn add "Review quarterly report"                    # Quick add to inbox
-taskdn add "Review report" --project "Q1" --due friday  # With metadata
-taskdn add                                              # Interactive (human only)
-
 # Status changes
 taskdn complete ~/tasks/foo.md           # Mark done
 taskdn drop ~/tasks/foo.md               # Mark dropped
@@ -225,9 +290,9 @@ taskdn status ~/tasks/foo.md blocked     # Change to any status
 taskdn edit ~/tasks/foo.md               # Open in $EDITOR (human only)
 
 # Programmatic update (for AI/scripts)
-taskdn update ~/tasks/foo.md --data "status: ready"
-taskdn update ~/tasks/foo.md --data "title: New Title" --data "due: 2025-12-20"
-echo "status: done" | taskdn update ~/tasks/foo.md --stdin
+taskdn update ~/tasks/foo.md --set status=ready
+taskdn update ~/tasks/foo.md --set "title=New Title" --set "due=2025-12-20"
+taskdn update ~/tasks/foo.md --unset project    # Remove field
 
 # Archive (manual)
 taskdn archive ~/tasks/foo.md            # Move to tasks/archive/
@@ -237,7 +302,8 @@ taskdn archive ~/tasks/foo.md            # Move to tasks/archive/
 
 ```bash
 taskdn                                   # Shows --help
-taskdn validate                          # Check all task files for errors
+taskdn --version                         # Show version
+taskdn validate                          # Check all files for errors
 taskdn validate ~/tasks/foo.md           # Check single file
 taskdn config                            # Show current config
 taskdn config --set tasksDir=./tasks     # Set a value
@@ -253,10 +319,10 @@ taskdn init                              # Interactive setup (creates config)
 - AI mode: Requires exact file paths. No ambiguity allowed.
 - Human mode: Accepts fuzzy search on title. Prompts if ambiguous.
 
-**For reads (list, search, context, show):**
+**For reads (list, context, show):**
 
 - Both modes accept fuzzy search where it makes sense.
-- AI mode always returns paths so follow-up commands can use them.
+- AI mode always returns absolute paths so follow-up commands can use them.
 
 ```bash
 # Human: fuzzy search OK, prompts if multiple matches
@@ -265,6 +331,8 @@ taskdn complete "login bug"
 # AI: must use path (obtained from previous query)
 taskdn complete ~/tasks/fix-login-bug.md --ai
 ```
+
+**Path format in AI mode output:** Always absolute paths. This eliminates ambiguity about working directories and ensures paths can be used directly in follow-up commands.
 
 ---
 
@@ -276,9 +344,20 @@ taskdn complete ~/tasks/fix-login-bug.md --ai
 | `done`                 | Excluded         | `--include-done`    |
 | `dropped`              | Excluded         | `--include-dropped` |
 | Both done + dropped    | Excluded         | `--include-closed`  |
+| Deferred (future date) | Excluded         | `--include-deferred`|
 | Archived (in archive/) | Never included   | `--archived`        |
 
 Archiving is manual via `taskdn archive <path>`.
+
+### Deferred Tasks
+
+Tasks with `defer-until` set to a future date are automatically hidden from all queries until that date arrives. This is implicit filtering—you don't need to add `--exclude-deferred`.
+
+To see deferred tasks:
+```bash
+taskdn list --include-deferred           # Show all, including deferred
+taskdn list --deferred-this-week         # Tasks becoming visible this week
+```
 
 ---
 
@@ -293,7 +372,7 @@ taskdn add "Task" --due 2025-12-20
 taskdn add "Task" --due +3d              # 3 days from now
 ```
 
-**Output:** Always ISO 8601 format.
+**Output:** Always ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).
 
 ---
 
@@ -302,8 +381,8 @@ taskdn add "Task" --due +3d              # 3 days from now
 ### File Locations
 
 ```
-~/.taskdn/config.json    # User config
-./.taskdn.config.json           # Local override (project-specific)
+~/.config/taskdn/config.json    # User config
+./.taskdn.json                  # Local override (project-specific)
 ```
 
 ### Configuration Schema
@@ -320,7 +399,7 @@ taskdn add "Task" --due +3d              # 3 days from now
 
 1. CLI flags (`--tasks-dir ./tasks`)
 2. Environment variables (`TASKDN_TASKS_DIR`)
-3. Local config (`./.taskdn.config.json`)
+3. Local config (`./.taskdn.json`)
 4. User config (`~/.config/taskdn/config.json`)
 5. Defaults
 
@@ -331,7 +410,7 @@ taskdn add "Task" --due +3d              # 3 days from now
 1. Prompts for tasks directory path
 2. Prompts for projects directory path
 3. Prompts for areas directory path
-4. Creates `.taskdn.config.json` with those paths
+4. Creates `.taskdn.json` with those paths
 
 ---
 
@@ -359,135 +438,47 @@ taskdn list --json | jq '.[] | select(.status == "ready")'
 
 ```bash
 # Complete multiple tasks
-taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md --ai
+taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
 
 # Returns results for each
 ```
 
----
+### Short Flags
 
-## Technical Decisions
+Common flags have single-letter shortcuts:
 
-### Built with TypeScript/Bun
-
-**Why TypeScript/Bun (not Rust):**
-
-- Faster development iteration
-- Uses the TypeScript SDK directly
-- Bun compiles to standalone executables
-- 50-100ms startup is acceptable for a task management CLI
-
-**Characteristics:**
-
-- Binary size: ~50-100MB (includes Bun runtime)
-- Startup time: ~50-100ms
-- Cross-platform: macOS, Linux, Windows
+| Short | Long        | Usage                    |
+| ----- | ----------- | ------------------------ |
+| `-s`  | `--status`  | `-s ready`               |
+| `-p`  | `--project` | `-p "Q1 Planning"`       |
+| `-a`  | `--area`    | `-a "Work"`              |
+| `-d`  | `--due`     | `-d today`               |
+| `-q`  | `--query`   | `-q "login"`             |
 
 ---
 
-## Build & Distribution
+## Non-Functional Requirements
 
-### Building
+### Exit Codes
 
-```bash
-# Development
-bun run src/cli.ts
+- `0` — Success
+- `1` — General error
+- `2` — Usage error (invalid arguments, unknown flags)
 
-# Build standalone executable
-bun build --compile --minify --outfile taskdn
+### Error Messages
 
-# Cross-compile
-bun build --compile --target=bun-darwin-arm64 --outfile dist/taskdn-macos-arm64
-bun build --compile --target=bun-darwin-x64 --outfile dist/taskdn-macos-x64
-bun build --compile --target=bun-linux-x64 --outfile dist/taskdn-linux-x64
-bun build --compile --target=bun-windows-x64 --outfile dist/taskdn.exe
-```
+- Should be helpful and suggest fixes
+- In AI mode, errors include structured information (error code, suggestions)
+- In human mode, errors are friendly prose with "Did you mean?" suggestions
 
-### Distribution
+### Shell Completions
 
-- **npm:** `npm install -g @taskdn/cli` or `bun add -g @taskdn/cli`
-- **GitHub Releases:** Standalone executables for each platform
-- **Homebrew:** Formula for macOS users (future)
+The CLI should support auto-completion for bash, zsh, and fish shells.
 
----
+### Performance
 
-## Project Structure
-
-```
-taskdn-cli/
-├── package.json
-├── tsconfig.json
-├── src/
-│   ├── cli.ts              # Entry point
-│   ├── commands/
-│   │   ├── context.ts
-│   │   ├── show.ts
-│   │   ├── list.ts
-│   │   ├── search.ts
-│   │   ├── add.ts
-│   │   ├── complete.ts
-│   │   ├── update.ts
-│   │   ├── edit.ts
-│   │   ├── archive.ts
-│   │   ├── validate.ts
-│   │   ├── config.ts
-│   │   ├── projects.ts
-│   │   └── areas.ts
-│   ├── output/
-│   │   ├── human.ts        # Colors, tables
-│   │   ├── json.ts         # JSON format
-│   │   └── yaml.ts         # YAML format (AI default)
-│   └── config.ts           # Config loading
-└── bin/
-    └── taskdn              # Compiled executable
-```
-
----
-
-## Dependencies
-
-```json
-{
-  "dependencies": {
-    "@taskdn/sdk": "workspace:*",
-    "commander": "^12.0.0",
-    "picocolors": "^1.0.0",
-    "cli-table3": "^0.6.0",
-    "yaml": "^2.0.0"
-  },
-  "devDependencies": {
-    "@clack/prompts": "^0.7.0"
-  }
-}
-```
-
-| Library          | Purpose                               |
-| ---------------- | ------------------------------------- |
-| `@taskdn/sdk`    | TypeScript SDK (the Rust bindings)    |
-| `commander`      | CLI argument parsing                  |
-| `picocolors`     | Terminal colors (fastest option)      |
-| `cli-table3`     | Pretty tables for human output        |
-| `yaml`           | YAML serialization for AI output      |
-| `@clack/prompts` | Interactive prompts (add, edit, init) |
-
----
-
-## Notes
-
-- Shell completions (bash, zsh, fish) should be auto-generated from commander
-- Consider adding `--verbose` flag for debugging
-- Error messages should be helpful and suggest fixes
-- Exit codes should follow conventions (0 = success, 1 = error, 2 = usage error)
-
----
-
-## Future Considerations
-
-These are explicitly out of scope for v1 but may be added later:
-
-- **Filtering in context command**: A generalized filter DSL (e.g., `--filter "tasks:status=done|ready"`) that works consistently across commands.
-- **Shorthand commands**: `taskdn today`, `taskdn inbox`, `taskdn next` for common queries.
-- **Computed filters**: `--actionable` (ready or in-progress, not deferred), `--stale` (not updated recently).
+- Startup time should be fast enough for interactive use
+- Commands should complete quickly for typical vault sizes (hundreds of tasks)
 
 ---
 
@@ -501,11 +492,17 @@ Humans and AI agents have fundamentally different needs. Humans want pretty outp
 
 ### Why `--ai` as a mode, not just a format?
 
-The `--ai` flag isn't just about output format—it changes behavior. AI mode never prompts (which would hang the agent), always includes file paths (so the agent can reference items in follow-up commands), and returns structured errors. This is more than just "output YAML instead of pretty text."
+The `--ai` flag isn't just about output format—it changes behavior. AI mode never prompts (which would hang the agent), always includes file paths (so the agent can reference items in follow-up commands), and returns structured errors. This is more than just "output differently."
 
-### Why YAML for AI output (not JSON)?
+### Why Markdown for AI output?
 
-YAML is significantly more token-efficient than JSON (fewer brackets, quotes, less nesting overhead). Modern LLMs parse YAML reliably. For multi-line content like task bodies, YAML handles it more elegantly. The `--json` flag is available when strict JSON is needed.
+AI agents receive CLI output in their context window. The format should be:
+1. Token-efficient (LLMs pay per token)
+2. Gracefully degradable (agents often use `head -100`)
+3. Readable without parsing (no code execution needed)
+4. Familiar (LLMs are trained on Markdown)
+
+JSON fails on degradability (truncated JSON is invalid) and requires mental parsing. YAML is better but still structural. Markdown is organized text that LLMs can read directly.
 
 ### Why the `context` command?
 
@@ -523,13 +520,9 @@ When an AI agent completes, drops, or updates a task, it must use the exact file
 
 Humans think in titles ("complete the login bug task"). Requiring exact paths would be tedious. So human mode accepts fuzzy search and prompts when ambiguous. AI mode requires paths because AI agents shouldn't guess—they should use the paths returned from previous queries.
 
-### Why noun commands for projects/areas (`taskdn projects`) instead of subcommands (`taskdn list projects`)?
+### Why verb-first command structure?
 
-Brevity for the common case. `taskdn list` (tasks) is the 90% case and stays short. Projects and areas are less frequent, so slightly longer commands are acceptable. The noun form (`taskdn projects`) is still shorter than the subcommand form.
-
-### Why separate commands for project/area creation?
-
-Tasks, projects, and areas have different fields and semantics per the spec. Separate commands (`taskdn project new`, `taskdn area new`) make this explicit and allow type-specific flags without confusion.
+`taskdn list` is cleaner than `taskdn task list` for the 90% case (tasks). The grammar is: verbs default to tasks, add entity type for projects/areas (`taskdn list projects`). This keeps common operations brief while remaining predictable.
 
 ### Why manual archiving?
 
@@ -539,13 +532,17 @@ Archiving is a deliberate act of putting something away "forever." Automatic arc
 
 Active lists should show actionable items. Completed tasks clutter the view. But they're not archived—they're still in the tasks directory as recent history. Flags like `--include-done` make them accessible when needed.
 
+### Why auto-hide deferred tasks?
+
+The `defer-until` field means "don't show me this until then." Requiring users to add `--exclude-deferred` to every query would be tedious. Auto-hiding matches user intent. `--include-deferred` is available when you need to see everything.
+
 ### Why natural language dates?
 
 Typing `--due tomorrow` or `--due "next friday"` is more ergonomic than calculating ISO dates. Since we control the date parsing, we can accept natural language and always output ISO 8601.
 
-### Why `taskdn` with no args shows help (not a dashboard)?
+### Why convenience commands (today, inbox, next)?
 
-Keep it simple for v1. A dashboard view could be added later as a shorthand command (`taskdn today` or similar), but the default behavior should be predictable and minimal.
+Daily workflows shouldn't require 30+ keystrokes. `taskdn today` vs `taskdn list --due today --scheduled today` is a massive ergonomic win. These commands encode common workflows that would otherwise require flag combinations.
 
 ---
 
@@ -553,32 +550,9 @@ Keep it simple for v1. A dashboard view could be added later as a shorthand comm
 
 This section captures items that need further discussion before implementation.
 
-### 1. Deferred Task Handling (High Priority)
+### 1. Sorting (Medium Priority)
 
-The spec has `defer-until` which hides tasks until a date. How should this interact with queries?
-
-**Question:** If a task has `defer-until: 2025-12-20` and `status: ready`, should it appear in `taskdn list --status ready` before December 20th?
-
-**Likely answer:** No—deferred tasks should be auto-hidden until their defer date. This is implicit filtering.
-
-**Needs:**
-- Confirm auto-hide behavior
-- `--include-deferred` flag to override
-- Way to see "tasks deferred until this week" for planning?
-
-### 2. Scheduled Date Queries (High Priority)
-
-We have `--due today`, `--due this-week`. The spec also has `scheduled` (the date you plan to work on something). This is important for daily planning workflows.
-
-**Proposed:**
-```bash
-taskdn list --scheduled today       # What I planned to work on today
-taskdn list --scheduled this-week   # What I planned for this week
-```
-
-### 3. Sorting (Medium Priority)
-
-No sorting specified. Should we have:
+No default sorting specified. Should we have:
 
 ```bash
 taskdn list --sort due          # By due date (nulls last?)
@@ -588,11 +562,14 @@ taskdn list --sort title        # Alphabetical
 taskdn list --sort due --desc   # Descending
 ```
 
-**Question:** Is this needed for v1, or over-engineering?
+**Questions:**
+- Is this needed for v1?
+- What's the default sort order when no `--sort` specified?
+- How to handle null values (tasks without due dates)?
 
-### 4. Activity/History Queries (Medium Priority)
+### 2. Activity/History Queries (Medium Priority)
 
-How does someone ask "what did I complete this week"? The spec has `completed-at` field.
+How does someone ask "what did I complete this week"?
 
 **Proposed:**
 ```bash
@@ -601,37 +578,62 @@ taskdn list --include-done --completed-after 2025-12-09
 taskdn list --include-done --completed-this-week
 ```
 
-### 5. Unsetting Fields (Medium Priority)
+### 3. Error Structure (High Priority)
 
-How to remove a value (e.g., remove project from task)?
+We need to define error codes and structure for AI mode.
 
-**Options:**
-```bash
-# Option A: Empty value
-taskdn update ~/tasks/foo.md --data "project: "
+**Human mode example:**
+```
+Error: Task not found: "login bug"
 
-# Option B: Explicit null
-taskdn update ~/tasks/foo.md --data "project: null"
-
-# Option C: Dedicated flag (human-friendly)
-taskdn update ~/tasks/foo.md --no-project
+Did you mean one of these?
+  • Fix login button (~/tasks/fix-login-button.md)
+  • Login page redesign (~/tasks/login-redesign.md)
 ```
 
-**Recommendation:** Support both B (for AI/scripts) and C (for humans).
+**AI mode example:**
+```markdown
+## Error: NOT_FOUND
 
-### 6. Convenience Commands vs Generic Update (Low Priority)
+No task matching "login bug"
 
-Should there be shortcuts for common date operations?
+### Suggestions
 
-| Shorthand | Equivalent |
-|-----------|------------|
-| `taskdn defer <path> --until "next week"` | `update --data "defer-until: ..."` |
-| `taskdn schedule <path> tomorrow` | `update --data "scheduled: ..."` |
-| `taskdn due <path> friday` | `update --data "due: ..."` |
+- **Fix login button** — ~/tasks/fix-login-button.md
+- **Login page redesign** — ~/tasks/login-redesign.md
+```
 
-**Current decision:** `update --data` is sufficient for v1. Shortcuts could be v2.
+**Needs:**
+- Define error codes (NOT_FOUND, INVALID_STATUS, AMBIGUOUS_MATCH, etc.)
+- Define which information each error includes
+- Ensure AI mode errors are still readable Markdown
 
-### 7. Stats/Summary Command (Low Priority)
+### 4. Empty Results
+
+If a query returns nothing:
+
+**Human mode:** Show helpful message ("No tasks found matching your criteria")
+
+**AI mode:** What format?
+```markdown
+## Tasks (0)
+
+No tasks match the specified criteria.
+```
+
+Or just empty output? The former is more informative when truncated.
+
+### 5. Markdown Format Details (High Priority)
+
+The exact Markdown format for AI mode needs specification:
+
+- Heading levels for different entity types
+- Which fields are always shown vs conditional
+- How to represent arrays (projects field)
+- How to handle very long bodies (truncation?)
+- Format for dates (ISO 8601, but with or without time?)
+
+### 6. Stats/Summary Command (Low Priority)
 
 Should there be a way to get summary statistics?
 
@@ -645,9 +647,9 @@ taskdn stats
 # Areas: 4 active
 ```
 
-**Question:** Useful for dashboards and AI overview, but is `context` sufficient?
+**Question:** Useful for dashboards and AI overview, but can `context` serve this purpose?
 
-### 8. Limit/Pagination (Low Priority)
+### 7. Limit/Pagination (Low Priority)
 
 For large task lists:
 ```bash
@@ -655,55 +657,9 @@ taskdn list --limit 20
 taskdn list --limit 20 --offset 40   # Page 3
 ```
 
-Probably not needed for v1 if most users have <100 active tasks. But AI agents querying archived tasks might hit large numbers.
+Probably not needed for v1 if most users have <100 active tasks.
 
-### 9. Error Behavior (Medium Priority)
-
-We should specify what errors look like in each mode.
-
-**Human mode:**
-```
-Error: Task not found: "login bug"
-
-Did you mean one of these?
-  • Fix login button (~/tasks/fix-login-button.md)
-  • Login page redesign (~/tasks/login-redesign.md)
-```
-
-**AI mode:**
-```yaml
-error:
-  code: NOT_FOUND
-  message: "No task matching 'login bug'"
-  suggestions:
-    - path: ~/tasks/fix-login-button.md
-      title: Fix login button
-    - path: ~/tasks/login-redesign.md
-      title: Login page redesign
-```
-
-**Needs:** Define error codes and structure for common errors.
-
-### 10. Empty Results in Context
-
-If `taskdn context project "Q1"` returns a project with no tasks:
-
-```yaml
-project:
-  path: ~/projects/q1-planning.md
-  title: Q1 Planning
-  status: planning
-
-tasks: []   # Empty array, or omit key entirely?
-```
-
-**Recommendation:** Empty array (consistent, easier to parse).
-
-### 11. Version Flag
-
-Should have `taskdn --version`. Not currently listed but assumed.
-
-### 12. Health Check / Doctor (Low Priority)
+### 8. Health Check / Doctor (Low Priority)
 
 ```bash
 taskdn doctor
@@ -716,7 +672,7 @@ taskdn doctor
 # ⚠ 1 task has invalid status value
 ```
 
-**Question:** Does this overlap too much with `validate`? Maybe `validate` covers file validity and `doctor` covers system health?
+**Question:** Does this overlap too much with `validate`? Maybe `validate` covers file syntax and `doctor` covers system health?
 
 ---
 
@@ -724,14 +680,21 @@ taskdn doctor
 
 | Item | Priority | Status |
 |------|----------|--------|
-| Deferred task handling | High | Needs decision |
-| Scheduled date queries (`--scheduled today`) | High | Likely yes |
-| Error structure for AI mode | Medium | Needs spec |
+| Error structure for AI mode | High | Needs spec |
+| Markdown format specification | High | Needs spec |
+| Empty result handling | High | Needs decision |
 | Sorting options | Medium | Needs decision |
 | Activity queries (`--completed-this-week`) | Medium | Likely yes |
-| Unsetting fields (`--no-project`) | Medium | Likely yes |
-| Version flag | Low | Assumed yes |
 | Stats command | Low | Maybe v2 |
 | Limit/pagination | Low | Maybe v2 |
 | Doctor command | Low | Maybe v2 |
-| Convenience commands (defer, schedule, due) | Low | v2 |
+
+---
+
+## Future Considerations
+
+These are explicitly out of scope for v1 but may be added later:
+
+- **Filtering in context command**: A generalized filter DSL (e.g., `--filter "tasks:status=done|ready"`) that works consistently across commands.
+- **Computed filters**: `--actionable` (ready or in-progress, not deferred), `--stale` (not updated recently).
+- **Saved views**: Named queries that can be recalled (e.g., `taskdn view "weekly-review"`).
