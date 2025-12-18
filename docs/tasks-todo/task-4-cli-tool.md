@@ -315,12 +315,60 @@ taskdn context project "Q1 Planning"
 # Task context: task + parent project + parent area
 taskdn context task ~/tasks/foo.md
 
-# No args: helpful error with list of active areas/projects
-taskdn context                        # Human: interactive chooser
-taskdn context --ai                   # AI: returns list with paths
+# No args: vault overview
+taskdn context --ai                   # AI: returns vault overview (see below)
+taskdn context                        # Human: TBD (may be interactive)
 ```
 
-**What context returns (example: `taskdn context area "Work" --ai`):**
+**Vault overview (`taskdn context --ai` with no arguments):**
+
+Returns a high-level overview of the vault's current state:
+
+```markdown
+## Vault Overview
+
+### Areas (3)
+
+#### Work
+- **Path:** ~/areas/work.md
+- **Projects:** 2 active
+- **Tasks:** 15 active
+
+#### Personal
+- **Path:** ~/areas/personal.md
+- **Projects:** 1 active
+- **Tasks:** 8 active
+
+### Summary
+
+- **Total active tasks:** 47
+- **Overdue:** 2
+- **In progress:** 3
+
+### This Week
+
+#### Due (5)
+
+- Fix login bug — ~/tasks/fix-login.md (due: 2025-12-18)
+- Review report — ~/tasks/review-report.md (due: 2025-12-20)
+
+#### Scheduled (3)
+
+- Team standup prep — ~/tasks/standup-prep.md (scheduled: 2025-12-19)
+```
+
+**Human mode (no `--ai` flag, no arguments):** Returns an error prompting the user to either specify an entity or use `--ai` for vault overview. Human-mode vault overview may be added in a future version.
+
+```
+Error: Please specify an entity (area, project, or task) or use --ai for vault overview.
+
+Examples:
+  taskdn context area "Work"
+  taskdn context project "Q1 Planning"
+  taskdn context --ai
+```
+
+**What context returns for a specific entity (example: `taskdn context area "Work" --ai`):**
 
 ```markdown
 ## Area: Work
@@ -407,6 +455,31 @@ taskdn list --sort due --desc            # Descending order
 
 **Null handling:** Tasks without a value for the sort field (e.g., no due date) appear last.
 
+#### Filter Combination Logic
+
+Filters combine using boolean logic:
+
+- **Same filter with comma-separated values = OR**
+  ```bash
+  taskdn list --status ready,in-progress
+  # Returns tasks where status = ready OR status = in-progress
+  ```
+
+- **Different filter types = AND**
+  ```bash
+  taskdn list --project "Q1" --status ready
+  # Returns tasks where project = "Q1" AND status = ready
+  ```
+
+- **Contradictory filters = empty result (no error)**
+  ```bash
+  taskdn list --due today --overdue
+  # Logically contradictory, returns empty result
+  # No error—this is mathematically correct (empty intersection)
+  ```
+
+This follows standard CLI conventions (similar to `find`, `grep`, etc.) and produces predictable, composable behavior.
+
 #### Completed Task Queries
 
 To query completed tasks, use `--include-done` or `--include-closed` with date filters:
@@ -425,6 +498,15 @@ taskdn list --include-done --completed-this-week   # Finished this week
 The `--completed-after` and `--completed-before` filters can be combined for date ranges. The convenience aliases (`--completed-today`, `--completed-this-week`) are shorthand for the appropriate date range.
 
 **Note:** These filters require `--include-done` or `--include-closed` to be explicit about including completed tasks.
+
+#### Limiting Results
+
+```bash
+taskdn list --limit 20               # Return at most 20 results
+taskdn list --overdue --limit 5      # Top 5 overdue tasks
+```
+
+Results are limited *after* sorting, so `--limit` combined with `--sort` gives you "top N by X".
 
 ### Add Command
 
@@ -446,6 +528,44 @@ taskdn add project "Q1 Planning" --area "Work" --status planning
 # Areas
 taskdn add area "Work"
 taskdn add area "Acme Corp" --type client
+```
+
+**AI mode output:**
+
+The output always includes the path so AI agents can reference the created entity in follow-up commands.
+
+```markdown
+## Task Created
+
+### Review quarterly report
+- **Path:** ~/tasks/review-quarterly-report.md
+- **Status:** inbox
+- **Created at:** 2025-12-18T14:30:00
+```
+
+With additional fields specified:
+
+```markdown
+## Task Created
+
+### Review quarterly report
+- **Path:** ~/tasks/review-quarterly-report.md
+- **Status:** ready
+- **Project:** Q1 Planning
+- **Due:** 2025-12-20
+- **Created at:** 2025-12-18T14:30:00
+```
+
+Projects and areas follow the same pattern:
+
+```markdown
+## Project Created
+
+### Q1 Planning
+- **Path:** ~/projects/q1-planning.md
+- **Status:** planning
+- **Area:** Work
+- **Created at:** 2025-12-18T14:30:00
 ```
 
 ### Task Operations
@@ -477,12 +597,99 @@ taskdn archive ~/tasks/foo.md            # Move to tasks/archive/
 ```bash
 taskdn                                   # Shows --help
 taskdn --version                         # Show version
-taskdn validate                          # Check all files for errors
-taskdn validate ~/tasks/foo.md           # Check single file
 taskdn config                            # Show current config
 taskdn config --set tasksDir=./tasks     # Set a value
 taskdn init                              # Interactive setup (creates config)
 ```
+
+### Doctor Command
+
+Comprehensive health check for the entire vault. Reports problems but does not fix them.
+
+```bash
+taskdn doctor                            # Full health check
+taskdn doctor --ai                       # Structured output for AI agents
+taskdn doctor --json                     # JSON output for scripts
+```
+
+**What it checks:**
+
+| Level | Checks |
+|-------|--------|
+| System | Config file exists and is valid |
+| System | Tasks/projects/areas directories exist and are accessible |
+| File | YAML frontmatter is parseable |
+| File | Required fields present (title, status) |
+| File | Status values are valid |
+| File | Date fields are valid format |
+| References | Project references point to existing projects |
+| References | Area references point to existing areas |
+
+**Human mode output:**
+
+```
+✓ Config found (~/.config/taskdn/config.json)
+✓ Tasks directory (47 files)
+✓ Projects directory (6 files)
+✓ Areas directory (4 files)
+
+⚠ 3 issues found:
+
+  ~/tasks/fix-login.md
+    → References non-existent project "Q1 Planing" (did you mean "Q1 Planning"?)
+
+  ~/tasks/old-task.md
+    → Invalid status "inprogress" (valid: inbox, ready, in-progress, ...)
+
+  ~/projects/abandoned.md
+    → YAML parse error on line 3
+
+Summary: 3 issues in 57 files checked
+```
+
+**AI mode output:**
+
+```markdown
+## System Health
+
+- **Config:** OK (~/.config/taskdn/config.json)
+- **Tasks:** OK (47 files)
+- **Projects:** OK (6 files)
+- **Areas:** OK (4 files)
+
+## Issues (3)
+
+### ~/tasks/fix-login.md
+- **Code:** REFERENCE_ERROR
+- **Field:** project
+- **Message:** References non-existent project "Q1 Planing"
+- **Suggestion:** Did you mean "Q1 Planning"?
+
+### ~/tasks/old-task.md
+- **Code:** INVALID_STATUS
+- **Field:** status
+- **Value:** inprogress
+- **Valid values:** inbox, ready, in-progress, blocked, done, dropped, icebox
+
+### ~/projects/abandoned.md
+- **Code:** PARSE_ERROR
+- **Line:** 3
+- **Message:** Unexpected key in YAML frontmatter
+
+## Summary
+
+3 issues found across 57 files checked.
+```
+
+**Exit codes:**
+
+| Code | Meaning |
+|------|---------|
+| 0 | All checks passed |
+| 1 | Issues found (command succeeded, but problems exist) |
+| 2 | Command failed to run (couldn't read config, etc.) |
+
+Exit code 1 for issues follows linter conventions—useful for CI pipelines.
 
 ---
 
@@ -512,9 +719,29 @@ taskdn complete ~/tasks/fix-login-bug.md --ai
 
 ## Completed & Archived Tasks
 
+### What "Active" Means
+
+Commands like `taskdn list` return "active" entities by default. Here's what "active" means for each entity type:
+
+**Active tasks** have ALL of:
+- Status NOT IN (`done`, `dropped`)
+- `defer-until` is either unset or ≤ today
+- File is not in the `archive/` subdirectory
+
+**Active projects** have ALL of:
+- Status is unset OR status NOT IN (`done`)
+- File is not in the `archive/` subdirectory
+
+**Active areas** have ALL of:
+- Status is unset OR status = `active`
+
+Note: Project status `paused` is still considered active (just on hold). Area status values other than `active` (e.g., `archived`) are excluded by default.
+
+### Inclusion Flags
+
 | State                  | Default Behavior | Flag to Include     |
 | ---------------------- | ---------------- | ------------------- |
-| Active statuses        | Included         | —                   |
+| Active (see above)     | Included         | —                   |
 | `done`                 | Excluded         | `--include-done`    |
 | `dropped`              | Excluded         | `--include-dropped` |
 | Both done + dropped    | Excluded         | `--include-closed`  |
@@ -613,9 +840,36 @@ taskdn list --json | jq '.[] | select(.status == "ready")'
 ```bash
 # Complete multiple tasks
 taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
-
-# Returns results for each
 ```
+
+**Partial failure behavior:**
+- All items are processed (don't stop at first error)
+- Successes and failures are reported separately
+- Exit code is `1` if ANY operation failed, `0` if all succeeded
+
+**AI mode output:**
+
+```markdown
+## Completed (2)
+
+### ~/tasks/a.md
+- **Title:** Fix login bug
+- **Status:** done
+- **Completed at:** 2025-12-18T14:30:00
+
+### ~/tasks/c.md
+- **Title:** Write tests
+- **Status:** done
+- **Completed at:** 2025-12-18T14:30:01
+
+## Errors (1)
+
+### ~/tasks/b.md
+- **Code:** NOT_FOUND
+- **Message:** Task file does not exist
+```
+
+If all operations succeed, the "Errors" section is omitted. If all operations fail, the "Completed" section is omitted.
 
 ### Short Flags
 
@@ -628,6 +882,7 @@ Common flags have single-letter shortcuts:
 | `-a`  | `--area`    | `-a "Work"`              |
 | `-d`  | `--due`     | `-d today`               |
 | `-q`  | `--query`   | `-q "login"`             |
+| `-l`  | `--limit`   | `-l 20`                  |
 
 ---
 
@@ -669,6 +924,36 @@ Each error includes:
 - `message` — Human-readable explanation of what went wrong
 - `details` — Context-specific information (the bad value, the path, etc.)
 - `suggestions` — When applicable (similar items, valid values, next steps)
+
+**AI mode error examples:**
+
+```markdown
+## Error: NOT_FOUND
+
+- **Message:** Task file does not exist
+- **Path:** ~/tasks/nonexistent.md
+- **Suggestion:** Did you mean ~/tasks/existent-task.md?
+```
+
+```markdown
+## Error: AMBIGUOUS
+
+- **Message:** Multiple tasks match "login"
+- **Matches:**
+  - ~/tasks/fix-login-bug.md — "Fix login bug"
+  - ~/tasks/login-redesign.md — "Login page redesign"
+  - ~/tasks/login-tests.md — "Write login tests"
+```
+
+```markdown
+## Error: INVALID_STATUS
+
+- **Message:** Invalid status value
+- **Value:** inprogress
+- **Valid values:** inbox, icebox, ready, in-progress, blocked, done, dropped
+```
+
+The heading always includes the error code for quick identification. Fields vary by error type but follow the structure above.
 
 Additional error codes may be added as needed during implementation.
 
@@ -719,6 +1004,10 @@ JSON fails on degradability (truncated JSON is invalid) and requires mental pars
 
 AI agents helping users plan or review need hierarchical context. Without `context`, an agent would need multiple calls: get the area, then get its projects, then get tasks for each project. The `context` command returns everything in one call—the entity plus all related entities—minimizing round trips.
 
+### Why does `context` with no arguments return a vault overview?
+
+An AI agent's first question is often "what's going on in this vault?" Rather than add a separate `stats` command, we extend `context` to serve this purpose. With an entity argument, you get that entity's context. With no argument, you get the vault's context—areas, projects, counts, and what's due/scheduled this week. This keeps the command set small while serving the "orient me" use case.
+
 ### Why separate `show` and `context`?
 
 `show` returns a single entity with its body. `context` returns an entity plus its relationships (parent area/project, child tasks). They serve different purposes: `show` is "let me see this thing," `context` is "let me understand the full picture around this thing."
@@ -759,62 +1048,9 @@ Typing `--due tomorrow` or `--due "next friday"` is more ergonomic than calculat
 
 Daily workflows shouldn't require 30+ keystrokes. `taskdn today` vs `taskdn list --due today --scheduled today` is a massive ergonomic win. These commands encode common workflows that would otherwise require flag combinations.
 
----
+### Why a single `doctor` command instead of separate `validate`?
 
-## Open Questions & Items to Resolve
-
-This section captures items that need further discussion before implementation.
-
-### 1. Stats/Summary Command (Low Priority)
-
-Should there be a way to get summary statistics?
-
-```bash
-taskdn stats
-# Output:
-# Tasks: 47 total (12 ready, 3 in-progress, 5 blocked, 15 inbox, 12 icebox)
-# Overdue: 2
-# Due this week: 8
-# Projects: 6 active
-# Areas: 4 active
-```
-
-**Question:** Useful for dashboards and AI overview, but can `context` serve this purpose?
-
-### 2. Limit/Pagination (Low Priority)
-
-For large task lists:
-```bash
-taskdn list --limit 20
-taskdn list --limit 20 --offset 40   # Page 3
-```
-
-Probably not needed for v1 if most users have <100 active tasks.
-
-### 3. Health Check / Doctor (Low Priority)
-
-```bash
-taskdn doctor
-# Checks:
-# ✓ Config file found
-# ✓ Tasks directory exists (47 tasks)
-# ✓ Projects directory exists (6 projects)
-# ✓ Areas directory exists (4 areas)
-# ⚠ 2 tasks reference non-existent projects
-# ⚠ 1 task has invalid status value
-```
-
-**Question:** Does this overlap too much with `validate`? Maybe `validate` covers file syntax and `doctor` covers system health?
-
----
-
-## Summary: Prioritized Open Items
-
-| Item | Priority | Status |
-|------|----------|--------|
-| Stats command | Low | Maybe v2 |
-| Limit/pagination | Low | Maybe v2 |
-| Doctor command | Low | Maybe v2 |
+Health checking has multiple layers: system config, file syntax, field values, cross-file references. Splitting these into `validate` (files) and `doctor` (system) creates artificial boundaries—a broken project reference is both a file issue and a system issue. One command that checks everything and reports all problems is simpler to remember and provides a complete picture. The name `doctor` implies diagnosis without treatment—it tells you what's wrong but doesn't fix it.
 
 ---
 
