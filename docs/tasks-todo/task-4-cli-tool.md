@@ -118,11 +118,148 @@ JSON fails criteria 2 and 3: truncated JSON is invalid, and LLMs must mentally p
 **JSON mode (`--json`):**
 
 ```json
-[
-  {"path": "~/tasks/fix-login-bug.md", "title": "Fix login bug", "status": "in-progress", "due": "2025-12-15"},
-  {"path": "~/tasks/write-docs.md", "title": "Write documentation", "status": "ready", "project": "Q1 Planning"}
-]
+{
+  "summary": "Found 2 tasks",
+  "tasks": [
+    {"path": "~/tasks/fix-login-bug.md", "title": "Fix login bug", "status": "in-progress", "due": "2025-12-15"},
+    {"path": "~/tasks/write-docs.md", "title": "Write documentation", "status": "ready", "project": "Q1 Planning"}
+  ]
+}
 ```
+
+### JSON Output Structure
+
+JSON output always includes a `summary` field alongside the data:
+
+```json
+{
+  "summary": "<one-sentence description of what was returned>",
+  "<entity-type>": [...]
+}
+```
+
+**Examples:**
+
+```json
+// Task list
+{
+  "summary": "Found 3 tasks",
+  "tasks": [...]
+}
+
+// Empty result
+{
+  "summary": "No tasks match the specified criteria",
+  "tasks": []
+}
+
+// Context command (multiple entity types)
+{
+  "summary": "Work area with 2 projects and 8 tasks",
+  "area": {...},
+  "projects": [...],
+  "tasks": [...]
+}
+
+// Single entity (show command)
+{
+  "summary": "Task: Fix login bug",
+  "task": {...}
+}
+```
+
+This structure ensures:
+- Results are self-documenting
+- Empty results are explicit (not silent)
+- Entity types are clear from the keys
+- Scripts access data via `.tasks`, `.projects`, etc.
+
+### Empty Results
+
+Empty results are always explicit, never silent:
+
+**Human mode:**
+```
+No tasks found matching your criteria.
+```
+
+**AI mode:**
+```markdown
+## Tasks (0)
+
+No tasks match the specified criteria.
+```
+
+**JSON mode:**
+```json
+{
+  "summary": "No tasks match the specified criteria",
+  "tasks": []
+}
+```
+
+### AI Mode Output Specification
+
+This section details the exact format for `--ai` mode output.
+
+#### Heading Structure
+
+Output follows a logical heading hierarchy that is readable by both humans and LLMs:
+
+- `##` for top-level sections (entity type + count)
+- `###` for individual entities
+- Nested contexts may go deeper as needed for logical structure
+
+#### Fields by Command
+
+**`list` command** — Scannable summary for decision-making:
+
+| Category | Fields |
+|----------|--------|
+| Always shown | path, title (in heading), status |
+| Shown if set | due, project (or area if no project) |
+| Omitted | tags, scheduled, defer-until, created, updated, completed, body |
+
+**`show` command** — Full detail for examination:
+
+- All frontmatter fields (nothing omitted)
+- Full body content
+
+**`context` command** — Hierarchy with focused detail:
+
+| Entity queried | Primary entity | Related entities |
+|----------------|----------------|------------------|
+| Area | Full frontmatter + body | Projects: title, path, status, task count<br>Tasks: title, path, status, due |
+| Project | Full frontmatter + body | Parent area: title, path<br>Tasks: title, path, status, due |
+| Task | Full frontmatter + body | Parent project: title, path, status<br>Parent area: title, path |
+
+- **Primary entity:** Full frontmatter + body
+- **Related entities:** Summary only (title, path, status; for tasks: also due)
+- **With `--with-bodies`:** All entities include full frontmatter + body
+
+#### Array Fields
+
+Arrays (like tags) are represented as comma-separated inline values:
+
+```markdown
+- **Tags:** bug, urgent, frontend
+```
+
+#### Date Formats
+
+| Field type | Format | Example |
+|------------|--------|---------|
+| Date fields (due, scheduled, defer-until) | `YYYY-MM-DD` | `2025-12-20` |
+| Timestamp fields (created, updated, completed) | `YYYY-MM-DDTHH:MM:SS` | `2025-12-15T14:30:00` |
+
+#### Body Inclusion Rules
+
+| Command | Body behavior |
+|---------|---------------|
+| `list` | Never includes bodies |
+| `show` | Always includes full body |
+| `context` | Includes body of primary entity only |
+| `context --with-bodies` | Includes bodies for all entities |
 
 ---
 
@@ -256,6 +393,39 @@ taskdn list projects --status planning   # Filter by status
 taskdn list areas                        # All active areas
 ```
 
+#### Sorting
+
+```bash
+taskdn list --sort due                   # By due date (ascending)
+taskdn list --sort created               # By creation date
+taskdn list --sort updated               # By last update
+taskdn list --sort title                 # Alphabetical
+taskdn list --sort due --desc            # Descending order
+```
+
+**Default sort order:** `created` (newest first). Use `--sort` for custom ordering, or `taskdn next` for smart prioritization.
+
+**Null handling:** Tasks without a value for the sort field (e.g., no due date) appear last.
+
+#### Completed Task Queries
+
+To query completed tasks, use `--include-done` or `--include-closed` with date filters:
+
+```bash
+# Primitive filters (composable)
+taskdn list --include-done --completed-after 2025-12-01
+taskdn list --include-done --completed-before 2025-12-15
+taskdn list --include-done --completed-after 2025-12-01 --completed-before 2025-12-15
+
+# Convenience aliases
+taskdn list --include-done --completed-today       # Finished today
+taskdn list --include-done --completed-this-week   # Finished this week
+```
+
+The `--completed-after` and `--completed-before` filters can be combined for date ranges. The convenience aliases (`--completed-today`, `--completed-this-week`) are shorthand for the appropriate date range.
+
+**Note:** These filters require `--include-done` or `--include-closed` to be explicit about including completed tasks.
+
 ### Add Command
 
 Create new tasks, projects, or areas.
@@ -291,8 +461,12 @@ taskdn edit ~/tasks/foo.md               # Open in $EDITOR (human only)
 
 # Programmatic update (for AI/scripts)
 taskdn update ~/tasks/foo.md --set status=ready
-taskdn update ~/tasks/foo.md --set "title=New Title" --set "due=2025-12-20"
+taskdn update ~/tasks/foo.md --set title="New Title" --set due=2025-12-20
 taskdn update ~/tasks/foo.md --unset project    # Remove field
+
+# Values with spaces need quotes (either style works)
+taskdn update ~/tasks/foo.md --set title="My Task Title"
+taskdn update ~/tasks/foo.md --set "title=My Task Title"
 
 # Archive (manual)
 taskdn archive ~/tasks/foo.md            # Move to tasks/archive/
@@ -471,6 +645,43 @@ Common flags have single-letter shortcuts:
 - In AI mode, errors include structured information (error code, suggestions)
 - In human mode, errors are friendly prose with "Did you mean?" suggestions
 
+### Error Codes
+
+Errors include a machine-readable code and contextual information:
+
+| Code | When | Includes |
+|------|------|----------|
+| `NOT_FOUND` | File/entity doesn't exist | Suggestions for similar items |
+| `AMBIGUOUS` | Fuzzy search matched multiple items | List of matches with paths |
+| `INVALID_STATUS` | Bad status value | List of valid statuses |
+| `INVALID_DATE` | Unparseable date string | Expected formats |
+| `INVALID_PATH` | Path outside configured directories | Configured directory paths |
+| `PARSE_ERROR` | YAML frontmatter malformed | Line number, specific issue |
+| `MISSING_FIELD` | Required field absent | Which field is missing |
+| `REFERENCE_ERROR` | Project/area reference doesn't exist | The broken reference |
+| `PERMISSION_ERROR` | Can't read/write file | File path |
+| `CONFIG_ERROR` | Config missing or invalid | Suggestion to run `taskdn init` |
+
+**Error structure (AI mode):**
+
+Each error includes:
+- `code` — Machine-readable identifier from the table above
+- `message` — Human-readable explanation of what went wrong
+- `details` — Context-specific information (the bad value, the path, etc.)
+- `suggestions` — When applicable (similar items, valid values, next steps)
+
+Additional error codes may be added as needed during implementation.
+
+### Error Output Destination
+
+Errors go to different streams depending on mode:
+
+- **Human mode:** stderr (Unix standard, allows `taskdn list > file.txt` without errors in file)
+- **AI mode:** stdout (guarantees agents see errors as part of the response)
+- **JSON mode:** stdout (errors are structured data)
+
+This ensures AI agents always receive error information, while human mode follows Unix conventions for piping.
+
 ### Shell Completions
 
 The CLI should support auto-completion for bash, zsh, and fish shells.
@@ -512,6 +723,10 @@ AI agents helping users plan or review need hierarchical context. Without `conte
 
 `show` returns a single entity with its body. `context` returns an entity plus its relationships (parent area/project, child tasks). They serve different purposes: `show` is "let me see this thing," `context` is "let me understand the full picture around this thing."
 
+### Why separate `list` and `show`?
+
+`list` returns multiple entities in summary form. `show` returns one entity with full detail. They have different intents: `list` is "what things match these criteria?" while `show` is "tell me everything about this specific thing." This mirrors familiar patterns like `git log` vs `git show`. Merging them (e.g., `list --full <path>`) would conflate two distinct operations.
+
 ### Why require paths for writes in AI mode?
 
 When an AI agent completes, drops, or updates a task, it must use the exact file path. This prevents mistakes—no risk of fuzzy matching the wrong task. The pattern is: query first (get paths), then act (use paths). This is slightly more verbose but eliminates a class of errors.
@@ -550,90 +765,7 @@ Daily workflows shouldn't require 30+ keystrokes. `taskdn today` vs `taskdn list
 
 This section captures items that need further discussion before implementation.
 
-### 1. Sorting (Medium Priority)
-
-No default sorting specified. Should we have:
-
-```bash
-taskdn list --sort due          # By due date (nulls last?)
-taskdn list --sort created      # By creation date
-taskdn list --sort updated      # By last update
-taskdn list --sort title        # Alphabetical
-taskdn list --sort due --desc   # Descending
-```
-
-**Questions:**
-- Is this needed for v1?
-- What's the default sort order when no `--sort` specified?
-- How to handle null values (tasks without due dates)?
-
-### 2. Activity/History Queries (Medium Priority)
-
-How does someone ask "what did I complete this week"?
-
-**Proposed:**
-```bash
-taskdn list --include-done --completed-after 2025-12-09
-# Or shorthand:
-taskdn list --include-done --completed-this-week
-```
-
-### 3. Error Structure (High Priority)
-
-We need to define error codes and structure for AI mode.
-
-**Human mode example:**
-```
-Error: Task not found: "login bug"
-
-Did you mean one of these?
-  • Fix login button (~/tasks/fix-login-button.md)
-  • Login page redesign (~/tasks/login-redesign.md)
-```
-
-**AI mode example:**
-```markdown
-## Error: NOT_FOUND
-
-No task matching "login bug"
-
-### Suggestions
-
-- **Fix login button** — ~/tasks/fix-login-button.md
-- **Login page redesign** — ~/tasks/login-redesign.md
-```
-
-**Needs:**
-- Define error codes (NOT_FOUND, INVALID_STATUS, AMBIGUOUS_MATCH, etc.)
-- Define which information each error includes
-- Ensure AI mode errors are still readable Markdown
-
-### 4. Empty Results
-
-If a query returns nothing:
-
-**Human mode:** Show helpful message ("No tasks found matching your criteria")
-
-**AI mode:** What format?
-```markdown
-## Tasks (0)
-
-No tasks match the specified criteria.
-```
-
-Or just empty output? The former is more informative when truncated.
-
-### 5. Markdown Format Details (High Priority)
-
-The exact Markdown format for AI mode needs specification:
-
-- Heading levels for different entity types
-- Which fields are always shown vs conditional
-- How to represent arrays (projects field)
-- How to handle very long bodies (truncation?)
-- Format for dates (ISO 8601, but with or without time?)
-
-### 6. Stats/Summary Command (Low Priority)
+### 1. Stats/Summary Command (Low Priority)
 
 Should there be a way to get summary statistics?
 
@@ -649,7 +781,7 @@ taskdn stats
 
 **Question:** Useful for dashboards and AI overview, but can `context` serve this purpose?
 
-### 7. Limit/Pagination (Low Priority)
+### 2. Limit/Pagination (Low Priority)
 
 For large task lists:
 ```bash
@@ -659,7 +791,7 @@ taskdn list --limit 20 --offset 40   # Page 3
 
 Probably not needed for v1 if most users have <100 active tasks.
 
-### 8. Health Check / Doctor (Low Priority)
+### 3. Health Check / Doctor (Low Priority)
 
 ```bash
 taskdn doctor
@@ -680,11 +812,6 @@ taskdn doctor
 
 | Item | Priority | Status |
 |------|----------|--------|
-| Error structure for AI mode | High | Needs spec |
-| Markdown format specification | High | Needs spec |
-| Empty result handling | High | Needs decision |
-| Sorting options | Medium | Needs decision |
-| Activity queries (`--completed-this-week`) | Medium | Likely yes |
 | Stats command | Low | Maybe v2 |
 | Limit/pagination | Low | Maybe v2 |
 | Doctor command | Low | Maybe v2 |
