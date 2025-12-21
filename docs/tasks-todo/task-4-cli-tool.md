@@ -126,15 +126,15 @@ JSON fails criteria 2 and 3: truncated JSON is invalid, and LLMs must mentally p
 ## Tasks (2)
 
 ### Fix login bug
-- **Path:** ~/tasks/fix-login-bug.md
-- **Status:** in-progress
-- **Due:** 2025-12-15
-- **Project:** Q1 Planning
+- **path:** ~/tasks/fix-login-bug.md
+- **status:** in-progress
+- **due:** 2025-12-15
+- **project:** Q1 Planning
 
 ### Write documentation
-- **Path:** ~/tasks/write-docs.md
-- **Status:** ready
-- **Project:** Q1 Planning
+- **path:** ~/tasks/write-docs.md
+- **status:** ready
+- **project:** Q1 Planning
 ```
 
 **JSON mode (`--json`):**
@@ -344,6 +344,8 @@ taskdn add area "Work"         # Add area
 
 Tasks are 90% of usage, so they get the shortest syntax. Projects and areas require explicit naming.
 
+**Note:** `taskdn add "Task title"` is equivalent to `taskdn add task "Task title"`. The explicit `task` keyword is optional but accepted. This means `--project` as a flag (assigning a task to a project) is never ambiguous with `project` as an entity type (creating a project).
+
 ### Convenience Commands
 
 These shortcuts exist for high-frequency daily operations:
@@ -381,7 +383,7 @@ taskdn context task ~/tasks/foo.md
 
 # No args: vault overview
 taskdn context --ai                   # AI: returns vault overview (see below)
-taskdn context                        # Human: TBD (may be interactive)
+taskdn context                        # Human: error (see below)
 ```
 
 **Vault overview (`taskdn context --ai` with no arguments):**
@@ -394,20 +396,20 @@ Returns a high-level overview of the vault's current state:
 ### Areas (3)
 
 #### Work
-- **Path:** ~/areas/work.md
-- **Projects:** 2 active
-- **Tasks:** 15 active
+- **path:** ~/areas/work.md
+- **projects:** 2 active
+- **tasks:** 15 active
 
 #### Personal
-- **Path:** ~/areas/personal.md
-- **Projects:** 1 active
-- **Tasks:** 8 active
+- **path:** ~/areas/personal.md
+- **projects:** 1 active
+- **tasks:** 8 active
 
 ### Summary
 
-- **Total active tasks:** 47
-- **Overdue:** 2
-- **In progress:** 3
+- **total-active-tasks:** 47
+- **overdue:** 2
+- **in-progress:** 3
 
 ### This Week
 
@@ -437,33 +439,33 @@ Examples:
 ```markdown
 ## Area: Work
 
-- **Path:** ~/areas/work.md
-- **Status:** active
+- **path:** ~/areas/work.md
+- **status:** active
 
 ## Projects in Work (2)
 
 ### Q1 Planning
-- **Path:** ~/projects/q1-planning.md
-- **Status:** in-progress
-- **Tasks:** 5
+- **path:** ~/projects/q1-planning.md
+- **status:** in-progress
+- **tasks:** 5
 
 ### Client Onboarding
-- **Path:** ~/projects/client-onboarding.md
-- **Status:** ready
-- **Tasks:** 3
+- **path:** ~/projects/client-onboarding.md
+- **status:** ready
+- **tasks:** 3
 
 ## Tasks in Work (8)
 
 ### Fix login bug
-- **Path:** ~/tasks/fix-login-bug.md
-- **Status:** in-progress
-- **Project:** Q1 Planning
-- **Due:** 2025-12-15
+- **path:** ~/tasks/fix-login-bug.md
+- **status:** in-progress
+- **project:** Q1 Planning
+- **due:** 2025-12-15
 
 ### Write documentation
-- **Path:** ~/tasks/write-docs.md
-- **Status:** ready
-- **Project:** Q1 Planning
+- **path:** ~/tasks/write-docs.md
+- **status:** ready
+- **project:** Q1 Planning
 ```
 
 **Body inclusion:** Task/project/area bodies are NOT included by default. Use `--with-bodies` to include them.
@@ -610,9 +612,9 @@ The output always includes the path so AI agents can reference the created entit
 ## Task Created
 
 ### Review quarterly report
-- **Path:** ~/tasks/review-quarterly-report.md
-- **Status:** inbox
-- **Created at:** 2025-12-18T14:30:00
+- **path:** ~/tasks/review-quarterly-report.md
+- **status:** inbox
+- **created-at:** 2025-12-18T14:30:00
 ```
 
 With additional fields specified:
@@ -621,11 +623,11 @@ With additional fields specified:
 ## Task Created
 
 ### Review quarterly report
-- **Path:** ~/tasks/review-quarterly-report.md
-- **Status:** ready
-- **Project:** Q1 Planning
-- **Due:** 2025-12-20
-- **Created at:** 2025-12-18T14:30:00
+- **path:** ~/tasks/review-quarterly-report.md
+- **status:** ready
+- **project:** Q1 Planning
+- **due:** 2025-12-20
+- **created-at:** 2025-12-18T14:30:00
 ```
 
 Projects and areas follow the same pattern:
@@ -634,10 +636,10 @@ Projects and areas follow the same pattern:
 ## Project Created
 
 ### Q1 Planning
-- **Path:** ~/projects/q1-planning.md
-- **Status:** planning
-- **Area:** Work
-- **Created at:** 2025-12-18T14:30:00
+- **path:** ~/projects/q1-planning.md
+- **status:** planning
+- **area:** Work
+- **created-at:** 2025-12-18T14:30:00
 ```
 
 ### Task Operations
@@ -694,6 +696,7 @@ taskdn doctor --json                     # JSON output for scripts
 | File | Required fields present (title, status) |
 | File | Status values are valid |
 | File | Date fields are valid format |
+| File | Tasks have at most one project (warns if multiple) |
 | References | Project references point to existing projects |
 | References | Area references point to existing areas |
 
@@ -724,29 +727,29 @@ Summary: 3 issues in 57 files checked
 ```markdown
 ## System Health
 
-- **Config:** OK (~/.config/taskdn/config.json)
-- **Tasks:** OK (47 files)
-- **Projects:** OK (6 files)
-- **Areas:** OK (4 files)
+- **config:** OK (~/.config/taskdn/config.json)
+- **tasks:** OK (47 files)
+- **projects:** OK (6 files)
+- **areas:** OK (4 files)
 
 ## Issues (3)
 
 ### ~/tasks/fix-login.md
-- **Code:** REFERENCE_ERROR
-- **Field:** project
-- **Message:** References non-existent project "Q1 Planing"
-- **Suggestion:** Did you mean "Q1 Planning"?
+- **code:** REFERENCE_ERROR
+- **field:** project
+- **message:** References non-existent project "Q1 Planing"
+- **suggestion:** Did you mean "Q1 Planning"?
 
 ### ~/tasks/old-task.md
-- **Code:** INVALID_STATUS
-- **Field:** status
-- **Value:** inprogress
-- **Valid values:** inbox, ready, in-progress, blocked, done, dropped, icebox
+- **code:** INVALID_STATUS
+- **field:** status
+- **value:** inprogress
+- **valid-values:** inbox, ready, in-progress, blocked, done, dropped, icebox
 
 ### ~/projects/abandoned.md
-- **Code:** PARSE_ERROR
-- **Line:** 3
-- **Message:** Unexpected key in YAML frontmatter
+- **code:** PARSE_ERROR
+- **line:** 3
+- **message:** Unexpected key in YAML frontmatter
 
 ## Summary
 
@@ -785,7 +788,13 @@ taskdn complete "login bug"
 taskdn complete ~/tasks/fix-login-bug.md --ai
 ```
 
-**Path format in AI mode output:** Always absolute paths. This eliminates ambiguity about working directories and ensures paths can be used directly in follow-up commands.
+**Path format in AI mode output:** Full paths, using `~` notation when the file is under the user's home directory (e.g., `~/notes/tasks/fix-login.md`), otherwise absolute paths (e.g., `/Volumes/External/vault/tasks/fix-login.md`). This ensures paths are unambiguous and usable for follow-up operations.
+
+**Path format for input:** The CLI accepts paths in any format and resolves them appropriately:
+- Filename: `fix-login.md` (resolved relative to the appropriate directory based on command)
+- Relative: `archive/old-task.md` (resolved relative to tasks_dir)
+- Tilde: `~/notes/tasks/fix-login.md` (expanded)
+- Absolute: `/Users/danny/notes/tasks/fix-login.md` (used as-is)
 
 ### Fuzzy Matching Rules
 
@@ -826,7 +835,7 @@ Fuzzy matching uses simple, predictable rules:
 Commands like `taskdn list` return "active" entities by default. Here's what "active" means for each entity type:
 
 **Active tasks** have ALL of:
-- Status NOT IN (`done`, `dropped`)
+- Status NOT IN (`done`, `dropped`, `icebox`)
 - `defer-until` is either unset or ≤ today
 - File is not in the `archive/` subdirectory
 
@@ -844,6 +853,7 @@ Note: Project status `paused` is still considered active (just on hold). Area st
 | State                  | Default Behavior | Flag to Include       |
 | ---------------------- | ---------------- | --------------------- |
 | Active (see above)     | Included         | —                     |
+| `icebox`               | Excluded         | `--include-icebox`    |
 | `done`                 | Excluded         | `--include-done`      |
 | `dropped`              | Excluded         | `--include-dropped`   |
 | Both done + dropped    | Excluded         | `--include-closed`    |
@@ -986,20 +996,20 @@ taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
 ## Completed (2)
 
 ### ~/tasks/a.md
-- **Title:** Fix login bug
-- **Status:** done
-- **Completed at:** 2025-12-18T14:30:00
+- **title:** Fix login bug
+- **status:** done
+- **completed-at:** 2025-12-18T14:30:00
 
 ### ~/tasks/c.md
-- **Title:** Write tests
-- **Status:** done
-- **Completed at:** 2025-12-18T14:30:01
+- **title:** Write tests
+- **status:** done
+- **completed-at:** 2025-12-18T14:30:01
 
 ## Errors (1)
 
 ### ~/tasks/b.md
-- **Code:** NOT_FOUND
-- **Message:** Task file does not exist
+- **code:** NOT_FOUND
+- **message:** Task file does not exist
 ```
 
 If all operations succeed, the "Errors" section is omitted. If all operations fail, the "Completed" section is omitted.
@@ -1066,6 +1076,7 @@ Errors include a machine-readable code and contextual information:
 | `PARSE_ERROR` | YAML frontmatter malformed | Line number, specific issue |
 | `MISSING_FIELD` | Required field absent | Which field is missing |
 | `REFERENCE_ERROR` | Project/area reference doesn't exist | The broken reference |
+| `MULTIPLE_PROJECTS` | Task has more than one project | The extra projects (warning, not error) |
 | `PERMISSION_ERROR` | Can't read/write file | File path |
 | `CONFIG_ERROR` | Config missing or invalid | Suggestion to run `taskdn init` |
 
@@ -1082,16 +1093,16 @@ Each error includes:
 ```markdown
 ## Error: NOT_FOUND
 
-- **Message:** Task file does not exist
-- **Path:** ~/tasks/nonexistent.md
-- **Suggestion:** Did you mean ~/tasks/existent-task.md?
+- **message:** Task file does not exist
+- **path:** ~/tasks/nonexistent.md
+- **suggestion:** Did you mean ~/tasks/existent-task.md?
 ```
 
 ```markdown
 ## Error: AMBIGUOUS
 
-- **Message:** Multiple tasks match "login"
-- **Matches:**
+- **message:** Multiple tasks match "login"
+- **matches:**
   - ~/tasks/fix-login-bug.md — "Fix login bug"
   - ~/tasks/login-redesign.md — "Login page redesign"
   - ~/tasks/login-tests.md — "Write login tests"
@@ -1100,9 +1111,9 @@ Each error includes:
 ```markdown
 ## Error: INVALID_STATUS
 
-- **Message:** Invalid status value
-- **Value:** inprogress
-- **Valid values:** inbox, icebox, ready, in-progress, blocked, done, dropped
+- **message:** Invalid status value
+- **value:** inprogress
+- **valid-values:** inbox, icebox, ready, in-progress, blocked, done, dropped
 ```
 
 The heading always includes the error code for quick identification. Fields vary by error type but follow the structure above.
@@ -1175,6 +1186,16 @@ When an AI agent completes, drops, or updates a task, it must use the exact file
 ### Why fuzzy search for humans, paths for AI writes?
 
 Humans think in titles ("complete the login bug task"). Requiring exact paths would be tedious. So human mode accepts fuzzy search and prompts when ambiguous. AI mode requires paths because AI agents shouldn't guess—they should use the paths returned from previous queries.
+
+### Why `project` (singular) when files use `projects` (array)?
+
+The specification defines the field as `projects` (an array with exactly one element) for compatibility with tools like TaskNotes that support multiple projects per task. However, Taskdn enforces single-project semantics, so the CLI presents this as `project` (singular) everywhere:
+
+- Output shows `project: Q1 Planning` (not `projects`)
+- Input accepts `--project "Q1"` and `--set project="Q1"`
+- The CLI reads `projects[0]` and writes `projects: ["[[value]]"]`
+
+This prevents users and AI agents from thinking multiple projects are supported. If a file contains multiple projects (from another tool or manual editing), the CLI uses the first one and ignores the rest. The `doctor` command warns about multi-project files.
 
 ### Why verb-first command structure?
 
