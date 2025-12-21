@@ -47,20 +47,42 @@ The CLI serves two fundamentally different users with different needs:
 
 Rather than compromise, we embrace this split with distinct modes.
 
+### Interactive Prompts (Human Mode)
+
+Some human-mode operations require interactive prompts:
+
+- **Fuzzy match with multiple results:** User selects from a list
+- **`taskdn add` with no arguments:** Prompts for title, status, etc.
+- **Confirmations:** Destructive operations may prompt for confirmation
+
+The exact UX for these prompts will be designed during implementation using a TUI library. Key principles:
+
+- Ctrl-C always cancels safely (no partial operations)
+- Prompts show sensible defaults where applicable
+- AI mode (`--ai`) never prompts—it succeeds or fails with a clear error
+
+Interactive prompt behavior is not covered by automated tests.
+
 ---
 
 ## Output Modes & Flags
 
 ### The Flag System
 
-| Flags    | Mode   | Format                  | Prompts? |
-| -------- | ------ | ----------------------- | -------- |
-| (none)   | Human  | Pretty (colors, tables) | Yes      |
-| `--json` | Script | JSON                    | No       |
-| `--ai`   | AI     | Markdown (structured)   | No       |
+| Flags         | Format                  | Prompts? | Paths Included | Use Case |
+| ------------- | ----------------------- | -------- | -------------- | -------- |
+| (none)        | Pretty (colors, tables) | Yes      | Sometimes      | Human at terminal |
+| `--json`      | JSON                    | No       | Yes            | Scripts, piping to `jq`, interop |
+| `--ai`        | Markdown (structured)   | No       | Yes            | AI agents (Claude Code, etc.) |
+| `--ai --json` | JSON                    | No       | Yes            | AI agents needing JSON |
 
-- **`--ai`** is a _mode_ that changes behavior: no prompts, always includes file paths, structured errors, token-efficient Markdown output
-- **`--json`** is a _format_ override for programmatic parsing (scripts, piping to `jq`)
+**How the flags work:**
+
+- **`--ai`** is a _mode_ that changes behavior: no prompts, always includes file paths, structured errors, token-efficient Markdown output. Some commands may return AI-optimized content (e.g., more context, different field selection).
+
+- **`--json`** is a _format_ that also implies non-interactive behavior: no prompts, paths included, structured errors in JSON. Useful for piping to other tools, saving to disk, or programmatic parsing.
+
+- **`--ai --json`** combines both: JSON format with any AI-specific behavioral differences. In practice, mostly equivalent to `--json` alone, but ensures AI-optimized content if a command provides it.
 
 ### AI Mode Behaviors
 
@@ -239,11 +261,53 @@ Output follows a logical heading hierarchy that is readable by both humans and L
 
 #### Array Fields
 
-Arrays (like tags) are represented as comma-separated inline values:
+Array values are displayed as comma-separated inline values:
 
 ```markdown
-- **Tags:** bug, urgent, frontend
+- **blocked-by:** [[Project A]], [[Project B]]
 ```
+
+**Edge cases:**
+
+| Case | Display |
+|------|---------|
+| Empty array | `- **blocked-by:** (none)` |
+| Single item | `- **blocked-by:** [[Project A]]` (no comma) |
+| Multiple items | `- **blocked-by:** [[Project A]], [[Project B]]` |
+
+**Note on unknown fields:** The spec requires implementations to preserve unknown frontmatter fields (like `tags`). The `show` command displays all frontmatter fields, including unknown ones, using the same formatting rules. Unknown fields are not displayed in `list` output.
+
+#### Field Name Display
+
+Field names are displayed differently depending on mode:
+
+**AI mode** — Uses exact field names from the spec (kebab-case). This ensures consistency with file contents and `--set` commands.
+
+```markdown
+- **path:** ~/tasks/fix-login-bug.md
+- **status:** in-progress
+- **created-at:** 2025-12-15T14:30:00
+- **defer-until:** 2025-12-20
+```
+
+**Human mode** — Uses friendly labels for readability.
+
+| File Field | Human Label |
+|------------|-------------|
+| `status` | Status |
+| `created-at` | Created |
+| `updated-at` | Updated |
+| `completed-at` | Completed |
+| `due` | Due |
+| `scheduled` | Scheduled |
+| `defer-until` | Deferred Until |
+| `project` | Project |
+| `area` | Area |
+| `description` | Description |
+| `start-date` | Start Date |
+| `end-date` | End Date |
+| `blocked-by` | Blocked By |
+| `type` | Type |
 
 #### Date Formats
 
@@ -453,7 +517,15 @@ taskdn list --sort due --desc            # Descending order
 
 **Default sort order:** `created` (newest first). Use `--sort` for custom ordering, or `taskdn next` for smart prioritization.
 
-**Null handling:** Tasks without a value for the sort field (e.g., no due date) appear last.
+**Null handling:** Tasks without a value for the sort field always appear last in the output, regardless of sort direction.
+
+```bash
+taskdn list --sort due
+# Output: Tasks with due dates (earliest first), then tasks without due dates
+
+taskdn list --sort due --desc
+# Output: Tasks with due dates (latest first), then tasks without due dates
+```
 
 #### Filter Combination Logic
 
@@ -715,6 +787,36 @@ taskdn complete ~/tasks/fix-login-bug.md --ai
 
 **Path format in AI mode output:** Always absolute paths. This eliminates ambiguity about working directories and ensures paths can be used directly in follow-up commands.
 
+### Fuzzy Matching Rules
+
+Fuzzy matching uses simple, predictable rules:
+
+1. **Case-insensitive** — "LOGIN" matches "Fix login bug"
+2. **Substring match** — Query must appear somewhere in the title
+3. **No typo tolerance** — "logn" does NOT match "login"
+
+**Examples:**
+```bash
+# Query: "login"
+# ✓ Matches: "Fix login bug", "Login page redesign", "Update login tests"
+# ✗ No match: "Authentication system" (no substring "login")
+
+# Query: "LOGIN"
+# ✓ Matches same as above (case-insensitive)
+
+# Query: "logn" (typo)
+# ✗ Matches nothing (exact substring required)
+```
+
+**Multiple match behavior:**
+
+| Mode | Operation | Multiple matches |
+|------|-----------|------------------|
+| Human | Read (show, context) | Prompt user to select |
+| Human | Write (complete, drop, etc.) | Prompt user to select |
+| AI | Read (show, context) | Return `AMBIGUOUS` error with list of matches |
+| AI | Write | Not allowed—must use exact path |
+
 ---
 
 ## Completed & Archived Tasks
@@ -739,14 +841,25 @@ Note: Project status `paused` is still considered active (just on hold). Area st
 
 ### Inclusion Flags
 
-| State                  | Default Behavior | Flag to Include     |
-| ---------------------- | ---------------- | ------------------- |
-| Active (see above)     | Included         | —                   |
-| `done`                 | Excluded         | `--include-done`    |
-| `dropped`              | Excluded         | `--include-dropped` |
-| Both done + dropped    | Excluded         | `--include-closed`  |
-| Deferred (future date) | Excluded         | `--include-deferred`|
-| Archived (in archive/) | Never included   | `--archived`        |
+| State                  | Default Behavior | Flag to Include       |
+| ---------------------- | ---------------- | --------------------- |
+| Active (see above)     | Included         | —                     |
+| `done`                 | Excluded         | `--include-done`      |
+| `dropped`              | Excluded         | `--include-dropped`   |
+| Both done + dropped    | Excluded         | `--include-closed`    |
+| Deferred (future date) | Excluded         | `--include-deferred`  |
+| Archived (in archive/) | Excluded         | `--include-archived`  |
+
+All `--include-*` flags add items to the normal query results.
+
+**Archive-only queries:**
+
+Use `--only-archived` to query exclusively from the archive directory:
+
+```bash
+taskdn list --only-archived                    # All archived tasks
+taskdn list --only-archived --project "Q1"     # Archived tasks from Q1
+```
 
 Archiving is manual via `taskdn archive <path>`.
 
@@ -774,6 +887,26 @@ taskdn add "Task" --due +3d              # 3 days from now
 ```
 
 **Output:** Always ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).
+
+### Natural Language Date Rules
+
+1. **Reference point:** "today" is midnight in system local time
+2. **Day names:** Always mean the *next* occurrence
+   - If today is Friday, "friday" = next Friday (7 days away)
+   - If today is Wednesday, "friday" = this Friday (2 days away)
+3. **"next X":** Skips the immediate occurrence
+   - "next friday" on Thursday = Friday 8 days away, not tomorrow
+4. **Relative dates:**
+   - `+3d` = 3 days from today
+   - `+1w` = 1 week from today
+   - `+2m` = 2 months from today
+5. **Numeric dates:** Only ISO format (`YYYY-MM-DD`) accepted
+   - Ambiguous formats like `12/1` or `1/12` are rejected with `INVALID_DATE` error
+6. **Time zone:** All dates interpreted in system local time
+
+**Recommendation for AI agents:**
+
+> AI agents SHOULD use ISO 8601 format (`YYYY-MM-DD`) for all date inputs to avoid ambiguity. Natural language parsing is provided for human convenience but introduces interpretation edge cases.
 
 ---
 
@@ -890,9 +1023,28 @@ Common flags have single-letter shortcuts:
 
 ### Exit Codes
 
-- `0` — Success
-- `1` — General error
-- `2` — Usage error (invalid arguments, unknown flags)
+| Code | Meaning |
+|------|---------|
+| `0` | Success (including empty results—that's a valid outcome) |
+| `1` | Runtime error (file not found, permission denied, parse error, reference error) |
+| `2` | Usage error (invalid arguments, unknown flags, bad date format in CLI input) |
+
+**The distinction:**
+- Code `2` = "you typed the command wrong" — fix your command
+- Code `1` = "the command was valid but something went wrong" — vault/file issue
+
+**Examples:**
+| Command | Exit Code | Reason |
+|---------|-----------|--------|
+| `taskdn list --status invalid` | 2 | Bad argument value |
+| `taskdn complete nonexistent.md` | 1 | File not found |
+| `taskdn list --due "not a date"` | 2 | Unparseable CLI input |
+| `taskdn list` (with malformed files) | 0 | Succeeded, bad files skipped with warnings |
+| `taskdn list --project "Q1"` (no matches) | 0 | Empty result is valid |
+| `taskdn update task.md --set status=invalid` | 2 | Bad argument value |
+| `taskdn show task.md` (YAML parse error) | 1 | File exists but is malformed |
+
+**Note:** The `doctor` command has its own exit code semantics (see Doctor Command section) since "issues found" is a distinct diagnostic outcome.
 
 ### Error Messages
 
