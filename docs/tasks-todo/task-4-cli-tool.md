@@ -69,12 +69,12 @@ Interactive prompt behavior is not covered by automated tests.
 
 ### The Flag System
 
-| Flags         | Format                  | Prompts? | Paths Included | Use Case |
-| ------------- | ----------------------- | -------- | -------------- | -------- |
-| (none)        | Pretty (colors, tables) | Yes      | Sometimes      | Human at terminal |
+| Flags         | Format                  | Prompts? | Paths Included | Use Case                         |
+| ------------- | ----------------------- | -------- | -------------- | -------------------------------- |
+| (none)        | Pretty (colors, tables) | Yes      | Sometimes      | Human at terminal                |
 | `--json`      | JSON                    | No       | Yes            | Scripts, piping to `jq`, interop |
-| `--ai`        | Markdown (structured)   | No       | Yes            | AI agents (Claude Code, etc.) |
-| `--ai --json` | JSON                    | No       | Yes            | AI agents needing JSON |
+| `--ai`        | Markdown (structured)   | No       | Yes            | AI agents (Claude Code, etc.)    |
+| `--ai --json` | JSON                    | No       | Yes            | AI agents needing JSON           |
 
 **How the flags work:**
 
@@ -126,12 +126,14 @@ JSON fails criteria 2 and 3: truncated JSON is invalid, and LLMs must mentally p
 ## Tasks (2)
 
 ### Fix login bug
+
 - **path:** ~/tasks/fix-login-bug.md
 - **status:** in-progress
 - **due:** 2025-12-15
 - **project:** Q1 Planning
 
 ### Write documentation
+
 - **path:** ~/tasks/write-docs.md
 - **status:** ready
 - **project:** Q1 Planning
@@ -143,8 +145,18 @@ JSON fails criteria 2 and 3: truncated JSON is invalid, and LLMs must mentally p
 {
   "summary": "Found 2 tasks",
   "tasks": [
-    {"path": "~/tasks/fix-login-bug.md", "title": "Fix login bug", "status": "in-progress", "due": "2025-12-15"},
-    {"path": "~/tasks/write-docs.md", "title": "Write documentation", "status": "ready", "project": "Q1 Planning"}
+    {
+      "path": "~/tasks/fix-login-bug.md",
+      "title": "Fix login bug",
+      "status": "in-progress",
+      "due": "2025-12-15"
+    },
+    {
+      "path": "~/tasks/write-docs.md",
+      "title": "Write documentation",
+      "status": "ready",
+      "project": "Q1 Planning"
+    }
   ]
 }
 ```
@@ -191,6 +203,7 @@ JSON output always includes a `summary` field alongside the data:
 ```
 
 This structure ensures:
+
 - Results are self-documenting
 - Empty results are explicit (not silent)
 - Entity types are clear from the keys
@@ -201,11 +214,13 @@ This structure ensures:
 Empty results are always explicit, never silent:
 
 **Human mode:**
+
 ```
 No tasks found matching your criteria.
 ```
 
 **AI mode:**
+
 ```markdown
 ## Tasks (0)
 
@@ -213,6 +228,7 @@ No tasks match the specified criteria.
 ```
 
 **JSON mode:**
+
 ```json
 {
   "summary": "No tasks match the specified criteria",
@@ -236,11 +252,11 @@ Output follows a logical heading hierarchy that is readable by both humans and L
 
 **`list` command** — Scannable summary for decision-making:
 
-| Category | Fields |
-|----------|--------|
-| Always shown | path, title (in heading), status |
-| Shown if set | due, project (or area if no project) |
-| Omitted | tags, scheduled, defer-until, created, updated, completed, body |
+| Category     | Fields                                                          |
+| ------------ | --------------------------------------------------------------- |
+| Always shown | path, title (in heading), status                                |
+| Shown if set | due, project (or area if no project)                            |
+| Omitted      | tags, scheduled, defer-until, created, updated, completed, body |
 
 **`show` command** — Full detail for examination:
 
@@ -249,11 +265,11 @@ Output follows a logical heading hierarchy that is readable by both humans and L
 
 **`context` command** — Hierarchy with focused detail:
 
-| Entity queried | Primary entity | Related entities |
-|----------------|----------------|------------------|
-| Area | Full frontmatter + body | Projects: title, path, status, task count<br>Tasks: title, path, status, due |
-| Project | Full frontmatter + body | Parent area: title, path<br>Tasks: title, path, status, due |
-| Task | Full frontmatter + body | Parent project: title, path, status<br>Parent area: title, path |
+| Entity queried | Primary entity          | Related entities                                                             |
+| -------------- | ----------------------- | ---------------------------------------------------------------------------- |
+| Area           | Full frontmatter + body | Projects: title, path, status, task count<br>Tasks: title, path, status, due |
+| Project        | Full frontmatter + body | Parent area: title, path<br>Tasks: title, path, status, due                  |
+| Task           | Full frontmatter + body | Parent project: title, path, status<br>Parent area: title, path              |
 
 - **Primary entity:** Full frontmatter + body
 - **Related entities:** Summary only (title, path, status; for tasks: also due)
@@ -269,10 +285,10 @@ Array values are displayed as comma-separated inline values:
 
 **Edge cases:**
 
-| Case | Display |
-|------|---------|
-| Empty array | `- **blocked-by:** (none)` |
-| Single item | `- **blocked-by:** [[Project A]]` (no comma) |
+| Case           | Display                                          |
+| -------------- | ------------------------------------------------ |
+| Empty array    | `- **blocked-by:** (none)`                       |
+| Single item    | `- **blocked-by:** [[Project A]]` (no comma)     |
 | Multiple items | `- **blocked-by:** [[Project A]], [[Project B]]` |
 
 **Note on unknown fields:** The spec requires implementations to preserve unknown frontmatter fields (like `tags`). The `show` command displays all frontmatter fields, including unknown ones, using the same formatting rules. Unknown fields are not displayed in `list` output.
@@ -292,38 +308,38 @@ Field names are displayed differently depending on mode:
 
 **Human mode** — Uses friendly labels for readability.
 
-| File Field | Human Label |
-|------------|-------------|
-| `status` | Status |
-| `created-at` | Created |
-| `updated-at` | Updated |
-| `completed-at` | Completed |
-| `due` | Due |
-| `scheduled` | Scheduled |
-| `defer-until` | Deferred Until |
-| `project` | Project |
-| `area` | Area |
-| `description` | Description |
-| `start-date` | Start Date |
-| `end-date` | End Date |
-| `blocked-by` | Blocked By |
-| `type` | Type |
+| File Field     | Human Label    |
+| -------------- | -------------- |
+| `status`       | Status         |
+| `created-at`   | Created        |
+| `updated-at`   | Updated        |
+| `completed-at` | Completed      |
+| `due`          | Due            |
+| `scheduled`    | Scheduled      |
+| `defer-until`  | Deferred Until |
+| `project`      | Project        |
+| `area`         | Area           |
+| `description`  | Description    |
+| `start-date`   | Start Date     |
+| `end-date`     | End Date       |
+| `blocked-by`   | Blocked By     |
+| `type`         | Type           |
 
 #### Date Formats
 
-| Field type | Format | Example |
-|------------|--------|---------|
-| Date fields (due, scheduled, defer-until) | `YYYY-MM-DD` | `2025-12-20` |
+| Field type                                     | Format                | Example               |
+| ---------------------------------------------- | --------------------- | --------------------- |
+| Date fields (due, scheduled, defer-until)      | `YYYY-MM-DD`          | `2025-12-20`          |
 | Timestamp fields (created, updated, completed) | `YYYY-MM-DDTHH:MM:SS` | `2025-12-15T14:30:00` |
 
 #### Body Inclusion Rules
 
-| Command | Body behavior |
-|---------|---------------|
-| `list` | Never includes bodies |
-| `show` | Always includes full body |
-| `context` | Includes body of primary entity only |
-| `context --with-bodies` | Includes bodies for all entities |
+| Command                 | Body behavior                        |
+| ----------------------- | ------------------------------------ |
+| `list`                  | Never includes bodies                |
+| `show`                  | Always includes full body            |
+| `context`               | Includes body of primary entity only |
+| `context --with-bodies` | Includes bodies for all entities     |
 
 ---
 
@@ -335,9 +351,11 @@ Commands follow a verb-first pattern where tasks are the implied default:
 
 ```bash
 taskdn list                    # List tasks (implied)
+taskdn list tasks              # List tasks (explicit)
 taskdn list projects           # List projects
 taskdn list areas              # List areas
 taskdn add "Task title"        # Add task (implied)
+taskdn add task "Task title"   # Add task (explicit)
 taskdn add project "Q1"        # Add project
 taskdn add area "Work"         # Add area
 ```
@@ -357,6 +375,7 @@ taskdn next                    # Smart prioritization (see below)
 ```
 
 **`taskdn next`** returns the most actionable tasks, prioritized by:
+
 - Overdue tasks (highest priority)
 - Due today
 - Due this week
@@ -396,11 +415,13 @@ Returns a high-level overview of the vault's current state:
 ### Areas (3)
 
 #### Work
+
 - **path:** ~/areas/work.md
 - **projects:** 2 active
 - **tasks:** 15 active
 
 #### Personal
+
 - **path:** ~/areas/personal.md
 - **projects:** 1 active
 - **tasks:** 8 active
@@ -445,11 +466,13 @@ Examples:
 ## Projects in Work (2)
 
 ### Q1 Planning
+
 - **path:** ~/projects/q1-planning.md
 - **status:** in-progress
 - **tasks:** 5
 
 ### Client Onboarding
+
 - **path:** ~/projects/client-onboarding.md
 - **status:** ready
 - **tasks:** 3
@@ -457,12 +480,14 @@ Examples:
 ## Tasks in Work (8)
 
 ### Fix login bug
+
 - **path:** ~/tasks/fix-login-bug.md
 - **status:** in-progress
 - **project:** Q1 Planning
 - **due:** 2025-12-15
 
 ### Write documentation
+
 - **path:** ~/tasks/write-docs.md
 - **status:** ready
 - **project:** Q1 Planning
@@ -534,12 +559,14 @@ taskdn list --sort due --desc
 Filters combine using boolean logic:
 
 - **Same filter with comma-separated values = OR**
+
   ```bash
   taskdn list --status ready,in-progress
   # Returns tasks where status = ready OR status = in-progress
   ```
 
 - **Different filter types = AND**
+
   ```bash
   taskdn list --project "Q1" --status ready
   # Returns tasks where project = "Q1" AND status = ready
@@ -580,7 +607,7 @@ taskdn list --limit 20               # Return at most 20 results
 taskdn list --overdue --limit 5      # Top 5 overdue tasks
 ```
 
-Results are limited *after* sorting, so `--limit` combined with `--sort` gives you "top N by X".
+Results are limited _after_ sorting, so `--limit` combined with `--sort` gives you "top N by X".
 
 ### Add Command
 
@@ -612,6 +639,7 @@ The output always includes the path so AI agents can reference the created entit
 ## Task Created
 
 ### Review quarterly report
+
 - **path:** ~/tasks/review-quarterly-report.md
 - **status:** inbox
 - **created-at:** 2025-12-18T14:30:00
@@ -623,6 +651,7 @@ With additional fields specified:
 ## Task Created
 
 ### Review quarterly report
+
 - **path:** ~/tasks/review-quarterly-report.md
 - **status:** ready
 - **project:** Q1 Planning
@@ -636,6 +665,7 @@ Projects and areas follow the same pattern:
 ## Project Created
 
 ### Q1 Planning
+
 - **path:** ~/projects/q1-planning.md
 - **status:** planning
 - **area:** Work
@@ -688,17 +718,17 @@ taskdn doctor --json                     # JSON output for scripts
 
 **What it checks:**
 
-| Level | Checks |
-|-------|--------|
-| System | Config file exists and is valid |
-| System | Tasks/projects/areas directories exist and are accessible |
-| File | YAML frontmatter is parseable |
-| File | Required fields present (title, status) |
-| File | Status values are valid |
-| File | Date fields are valid format |
-| File | Tasks have at most one project (warns if multiple) |
-| References | Project references point to existing projects |
-| References | Area references point to existing areas |
+| Level      | Checks                                                    |
+| ---------- | --------------------------------------------------------- |
+| System     | Config file exists and is valid                           |
+| System     | Tasks/projects/areas directories exist and are accessible |
+| File       | YAML frontmatter is parseable                             |
+| File       | Required fields present (title, status)                   |
+| File       | Status values are valid                                   |
+| File       | Date fields are valid format                              |
+| File       | Tasks have at most one project (warns if multiple)        |
+| References | Project references point to existing projects             |
+| References | Area references point to existing areas                   |
 
 **Human mode output:**
 
@@ -735,18 +765,21 @@ Summary: 3 issues in 57 files checked
 ## Issues (3)
 
 ### ~/tasks/fix-login.md
+
 - **code:** REFERENCE_ERROR
 - **field:** project
 - **message:** References non-existent project "Q1 Planing"
 - **suggestion:** Did you mean "Q1 Planning"?
 
 ### ~/tasks/old-task.md
+
 - **code:** INVALID_STATUS
 - **field:** status
 - **value:** inprogress
 - **valid-values:** inbox, ready, in-progress, blocked, done, dropped, icebox
 
 ### ~/projects/abandoned.md
+
 - **code:** PARSE_ERROR
 - **line:** 3
 - **message:** Unexpected key in YAML frontmatter
@@ -758,11 +791,11 @@ Summary: 3 issues in 57 files checked
 
 **Exit codes:**
 
-| Code | Meaning |
-|------|---------|
-| 0 | All checks passed |
-| 1 | Issues found (command succeeded, but problems exist) |
-| 2 | Command failed to run (couldn't read config, etc.) |
+| Code | Meaning                                              |
+| ---- | ---------------------------------------------------- |
+| 0    | All checks passed                                    |
+| 1    | Issues found (command succeeded, but problems exist) |
+| 2    | Command failed to run (couldn't read config, etc.)   |
 
 Exit code 1 for issues follows linter conventions—useful for CI pipelines.
 
@@ -791,6 +824,7 @@ taskdn complete ~/tasks/fix-login-bug.md --ai
 **Path format in AI mode output:** Full paths, using `~` notation when the file is under the user's home directory (e.g., `~/notes/tasks/fix-login.md`), otherwise absolute paths (e.g., `/Volumes/External/vault/tasks/fix-login.md`). This ensures paths are unambiguous and usable for follow-up operations.
 
 **Path format for input:** The CLI accepts paths in any format and resolves them appropriately:
+
 - Filename: `fix-login.md` (resolved relative to the appropriate directory based on command)
 - Relative: `archive/old-task.md` (resolved relative to tasks_dir)
 - Tilde: `~/notes/tasks/fix-login.md` (expanded)
@@ -805,6 +839,7 @@ Fuzzy matching uses simple, predictable rules:
 3. **No typo tolerance** — "logn" does NOT match "login"
 
 **Examples:**
+
 ```bash
 # Query: "login"
 # ✓ Matches: "Fix login bug", "Login page redesign", "Update login tests"
@@ -819,12 +854,12 @@ Fuzzy matching uses simple, predictable rules:
 
 **Multiple match behavior:**
 
-| Mode | Operation | Multiple matches |
-|------|-----------|------------------|
-| Human | Read (show, context) | Prompt user to select |
-| Human | Write (complete, drop, etc.) | Prompt user to select |
-| AI | Read (show, context) | Return `AMBIGUOUS` error with list of matches |
-| AI | Write | Not allowed—must use exact path |
+| Mode  | Operation                    | Multiple matches                              |
+| ----- | ---------------------------- | --------------------------------------------- |
+| Human | Read (show, context)         | Prompt user to select                         |
+| Human | Write (complete, drop, etc.) | Prompt user to select                         |
+| AI    | Read (show, context)         | Return `AMBIGUOUS` error with list of matches |
+| AI    | Write                        | Not allowed—must use exact path               |
 
 ---
 
@@ -835,30 +870,32 @@ Fuzzy matching uses simple, predictable rules:
 Commands like `taskdn list` return "active" entities by default. Here's what "active" means for each entity type:
 
 **Active tasks** have ALL of:
+
 - Status NOT IN (`done`, `dropped`, `icebox`)
 - `defer-until` is either unset or ≤ today
 - File is not in the `archive/` subdirectory
 
 **Active projects** have ALL of:
+
 - Status is unset OR status NOT IN (`done`)
-- File is not in the `archive/` subdirectory
 
 **Active areas** have ALL of:
+
 - Status is unset OR status = `active`
 
 Note: Project status `paused` is still considered active (just on hold). Area status values other than `active` (e.g., `archived`) are excluded by default.
 
 ### Inclusion Flags
 
-| State                  | Default Behavior | Flag to Include       |
-| ---------------------- | ---------------- | --------------------- |
-| Active (see above)     | Included         | —                     |
-| `icebox`               | Excluded         | `--include-icebox`    |
-| `done`                 | Excluded         | `--include-done`      |
-| `dropped`              | Excluded         | `--include-dropped`   |
-| Both done + dropped    | Excluded         | `--include-closed`    |
-| Deferred (future date) | Excluded         | `--include-deferred`  |
-| Archived (in archive/) | Excluded         | `--include-archived`  |
+| State                  | Default Behavior | Flag to Include      |
+| ---------------------- | ---------------- | -------------------- |
+| Active (see above)     | Included         | —                    |
+| `icebox`               | Excluded         | `--include-icebox`   |
+| `done`                 | Excluded         | `--include-done`     |
+| `dropped`              | Excluded         | `--include-dropped`  |
+| Both done + dropped    | Excluded         | `--include-closed`   |
+| Deferred (future date) | Excluded         | `--include-deferred` |
+| Archived (in archive/) | Excluded         | `--include-archived` |
 
 All `--include-*` flags add items to the normal query results.
 
@@ -878,6 +915,7 @@ Archiving is manual via `taskdn archive <path>`.
 Tasks with `defer-until` set to a future date are automatically hidden from all queries until that date arrives. This is implicit filtering—you don't need to add `--exclude-deferred`.
 
 To see deferred tasks:
+
 ```bash
 taskdn list --include-deferred           # Show all, including deferred
 taskdn list --deferred-this-week         # Tasks becoming visible this week
@@ -901,7 +939,7 @@ taskdn add "Task" --due +3d              # 3 days from now
 ### Natural Language Date Rules
 
 1. **Reference point:** "today" is midnight in system local time
-2. **Day names:** Always mean the *next* occurrence
+2. **Day names:** Always mean the _next_ occurrence
    - If today is Friday, "friday" = next Friday (7 days away)
    - If today is Wednesday, "friday" = this Friday (2 days away)
 3. **"next X":** Skips the immediate occurrence
@@ -986,6 +1024,7 @@ taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
 ```
 
 **Partial failure behavior:**
+
 - All items are processed (don't stop at first error)
 - Successes and failures are reported separately
 - Exit code is `1` if ANY operation failed, `0` if all succeeded
@@ -996,11 +1035,13 @@ taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
 ## Completed (2)
 
 ### ~/tasks/a.md
+
 - **title:** Fix login bug
 - **status:** done
 - **completed-at:** 2025-12-18T14:30:00
 
 ### ~/tasks/c.md
+
 - **title:** Write tests
 - **status:** done
 - **completed-at:** 2025-12-18T14:30:01
@@ -1008,6 +1049,7 @@ taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
 ## Errors (1)
 
 ### ~/tasks/b.md
+
 - **code:** NOT_FOUND
 - **message:** Task file does not exist
 ```
@@ -1018,14 +1060,14 @@ If all operations succeed, the "Errors" section is omitted. If all operations fa
 
 Common flags have single-letter shortcuts:
 
-| Short | Long        | Usage                    |
-| ----- | ----------- | ------------------------ |
-| `-s`  | `--status`  | `-s ready`               |
-| `-p`  | `--project` | `-p "Q1 Planning"`       |
-| `-a`  | `--area`    | `-a "Work"`              |
-| `-d`  | `--due`     | `-d today`               |
-| `-q`  | `--query`   | `-q "login"`             |
-| `-l`  | `--limit`   | `-l 20`                  |
+| Short | Long        | Usage              |
+| ----- | ----------- | ------------------ |
+| `-s`  | `--status`  | `-s ready`         |
+| `-p`  | `--project` | `-p "Q1 Planning"` |
+| `-a`  | `--area`    | `-a "Work"`        |
+| `-d`  | `--due`     | `-d today`         |
+| `-q`  | `--query`   | `-q "login"`       |
+| `-l`  | `--limit`   | `-l 20`            |
 
 ---
 
@@ -1033,13 +1075,14 @@ Common flags have single-letter shortcuts:
 
 ### Exit Codes
 
-| Code | Meaning |
-|------|---------|
-| `0` | Success (including empty results—that's a valid outcome) |
-| `1` | Runtime error (file not found, permission denied, parse error, reference error) |
-| `2` | Usage error (invalid arguments, unknown flags, bad date format in CLI input) |
+| Code | Meaning                                                                         |
+| ---- | ------------------------------------------------------------------------------- |
+| `0`  | Success (including empty results—that's a valid outcome)                        |
+| `1`  | Runtime error (file not found, permission denied, parse error, reference error) |
+| `2`  | Usage error (invalid arguments, unknown flags, bad date format in CLI input)    |
 
 **The distinction:**
+
 - Code `2` = "you typed the command wrong" — fix your command
 - Code `1` = "the command was valid but something went wrong" — vault/file issue
 
@@ -1066,23 +1109,24 @@ Common flags have single-letter shortcuts:
 
 Errors include a machine-readable code and contextual information:
 
-| Code | When | Includes |
-|------|------|----------|
-| `NOT_FOUND` | File/entity doesn't exist | Suggestions for similar items |
-| `AMBIGUOUS` | Fuzzy search matched multiple items | List of matches with paths |
-| `INVALID_STATUS` | Bad status value | List of valid statuses |
-| `INVALID_DATE` | Unparseable date string | Expected formats |
-| `INVALID_PATH` | Path outside configured directories | Configured directory paths |
-| `PARSE_ERROR` | YAML frontmatter malformed | Line number, specific issue |
-| `MISSING_FIELD` | Required field absent | Which field is missing |
-| `REFERENCE_ERROR` | Project/area reference doesn't exist | The broken reference |
-| `MULTIPLE_PROJECTS` | Task has more than one project | The extra projects (warning, not error) |
-| `PERMISSION_ERROR` | Can't read/write file | File path |
-| `CONFIG_ERROR` | Config missing or invalid | Suggestion to run `taskdn init` |
+| Code                | When                                 | Includes                                |
+| ------------------- | ------------------------------------ | --------------------------------------- |
+| `NOT_FOUND`         | File/entity doesn't exist            | Suggestions for similar items           |
+| `AMBIGUOUS`         | Fuzzy search matched multiple items  | List of matches with paths              |
+| `INVALID_STATUS`    | Bad status value                     | List of valid statuses                  |
+| `INVALID_DATE`      | Unparseable date string              | Expected formats                        |
+| `INVALID_PATH`      | Path outside configured directories  | Configured directory paths              |
+| `PARSE_ERROR`       | YAML frontmatter malformed           | Line number, specific issue             |
+| `MISSING_FIELD`     | Required field absent                | Which field is missing                  |
+| `REFERENCE_ERROR`   | Project/area reference doesn't exist | The broken reference                    |
+| `MULTIPLE_PROJECTS` | Task has more than one project       | The extra projects (warning, not error) |
+| `PERMISSION_ERROR`  | Can't read/write file                | File path                               |
+| `CONFIG_ERROR`      | Config missing or invalid            | Suggestion to run `taskdn init`         |
 
 **Error structure (AI mode):**
 
 Each error includes:
+
 - `code` — Machine-readable identifier from the table above
 - `message` — Human-readable explanation of what went wrong
 - `details` — Context-specific information (the bad value, the path, etc.)
@@ -1156,6 +1200,7 @@ The `--ai` flag isn't just about output format—it changes behavior. AI mode ne
 ### Why Markdown for AI output?
 
 AI agents receive CLI output in their context window. The format should be:
+
 1. Token-efficient (LLMs pay per token)
 2. Gracefully degradable (agents often use `head -100`)
 3. Readable without parsing (no code execution needed)
