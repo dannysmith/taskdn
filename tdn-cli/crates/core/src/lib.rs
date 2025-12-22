@@ -1,6 +1,10 @@
 #[macro_use]
 extern crate napi_derive;
 
+mod task;
+
+pub use task::*;
+
 /// Minimal test function to verify NAPI bindings work
 #[napi]
 pub fn hello_from_rust() -> String {

@@ -18,9 +18,13 @@ thiserror = "2"
 # Serialization
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+serde_yaml = "0.9"
 
-# Frontmatter parsing (to be added when implementing parser)
-# gray_matter = "0.2"
+# Frontmatter parsing
+gray_matter = "0.2"
 
 [build-dependencies]
 napi-build = "2"
+
+[dev-dependencies]
+tempfile = "3"

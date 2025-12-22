@@ -245,36 +245,40 @@ src/commands/
 
 ---
 
-## Phase 5: Minimal End-to-End Flow
+## Phase 5: Minimal End-to-End Flow ✅
 
 Prove the architecture works with a real (but minimal) implementation.
 
-### 5.1 Rust: Parse Single Task File
+Completed 2025-12-22.
 
-Implement just enough Rust to parse one task file:
+### 5.1 Rust: Parse Single Task File ✅
 
-- [ ] Add `gray_matter` dependency
-- [ ] Create basic Task struct (just title, status, path for now)
-- [ ] Create function to parse a task file given a path
-- [ ] Expose via NAPI: `parseTaskFile(path: string) -> Task | null`
-- [ ] Generate TypeScript types for Task
+Implemented task parser in `crates/core/src/task.rs`:
 
-### 5.2 Wire Up `show` Command
+- [x] Add `gray_matter` and `serde_yaml` dependencies
+- [x] Create Task struct with all frontmatter fields from spec
+- [x] Create `parse_task_file(path: String) -> Result<Task>` function
+- [x] Expose via NAPI with auto-generated TypeScript types
+- [x] TaskStatus enum with all 7 status values
 
-- [ ] `show` command accepts a file path
-- [ ] Calls Rust `parseTaskFile`
-- [ ] Outputs result through formatter:
-  - Human: pretty printed
-  - AI: Markdown format per spec
-  - JSON: structured JSON
-- [ ] Handle errors gracefully (file not found, parse error)
+### 5.2 Wire Up `show` Command ✅
 
-### 5.3 Test Against Demo Vault
+- [x] `show` command accepts a file path
+- [x] Calls Rust `parseTaskFile` with error handling
+- [x] Outputs result through formatter:
+  - Human: colored output with title, status, metadata, body
+  - AI: Structured Markdown with all fields
+  - JSON: Full task object with summary
+- [x] Handle errors gracefully (file not found, parse error)
 
-- [ ] Run `./scripts/reset-dummy-vault.sh`
-- [ ] Test: `bun run src/index.ts show ../dummy-demo-vault/tasks/task-review-quarterly-report.md`
-- [ ] Verify output in all three modes
-- [ ] Verify error handling for bad path
+### 5.3 Test Against Demo Vault ✅
+
+Verified against `dummy-demo-vault/tasks/implement-auth-endpoint.md`:
+
+- [x] Human mode: colored output with proper formatting
+- [x] AI mode: structured Markdown per spec
+- [x] JSON mode: full task object
+- [x] Error handling: proper exit code 1 and error message for bad path
 
 ---
 

@@ -1,3 +1,5 @@
+import type { Task } from '@bindings';
+
 /**
  * Output mode enum
  */
@@ -21,11 +23,24 @@ export function getOutputMode(options: GlobalOptions): OutputMode {
 }
 
 /**
- * Base interface for command results that can be formatted
+ * Result types for formatting
  */
-export interface FormattableResult {
-  type: string;
+export interface TaskResult {
+  type: 'task';
+  task: Task;
 }
+
+export interface TaskListResult {
+  type: 'task-list';
+  tasks: Task[];
+}
+
+export interface StubResult {
+  type: string;
+  [key: string]: unknown;
+}
+
+export type FormattableResult = TaskResult | TaskListResult | StubResult;
 
 /**
  * Formatter interface - all output formatters implement this

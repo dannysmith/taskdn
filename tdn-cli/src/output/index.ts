@@ -1,10 +1,17 @@
-import type { OutputMode, Formatter, FormattableResult, GlobalOptions } from './types.ts';
+import type {
+  OutputMode,
+  Formatter,
+  FormattableResult,
+  GlobalOptions,
+  TaskResult,
+  TaskListResult,
+} from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
 import { aiFormatter } from './ai.ts';
 import { jsonFormatter } from './json.ts';
 
-export type { OutputMode, Formatter, FormattableResult, GlobalOptions };
+export type { OutputMode, Formatter, FormattableResult, GlobalOptions, TaskResult, TaskListResult };
 export { getOutputMode };
 
 /**
