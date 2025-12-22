@@ -48,10 +48,14 @@ Based on these learnings, the project was reorganised:
 
 **New Approach:**
 
-1. Finalise all three specifications (S1, S2, S3), informed by the CLI interface design work already done
-2. Extract any useful patterns from the archived SDK code
-3. Decide on the right approach for building the CLI and SDKs together
-4. Clean up remaining documentation
+1. Finalise all three specifications (S1, S2, S3), informed by the CLI interface design work already done ✓
+2. Extract any useful patterns from the archived SDK code ✓
+3. Decide on the right approach for building the CLI and SDKs together ✓
+4. Clean up remaining documentation ✓
+
+**Architecture Decision (December 2025):**
+
+After evaluating options, we decided on a **consolidated hybrid architecture**: the CLI is a TypeScript/Bun project with an embedded Rust core library connected via NAPI-RS bindings. This avoids premature package extraction while keeping all code in one place. When the desktop app needs the Rust core, we'll extract it to a shared workspace crate. See [CLI Technical Overview](product-overviews/cli/cli-tech.md) for details.
 
 ### Prior Art: Beans
 
@@ -63,7 +67,7 @@ During research, we discovered [Beans](https://github.com/hmans/beans)—a proje
 
 See `docs/tasks-todo/` for active tasks. High-level phases:
 
-1. **Specifications** — Finalise S1, S2, S3 based on CLI design work and Beans review
-2. **Foundation** — Extract useful code from archived projects, establish build/test infrastructure
-3. **CLI** — Implement the CLI tool
-4. **Desktop** — Implement the Tauri desktop app
+1. **Specifications** — Finalise S1, S2, S3 based on CLI design work and Beans review ✓
+2. **Foundation** — Establish project structure and documentation ✓
+3. **CLI** — Implement the CLI tool ← _Current focus_
+4. **Desktop** — Implement the Tauri desktop app (will extract shared Rust core from CLI)

@@ -1,1 +1,0 @@
-# Developer SDKs - Technical Implementation

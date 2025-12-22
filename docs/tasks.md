@@ -13,12 +13,12 @@
 
 When you finish a task, use the completion script.
 
-Usage: pnpm task:complete TASK_NAME_OR_NUMBER
+Usage: bun run task:complete TASK_NAME_OR_NUMBER
 
 Examples:
-  pnpm task:complete frontend-performance
-  pnpm task:complete 2
-  pnpm task:complete awesome-feature
+  bun run task:complete frontend-performance
+  bun run task:complete 2
+  bun run task:complete awesome-feature
 
 The script will:
 1. Find the matching task in tasks-todo/
@@ -35,4 +35,4 @@ Example transformation:
 
 If you have existing completed tasks without dates, rename them using their last modified date:
 
-Usage: pnpm task:rename-done
+Usage: bun run task:rename-done

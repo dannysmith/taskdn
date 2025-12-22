@@ -4,13 +4,15 @@ Cross-platform Tauri desktop application.
 
 ## Context & Dependencies
 
-**Depends on:** Rust SDK (Phase 2) must be complete first.
+**Depends on:** CLI's embedded Rust core must be extracted to a shared workspace crate first.
 
-**Important:** Uses the **Rust SDK directly**, NOT the TypeScript SDK.
+**Important:** Uses the **Rust core directly**, NOT via NAPI-RS bindings.
 
 - NAPI-RS produces `.node` files which only work in Node.js/Bun
 - Tauri's frontend runs in a webview, not Node.js
-- The Rust SDK is imported as a Cargo dependency in `src-tauri/Cargo.toml`
+- The Rust core will be imported as a Cargo dependency in `src-tauri/Cargo.toml`
+
+See [CLI Technical Overview](../cli/cli-tech.md#sdk-extraction-for-desktop-app) for the extraction plan.
 
 ---
 

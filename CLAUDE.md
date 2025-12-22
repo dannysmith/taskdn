@@ -27,15 +27,16 @@ All top level documentation lives in `docs/`.
 
 ### Detailed Developer Docs
 
-Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in dount ask the user.
+Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in doubt, ask the user.
 
 ## Product Sub-directories
 
-| Directory         | What it is  | Language/Stack   | High-level docs                  |
-| ----------------- | ----------- | ---------------- | -------------------------------- |
-| `taskdn-sdk/`     | Core SDKs   | TBD              | `docs/product-overviews/sdk      |
-| `taskdn-cli/`     | CLI tool    | TBD              | `docs/product-overviews/cli`     |
-| `taskdn-desktop/` | Desktop app | Tauri v2 & React | `docs/product-overviews/desktop` |
+| Directory       | What it is  | Language/Stack       | High-level docs                  |
+| --------------- | ----------- | -------------------- | -------------------------------- |
+| `tdn-cli/`      | CLI tool    | TypeScript/Bun + Rust | `docs/product-overviews/cli`     |
+| `tdn-desktop/`  | Desktop app | Tauri v2 & React     | `docs/product-overviews/desktop` |
+
+**Note:** The CLI contains an embedded Rust core library (via NAPI-RS). When the desktop app is ready, this core will be extracted to a shared workspace crate. See `docs/product-overviews/cli/cli-tech.md` for details.
 
 ## Archived Projects
 
