@@ -1,4 +1,4 @@
-# Beans Project Review
+# Beans Project Review 2025-12-22
 
 A comprehensive review of [Beans](https://github.com/hmans/beans) - an "agentic-first" issue tracker designed for AI coding agents and humans working alongside them.
 
@@ -20,16 +20,16 @@ Beans is a Go-based CLI tool that stores issues as markdown files with YAML fron
 
 ### Different Use Cases
 
-| Aspect | Beans | Taskdn |
-|--------|-------|--------|
-| **Primary Context** | Working in a codebase with AI coding tools (Claude Code, OpenCode) | General-purpose personal task management |
-| **Scope** | Programming/development-specific | Life, work, projects - anything |
-| **Agent Role** | Agents managing their own work while coding | Agents helping humans manage their tasks |
-| **Integration Point** | Injected into coding sessions | Standalone CLI, potentially various integrations |
+| Aspect                | Beans                                                              | Taskdn                                           |
+| --------------------- | ------------------------------------------------------------------ | ------------------------------------------------ |
+| **Primary Context**   | Working in a codebase with AI coding tools (Claude Code, OpenCode) | General-purpose personal task management         |
+| **Scope**             | Programming/development-specific                                   | Life, work, projects - anything                  |
+| **Agent Role**        | Agents managing their own work while coding                        | Agents helping humans manage their tasks         |
+| **Integration Point** | Injected into coding sessions                                      | Standalone CLI, potentially various integrations |
 
 ### What's NOT Relevant for Taskdn
 
-1. **The "Prime" Pattern & TodoWrite Overrides**: Beans aggressively injects instructions and overrides Claude's built-in task tools. This makes sense when you want the agent to use Beans *instead of* its default tools during a coding session. Taskdn won't be used this way - we're not replacing an agent's internal task tracking, we're providing a general task management interface. **Not a priority for us.**
+1. **The "Prime" Pattern & TodoWrite Overrides**: Beans aggressively injects instructions and overrides Claude's built-in task tools. This makes sense when you want the agent to use Beans _instead of_ its default tools during a coding session. Taskdn won't be used this way - we're not replacing an agent's internal task tracking, we're providing a general task management interface. **Not a priority for us.**
 
 2. **Strict Type Hierarchy** (milestone → epic → feature → bug): This is programming-specific. The concept of "epics" and "bugs" doesn't translate to general task management. Our projects/areas model is more appropriate for life/work tasks. **Not applicable.**
 
@@ -48,12 +48,14 @@ Beans is a Go-based CLI tool that stores issues as markdown files with YAML fron
 ### GraphQL Tradeoffs for Taskdn
 
 **Advantages**:
+
 - Well-understood by AI agents
 - Self-documenting schema
 - Very flexible - agents request exactly what they need
 - Powerful filtering, including on relationships
 
 **Disadvantages**:
+
 - Returns JSON, which is somewhat token-inefficient
 - JSON responses are verbose (many lines of output)
 - Implementation complexity (code generation, resolver patterns)
@@ -527,6 +529,7 @@ indexMapping.ScoringModel = "bm25"  // Better relevance than TF-IDF
 ```
 
 **Why BM25 over TF-IDF**:
+
 - Handles term frequency saturation (repeated terms don't over-boost results)
 - Normalizes for document length (short docs aren't unfairly penalized)
 - Generally produces more intuitive relevance rankings
