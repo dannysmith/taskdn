@@ -21,6 +21,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 **Decision:** Commander.js with `@commander-js/extra-typings`
 
 **Rationale:**
+
 - Zero dependencies
 - Perfect Bun compatibility (no known issues)
 - Excellent TypeScript support with extra-typings package for full type inference
@@ -28,6 +29,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 - 244M weekly downloads, actively maintained (v14 released 2025)
 
 **Rejected alternatives:**
+
 - **yargs** - Critical Bun compatibility issues (regex parsing errors, version check failures)
 - **@oclif/core** - ts-node conflicts with Bun, overkill for our needs (28 dependencies)
 - **Bun native parseArgs** - No subcommand support, no help generation, too low-level
@@ -39,6 +41,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 **Decision:** @clack/prompts
 
 **Rationale:**
+
 - Beautiful defaults matching our "human mode" aesthetic goals
 - Built-in spinner (no separate library needed)
 - Built-in autocomplete for fuzzy select scenarios
@@ -48,6 +51,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 - 171 kB bundle size acceptable (CLI distributes as ~50MB binary anyway)
 
 **Rejected alternatives:**
+
 - **@inquirer/prompts** - Needs plugin for fuzzy search, throws errors on Ctrl-C (less elegant)
 - **prompts** - Lighter but no built-in spinners, less polished UX
 - **Bun readline** - Too much work to build fuzzy select, keyboard nav, etc.
@@ -57,6 +61,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 **Decision:** ansis (colors/formatting) + Clack spinner (for long operations)
 
 **Rationale for ansis:**
+
 - Chained syntax: `red.bold('text')` vs nested `pc.bold(pc.red('text'))`
 - Named imports for tree-shaking: `import { red, bold } from 'ansis'`
 - Handles multi-line text correctly (picocolors breaks at newlines)
@@ -65,6 +70,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 - ~15-20 kB bundle
 
 **Rationale for Clack spinner:**
+
 - Already bundled with @clack/prompts
 - Works standalone outside interactive prompts
 - Use for human-mode operations that might take noticeable time (vault scanning)
@@ -73,6 +79,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 **Terminal rendering approach:** Start with manual formatting using ansis. Build simple formatters ourselves rather than adding table/box libraries. The output formats in the spec are styled text with alignment, not true tables.
 
 **Rejected alternatives:**
+
 - **picocolors** - No chained syntax, doesn't handle multi-line edge case
 - **chalk** - 101 kB (14x larger), slower, no advantages over ansis
 - **ora** - Clack spinner sufficient, no need for separate library
@@ -83,6 +90,7 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 **Decision:** Simple substring matching (case-insensitive), implemented in Rust core
 
 **Rationale:**
+
 - Spec explicitly states "no typo tolerance" for fuzzy matching
 - `--query` text search should follow same rules for consistency
 - Rust core handles all text matching (single implementation, tested in one place)
@@ -90,12 +98,12 @@ Decisions made 2025-12-22 based on research into Bun compatibility, bundle size,
 
 ### Summary: Runtime Dependencies
 
-| Package | Purpose |
-|---------|---------|
-| `commander` | CLI framework |
+| Package                       | Purpose                                 |
+| ----------------------------- | --------------------------------------- |
+| `commander`                   | CLI framework                           |
 | `@commander-js/extra-typings` | TypeScript type inference for Commander |
-| `@clack/prompts` | Interactive prompts + spinner |
-| `ansis` | Terminal colors and text formatting |
+| `@clack/prompts`              | Interactive prompts + spinner           |
+| `ansis`                       | Terminal colors and text formatting     |
 
 Total: 4 packages (minimal dependency footprint)
 
@@ -288,27 +296,79 @@ Set up everything needed for ongoing development.
 
 ### 6.1 Testing Infrastructure
 
+#### Testing Strategy (decided 2025-12-22)
+
+**Test Types & Approach:**
+
+| Type                   | Location                      | Purpose                      | Notes                                                 |
+| ---------------------- | ----------------------------- | ---------------------------- | ----------------------------------------------------- |
+| Rust unit tests        | Co-located in `*.rs` files    | Test pure Rust functions     | Use `tempfile` for file-based tests. Already working. |
+| Rust integration tests | N/A                           | Skip                         | Unit tests + E2E cover this adequately                |
+| TS unit tests          | `tests/unit/`                 | Test formatters, utilities   | Pure function tests                                   |
+| TS binding smoke tests | `tests/unit/bindings.test.ts` | Verify NAPI bindings work    | Just a few tests to ensure Rust↔TS boundary works     |
+| E2E tests              | `tests/e2e/`                  | Test CLI commands end-to-end | **Primary focus** - these serve as CLI specification  |
+
+**E2E Test Design:**
+
+- **Runner:** Bun's built-in test runner (fast, no extra deps)
+- **Execution:** Run against source (`bun run src/index.ts`) for fast iteration. Structure helpers so we could point at binary later.
+- **Output assertions:** Strip ANSI colors, test content. Can add color assertions later when colorization is finalized.
+- **Structure:** One file per command, grouped with `describe` blocks. Tests should read as CLI specification.
+
+**Test Fixtures:**
+
+Create dedicated `tests/fixtures/vault/` with purpose-built files:
+
+```
+tests/fixtures/vault/
+├── tasks/
+│   ├── minimal.md           # Just title + status
+│   ├── full-metadata.md     # All optional fields
+│   ├── with-body.md         # Has markdown body
+│   └── each-status/         # One file per status value
+├── projects/
+└── areas/
+```
+
+**Why dedicated fixtures (not demo-vault):**
+
+- Stability: exists only for tests, won't change for other reasons
+- Intentionality: each file tests something specific
+- Edge cases: can include pathological cases
+- For write operations: use temp directories per-test
+
+**Interactive Prompts:**
+
+- Defer comprehensive testing for now
+- Test the logic that prompts call, not the prompts themselves
+- Consider PTY-based testing later if needed
+
+#### Checklist
+
 - [ ] Set up `bun test` for TypeScript tests
-- [ ] Set up `cargo test` for Rust tests
+- [ ] Set up `cargo test` for Rust tests (already working)
 - [ ] Create npm scripts: `test`, `test:ts`, `test:rust`
-- [ ] Add first integration test (show command against dummy vault)
+- [ ] Create `tests/fixtures/vault/` with test files
+- [ ] Create CLI test helper (runs CLI, captures output, strips colors)
+- [ ] Add E2E tests for `show` command
+- [ ] Add unit tests for formatters
+- [ ] Add binding smoke tests
+- [x] Write `docs/developer/testing.md` explaining approach
 
 ### 6.2 Documentation
 
-- [ ] Update `tdn-cli/README.md` with:
-  - Development setup instructions
-  - Build commands
-  - Test commands
-  - Architecture overview reference
-- [ ] Document any decisions made during this task
+- [ ] Write `docs/developer/architecture-guide.md` (in `tdn-cli`) - This should Briefly explain the high level architecture, Briefly explain about testing and reference the `testing.md` We created earlier. And it should also explain the various dependencies we've brought in and when and how to use them. This is a document which we will expand over time and it's intended for humans and in particular AI coding agents to read fairly regularly so that they can check that any work they've done matches the most important design patterns here. We don't need to include exhaustive code examples in here, But we can use short illustrative examples where they'd be helpful in explaining a non-obvious pattern. This document will obviously expand and become more important over time as we bring in more and more abstractions into the code base.
+- [ ] Update `tdn-cli/README.md` and `tdn-cli/CLAUDE.md` as nececarry. Keep them short, clear and useful.
+- [ ] Update `../docs/product-overviews/cli-tech.md` with the major architectural decisions and library choices that we have made so far. Remember this is a very high level document.
+- [ ] Document any important decisions made during this task at the end of this task doc.
 
 ### 6.3 Verify Checklist
 
 Before marking complete:
 
 - [ ] `bun run build` works
-- [ ] `bun run test` passes
-- [ ] `cargo test` passes in crates/core
+- [ ] `bun run check` passes
+- [ ] All tests pass
 - [ ] `bun run src/index.ts --help` shows help
 - [ ] `bun run src/index.ts show <path>` works for all output modes
 - [ ] `bun run src/index.ts show <bad-path>` shows appropriate error
