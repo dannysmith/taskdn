@@ -1,3 +1,5 @@
+# The CLI Tool - Requirements & Overview
+
 # Phase 4: CLI Tool
 
 Command-line interface for humans and AI agents.

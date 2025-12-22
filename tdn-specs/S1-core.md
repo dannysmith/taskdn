@@ -1,9 +1,8 @@
-# The Taskdn Specification
+# Specification S1: Core (Data Store)
 
 **Version:** 1.0.0-draft
-**Last Updated:** 2025-12-11
 
-This specification defines a file format for storing tasks, projects, and areas as Markdown files with YAML frontmatter. It is deliberately simple and opinionated.
+This specification defines a file format for storing tasks, projects, and areas as Markdown files with YAML frontmatter. It is deliberately simple and opinionated. All software which implements this standard will be mutually compatible when reading/writing task files on disk.
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
@@ -94,14 +93,14 @@ Any valid filename. Implementations SHOULD NOT impose filename conventions.
 
 ### 3.4 Optional Frontmatter Fields
 
-| Field          | Type                     | Description                                                                                         |
-| -------------- | ------------------------ | --------------------------------------------------------------------------------------------------- |
-| `completed-at` | date or datetime         | When the task was completed or dropped. SHOULD be set when `status` changes to `done` or `dropped`. |
-| `area`         | file reference           | Reference to an Area file.                                                                          |
+| Field          | Type                     | Description                                                                                                                        |
+| -------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `completed-at` | date or datetime         | When the task was completed or dropped. SHOULD be set when `status` changes to `done` or `dropped`.                                |
+| `area`         | file reference           | Reference to an Area file.                                                                                                         |
 | `projects`     | array of file references | Reference to a Project file. MUST be an array with exactly one element. Array format is used for compatibility with other systems. |
-| `due`          | date or datetime         | Hard deadline for the task.                                                                         |
-| `scheduled`    | date                     | The date the task is planned to be worked on. Used for calendar-based planning.                     |
-| `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.            |
+| `due`          | date or datetime         | Hard deadline for the task.                                                                                                        |
+| `scheduled`    | date                     | The date the task is planned to be worked on. Used for calendar-based planning.                                                    |
+| `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.                                           |
 
 ### 3.5 Status Values
 
@@ -162,16 +161,16 @@ Any valid filename.
 
 ### 4.4 Optional Frontmatter Fields
 
-| Field         | Type                     | Description                                                                                                                                       |
-| ------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `unique-id`   | string                   | A unique identifier for the project.                                                                                                              |
-| `area`        | file reference           | Reference to an Area file.                                                                                                                        |
-| `status`      | enum                     | One of: `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`.                                                                          |
-| `description` | string                   | A short description, SHOULD be under 500 characters.                                                                                              |
-| `start-date`  | date                     | When work on the project began or will begin.                                                                                                     |
-| `end-date`    | date                     | When the project was completed or is expected to complete.                                                                                        |
-| `blocked-by`  | array of file references | Projects that must be completed before this one can start.                                                                                        |
-| `taskdn-type` | literal `project`        | See note below on mixed-content directories. |
+| Field         | Type                     | Description                                                              |
+| ------------- | ------------------------ | ------------------------------------------------------------------------ |
+| `unique-id`   | string                   | A unique identifier for the project.                                     |
+| `area`        | file reference           | Reference to an Area file.                                               |
+| `status`      | enum                     | One of: `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`. |
+| `description` | string                   | A short description, SHOULD be under 500 characters.                     |
+| `start-date`  | date                     | When work on the project began or will begin.                            |
+| `end-date`    | date                     | When the project was completed or is expected to complete.               |
+| `blocked-by`  | array of file references | Projects that must be completed before this one can start.               |
+| `taskdn-type` | literal `project`        | See note below on mixed-content directories.                             |
 
 **Note on `taskdn-type`:** This field enables explicit opt-in for directories where Taskdn project files coexist with unrelated Markdown files. If ANY project file in a directory contains `taskdn-type: project`, implementations SHOULD ignore all files in that directory that lack this field. Use with caution: adding this field to a single file will cause all other files without it to be excluded.
 
@@ -226,12 +225,12 @@ Any valid filename.
 
 ### 5.4 Optional Frontmatter Fields
 
-| Field         | Type           | Description                                                                                                                                    |
-| ------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `status`      | enum           | Recommended values: `active` or `archived`. See note below.                                                                                    |
-| `type`        | string         | Allows differentiation between area types (e.g., "client", "life-area").                                                                       |
-| `description` | string         | A short description, SHOULD be under 500 characters.                                                                                           |
-| `taskdn-type` | literal `area` | See note below on mixed-content directories. |
+| Field         | Type           | Description                                                              |
+| ------------- | -------------- | ------------------------------------------------------------------------ |
+| `status`      | enum           | Recommended values: `active` or `archived`. See note below.              |
+| `type`        | string         | Allows differentiation between area types (e.g., "client", "life-area"). |
+| `description` | string         | A short description, SHOULD be under 500 characters.                     |
+| `taskdn-type` | literal `area` | See note below on mixed-content directories.                             |
 
 **Note on `taskdn-type`:** This field enables explicit opt-in for directories where Taskdn area files coexist with unrelated Markdown files. If ANY area file in a directory contains `taskdn-type: area`, implementations SHOULD ignore all files in that directory that lack this field. Use with caution: adding this field to a single file will cause all other files without it to be excluded.
 
@@ -240,6 +239,7 @@ Any valid filename.
 Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting them.
 
 When displaying areas, implementations SHOULD:
+
 - Display areas with `status: active` or with no `status` field.
 - Hide areas with any other `status` value (e.g., `archived`).
 
@@ -330,9 +330,9 @@ This specification is designed to be broadly compatible with:
 
 Machine-readable JSON Schema files are available for validation:
 
-- [task.schema.json](../schemas/task.schema.json) - Task frontmatter validation
-- [project.schema.json](../schemas/project.schema.json) - Project frontmatter validation
-- [area.schema.json](../schemas/area.schema.json) - Area frontmatter validation
+- [task.schema.json](./schemas/task.schema.json) - Task frontmatter validation
+- [project.schema.json](./schemas/project.schema.json) - Project frontmatter validation
+- [area.schema.json](./schemas/area.schema.json) - Area frontmatter validation
 
 These schemas can be used by editors (e.g., VS Code) for autocomplete and inline validation, or by implementations for programmatic validation.
 

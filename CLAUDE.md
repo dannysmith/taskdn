@@ -2,43 +2,47 @@
 
 ## Monorepo Context
 
-This is a **monorepo root**. Most work sessions should happen in a specific sub-project directory (e.g., `taskdn-rust/`, `taskdn-cli/`). Each sub-project has its own `CLAUDE.md` with project-specific instructions.
+This is a **monorepo root**. After initial work on a new product, most work sessions should happen in a specific product sub-directory (e.g., `tdn-desktop/`, `tdn-cli/`). Each product has its own `CLAUDE.md` with product-specific instructions.
 
-**If you're working on a specific tool**, `cd` into that directory and follow its local `CLAUDE.md`.
+## Documentation
 
-**This top-level context is for:**
+All top level documentation lives in `docs/`.
 
-- Cross-project coordination
-- Specification changes (`docs/user-guide/`)
-- High-level planning (`docs/tasks-todo/`)
-- Changes that affect multiple sub-projects
+- `docs/overview.md` - General Overview of the Project, Goals, Products, Principles etc. Evergreen.
+- `docs/roadmap-and-approach.md` - Approach to development & Eng principles, high-level roadmap.
+- `docs/tasks-todo` - See @docs/tasks.md.
+- `docs/developer` - Technical documentation common to all products.
 
-## Key Documentation
+  `docs/tasks-done` - Completed tasks. Old documents which may be useful to reference. Do not reference these without asking the user as they'll be out of date.
 
-- `docs/user-guide/1-philosophy.md` – Core principles and design decisions
-- `docs/user-guide/2-the-specification.md` – **The authoritative spec** for task/project/area file formats
-- `docs/developer/architecture-guide.md` – Overall system architecture, monorepo structure
-- `docs/schemas/` – JSON Schema files for the specification.
-- `docs/tasks-todo/` – Project-wide task tracking (phases)
+- `docs/archive` - Old documents which may be useful to reference. Do not reference these without asking the user as they'll be out of date.
 
-## Sub-Projects
+### Product Overview Docs
 
-| Directory                   | What it is          | Language/Stack      |
-| --------------------------- | ------------------- | ------------------- |
-| `taskdn-rust/`              | Core SDK            | Rust                |
-| `taskdn-ts/`                | TypeScript bindings | Rust + NAPI-RS      |
-| `taskdn-cli/`               | CLI tool            | TypeScript + Bun    |
-| `taskdn-desktop/`           | Desktop app         | Tauri v2 + Rust SDK |
-| `taskdn-obsidian-plugin/`   | Obsidian plugin     | TypeScript          |
-| `taskdn-claude-code-skill/` | Claude Code skill   | Markdown            |
-| `taskdn-website/`           | Marketing site      | TBD                 |
+`docs/product-overviews/` Contains one folder for each of the products in development. This is for storing the important high level evergreen documents for each product. These are stored in the top level docs because it will often be necessary for other projects to reference these.
+
+- Each **must** contain a `<name>-requirements.md` for non-technical product requirements and `<name>-tech.md` for overview of technical architecture, approach, external interface and any major decisions etc.
+- Each may contain other relevant evergreen documents.
+- As a general rule, these documents should not contain information on **internal** implementation details.
+
+### Detailed Developer docs
+
+Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in dount ask the user.
+
+## Product Sub-directories
+
+| Directory         | What it is  | Language/Stack   | High-level docs                  |
+| ----------------- | ----------- | ---------------- | -------------------------------- |
+| `taskdn-sdk/`     | Core SDKs   | TBD              | `docs/product-overviews/sdk      |
+| `taskdn-cli/`     | CLI tool    | TBD              | `docs/product-overviews/cli`     |
+| `taskdn-desktop/` | Desktop app | Tauri v2 & React | `docs/product-overviews/desktop` |
 
 ## Important: "Tasks" in This Project
 
 This project builds a task management system, but we also use tasks to track development work. **Don't confuse them:**
 
 - **Development tasks** – What you create when the user says "create a task" during a coding session. These are simple markdown files for tracking work (e.g., `task-1-implement-parser.md`). They do NOT follow the Taskdn specification.
-- **Taskdn tasks** – The task format we're building the app to handle. These follow `docs/user-guide/2-the-specification.md` and go in `demo-vault/` for testing.
+- **Taskdn tasks** – The task format we're building the app to handle. These follow `tdn-specs/S1-core.md` and go in `demo-vault/` for testing.
 
 **When the user asks you to "create a task":**
 
@@ -49,32 +53,24 @@ This project builds a task management system, but we also use tasks to track dev
 ## Development Rules
 
 1. **Read before editing** – Understand existing code and patterns before making changes.
-2. **Follow the spec** – All task/project/area file handling must conform to `docs/user-guide/2-the-specification.md`.
+2. **Follow the specs** – All task/project/area file handling must conform to `tdn-specs/S1-core.md`, and where appropriate to `tdn-specs/S2-interface-design.md` and `tdn-specs/S3-data-read-write.md`.
 3. **Use `bun`** – Prefer `bun` over `pnpm` or `npm` for JavaScript/TypeScript projects.
-4. **Sub-project autonomy** – Each `taskdn-*` directory is self-contained. Don't create cross-project dependencies without good reason.
-5. **Spec changes are serious** – Changes to the specification affect all implementations. Think carefully and update all relevant sub-projects.
-
-## When Working at Top Level
-
-If you're making changes here (not in a sub-project):
-
-- **Spec changes**: Update `docs/user-guide/2-the-specification.md` and the JSON schemas in `docs/schemas/`
-- **Philosophy/docs**: Update `docs/user-guide/` files
-- **Cross-project tasks**: Use `docs/tasks-todo/` for tracking
-- **Demo vault**: `demo-vault/` is for testing – add example task/project/area files there
+4. **Sub-project autonomy** – Each `tdn-*` directory is self-contained. Don't create cross-project dependencies without good reason, and always ask the user first.
+5. **Spec changes are serious** – Changes to the specification docs affect all implementations. Always clearly confirm with the user before making any changes to files in `tdn-specs/`.
 
 ## Demo Vault
 
 Two vaults exist for testing:
 
-| Vault | Purpose | In Git? |
-|-------|---------|---------|
-| `demo-vault/` | Canonical "golden" copy | Yes |
+| Vault               | Purpose                     | In Git?         |
+| ------------------- | --------------------------- | --------------- |
+| `demo-vault/`       | Canonical "golden" copy     | Yes             |
 | `dummy-demo-vault/` | Disposable copy for testing | No (gitignored) |
 
 **Always test against `dummy-demo-vault/`** so you don't corrupt the canonical version.
 
 Reset the dummy vault with:
+
 ```bash
 ./scripts/reset-dummy-vault.sh
 ```

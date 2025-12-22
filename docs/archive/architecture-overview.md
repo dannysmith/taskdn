@@ -1,48 +1,43 @@
-# Architecture Guide
+# Architecture Overview
+
+This is a high level level overview of how the different packages in this project play together. It is evergreen and may change over time.
 
 ## System Architecture
 
 ```
                          ┌─────────────────┐
-                         │    Rust SDK     │
-                         │  (taskdn-rust)  │
+                         │     Rust SDK      │
+                         │   (taskdn-rust)   │
                          └────────┬────────┘
                                   │
                 ┌─────────────────┼─────────────────┐
-                ▼                 ▼                 ▼
+                ▼                  ▼                   ▼
        ┌────────────────┐ ┌─────────────┐ ┌────────────────┐
-       │ TypeScript SDK │ │   Desktop   │ │     Other      │
-       │   (NAPI-RS)    │ │   (Tauri)   │ │ Rust consumers │
+       │  TypeScript SDK  ││    Desktop    ││      Other       │
+       │    (NAPI-RS)     ││    (Tauri)    ││  Rust consumers  │
        └───────┬────────┘ └─────────────┘ └────────────────┘
                │
         ┌──────┴──────┐
-        ▼             ▼
+        ▼              ▼
    ┌─────────┐  ┌──────────┐
-   │   CLI   │  │ Obsidian │
-   │  (Bun)  │  │  Plugin  │
+   │    CLI   │  │  Obsidian │
+   │   (Bun)  │  │   Plugin  │
    └─────────┘  └──────────┘
 ```
 
-| Project | Depends On | Notes |
-|---------|------------|-------|
-| `taskdn-rust` | Nothing | Foundation for everything |
-| `taskdn-ts` | Rust SDK | NAPI-RS bindings |
-| `taskdn-cli` | TS SDK | TypeScript + Bun |
-| `taskdn-desktop` | Rust SDK directly | Tauri imports Rust SDK as Cargo dep |
-| `taskdn-obsidian-plugin` | TS SDK | |
-
-**Important:** Desktop uses Rust SDK directly (not TS SDK) because NAPI `.node` files don't work in webviews.
+| Project                  | Depends On        | Notes                               |
+| ------------------------ | ----------------- | ----------------------------------- |
+| `taskdn-rust`            | Nothing           | Foundation for everything           |
+| `taskdn-ts`              | Rust SDK          | NAPI-RS bindings                    |
+| `taskdn-cli`             | TS SDK            | TypeScript + Bun                    |
+| `taskdn-desktop`         | Rust SDK directly | Tauri imports Rust SDK as Cargo dep |
+| `taskdn-obsidian-plugin` | TS SDK            |                                     |
 
 ---
 
 ## Monorepo Approach
 
-**No shared tooling** (no Turborepo, Nx, Lerna). Each project is self-contained.
-
-Why:
-- Mixed languages (Rust + TypeScript) - JS monorepo tools don't help
-- Linear dependencies - no complex resolution needed
-- Independent release cycles
+All these projects are kept in a single repo. They operate mostly as seperate projects, but have distinct
 
 ### Cross-Project References
 
