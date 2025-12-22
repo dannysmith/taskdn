@@ -357,10 +357,9 @@ tests/fixtures/vault/
 
 ### 6.2 Documentation
 
-- [ ] Write `docs/developer/architecture-guide.md` (in `tdn-cli`) - This should Briefly explain the high level architecture, Briefly explain about testing and reference the `testing.md` We created earlier. And it should also explain the various dependencies we've brought in and when and how to use them. This is a document which we will expand over time and it's intended for humans and in particular AI coding agents to read fairly regularly so that they can check that any work they've done matches the most important design patterns here. We don't need to include exhaustive code examples in here, But we can use short illustrative examples where they'd be helpful in explaining a non-obvious pattern. This document will obviously expand and become more important over time as we bring in more and more abstractions into the code base.
-- [ ] Update `tdn-cli/README.md` and `tdn-cli/CLAUDE.md` as nececarry. Keep them short, clear and useful.
+- [x] Write `docs/developer/architecture-guide.md` (in `tdn-cli`) - This should Briefly explain the high level architecture, Briefly explain about testing and reference the `testing.md` We created earlier. And it should also explain the various dependencies we've brought in and when and how to use them. This is a document which we will expand over time and it's intended for humans and in particular AI coding agents to read fairly regularly so that they can check that any work they've done matches the most important design patterns here. We don't need to include exhaustive code examples in here, But we can use short illustrative examples where they'd be helpful in explaining a non-obvious pattern. This document will obviously expand and become more important over time as we bring in more and more abstractions into the code base.
 - [ ] Update `../docs/product-overviews/cli-tech.md` with the major architectural decisions and library choices that we have made so far. Remember this is a very high level document.
-- [ ] Document any important decisions made during this task at the end of this task doc.
+- [ ] Update `tdn-cli/README.md` and `tdn-cli/CLAUDE.md` as nececarry. Keep them short, clear and useful.
 
 ### 6.3 Verify Checklist
 
