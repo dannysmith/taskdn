@@ -2,6 +2,7 @@
 title: Task With Body
 status: ready
 created-at: 2025-01-10
+updated-at: 2025-01-10
 area: "[[Personal]]"
 ---
 
