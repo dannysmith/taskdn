@@ -2,5 +2,28 @@
 name = "tdn-core"
 version = "0.1.0"
 edition = "2024"
+description = "Core library for Taskdn CLI"
+
+[lib]
+crate-type = ["cdylib"]
 
 [dependencies]
+# NAPI-RS bindings
+napi = { version = "2", features = ["napi9"] }
+napi-derive = "2"
+
+# Error handling
+thiserror = "2"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Frontmatter parsing (to be added when implementing parser)
+# gray_matter = "0.2"
+
+[build-dependencies]
+napi-build = "2"
+
+[profile.release]
+lto = true
