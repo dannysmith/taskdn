@@ -143,9 +143,13 @@ A set of unambiguous formal specifications describing the protocol and core APIs
 
 **All software which implements S1 will be mutually compatible when reading/writing task files on disk.** Implementing S2 will ensure a consistent & predictable external interface.
 
+See [tdn-specs README](../tdn-specs/README.md).
+
 ### 2. CLI App
 
 A command-line interface for both humans and AI agents to use. Human users can manage their tasks in an interactive TUI-like interface, or use the CLI in bash scripts. AI agents have a different interface, optimised for them.
+
+See [CLI Requirements](product-overviews/cli/cli-requirements.md).
 
 ### 3. Desktop App
 
@@ -153,13 +157,17 @@ A cross-platform Tauri app for day-to-day task management. which feels as slick 
 
 If they're in _planning mode_ they'll want to see contextual views and have important information surfaced where it's needed. If they're in _doing mode_ they'll want to see and work with their short-term task list without distractions.
 
+See [Desktop Requirements](product-overviews/desktop/desktop-requirements.md).
+
 ### 4. Developer SDKs
 
-### 5. Obsidian Plugin
+See [SDK Requirements](product-overviews/sdk/sdk-requirements.md).
+
+### 5. Obsidian Plugin [DEFERRED PROJECT]
 
 A leightweight integration which renders any links to task documents as special widgets, which show some meta-data about the task and allows their status to be changed. Also allows any regular checklist item to be easily turned into a task in-place.
 
-### 6. Extras
+### 6. Extras [DEFERRED PROJECT]
 
 - Templates and bases for Obsidian
 - Claude Code Plugin with skill & commands

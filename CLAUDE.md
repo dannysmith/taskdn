@@ -8,7 +8,7 @@ This is a **monorepo root**. After initial work on a new product, most work sess
 
 All top level documentation lives in `docs/`.
 
-- `docs/overview.md` - General Overview of the Project, Goals, Products, Principles etc. Evergreen.
+- `docs/overview.md` - General Overview of the Project, Goals, Products, Principles etc.
 - `docs/roadmap-and-approach.md` - Approach to development & Eng principles, high-level roadmap.
 - `docs/tasks-todo` - See @docs/tasks.md.
 - `docs/developer` - Technical documentation common to all products.
@@ -25,7 +25,7 @@ All top level documentation lives in `docs/`.
 - Each may contain other relevant evergreen documents.
 - As a general rule, these documents should not contain information on **internal** implementation details.
 
-### Detailed Developer docs
+### Detailed Developer Docs
 
 Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in dount ask the user.
 
@@ -36,6 +36,10 @@ Most of the product sub-directories will have their own `tdn-<name>/docs/` with 
 | `taskdn-sdk/`     | Core SDKs   | TBD              | `docs/product-overviews/sdk      |
 | `taskdn-cli/`     | CLI tool    | TBD              | `docs/product-overviews/cli`     |
 | `taskdn-desktop/` | Desktop app | Tauri v2 & React | `docs/product-overviews/desktop` |
+
+## Archived Projects
+
+`archived-projects` contains code which was developed during a research spike. never look in this directory unless the user expressly asks you to.
 
 ## Important: "Tasks" in This Project
 
