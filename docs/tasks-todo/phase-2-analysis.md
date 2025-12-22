@@ -160,6 +160,7 @@ Version: 1.0.0-draft
    - Two user types: humans and machines (including AI agents)
    - Optimize for each rather than compromise
    - Principle: interfaces SHOULD provide distinct modes
+   - Principle: agent-facing interfaces SHOULD bundle related context (see 3.3)
 
 ## 3. Interface Modes
    ### 3.1 Human Mode
@@ -179,6 +180,10 @@ Version: 1.0.0-draft
    - Non-interactive
    - Always includes file paths
    - Rationale for Markdown over JSON for agents
+   - Design principle: provide context-rich responses
+     - Bundle entity with related context in single response
+     - Reduces round-trips, gives agent full picture
+     - Specific API shape is implementation-defined
 
 ## 4. Output Formats
    ### 4.1 Human Output
@@ -393,7 +398,14 @@ The Beans review recommends Bleve with BM25, but Bleve is Go-specific.
 
 The CLI has a `context` command that returns an entity plus related entities. Should S2 describe this pattern generically?
 
-**Recommendation:** Not in v1. This is a CLI-specific convenience. SDKs would expose this differently (methods like `getProjectWithTasks()`). Desktop apps have their own navigation patterns. If we find this pattern recurring, add in a future version.
+**Recommendation:** Not as a formal specification in v1. This is a CLI-specific convenience. SDKs would expose this differently (methods like `getProjectWithTasks()`). Desktop apps have their own navigation patterns.
+
+**However:** S2 should include a design principle note about this pattern. When building tools for AI agents, bundling related context into a single response is valuable:
+- Agents benefit from receiving a task *plus* its project *plus* its area in one call
+- This reduces round-trips and gives the agent sufficient context to reason about the work
+- The specific API shape varies by interface type, but the principle is universal
+
+This should be mentioned in S2 Section 2 (Design Philosophy) or Section 3.3 (Agent Mode) as a recommendation, not a specification. Something like: "Agent-facing interfaces SHOULD provide operations that return entities with their related context, minimizing the need for multiple queries."
 
 ---
 

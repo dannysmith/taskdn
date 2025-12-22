@@ -35,7 +35,7 @@ Split the original single spec doc `/tdn-specs/S1-core.md` into three docs as pe
 
 ---
 
-#### Phase 2.1: Mapping & Analysis [IN PROGRESS]
+#### Phase 2.1: Mapping & Analysis [COMPLETE]
 
 **Goal:** Create a detailed planning document that maps content to target specs, surfaces any remaining decisions, and proposes structure for S2 and S3.
 
@@ -58,7 +58,7 @@ Split the original single spec doc `/tdn-specs/S1-core.md` into three docs as pe
 
 ---
 
-#### Phase 2.2: Create S3 (Smallest Scope)
+#### Phase 2.2: Create S3 (Smallest Scope) [COMPLETE]
 
 **Goal:** Create S3 with guidance for safely reading/writing S1-compliant files.
 
@@ -79,7 +79,7 @@ Split the original single spec doc `/tdn-specs/S1-core.md` into three docs as pe
 
 ---
 
-#### Phase 2.3: Refactor S1
+#### Phase 2.3: Refactor S1 [COMPLETE]
 
 **Goal:** Remove content that moved to S3, ensure S1 is purely about "files on disk."
 
@@ -99,7 +99,7 @@ Split the original single spec doc `/tdn-specs/S1-core.md` into three docs as pe
 
 ---
 
-#### Phase 2.4: Create S2
+#### Phase 2.4: Create S2 [COMPLETE]
 
 **Goal:** Create S2 with interface design principles and patterns.
 
@@ -126,7 +126,7 @@ Split the original single spec doc `/tdn-specs/S1-core.md` into three docs as pe
 
 ---
 
-#### Phase 2.5: Update cli-requirements.md
+#### Phase 2.5: Update cli-requirements.md [COMPLETE]
 
 **Goal:** Update CLI doc to reference S2, remove redundancy, keep CLI-specific details.
 

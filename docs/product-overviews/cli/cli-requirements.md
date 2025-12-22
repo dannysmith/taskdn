@@ -1,41 +1,22 @@
 # The CLI Tool - Requirements & Overview
 
-# Phase 4: CLI Tool
-
 Command-line interface for humans and AI agents.
 
+> **Note:** This document defines CLI-specific behavior. For general interface design patterns (modes, output formats, error handling, etc.), see [S2: Interface Design](/tdn-specs/S2-interface-design.md). The CLI implements S2 patterns with CLI-specific syntax and features.
+
 ## Context & Dependencies
-
-```
-┌─────────────────────┐
-│     Rust SDK        │
-│   (taskdn-rust)     │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│  TypeScript SDK     │
-│    (taskdn-ts)      │
-└─────────┬───────────┘
-          │
-          ▼
-┌─────────────────────┐
-│       CLI           │  ← This phase
-│    (taskdn-cli)     │
-└─────────────────────┘
-```
-
-**Depends on:** TypeScript SDK (Phase 3) must be complete first.
 
 **Consumed by:**
 
 - Human users (terminal)
-- AI coding assistants (Claude Code, Cursor, etc.)
+- AI coding assistants (Claude Code etc.)
 - Shell scripts and automation
 
 ---
 
 ## Two User Types, Two Modes
+
+> See also: [S2 §2 Design Philosophy](/tdn-specs/S2-interface-design.md#2-design-philosophy) and [S2 §3 Interface Modes](/tdn-specs/S2-interface-design.md#3-interface-modes)
 
 The CLI serves two fundamentally different users with different needs:
 
@@ -68,6 +49,8 @@ Interactive prompt behavior is not covered by automated tests.
 ---
 
 ## Output Modes & Flags
+
+> See also: [S2 §4 Output Formats](/tdn-specs/S2-interface-design.md#4-output-formats) for general output patterns
 
 ### The Flag System
 
@@ -805,6 +788,8 @@ Exit code 1 for issues follows linter conventions—useful for CI pipelines.
 
 ## Identification: Paths vs Fuzzy Search
 
+> See also: [S2 §7 Identification Patterns](/tdn-specs/S2-interface-design.md#7-identification-patterns)
+
 **For writes (complete, drop, status, update, archive):**
 
 - AI mode: Requires exact file paths. No ambiguity allowed.
@@ -926,6 +911,8 @@ taskdn list --deferred-this-week         # Tasks becoming visible this week
 ---
 
 ## Date Handling
+
+> See also: [S2 §6 Date Handling](/tdn-specs/S2-interface-design.md#6-date-handling) for input/output format standards
 
 **Input:** Natural language accepted in all modes.
 
@@ -1074,6 +1061,8 @@ Common flags have single-letter shortcuts:
 ---
 
 ## Non-Functional Requirements
+
+> See also: [S2 §9 Error Handling](/tdn-specs/S2-interface-design.md#9-error-handling) for error codes and patterns
 
 ### Exit Codes
 

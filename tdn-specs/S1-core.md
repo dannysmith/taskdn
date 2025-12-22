@@ -261,7 +261,9 @@ Key contacts, agreements, and background information...
 
 ## 6. Implementation Requirements
 
-This section defines requirements for software implementing this specification.
+This section defines conformance requirements for software implementing this specification.
+
+For guidance on reading, writing, and mutating files—including error handling, timestamp management, data preservation, and file safety—see **[S3: Data Read/Write Guidance](./S3-data-read-write.md)**.
 
 ### 6.1 Conformance Levels
 
@@ -281,25 +283,6 @@ Implementations MAY support:
 
 - Additional custom frontmatter fields.
 - Alternative file reference formats beyond WikiLinks.
-
-### 6.2 Error Handling
-
-- If a file cannot be parsed as valid YAML, implementations SHOULD skip the file and MAY emit a warning.
-- If a required field is missing, implementations SHOULD treat the file as invalid and MAY emit a warning.
-- If a status value is not recognized, implementations SHOULD treat it as invalid.
-- Implementations MUST NOT modify files that fail validation without explicit user consent.
-
-### 6.3 Timestamps
-
-- Implementations SHOULD automatically set `created-at` when a task is created.
-- Implementations SHOULD automatically update `updated-at` when a task is modified.
-- Implementations SHOULD automatically set `completed-at` when `status` changes to `done` or `dropped`.
-
-### 6.4 Interoperability
-
-- Implementations MUST preserve unknown frontmatter fields when modifying files.
-- Implementations MUST preserve the Markdown body when modifying frontmatter.
-- Implementations SHOULD preserve YAML formatting (comments, ordering) where possible.
 
 ---
 
@@ -343,4 +326,4 @@ The following features are intentionally omitted from v1.0 but may be considered
 - Priority levels
 - Recurring tasks
 - Subtasks as separate files
-- Tags beyond `task`
+- Tags/labels
