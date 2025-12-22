@@ -71,7 +71,7 @@ taskdn-cli/
 | Purpose                      | Technology               |
 | ---------------------------- | ------------------------ |
 | Frontmatter parsing          | gray_matter              |
-| YAML round-trip writing      | yaml-edit                |
+| YAML writing                 | TBD (see below)          |
 | Parallelism                  | rayon                    |
 | Date/time                    | chrono                   |
 | Error handling               | thiserror                |
@@ -81,7 +81,7 @@ taskdn-cli/
 
 **gray_matter** (Rust): Fast frontmatter extraction supporting YAML/JSON/TOML. Used for reading task files.
 
-**yaml-edit**: Lossless YAML parsing using syntax trees. Critical for preserving user formatting, comments position, and field order when updating files.
+**YAML writing (TBD)**: Round-trip fidelity requires preserving field order and unknown fields. Options to evaluate: `serde_yaml` (fast but loses comments), manual serialization with field ordering, or exploring less common crates. Note: the archived SDK accepted that YAML comments are lost—this may be an acceptable tradeoff.
 
 **NAPI-RS**: Creates native Node.js addons from Rust. Generates TypeScript type definitions automatically. Chosen over WASM because WASM cannot use `std::thread` or access the filesystem directly.
 
@@ -304,8 +304,8 @@ The `archived-projects/` directory contains prior work that informed these decis
 ### Rust Libraries
 
 - gray_matter (frontmatter): https://lib.rs/crates/gray_matter
-- yaml-edit (round-trip YAML): https://crates.io/crates/yaml-edit
 - rayon (parallelism): https://lib.rs/crates/rayon
+- serde_yaml: https://lib.rs/crates/serde_yaml
 
 ### Prior Art
 
