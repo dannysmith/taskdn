@@ -101,113 +101,98 @@ Total: 4 packages (minimal dependency footprint)
 
 ---
 
-## Phase 2: Project Initialization
+## Phase 2: Project Initialization ✅
 
 Set up the basic project structure with both TypeScript and Rust components.
 
-### 2.1 Directory Structure
+Completed 2025-12-22.
 
-Create the structure outlined in `cli-tech.md`:
+### 2.1 Directory Structure ✅
+
+Created structure (slightly simplified from original plan - scripts/ and tests/ deferred):
 
 ```
 tdn-cli/
 ├── package.json
 ├── tsconfig.json
-├── src/                      # TypeScript CLI layer
-│   ├── index.ts              # Entry point
-│   ├── commands/             # Command implementations (stubs)
-│   └── output/               # Human/AI/JSON formatters (stubs)
+├── Cargo.toml              # Workspace root
+├── src/                    # TypeScript CLI layer
+│   ├── index.ts            # Entry point
+│   ├── commands/           # Command implementations (empty)
+│   └── output/             # Human/AI/JSON formatters (empty)
 ├── crates/
-│   └── core/                 # Rust library
+│   └── core/               # Rust library
 │       ├── Cargo.toml
+│       ├── build.rs
 │       └── src/
-│           └── lib.rs        # NAPI exports (stub)
-├── bindings/                 # Auto-generated TypeScript types
-├── scripts/                  # Build scripts
-└── tests/                    # Integration tests
+│           └── lib.rs      # NAPI exports
+└── bindings/               # Auto-generated (gitignored)
 ```
 
-- [ ] Create directory structure
-- [ ] Initialize `package.json` with Bun (`bun init`)
-- [ ] Initialize Rust workspace with `cargo init --lib crates/core`
-- [ ] Create `.gitignore` covering both Node and Rust artifacts
+- [x] Create directory structure
+- [x] Initialize `package.json` with Bun
+- [x] Initialize Rust workspace with crates/core
+- [x] Create `.gitignore` covering both Node and Rust artifacts
 
-### 2.2 TypeScript Dependencies
+### 2.2 TypeScript Dependencies ✅
 
-Install the libraries decided in Phase 1:
+- [x] Install Commander.js and extra-typings for CLI framework
+- [x] Install @clack/prompts for interactive prompts and spinners
+- [x] Install ansis for terminal colors and formatting
+- [x] Verify all packages install correctly with Bun
 
-```bash
-# Runtime dependencies
-bun add commander @commander-js/extra-typings @clack/prompts ansis
+### 2.3 TypeScript Configuration ✅
 
-# Dev dependencies (types, etc.)
-bun add -d @types/node
-```
+- [x] Create `tsconfig.json` with strict mode, appropriate target
+- [x] Path aliases skipped (not needed for this project size)
+- [x] Set up for Bun runtime
 
-- [ ] Install Commander.js and extra-typings for CLI framework
-- [ ] Install @clack/prompts for interactive prompts and spinners
-- [ ] Install ansis for terminal colors and formatting
-- [ ] Verify all packages install correctly with Bun
+### 2.4 Rust Configuration ✅
 
-### 2.3 TypeScript Configuration
+- [x] Set up `Cargo.toml` with dependencies: napi v3, napi-derive v3, thiserror, serde
+- [x] Configure for library output with cdylib target
+- [x] Set up `build.rs` for NAPI
 
-- [ ] Create `tsconfig.json` with strict mode, appropriate target
-- [ ] Configure path aliases if useful (e.g., `@/` for `src/`)
-- [ ] Set up for Bun runtime (check Bun-specific tsconfig options)
+### 2.5 Ancillary Tooling Setup ✅
 
-### 2.4 Rust Configuration
-
-- [ ] Set up `Cargo.toml` with initial dependencies:
-  - `napi` and `napi-derive` for bindings
-  - `thiserror` for errors
-  - `serde` for serialization
-- [ ] Configure for library output with cdylib target
-- [ ] Set up `build.rs` if needed for NAPI
-
-### 2.5 Ancillary Tooling Setup [MANUAL BY USER]
-
-- [ ] Set up Prettier, ESLint, and Clippy
-- [ ] Set up commands to run formatters, including `check:all` command
-- [ ] Initialize CLAUDE.md, README.md, docs/ etc
+- [x] Set up Prettier, ESLint (flat config), and Clippy
+- [x] Set up `check` (all), `check:ts`, `check:rust`, `fix` commands
+- [x] Initialize CLAUDE.md, README.md
 
 ---
 
-## Phase 3: NAPI-RS Bindings Setup
+## Phase 3: NAPI-RS Bindings Setup ✅
 
 This is the critical integration layer. Get a minimal working binding before building anything complex.
 
-### 3.1 Minimal Binding Test
+Completed 2025-12-22.
 
-Create a trivial Rust function exposed to TypeScript:
+### 3.1 Minimal Binding Test ✅
 
-```rust
-// crates/core/src/lib.rs
-#[napi]
-pub fn hello_from_rust() -> String {
-    "Hello from Rust!".to_string()
-}
+Implemented `helloFromRust()` in Rust, verified TypeScript can call it:
+
+```
+$ bun run src/index.ts
+✓ All dependencies loaded successfully
+✓ Rust binding works: Hello from Rust!
 ```
 
-```typescript
-// src/index.ts
-import { helloFromRust } from '../bindings'
-console.log(helloFromRust())
-```
+- [x] Install NAPI-RS dependencies in Rust (napi v3, napi-derive v3, napi-build v2)
+- [x] Configure NAPI-RS build (config in package.json "napi" key)
+- [x] Run build to generate TypeScript bindings in `bindings/`
+- [x] Verify TypeScript can import and call the Rust function
+- [x] Document the build command in README
 
-- [ ] Install NAPI-RS dependencies in Rust
-- [ ] Configure NAPI-RS build (napi.config.json or similar)
-- [ ] Run build to generate TypeScript bindings in `bindings/`
-- [ ] Verify TypeScript can import and call the Rust function
-- [ ] Document the build command in README
+### 3.2 Build Pipeline ✅
 
-### 3.2 Build Pipeline
+Using npm scripts instead of shell scripts (cleaner for cross-platform):
 
-- [ ] Create `scripts/build.sh` that:
-  - Builds Rust library
-  - Generates TypeScript bindings
-  - Compiles TypeScript (if needed for type checking)
-- [ ] Create `scripts/dev.sh` for development (rebuild on changes?)
-- [ ] Test that `bun run src/index.ts` works after build
+- `bun run build` - Release build with NAPI bindings
+- `bun run build:dev` - Debug build
+- `bun run check` - Full check (TS + Rust)
+
+- [x] Build pipeline generates Rust library + TypeScript bindings
+- [x] `bun run src/index.ts` works after build
 
 ---
 
