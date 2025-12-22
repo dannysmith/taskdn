@@ -205,11 +205,11 @@ describe('taskdn show', () => {
       expect(stdout).toContain('Project Without Status');
     });
 
-    test('JSON output has null status', async () => {
+    test('JSON output omits undefined status', async () => {
       const { stdout } = await runCli(['show', projectPath, '--json']);
       const output = JSON.parse(stdout);
       expect(output.project.title).toBe('Project Without Status');
-      expect(output.project.status).toBeNull();
+      expect(output.project.status).toBeUndefined();
     });
   });
 

@@ -100,7 +100,7 @@ describe('NAPI bindings', () => {
       // Status is optional for projects per S1 Section 4.4
       const project = parseProjectFile(fixturePath('vault/projects/no-status.md'));
       expect(project.title).toBe('Project Without Status');
-      expect(project.status).toBeNull();
+      expect(project.status).toBeUndefined();
       expect(project.area).toBe('[[Work]]');
     });
   });

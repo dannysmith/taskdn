@@ -1,6 +1,6 @@
 import { bold, green, blue, dim, cyan, yellow } from 'ansis';
-import type { Task } from '@bindings';
-import type { Formatter, FormattableResult, TaskResult } from './types.ts';
+import type { Task, Project } from '@bindings';
+import type { Formatter, FormattableResult, TaskResult, ProjectResult } from './types.ts';
 import { toKebabCase } from './types.ts';
 
 /**
@@ -47,6 +47,39 @@ function formatTask(task: Task): string {
 }
 
 /**
+ * Format a single project for human output
+ */
+function formatProject(project: Project): string {
+  const lines: string[] = [];
+
+  // Title with status (status is optional for projects)
+  if (project.status) {
+    lines.push(bold(project.title) + '  ' + formatStatus(project.status));
+  } else {
+    lines.push(bold(project.title));
+  }
+  lines.push(dim(project.path));
+  lines.push('');
+
+  // Metadata
+  if (project.startDate) lines.push(`${dim('Start Date:')} ${project.startDate}`);
+  if (project.endDate) lines.push(`${dim('End Date:')} ${project.endDate}`);
+  if (project.area) lines.push(`${dim('Area:')} ${cyan(project.area)}`);
+  if (project.description) lines.push(`${dim('Description:')} ${project.description}`);
+  if (project.blockedBy && project.blockedBy.length > 0) {
+    lines.push(`${dim('Blocked By:')} ${project.blockedBy.join(', ')}`);
+  }
+
+  // Body
+  if (project.body) {
+    lines.push('');
+    lines.push(project.body);
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Human-readable formatter with colors and styling
  */
 export const humanFormatter: Formatter = {
@@ -58,8 +91,10 @@ export const humanFormatter: Formatter = {
       }
       case 'task-list':
         return bold(blue('Tasks')) + dim(' (stub output)');
-      case 'project':
-        return bold(green('Project')) + dim(' (stub output)');
+      case 'project': {
+        const projectResult = result as ProjectResult;
+        return formatProject(projectResult.project);
+      }
       case 'area':
         return bold(green('Area')) + dim(' (stub output)');
       case 'context':

@@ -1,4 +1,4 @@
-import type { Task } from '@bindings';
+import type { Task, Project } from '@bindings';
 
 /**
  * Output mode enum
@@ -35,12 +35,17 @@ export interface TaskListResult {
   tasks: Task[];
 }
 
+export interface ProjectResult {
+  type: 'project';
+  project: Project;
+}
+
 export interface StubResult {
   type: string;
   [key: string]: unknown;
 }
 
-export type FormattableResult = TaskResult | TaskListResult | StubResult;
+export type FormattableResult = TaskResult | TaskListResult | ProjectResult | StubResult;
 
 /**
  * Formatter interface - all output formatters implement this

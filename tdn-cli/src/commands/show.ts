@@ -1,16 +1,31 @@
 import { resolve } from 'path';
 import { Command } from '@commander-js/extra-typings';
 import { red } from 'ansis';
-import { parseTaskFile } from '@bindings';
+import { parseTaskFile, parseProjectFile } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, TaskResult } from '@/output/index.ts';
+import type {
+  GlobalOptions,
+  TaskResult,
+  ProjectResult,
+  FormattableResult,
+} from '@/output/index.ts';
+
+/**
+ * Detect entity type from file path
+ * Returns 'project' if path contains /projects/, otherwise 'task'
+ */
+function detectEntityType(path: string): 'task' | 'project' {
+  if (path.includes('/projects/')) {
+    return 'project';
+  }
+  return 'task';
+}
 
 /**
  * Show command - view a single entity with full content
  *
  * Usage:
- *   taskdn show <path>                    # Show task by path
- *   taskdn show project "Q1 Planning"     # Show project by name (stub)
+ *   taskdn show <path>                    # Show task or project by path
  *   taskdn show area "Work"               # Show area by name (stub)
  */
 export const showCommand = new Command('show')
@@ -24,12 +39,22 @@ export const showCommand = new Command('show')
     const absolutePath = resolve(target);
 
     try {
-      const task = parseTaskFile(absolutePath);
+      const entityType = detectEntityType(absolutePath);
+      let result: FormattableResult;
 
-      const result: TaskResult = {
-        type: 'task',
-        task,
-      };
+      if (entityType === 'project') {
+        const project = parseProjectFile(absolutePath);
+        result = {
+          type: 'project',
+          project,
+        } as ProjectResult;
+      } else {
+        const task = parseTaskFile(absolutePath);
+        result = {
+          type: 'task',
+          task,
+        } as TaskResult;
+      }
 
       console.log(formatOutput(result, globalOpts));
     } catch (error) {

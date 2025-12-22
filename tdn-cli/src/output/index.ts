@@ -5,13 +5,22 @@ import type {
   GlobalOptions,
   TaskResult,
   TaskListResult,
+  ProjectResult,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
 import { aiFormatter } from './ai.ts';
 import { jsonFormatter } from './json.ts';
 
-export type { OutputMode, Formatter, FormattableResult, GlobalOptions, TaskResult, TaskListResult };
+export type {
+  OutputMode,
+  Formatter,
+  FormattableResult,
+  GlobalOptions,
+  TaskResult,
+  TaskListResult,
+  ProjectResult,
+};
 export { getOutputMode };
 
 /**
