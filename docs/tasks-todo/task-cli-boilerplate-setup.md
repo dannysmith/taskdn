@@ -3,6 +3,7 @@
 Set up the foundational project structure for `tdn-cli/` so we can begin implementing features. This task covers research, tooling decisions, and scaffolding - ending with a working skeleton that can parse a single task file and output in all three modes (human/AI/JSON).
 
 **Goal:** Have a working development environment where we can:
+
 1. Write Rust code for the core library
 2. Write TypeScript code for the CLI layer
 3. Build and run the CLI locally
@@ -11,78 +12,92 @@ Set up the foundational project structure for `tdn-cli/` so we can begin impleme
 
 ---
 
-## Phase 1: Research & Tooling Decisions
+## Phase 1: Research & Tooling Decisions ✅
 
-Before writing any code, we need to resolve the open questions from `cli-tech.md`. This phase is interactive - the user will make final decisions based on research findings.
+Decisions made 2025-12-22 based on research into Bun compatibility, bundle size, TypeScript DX, and feature requirements.
 
-### 1.1 CLI Framework Evaluation
+### 1.1 CLI Framework ✅
 
-**Question:** Which CLI framework for the TypeScript layer?
+**Decision:** Commander.js with `@commander-js/extra-typings`
 
-**Options to evaluate:**
-- **Commander.js** - Most popular, battle-tested, excellent TypeScript support
-- **yargs** - Powerful but heavier, good for complex CLIs
-- **@oclif/core** - Enterprise-grade, might be overkill
-- **Bun's native `parseArgs`** - Zero dependencies, but less ergonomic
+**Rationale:**
+- Zero dependencies
+- Perfect Bun compatibility (no known issues)
+- Excellent TypeScript support with extra-typings package for full type inference
+- Clean subcommand API, auto-generated help text
+- 244M weekly downloads, actively maintained (v14 released 2025)
 
-**Research tasks:**
-- [ ] Check Commander.js TypeScript DX, subcommand support, help generation
-- [ ] Check if Bun's parseArgs is sufficient for our command grammar (verb-first with entity types)
-- [ ] Consider: we need subcommands (`list`, `add`, `show`), flags (`--ai`, `--json`), positional args
-- [ ] Consider: help text generation, shell completions support
+**Rejected alternatives:**
+- **yargs** - Critical Bun compatibility issues (regex parsing errors, version check failures)
+- **@oclif/core** - ts-node conflicts with Bun, overkill for our needs (28 dependencies)
+- **Bun native parseArgs** - No subcommand support, no help generation, too low-level
 
-**Decision needed:** Which framework to use?
+**Shell completions:** Deferred to v2+. When needed, evaluate [bombshell-dev/tab](https://github.com/bombshell-dev/tab) (from Clack's creators).
 
-### 1.2 TUI/Prompt Library Evaluation
+### 1.2 TUI/Prompt Library ✅
 
-**Question:** Which library for interactive prompts (human mode)?
+**Decision:** @clack/prompts
 
-**Options to evaluate:**
-- **@inquirer/prompts** - Modern, modular, maintained successor to inquirer.js
-- **prompts** - Lightweight, simple API
-- **@clack/prompts** - Beautiful defaults, designed for CLIs
-- **Bun-native approach** - Custom with readline?
+**Rationale:**
+- Beautiful defaults matching our "human mode" aesthetic goals
+- Built-in spinner (no separate library needed)
+- Built-in autocomplete for fuzzy select scenarios
+- Excellent Ctrl-C handling with `isCancel()` guard pattern
+- `group()` prompts perfect for multi-field input (`taskdn add` with no args)
+- Confirmed Bun compatibility
+- 171 kB bundle size acceptable (CLI distributes as ~50MB binary anyway)
 
-**Research tasks:**
-- [ ] Review what prompts we need: fuzzy select (multiple matches), confirmation, multi-field input
-- [ ] Check Bun compatibility for each option
-- [ ] Consider: Ctrl-C handling, spinner support for long operations
+**Rejected alternatives:**
+- **@inquirer/prompts** - Needs plugin for fuzzy search, throws errors on Ctrl-C (less elegant)
+- **prompts** - Lighter but no built-in spinners, less polished UX
+- **Bun readline** - Too much work to build fuzzy select, keyboard nav, etc.
 
-**Decision needed:** Which prompt library to use?
+### 1.3 Terminal Output Styling ✅
 
-### 1.3 Terminal Output Styling
+**Decision:** ansis (colors/formatting) + Clack spinner (for long operations)
 
-**Question:** How to handle colors, formatting, spinners?
+**Rationale for ansis:**
+- Chained syntax: `red.bold('text')` vs nested `pc.bold(pc.red('text'))`
+- Named imports for tree-shaking: `import { red, bold } from 'ansis'`
+- Handles multi-line text correctly (picocolors breaks at newlines)
+- Excellent TypeScript autocomplete
+- Modern chalk replacement recommended by e18e community
+- ~15-20 kB bundle
 
-**Options:**
-- **chalk** - De facto standard for colors
-- **picocolors** - Much smaller, faster
-- **ora** - Spinners
-- **Bun's built-in** - Check what Bun provides natively
+**Rationale for Clack spinner:**
+- Already bundled with @clack/prompts
+- Works standalone outside interactive prompts
+- Use for human-mode operations that might take noticeable time (vault scanning)
+- Skip spinner in AI mode (no progress indicators needed)
 
-**Research tasks:**
-- [ ] Check if picocolors is sufficient (we don't need advanced features)
-- [ ] Determine if we need spinners for any v1 operations
-- [ ] Check Bun's native terminal capabilities
+**Terminal rendering approach:** Start with manual formatting using ansis. Build simple formatters ourselves rather than adding table/box libraries. The output formats in the spec are styled text with alignment, not true tables.
 
-**Decision needed:** Which styling libraries (if any)?
+**Rejected alternatives:**
+- **picocolors** - No chained syntax, doesn't handle multi-line edge case
+- **chalk** - 101 kB (14x larger), slower, no advantages over ansis
+- **ora** - Clack spinner sufficient, no need for separate library
+- **Bun.color()** - Only colors, no text formatting (bold/dim/underline)
 
-### 1.4 Search Implementation
+### 1.4 Search Implementation ✅
 
-**Question:** Simple substring or more sophisticated search from the start?
+**Decision:** Simple substring matching (case-insensitive), implemented in Rust core
 
-**Context:** The `--query` flag does text search in title/body. Fuzzy matching for entity lookup uses simple substring matching (per spec).
+**Rationale:**
+- Spec explicitly states "no typo tolerance" for fuzzy matching
+- `--query` text search should follow same rules for consistency
+- Rust core handles all text matching (single implementation, tested in one place)
+- Can revisit if users request smarter search in future versions
 
-**Options:**
-- **Simple substring (case-insensitive)** - Matches spec exactly, trivial to implement
-- **Basic fuzzy (e.g., fuse.js)** - Better UX for typos, but spec says no typo tolerance
-- **Defer to Rust** - Let the core handle all text matching
+### Summary: Runtime Dependencies
 
-**Research tasks:**
-- [ ] Re-read spec on fuzzy matching rules - confirms simple substring only
-- [ ] Decide if `--query` search should be smarter than entity lookup
+| Package | Purpose |
+|---------|---------|
+| `commander` | CLI framework |
+| `@commander-js/extra-typings` | TypeScript type inference for Commander |
+| `@clack/prompts` | Interactive prompts + spinner |
+| `ansis` | Terminal colors and text formatting |
 
-**Decision needed:** Keep it simple (substring) or add fuzzy search for `--query`?
+Total: 4 packages (minimal dependency footprint)
 
 ---
 
@@ -113,17 +128,34 @@ tdn-cli/
 ```
 
 - [ ] Create directory structure
-- [ ] Initialize `package.json` with Bun
+- [ ] Initialize `package.json` with Bun (`bun init`)
 - [ ] Initialize Rust workspace with `cargo init --lib crates/core`
 - [ ] Create `.gitignore` covering both Node and Rust artifacts
 
-### 2.2 TypeScript Configuration
+### 2.2 TypeScript Dependencies
+
+Install the libraries decided in Phase 1:
+
+```bash
+# Runtime dependencies
+bun add commander @commander-js/extra-typings @clack/prompts ansis
+
+# Dev dependencies (types, etc.)
+bun add -d @types/node
+```
+
+- [ ] Install Commander.js and extra-typings for CLI framework
+- [ ] Install @clack/prompts for interactive prompts and spinners
+- [ ] Install ansis for terminal colors and formatting
+- [ ] Verify all packages install correctly with Bun
+
+### 2.3 TypeScript Configuration
 
 - [ ] Create `tsconfig.json` with strict mode, appropriate target
 - [ ] Configure path aliases if useful (e.g., `@/` for `src/`)
 - [ ] Set up for Bun runtime (check Bun-specific tsconfig options)
 
-### 2.3 Rust Configuration
+### 2.4 Rust Configuration
 
 - [ ] Set up `Cargo.toml` with initial dependencies:
   - `napi` and `napi-derive` for bindings
@@ -131,6 +163,12 @@ tdn-cli/
   - `serde` for serialization
 - [ ] Configure for library output with cdylib target
 - [ ] Set up `build.rs` if needed for NAPI
+
+### 2.5 Ancillary Tooling Setup [MANUAL BY USER]
+
+- [ ] Set up Prettier, ESLint, and Clippy
+- [ ] Set up commands to run formatters, including `check:all` command
+- [ ] Initialize CLAUDE.md, README.md, docs/ etc
 
 ---
 
@@ -152,8 +190,8 @@ pub fn hello_from_rust() -> String {
 
 ```typescript
 // src/index.ts
-import { helloFromRust } from '../bindings';
-console.log(helloFromRust());
+import { helloFromRust } from '../bindings'
+console.log(helloFromRust())
 ```
 
 - [ ] Install NAPI-RS dependencies in Rust
