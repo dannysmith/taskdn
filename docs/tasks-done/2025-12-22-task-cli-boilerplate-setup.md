@@ -359,19 +359,19 @@ tests/fixtures/vault/
 
 - [x] Write `docs/developer/architecture-guide.md` (in `tdn-cli`) - This should Briefly explain the high level architecture, Briefly explain about testing and reference the `testing.md` We created earlier. And it should also explain the various dependencies we've brought in and when and how to use them. This is a document which we will expand over time and it's intended for humans and in particular AI coding agents to read fairly regularly so that they can check that any work they've done matches the most important design patterns here. We don't need to include exhaustive code examples in here, But we can use short illustrative examples where they'd be helpful in explaining a non-obvious pattern. This document will obviously expand and become more important over time as we bring in more and more abstractions into the code base.
 - [x] Update `../docs/product-overviews/cli-tech.md` with the major architectural decisions and library choices that we have made so far. Remember this is a very high level document.
-- [ ] Update `tdn-cli/README.md` and `tdn-cli/CLAUDE.md` as nececarry. Keep them short, clear and useful.
+- [x] Update `tdn-cli/README.md` and `tdn-cli/CLAUDE.md` as nececarry. Keep them short, clear and useful.
 
 ### 6.3 Verify Checklist
 
 Before marking complete:
 
-- [ ] `bun run build` works
-- [ ] `bun run check` passes
-- [ ] All tests pass
-- [ ] `bun run src/index.ts --help` shows help
-- [ ] `bun run src/index.ts show <path>` works for all output modes
-- [ ] `bun run src/index.ts show <bad-path>` shows appropriate error
-- [ ] TypeScript types for Rust structs are generated and usable
+- [x] `bun run build` works
+- [x] `bun run check` passes
+- [x] All tests pass
+- [x] `bun run src/index.ts --help` shows help
+- [x] `bun run src/index.ts show <path>` works for all output modes
+- [x] `bun run src/index.ts show <bad-path>` shows appropriate error
+- [x] TypeScript types for Rust structs are generated and usable
 
 ---
 

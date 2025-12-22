@@ -17,7 +17,13 @@ bun run check        # Run all checks (TS + Rust)
 bun run fix          # Run all formatters (Prettier + cargo fmt)
 bun run build        # Build release NAPI bindings
 bun run build:dev    # Build debug NAPI bindings
+bun run test         # Run all tests (TS + Rust)
 ```
+
+## Developer Docs
+
+- `docs/developer/architecture-guide.md` - Architecture and patterns (read this first)
+- `docs/developer/testing.md` - Testing strategy
 
 ## Path Aliases
 
@@ -32,3 +38,15 @@ Use these aliases in TypeScript imports (configured in tsconfig.json):
 - Use `bun` (not pnpm/npm) for all JS/TS operations
 - Rust code lives in `crates/core/` and exposes functions via `#[napi]` macro
 - TypeScript types for Rust functions are auto-generated in `bindings/index.d.ts`
+
+## Workflow Notes
+
+**Regenerating bindings after Rust API changes:** If you modify any `#[napi]` function signatures, structs, or enums in the Rust code, you must regenerate the TypeScript bindings:
+
+```bash
+bun run build        # Regenerates bindings/index.js and bindings/index.d.ts
+```
+
+The TypeScript layer won't see your changes until you rebuild.
+
+**Format before check:** When you've edited more than a few TypeScript or Rust files, run `bun run fix` before `bun run check`. This avoids formatting errors failing the check.
