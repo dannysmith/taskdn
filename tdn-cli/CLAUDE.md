@@ -7,6 +7,7 @@ High-level documentation (requirements, technical overview) lives in `../docs/pr
 ## Overview
 
 This is the CLI tool for Taskdn - a hybrid TypeScript + Rust project:
+
 - **TypeScript layer** (Bun): CLI interface, prompts, output formatting
 - **Rust core** (NAPI-RS): Performance-critical operations (parsing, search)
 
@@ -50,3 +51,28 @@ bun run build        # Regenerates bindings/index.js and bindings/index.d.ts
 The TypeScript layer won't see your changes until you rebuild.
 
 **Format before check:** When you've edited more than a few TypeScript or Rust files, run `bun run fix` before `bun run check`. This avoids formatting errors failing the check.
+
+## TDD Workflow for CLI Features
+
+This only applies in full when adding new features (ie command etc) to the codebase.
+
+For each feature or small set of features:
+
+1. **Write failing E2E test** - Describe expected behavior
+2. **Add fixture files as needed** - Ensure they conform to S1 spec
+3. **Review test against specs** - Check S1, S2, `cli-requirements.md`
+4. **User confirms test** - Commit before implementing
+5. **Implement until green** - Iteratively build the solution
+6. **Refactor** - Clean up Rust and TypeScript code and identify opportunities to refactor
+7. **Add Rust unit tests** - Where valuable for parsing logic
+8. **Add TS unit tests** - For formatters and utilities as needed
+9. **Run checks** - `bun run fix` then `bun run check`
+10. **Update docs** - `docs/cli-progress.md` and task document
+11. **Summary** - Provide summary and manual test commands to user, suggest a short commit message too.
+
+## Progress Tracking
+
+- **Task documents:** `../docs/tasks-todo/task-{1-8}-cli-*.md`
+- **Progress checklist:** `docs/cli-progress.md`
+
+Update the progress checklist as features are completed.
