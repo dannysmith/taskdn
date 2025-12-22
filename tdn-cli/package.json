@@ -10,15 +10,20 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
+    "build": "napi build --release --platform --package tdn-core -o bindings",
+    "build:dev": "napi build --platform --package tdn-core -o bindings",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
     "format": "prettier --write \"src/**/*.ts\" \"*.config.js\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"*.config.js\"",
-    "check": "bun run format:check && bun run lint && bunx tsc --noEmit",
-    "fix": "bun run format && bun run lint:fix"
+    "check": "bun run format:check && bun run lint && bunx tsc --noEmit && cargo clippy --manifest-path crates/core/Cargo.toml -- -D warnings && cargo test --manifest-path crates/core/Cargo.toml",
+    "check:ts": "bun run format:check && bun run lint && bunx tsc --noEmit",
+    "check:rust": "cargo clippy --manifest-path crates/core/Cargo.toml -- -D warnings && cargo test --manifest-path crates/core/Cargo.toml",
+    "fix": "bun run format && bun run lint:fix && cargo fmt --manifest-path crates/core/Cargo.toml"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@napi-rs/cli": "^3.5.0",
     "@types/bun": "latest",
     "@types/node": "^22",
     "eslint": "^9.39.2",
@@ -34,5 +39,10 @@
     "@commander-js/extra-typings": "^14.0.0",
     "ansis": "^4.2.0",
     "commander": "^14.0.2"
+  },
+  "napi": {
+    "binaryName": "tdn-core",
+    "packageName": "tdn-core",
+    "targets": []
   }
 }
