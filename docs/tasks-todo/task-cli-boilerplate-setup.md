@@ -196,53 +196,52 @@ Using npm scripts instead of shell scripts (cleaner for cross-platform):
 
 ---
 
-## Phase 4: CLI Skeleton
+## Phase 4: CLI Skeleton ✅
 
 Build out the TypeScript CLI structure with stubs.
 
-### 4.1 Entry Point & Argument Parsing
+Completed 2025-12-22.
 
-Using the chosen CLI framework from Phase 1:
+### 4.1 Entry Point & Argument Parsing ✅
 
-- [ ] Create `src/index.ts` with basic argument parsing
-- [ ] Implement `--help` and `--version` flags
-- [ ] Implement `--ai` and `--json` global flags
-- [ ] Set up subcommand routing (stubs for: list, show, add, context)
+- [x] Create `src/index.ts` with basic argument parsing
+- [x] Implement `--help` and `--version` flags
+- [x] Implement `--ai` and `--json` global flags
+- [x] Set up subcommand routing (list, show, add, context)
 
-### 4.2 Output Formatters
+### 4.2 Output Formatters ✅
 
-Create the three output mode handlers:
+Created output mode handlers:
 
 ```
 src/output/
 ├── index.ts          # Factory/router based on flags
-├── human.ts          # Pretty terminal output
+├── types.ts          # OutputMode, Formatter, GlobalOptions types
+├── human.ts          # Pretty terminal output (ansis colors)
 ├── ai.ts             # Structured Markdown
-└── json.ts           # JSON output
+└── json.ts           # JSON output with summary field
 ```
 
-- [ ] Create output interface/type that all formatters implement
-- [ ] Implement stub formatters that output placeholder text
-- [ ] Wire up to CLI flags
+- [x] Create output interface/type that all formatters implement
+- [x] Implement stub formatters that output placeholder text
+- [x] Wire up to CLI flags via `formatOutput()` helper
 
-### 4.3 Command Stubs
+### 4.3 Command Stubs ✅
 
-Create stub implementations:
+Created stub implementations:
 
 ```
 src/commands/
-├── list.ts
-├── show.ts
-├── add.ts
-├── context.ts
+├── list.ts           # List with filters (--status, --project, --due, etc.)
+├── show.ts           # Show single entity
+├── add.ts            # Add with options, interactive mode stub
+├── context.ts        # Context with vault overview in AI mode
 └── index.ts          # Exports all commands
 ```
 
-- [ ] Each command stub should:
-  - Accept appropriate arguments
-  - Call placeholder Rust function (or direct stub)
-  - Output via the formatter system
-- [ ] Implement `show` first as simplest case
+- [x] Each command accepts appropriate arguments
+- [x] Commands output via the formatter system
+- [x] All three output modes (human/ai/json) working
 
 ---
 
