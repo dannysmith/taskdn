@@ -104,22 +104,22 @@ pub fn parse_task_file(file_path: String) -> Result<Task> {
 
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
-    let parsed = matter.parse(&content);
+    let parsed = matter.parse::<TaskFrontmatter>(&content).map_err(|e| {
+        Error::new(
+            Status::GenericFailure,
+            format!("Failed to parse frontmatter: {}", e),
+        )
+    })?;
 
     // Extract frontmatter data
-    let frontmatter: TaskFrontmatter = parsed
+    let frontmatter = parsed
         .data
-        .ok_or_else(|| Error::new(Status::GenericFailure, "No frontmatter found"))?
-        .deserialize()
-        .map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to parse frontmatter: {}", e),
-            )
-        })?;
+        .ok_or_else(|| Error::new(Status::GenericFailure, "No frontmatter found"))?;
 
     // Extract project from projects array (first element)
-    let project = frontmatter.projects.and_then(|p| p.into_iter().next());
+    let project = frontmatter
+        .projects
+        .and_then(|p: Vec<String>| p.into_iter().next());
 
     Ok(Task {
         path: file_path,
