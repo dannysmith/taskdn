@@ -1,14 +1,5 @@
 import type { Formatter, FormattableResult, TaskResult } from './types.ts';
-
-/**
- * Convert status to kebab-case for JSON output
- */
-function formatStatus(status: string): string {
-  return status
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
-}
+import { toKebabCase } from './types.ts';
 
 /**
  * JSON formatter - structured data for scripts and programmatic access
@@ -24,7 +15,7 @@ export const jsonFormatter: Formatter = {
           task: {
             path: task.path,
             title: task.title,
-            status: formatStatus(task.status),
+            status: toKebabCase(task.status),
             ...(task.due && { due: task.due }),
             ...(task.scheduled && { scheduled: task.scheduled }),
             ...(task.deferUntil && { 'defer-until': task.deferUntil }),

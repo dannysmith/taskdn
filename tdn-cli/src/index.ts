@@ -1,10 +1,6 @@
 #!/usr/bin/env bun
 import { Command } from '@commander-js/extra-typings';
-import { helloFromRust } from '@bindings';
 import { showCommand, listCommand, addCommand, contextCommand } from '@/commands/index.ts';
-
-// Verify Rust bindings are working (will be removed once we have real Rust functions)
-const _rustCheck = helloFromRust;
 
 const program = new Command()
   .name('taskdn')

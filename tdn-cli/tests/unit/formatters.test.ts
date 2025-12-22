@@ -5,6 +5,7 @@ import { jsonFormatter } from '@/output/json';
 import { getOutputMode } from '@/output/types';
 import type { Task, TaskStatus } from '@bindings';
 import type { TaskResult } from '@/output/types';
+import { stripAnsi } from '../helpers/cli';
 
 // Helper to create a mock task
 function createMockTask(overrides: Partial<Task> = {}): Task {
@@ -20,12 +21,6 @@ function createMockTask(overrides: Partial<Task> = {}): Task {
 // Helper to create a task result
 function createTaskResult(task: Task): TaskResult {
   return { type: 'task', task };
-}
-
-// Helper to strip ANSI codes for testing human formatter
-function stripAnsi(str: string): string {
-  // eslint-disable-next-line no-control-regex
-  return str.replace(/[\u001b\u009b][[()#;?]*(?:[0-9]{1,4}(?:;[0-9]{0,4})*)?[0-9A-ORZcf-nqry=><]/g, '');
 }
 
 describe('getOutputMode', () => {

@@ -1,19 +1,8 @@
 import { describe, test, expect } from 'bun:test';
-import { resolve } from 'path';
-import { helloFromRust, parseTaskFile } from '@bindings';
-
-// Helper to get fixture path
-function fixturePath(relativePath: string): string {
-  return resolve(import.meta.dir, '../fixtures', relativePath);
-}
+import { parseTaskFile } from '@bindings';
+import { fixturePath } from '../helpers/cli';
 
 describe('NAPI bindings', () => {
-  describe('helloFromRust', () => {
-    test('bindings load successfully', () => {
-      expect(helloFromRust()).toBe('Hello from Rust!');
-    });
-  });
-
   describe('parseTaskFile', () => {
     test('returns Task object with required fields', () => {
       const task = parseTaskFile(fixturePath('vault/tasks/minimal.md'));

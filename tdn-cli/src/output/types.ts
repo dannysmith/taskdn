@@ -48,3 +48,13 @@ export type FormattableResult = TaskResult | TaskListResult | StubResult;
 export interface Formatter {
   format(result: FormattableResult): string;
 }
+
+/**
+ * Convert PascalCase to kebab-case (e.g., "InProgress" -> "in-progress")
+ */
+export function toKebabCase(str: string): string {
+  return str
+    .replace(/([A-Z])/g, '-$1')
+    .toLowerCase()
+    .replace(/^-/, '');
+}

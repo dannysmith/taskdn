@@ -90,13 +90,9 @@ A few tests to verify the Rust↔TypeScript boundary works correctly.
 ```typescript
 // tests/unit/bindings.test.ts
 import { describe, test, expect } from "bun:test";
-import { parseTaskFile, helloFromRust } from "@bindings";
+import { parseTaskFile } from "@bindings";
 
 describe("NAPI bindings", () => {
-  test("bindings load successfully", () => {
-    expect(helloFromRust()).toBe("Hello from Rust!");
-  });
-
   test("parseTaskFile returns Task object", () => {
     const task = parseTaskFile("tests/fixtures/vault/tasks/minimal.md");
     expect(task.title).toBeDefined();

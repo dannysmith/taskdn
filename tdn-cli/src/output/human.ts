@@ -1,6 +1,7 @@
 import { bold, green, blue, dim, cyan, yellow } from 'ansis';
 import type { Task } from '@bindings';
 import type { Formatter, FormattableResult, TaskResult } from './types.ts';
+import { toKebabCase } from './types.ts';
 
 /**
  * Format a task status with appropriate color
@@ -16,12 +17,7 @@ function formatStatus(status: string): string {
     Done: (s) => dim(s),
   };
   const colorFn = statusColors[status] ?? ((s: string) => s);
-  return colorFn(
-    status
-      .replace(/([A-Z])/g, '-$1')
-      .toLowerCase()
-      .replace(/^-/, '')
-  );
+  return colorFn(toKebabCase(status));
 }
 
 /**

@@ -72,14 +72,6 @@ pub struct Task {
     pub body: String,
 }
 
-/// Error type for task parsing
-#[derive(Debug)]
-#[napi(object)]
-pub struct ParseError {
-    pub message: String,
-    pub path: String,
-}
-
 /// Parse a task file and return the Task struct
 /// Returns null if the file cannot be parsed
 #[napi]

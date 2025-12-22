@@ -1,15 +1,6 @@
 import type { Task } from '@bindings';
 import type { Formatter, FormattableResult, TaskResult } from './types.ts';
-
-/**
- * Convert status to kebab-case for AI output
- */
-function formatStatus(status: string): string {
-  return status
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
-}
+import { toKebabCase } from './types.ts';
 
 /**
  * Format a single task for AI mode (structured Markdown)
@@ -20,7 +11,7 @@ function formatTask(task: Task): string {
   lines.push(`## ${task.title}`);
   lines.push('');
   lines.push(`- **path:** ${task.path}`);
-  lines.push(`- **status:** ${formatStatus(task.status)}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
 
   if (task.due) lines.push(`- **due:** ${task.due}`);
   if (task.scheduled) lines.push(`- **scheduled:** ${task.scheduled}`);
