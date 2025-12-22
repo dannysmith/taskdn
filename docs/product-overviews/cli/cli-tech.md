@@ -59,29 +59,29 @@ taskdn-cli/
 
 ### TypeScript Layer
 
-| Purpose             | Technology                            |
-| ------------------- | ------------------------------------- |
-| Runtime             | Bun                                   |
-| CLI framework       | TBD (commander, yargs, or @boune/cli) |
-| Interactive prompts | TBD (inquire.js or similar)           |
-| Terminal output     | TBD (chalk, ora for spinners)         |
+| Purpose             | Technology                                      |
+| ------------------- | ----------------------------------------------- |
+| Runtime             | Bun                                             |
+| CLI framework       | Commander.js with `@commander-js/extra-typings` |
+| Interactive prompts | `@clack/prompts` (includes spinner)             |
+| Terminal output     | `ansis` (colors, bold, dim)                     |
 
 ### Rust Core
 
-| Purpose                      | Technology               |
-| ---------------------------- | ------------------------ |
-| Frontmatter parsing          | gray_matter              |
-| YAML writing                 | TBD (see below)          |
-| Parallelism                  | rayon                    |
-| Date/time                    | chrono                   |
-| Error handling               | thiserror                |
-| Node.js bindings             | napi-rs                  |
+| Purpose             | Technology  | Status      |
+| ------------------- | ----------- | ----------- |
+| Frontmatter parsing | gray_matter | Implemented |
+| YAML serialization  | serde_yaml  | Implemented |
+| Parallelism         | rayon       | Planned     |
+| Date/time           | chrono      | Planned     |
+| Error handling      | thiserror   | Implemented |
+| Node.js bindings    | napi-rs v3  | Implemented |
 
 ### Key Dependencies
 
 **gray_matter** (Rust): Fast frontmatter extraction supporting YAML/JSON/TOML. Used for reading task files.
 
-**YAML writing (TBD)**: Round-trip fidelity requires preserving field order and unknown fields. Options to evaluate: `serde_yaml` (fast but loses comments), manual serialization with field ordering, or exploring less common crates. Note: the archived SDK accepted that YAML comments are lost—this may be an acceptable tradeoff.
+**serde_yaml**: Used for YAML serialization. Note that YAML comments are not preserved on round-trip—this is an acceptable tradeoff (matches the archived SDK approach).
 
 **NAPI-RS**: Creates native Node.js addons from Rust. Generates TypeScript type definitions automatically. Chosen over WASM because WASM cannot use `std::thread` or access the filesystem directly.
 
@@ -313,19 +313,23 @@ The `archived-projects/` directory contains prior work that informed these decis
 
 ---
 
-## Open Questions
+## Resolved Decisions
 
-To be resolved before or during implementation:
+Decisions made during Phase 1 research (2025-12-22):
 
-1. **CLI framework choice:** Commander, yargs, @boune/cli, or custom with Bun's parseArgs?
-2. **TUI library:** For interactive prompts in human mode.
-3. **Exact project structure:** Script organization, dev workflow tooling.
-4. **Search implementation:** Simple substring matching initially, or full-text search from the start?
+1. **CLI framework:** Commander.js with `@commander-js/extra-typings`. Chosen for zero dependencies, excellent Bun compatibility, and full TypeScript type inference. Rejected yargs (Bun compatibility issues), @oclif/core (ts-node conflicts, too heavy).
+
+2. **Interactive prompts:** `@clack/prompts`. Beautiful defaults, built-in spinner and autocomplete, excellent Ctrl-C handling with `isCancel()` pattern. Rejected @inquirer/prompts (throws on Ctrl-C), prompts (no built-in spinner).
+
+3. **Terminal styling:** `ansis`. Chained syntax (`red.bold('text')`), named imports for tree-shaking, handles multi-line text correctly. Rejected picocolors (no chained syntax), chalk (14x larger bundle).
+
+4. **Search implementation:** Simple case-insensitive substring matching in Rust core. Spec explicitly states "no typo tolerance" for fuzzy matching. Can revisit if users request smarter search.
 
 ---
 
 ## Revision History
 
-| Date       | Change                                  |
-| ---------- | --------------------------------------- |
-| 2025-12-22 | Initial version based on Phase 2 research |
+| Date       | Change                                                          |
+| ---------- | --------------------------------------------------------------- |
+| 2025-12-22 | Initial version based on Phase 2 research                       |
+| 2025-12-22 | Updated with resolved technology decisions from Phase 1 research |
