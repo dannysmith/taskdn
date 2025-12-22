@@ -9,11 +9,22 @@
   },
   "scripts": {
     "start": "bun run src/index.ts",
-    "dev": "bun run --watch src/index.ts"
+    "dev": "bun run --watch src/index.ts",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"*.config.js\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.config.js\"",
+    "check": "bun run format:check && bun run lint && bunx tsc --noEmit",
+    "fix": "bun run format && bun run lint:fix"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/bun": "latest",
-    "@types/node": "^22"
+    "@types/node": "^22",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.7.4",
+    "typescript-eslint": "^8.50.1"
   },
   "peerDependencies": {
     "typescript": "^5"
