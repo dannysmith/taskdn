@@ -1,0 +1,13 @@
+# Task: Extract useful info from archived projects.
+
+We spent a fair amount of time working on the Rust and TS SDKs archived in `archived-projects/` We're probably going to still need a Rust SDK to make building the Tauri app easier. And Rust has a major advantage that it is extremely fast at reading and writing files and at processing uh and parseing those files. However, our original plan to start with building the Rust SDK, then build TypeScript bindings, then build a CLI, is ridiculous. We're going to build the CLI first, so we have to now make some decisions on how we want to go about doing this.
+
+I guess it feels to me that perhaps a sensible way of doing this would be to build the CLI using TypeScript, but with an underlying Rust engine inside of it, which deals with all of the um kind of lower level stuff. And then as we build that we can explore which parts of the CLI behavior should stay in the CLI layer and which parts it makes sense to push down into the Rust layer. That way we can end up with um a Rust system which is used by the CLI. And then perhaps we could extract that into a cargo package Which could then be used by both the CLI and the desktop app. The problem with this though is that I'd rather write the write the CLI in TypeScript because it'll be faster to build And easier to maintain. Which would mean some sort of bindings from tS to Rust. And now we're getting back into complicated territory here.
+
+## Phase 1 - Explore Archived Projects
+
+Uh what I want you to do in this task is firstly go and look at the two archived projects, fully explore them and how they work, and I want you to pick out any really valuable or important decisions that you think we made while building them specifically about things like efficiency um and safety and all of those things. What I'm really looking for here is any lessons or learnings or brilliant ideas we stumbled upon while we were developing those archived projects Which are gonna save us a whole load of thinking and effort and trial and error further down the line when we implement this time around. And then I'd like you to write those things to the end of this task doc. Use subagents if you need. Ultrathink
+
+## Phase 2 - Research on approach
+
+When you've done that I want you to think carefully about our options for how we progress from here in terms of developing the CLI in a way that it's still performant and it allows us to extract an SDK that we can use it in the desktop app later. You can research online with sub agents as much as you need. Ultrathink. let's really explore options so that we don't go down the wrong path again.

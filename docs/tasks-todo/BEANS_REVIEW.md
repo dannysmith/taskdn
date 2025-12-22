@@ -14,6 +14,55 @@ Beans is a Go-based CLI tool that stores issues as markdown files with YAML fron
 
 ---
 
+## Context: Beans vs Taskdn
+
+**Important**: Beans and Taskdn are built for very different contexts. This affects which patterns are relevant for us.
+
+### Different Use Cases
+
+| Aspect | Beans | Taskdn |
+|--------|-------|--------|
+| **Primary Context** | Working in a codebase with AI coding tools (Claude Code, OpenCode) | General-purpose personal task management |
+| **Scope** | Programming/development-specific | Life, work, projects - anything |
+| **Agent Role** | Agents managing their own work while coding | Agents helping humans manage their tasks |
+| **Integration Point** | Injected into coding sessions | Standalone CLI, potentially various integrations |
+
+### What's NOT Relevant for Taskdn
+
+1. **The "Prime" Pattern & TodoWrite Overrides**: Beans aggressively injects instructions and overrides Claude's built-in task tools. This makes sense when you want the agent to use Beans *instead of* its default tools during a coding session. Taskdn won't be used this way - we're not replacing an agent's internal task tracking, we're providing a general task management interface. **Not a priority for us.**
+
+2. **Strict Type Hierarchy** (milestone → epic → feature → bug): This is programming-specific. The concept of "epics" and "bugs" doesn't translate to general task management. Our projects/areas model is more appropriate for life/work tasks. **Not applicable.**
+
+3. **Commit Integration**: Beans has specific workflows around including bean files in git commits. This is irrelevant for general task management. **Not applicable.**
+
+### What IS Relevant for Taskdn
+
+1. **GraphQL as Query Language for Agents**: Very interesting. AI agents understand GraphQL well, and it allows precise field selection (token-efficient). However, see tradeoffs below.
+
+2. **Bleve Search with BM25 Scoring**: Worth adopting as a standard for full-text search. BM25 provides better relevance ranking than TF-IDF - handles term frequency saturation and document length normalization well. Could be a good default for any search/query functionality we implement.
+
+3. **Consistent Flag Patterns**: The inclusion/exclusion pattern (`-s todo` vs `--no-status completed`) and repeatability for OR logic is clean and predictable.
+
+4. **Output Mode Design**: Default human-friendly, `--json` for machines (with implied non-interactive mode), `--quiet` for scripting.
+
+### GraphQL Tradeoffs for Taskdn
+
+**Advantages**:
+- Well-understood by AI agents
+- Self-documenting schema
+- Very flexible - agents request exactly what they need
+- Powerful filtering, including on relationships
+
+**Disadvantages**:
+- Returns JSON, which is somewhat token-inefficient
+- JSON responses are verbose (many lines of output)
+- Implementation complexity (code generation, resolver patterns)
+- Learning curve for human users who don't know GraphQL
+
+**Open Question**: Could we have GraphQL for agents AND a simpler interface for humans/scripts? Or is there a middle ground - GraphQL-like field selection with simpler filter syntax?
+
+---
+
 ## 1. External Interface Design for AI Agents
 
 This is the most important section for our purposes. Beans has put significant thought into agent interaction.
@@ -464,60 +513,76 @@ Fields indexed: `id`, `slug`, `title`, `body`
 
 ---
 
-## 6. Lessons for Taskdn CLI
+## 6. Recommendations for Taskdn CLI
 
-### 6.1 Agent Interface Patterns to Consider
+_See also "Context: Beans vs Taskdn" section at the top for what's relevant vs. not._
 
-1. **Prime/Injection Pattern**: A command that outputs agent instructions for session injection. Very effective at ensuring consistent behavior.
+### 6.1 Adopt: Bleve Search with BM25 Scoring
 
-2. **Schema Injection**: Including the query schema in agent instructions teaches capabilities without external docs.
+Beans uses Bleve with BM25 scoring for full-text search. This is worth adopting as a standard:
 
-3. **Explicit Workflow Prescription**: Tell agents exactly what to do step-by-step ("BEFORE starting... THEN... FINALLY...").
+```go
+indexMapping := bleve.NewIndexMapping()
+indexMapping.ScoringModel = "bm25"  // Better relevance than TF-IDF
+```
 
-4. **TodoWrite Override**: Beans explicitly tells agents to ignore built-in task tools. We might consider similar patterns if we want agents to use our system exclusively.
+**Why BM25 over TF-IDF**:
+- Handles term frequency saturation (repeated terms don't over-boost results)
+- Normalizes for document length (short docs aren't unfairly penalized)
+- Generally produces more intuitive relevance rankings
 
-### 6.2 Query Interface Considerations
+**Bleve Query Syntax** is also worth considering - supports fuzzy matching, wildcards, phrases, boolean operators, and field-specific searches.
 
-**GraphQL Pros**:
+### 6.2 Adopt: Output Mode Design
 
-- Agents request exactly what they need (token-efficient)
-- Self-documenting schema
-- Powerful filtering including on relationships
-- Well-understood standard
+Beans' pattern is solid and we should follow it:
 
-**GraphQL Cons**:
+- **Default**: Human-friendly, colored terminal output
+- **`--json`**: Machine-readable JSON (implies non-interactive/force mode)
+- **`--quiet` / `-q`**: IDs only, one per line (for scripting/piping)
+- **`--raw`**: Unprocessed content (for `show`-type commands)
 
-- Additional complexity vs simple flags
-- Learning curve for users who don't know GraphQL
-- Requires code generation tooling
+### 6.3 Adopt: Consistent Flag Patterns
 
-**Alternative**: A simpler domain-specific query language might achieve similar goals with less overhead. Could use GraphQL-like field selection with simpler filter syntax.
+The inclusion/exclusion pattern is clean:
 
-### 6.3 Output Mode Design
+```bash
+# Inclusion (OR logic when repeated)
+-s todo -s in-progress
 
-Beans' approach is solid:
+# Exclusion
+--no-status completed
 
-- Default: human-friendly, colored
-- `--json`: machine-readable, no prompts
-- Field selection via GraphQL
-- `--quiet` for scripting
+# Combined
+-s todo -s in-progress --no-type someday
+```
 
-### 6.4 What Beans Does Well
+### 6.4 Consider: GraphQL for Agent Interface
 
-1. **Aggressive agent instruction injection** - Gets agent behavior right from session start
-2. **GraphQL for precise data access** - Minimizes token waste
-3. **Consistent flag patterns** - Easy to learn and predict
-4. **Type hierarchy enforcement** - Prevents invalid data structures
-5. **Built-in data integrity** - Cycle detection, broken link fixing
-6. **File watching for TUI** - Smooth multi-process experience
+GraphQL is interesting but involves tradeoffs. See "GraphQL Tradeoffs for Taskdn" section above.
 
-### 6.5 Potential Gaps / Opportunities
+**If we adopt it**: Could offer both `tdn query '<graphql>'` for agents AND simpler flag-based commands for humans. GraphQL would be the "power user" interface.
 
-1. **No scheduled/due dates** - Beans focuses on status, not time
-2. **No recurring tasks** - Single-instance only
-3. **Limited project/area model** - Uses parent hierarchy instead
-4. **No explicit "defer" workflow** - Just uses priority
-5. **No separate inbox** - All beans are in the same flat structure
+**If we don't**: A simpler domain-specific query language could achieve similar goals. The key insight from Beans is that agents benefit from precise field selection - however we implement that.
+
+### 6.5 Skip: Agent-Specific Patterns
+
+These patterns are specific to Beans' use case (coding tools) and not relevant for Taskdn:
+
+- **Prime/Injection Pattern** - for overriding built-in agent tools
+- **TodoWrite Override** - for replacing agent's internal task tracking
+- **Strict Type Hierarchy** - programming-specific (milestone → epic → feature → bug)
+- **Commit Integration** - git-specific workflows
+
+### 6.6 Opportunities (What Beans Lacks)
+
+These are gaps in Beans that Taskdn is designed to address:
+
+1. **Scheduled/Due Dates** - Beans focuses on status, not time
+2. **Recurring Tasks** - Single-instance only
+3. **Projects/Areas Model** - Beans uses parent hierarchy instead of explicit project/area concepts
+4. **Defer/Someday Workflow** - Beans just uses priority
+5. **Inbox Concept** - All beans are in the same flat structure
 
 ---
 
