@@ -345,14 +345,14 @@ tests/fixtures/vault/
 
 #### Checklist
 
-- [ ] Set up `bun test` for TypeScript tests
-- [ ] Set up `cargo test` for Rust tests (already working)
-- [ ] Create npm scripts: `test`, `test:ts`, `test:rust`
-- [ ] Create `tests/fixtures/vault/` with test files
-- [ ] Create CLI test helper (runs CLI, captures output, strips colors)
-- [ ] Add E2E tests for `show` command
-- [ ] Add unit tests for formatters
-- [ ] Add binding smoke tests
+- [x] Set up `bun test` for TypeScript tests
+- [x] Set up `cargo test` for Rust tests (already working)
+- [x] Create npm scripts: `test`, `test:ts`, `test:rust`
+- [x] Create `tests/fixtures/vault/` with test files
+- [x] Create CLI test helper (runs CLI, captures output, strips colors)
+- [x] Add E2E tests for `show` command
+- [x] Add unit tests for formatters
+- [x] Add binding smoke tests
 - [x] Write `docs/developer/testing.md` explaining approach
 
 ### 6.2 Documentation

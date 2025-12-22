@@ -19,7 +19,10 @@
     "check": "bun run format:check && bun run lint && bunx tsc --noEmit && cargo clippy --manifest-path crates/core/Cargo.toml -- -D warnings && cargo test --manifest-path crates/core/Cargo.toml",
     "check:ts": "bun run format:check && bun run lint && bunx tsc --noEmit",
     "check:rust": "cargo clippy --manifest-path crates/core/Cargo.toml -- -D warnings && cargo test --manifest-path crates/core/Cargo.toml",
-    "fix": "bun run format && bun run lint:fix && cargo fmt --manifest-path crates/core/Cargo.toml"
+    "fix": "bun run format && bun run lint:fix && cargo fmt --manifest-path crates/core/Cargo.toml",
+    "test": "bun run test:ts && bun run test:rust",
+    "test:ts": "bun test",
+    "test:rust": "cargo test --manifest-path crates/core/Cargo.toml"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",

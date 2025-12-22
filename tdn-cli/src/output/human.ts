@@ -18,7 +18,6 @@ function formatStatus(status: string): string {
   const colorFn = statusColors[status] ?? ((s: string) => s);
   return colorFn(
     status
-      .toLowerCase()
       .replace(/([A-Z])/g, '-$1')
       .toLowerCase()
       .replace(/^-/, '')
