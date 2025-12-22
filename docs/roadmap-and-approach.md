@@ -1,34 +1,69 @@
 # Roadmap and Approach
 
-## General Development Principles
-
-We will add any fundamental product development principles here as we decide upon them.
+## Development Principles
 
 ### Minimal by Default
 
 We start with the simplest possible implementation and only add complexity when it provides clear value. This applies to both the file format (few required fields, sensible defaults) and the user interfaces (no bells and whistles unless they're actually necessary). Features earn their place by solving real problems, not by looking impressive.
 
+---
+
 ## Historical Context
 
-The original plan for implementing this went something like this:
+_This section documents decisions made during early development. It will be removed or consolidated once the project is more established._
 
-- Produce single spec covering file formats and _some_ implementation details
-- Implement a Rust SDK (now in `/archived-projects/taskdn-rust`) to be used in the Tauri app.
-- Implement a TS SDK based on NAPI-RS Um essentially generating bindings from the rust app (now in `/archived-projects/taskdn-ts`).
-- Publish both of these to npm and Cargo Package registries online.
-- Begin work on the CLI, starting by spending a long time and a lot of effort really thinking through the best external interface for this CLI. The idea was that this would use the TypeScript SDK to do its stuff.
-- When the CLI was done we'd work on the Tauri desktop app which would use the Rust SDK we already built and published.
+### Original Plan
 
-However, having spent so much time looking at at the external interface for the CLI it became apparent that there were a lot of decisions which we hadn't made earlier on about how things should work. We solved a lot of these by designing an interface for the CLI, but it seems to me that many of these decisions should also be supported in the underlying SDKs. many of the decisions we've made here about how to interact with these various tasks Feel like they should form part of a general specification (will be S2) uh about how implementations should think about interacting with these things. Now this doesn't need to be anywhere near as detailed as the actual detail of the implementation for our CLI. But using some of that to write a I guess some kind of guidance for implementations that's general should also help us to make sure that we have at least some some some some some some some some some some some general kind of interface principles which we can apply to both the Rust SDK that we need to build and to the CLI. And of course do any other things we make in the future.
+The original implementation plan was:
 
-It was also the original plan to have most of the work done in this project be done in very separate sub project folders (originally taskdn-rust, taskdn-ts, taskdn-cli, taskdn-claude` taskdn-tauri, taskdn-obsidian-plugin etc). I was imagining work in the top level directory to really only be about planning and kinda high level stuff. Now we probably will end up working very much like that in the future once we have the basis of all of these apps built and working properly. But I was constantly finding the need when working in say the CLI subdirectory to refer out to other directories. And documentation in other places.
+1. Produce a single spec covering file formats and some implementation details
+2. Implement a Rust SDK (for the Tauri desktop app)
+3. Generate a TypeScript SDK from the Rust one via NAPI-RS bindings
+4. Publish both SDKs to npm and Cargo registries
+5. Build the CLI using the TypeScript SDK
+6. Build the Tauri desktop app using the Rust SDK
 
-So Today I have done a huge reorganisation of this project. I've completely archived the SDKs that we built because I don't think it made sense to start with them and I'd like to rethink our whole approach to doing that. Although I do think it's important that we end up with a Rust SDK and probably a TypeScript one as well. There is some good stuff that we should extract from that. I've also removed all of the sub-projects And started referring to them as products. There are now only four in here. And they're all basically empty. Except for the specs one, which I've moved out of the docs directory, because effectively it is a product here. Um and that now lives in its own product folder. I've also reworked all of the documentation. I've removed the user guide, which was here, and I have tried to consolidate that into overview.md.
+The project was also structured with completely separate sub-project folders (`taskdn-rust`, `taskdn-ts`, `taskdn-cli`, `taskdn-tauri`, `taskdn-obsidian-plugin`, etc.), with top-level work focused only on high-level planning.
 
-So I think our new approach here should be to finalise all three specifications. I've added a task for that. That will need to pull in information from some other places. Then we should extract any useful information from the archived projects, and I suspect most of that will be technical. And then we need to basically decide on an approach to how we should be building the CLI and SDK, etc. together. And then finally I've added a third task um to just do a little bit of clean up and rationalisation on everything that that we've got here. And that's all just um really finishing the work I've done manually so far today. And I'm hoping that will get us in a position where we can actually start building uh the CLI uh very quickly and sensibly.
+### What We Learned
 
-I should also mention that there is another project which I found recently which is a different scope, but it has some very very very interesting approaches to effectively simplifying how A A A A A A A A A AI agents work with task files in Markdown. It uses GraphQL as a query language, and generally seems to have a good interface, external interface for working with markdown files like this. So the first part of the first task we're going to do next is reviewing that.
+While designing the CLI's external interface, it became clear that many fundamental decisions about how users and tools should interact with tasks hadn't been made. These decisions—around querying, filtering, workflows, output formats, etc felt like they should be part of a general specification (now S2: Interface Design), not just baked into the CLI implementation. This would ensure consistency across all products: the CLI, the SDKs, and any future tools.
+
+The sub-project structure also proved problematic during early development. Work in one directory constantly required referencing documentation and code in others, making the separation feel artificial and friction-inducing.
+
+### December 2024 Reorganisation
+
+Based on these learnings, the project was reorganised:
+
+**Archived:**
+
+- The early Rust and TypeScript SDKs (moved to `archived-projects/`). Starting with SDKs before settling the specifications and interface design was premature.
+
+**Restructured:**
+
+- Sub-projects renamed to "products" and consolidated
+- Specs moved from `docs/` to their own top-level directory (`tdn-specs/`) since they're effectively a product
+- Documentation reworked and consolidated (user guide merged into `overview.md`)
+- Product folders now mostly empty, ready for implementation
+
+**New Approach:**
+
+1. Finalise all three specifications (S1, S2, S3), informed by the CLI interface design work already done
+2. Extract any useful patterns from the archived SDK code
+3. Decide on the right approach for building the CLI and SDKs together
+4. Clean up remaining documentation
+
+### Prior Art: Beans
+
+During research, we discovered [Beans](https://github.com/hmans/beans)—a project with a different scope but interesting approaches to AI agent interaction with markdown task files. It uses GraphQL as a query language and has a well-designed external interface. Reviewing this is the first step in Task 1.
+
+---
 
 ## Current Roadmap
 
-[WILL COMPLETE LATER]
+See `docs/tasks-todo/` for active tasks. High-level phases:
+
+1. **Specifications** — Finalise S1, S2, S3 based on CLI design work and Beans review
+2. **Foundation** — Extract useful code from archived projects, establish build/test infrastructure
+3. **CLI** — Implement the CLI tool
+4. **Desktop** — Implement the Tauri desktop app
