@@ -19,21 +19,19 @@ Add project parsing to `crates/core/src/`.
 #[napi(string_enum)]
 pub enum ProjectStatus {
     Planning,
+    Ready,
+    Blocked,
     InProgress,
     Paused,
-    Blocked,
     Done,
-    Dropped,
 }
 
 #[napi(object)]
 pub struct Project {
     pub path: String,
     pub title: String,
-    pub status: ProjectStatus,
-    pub created_at: Option<String>,
-    pub updated_at: Option<String>,
-    pub completed_at: Option<String>,
+    pub status: Option<ProjectStatus>,  // Optional per S1 spec
+    pub unique_id: Option<String>,
     pub area: Option<String>,
     pub start_date: Option<String>,
     pub end_date: Option<String>,
@@ -72,20 +70,12 @@ pub enum AreaStatus {
     Archived,
 }
 
-#[napi(string_enum)]
-pub enum AreaType {
-    Personal,
-    Work,
-    Client,
-    Other,
-}
-
 #[napi(object)]
 pub struct Area {
     pub path: String,
     pub title: String,
     pub status: Option<AreaStatus>,
-    pub area_type: Option<AreaType>,  // 'type' is reserved
+    pub area_type: Option<String>,  // 'type' in YAML - free-form string per S1 spec
     pub created_at: Option<String>,
     pub updated_at: Option<String>,
     pub description: Option<String>,

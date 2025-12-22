@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { parseTaskFile } from '@bindings';
+import { parseTaskFile, parseProjectFile } from '@bindings';
 import { fixturePath } from '../helpers/cli';
 
 describe('NAPI bindings', () => {
@@ -48,6 +48,60 @@ describe('NAPI bindings', () => {
         const task = parseTaskFile(fixturePath(`vault/tasks/${file}`));
         expect(task.status as string).toBe(expected);
       }
+    });
+  });
+
+  describe('parseProjectFile', () => {
+    test('returns Project object with required fields', () => {
+      const project = parseProjectFile(fixturePath('vault/projects/minimal.md'));
+      expect(project.title).toBe('Minimal Project');
+      expect(project.path).toBeDefined();
+      expect(project.body).toBeDefined();
+    });
+
+    test('parses status correctly', () => {
+      const project = parseProjectFile(fixturePath('vault/projects/minimal.md'));
+      expect(project.status as string).toBe('InProgress');
+    });
+
+    test('parses all metadata fields', () => {
+      const project = parseProjectFile(fixturePath('vault/projects/full-metadata.md'));
+      expect(project.title).toBe('Full Metadata Project');
+      expect(project.status as string).toBe('InProgress');
+      expect(project.startDate).toBe('2025-01-10');
+      expect(project.endDate).toBe('2025-03-01');
+      expect(project.area).toBe('[[Work]]');
+      expect(project.description).toBe('A project with all optional fields populated');
+      expect(project.blockedBy).toEqual(['[[Another Project]]']);
+    });
+
+    test('parses body content', () => {
+      const project = parseProjectFile(fixturePath('vault/projects/with-body.md'));
+      expect(project.body).toContain('project body');
+      expect(project.body).toContain('Goals');
+      expect(project.body).toContain('Deliver feature X');
+    });
+
+    test('throws on nonexistent file', () => {
+      expect(() => parseProjectFile('/nonexistent/path.md')).toThrow();
+    });
+
+    test('parses all project status values correctly', () => {
+      // The minimal fixture has in-progress status
+      const project = parseProjectFile(fixturePath('vault/projects/minimal.md'));
+      expect(project.status as string).toBe('InProgress');
+
+      // The with-body fixture has planning status
+      const planningProject = parseProjectFile(fixturePath('vault/projects/with-body.md'));
+      expect(planningProject.status as string).toBe('Planning');
+    });
+
+    test('handles project without status (optional per S1 spec)', () => {
+      // Status is optional for projects per S1 Section 4.4
+      const project = parseProjectFile(fixturePath('vault/projects/no-status.md'));
+      expect(project.title).toBe('Project Without Status');
+      expect(project.status).toBeNull();
+      expect(project.area).toBe('[[Work]]');
     });
   });
 });

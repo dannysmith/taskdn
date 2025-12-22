@@ -133,6 +133,121 @@ describe('taskdn show', () => {
     });
   });
 
+  describe('with minimal project', () => {
+    const projectPath = fixturePath('vault/projects/minimal.md');
+
+    test('outputs project title', async () => {
+      const { stdout, exitCode } = await runCli(['show', projectPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Minimal Project');
+    });
+
+    test('outputs project status', async () => {
+      const { stdout } = await runCli(['show', projectPath]);
+      expect(stdout).toContain('in-progress');
+    });
+  });
+
+  describe('with full metadata project', () => {
+    const projectPath = fixturePath('vault/projects/full-metadata.md');
+
+    test('outputs all project metadata fields', async () => {
+      const { stdout, exitCode } = await runCli(['show', projectPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Full Metadata Project');
+      expect(stdout).toContain('in-progress');
+      expect(stdout).toContain('2025-01-10'); // start-date
+      expect(stdout).toContain('2025-03-01'); // end-date
+      expect(stdout).toContain('Work'); // area
+    });
+  });
+
+  describe('with project containing body', () => {
+    const projectPath = fixturePath('vault/projects/with-body.md');
+
+    test('outputs body content', async () => {
+      const { stdout, exitCode } = await runCli(['show', projectPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Project With Body');
+      expect(stdout).toContain('Goals');
+      expect(stdout).toContain('Deliver feature X');
+    });
+  });
+
+  describe('project with --ai flag', () => {
+    const projectPath = fixturePath('vault/projects/minimal.md');
+
+    test('outputs structured markdown', async () => {
+      const { stdout, exitCode } = await runCli(['show', projectPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Minimal Project');
+      expect(stdout).toContain('- **status:** in-progress');
+      expect(stdout).toContain('- **path:**');
+    });
+
+    test('includes all metadata for full project', async () => {
+      const fullProjectPath = fixturePath('vault/projects/full-metadata.md');
+      const { stdout } = await runCli(['show', fullProjectPath, '--ai']);
+      expect(stdout).toContain('- **start-date:** 2025-01-10');
+      expect(stdout).toContain('- **end-date:** 2025-03-01');
+      expect(stdout).toContain('- **area:** [[Work]]');
+      expect(stdout).toContain('- **description:**');
+      expect(stdout).toContain('- **blocked-by:**');
+    });
+  });
+
+  describe('project without status', () => {
+    const projectPath = fixturePath('vault/projects/no-status.md');
+
+    test('handles missing status gracefully', async () => {
+      const { stdout, exitCode } = await runCli(['show', projectPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Project Without Status');
+    });
+
+    test('JSON output has null status', async () => {
+      const { stdout } = await runCli(['show', projectPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.project.title).toBe('Project Without Status');
+      expect(output.project.status).toBeNull();
+    });
+  });
+
+  describe('project with --json flag', () => {
+    const projectPath = fixturePath('vault/projects/minimal.md');
+
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['show', projectPath, '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('includes summary field', async () => {
+      const { stdout } = await runCli(['show', projectPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toBe('Project: Minimal Project');
+    });
+
+    test('includes project object with correct fields', async () => {
+      const { stdout } = await runCli(['show', projectPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.project.title).toBe('Minimal Project');
+      expect(output.project.status).toBe('in-progress');
+      expect(output.project.path).toContain('minimal.md');
+    });
+
+    test('includes all metadata for full project', async () => {
+      const fullProjectPath = fixturePath('vault/projects/full-metadata.md');
+      const { stdout } = await runCli(['show', fullProjectPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.project.startDate).toBe('2025-01-10');
+      expect(output.project.endDate).toBe('2025-03-01');
+      expect(output.project.area).toBe('[[Work]]');
+      expect(output.project.description).toBe('A project with all optional fields populated');
+      expect(output.project.blockedBy).toEqual(['[[Another Project]]']);
+    });
+  });
+
   describe('status parsing', () => {
     test('parses inbox status', async () => {
       const { stdout } = await runCli([
