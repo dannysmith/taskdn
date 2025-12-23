@@ -4,6 +4,7 @@ extern crate napi_derive;
 mod area;
 mod project;
 mod task;
+mod test_utils;
 mod vault;
 
 pub use area::*;

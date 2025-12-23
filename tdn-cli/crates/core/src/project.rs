@@ -116,14 +116,7 @@ pub fn parse_project_file(file_path: String) -> Result<Project> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
-
-    fn create_temp_project(content: &str) -> NamedTempFile {
-        let mut file = NamedTempFile::new().unwrap();
-        file.write_all(content.as_bytes()).unwrap();
-        file
-    }
+    use crate::test_utils::helpers::create_temp_file;
 
     #[test]
     fn parse_minimal_project() {
@@ -133,7 +126,7 @@ status: planning
 ---
 Some body content.
 "#;
-        let file = create_temp_project(content);
+        let file = create_temp_file(content);
         let project = parse_project_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(project.title, "Test Project");
@@ -157,7 +150,7 @@ blocked-by:
 ## Notes
 Some notes here.
 "#;
-        let file = create_temp_project(content);
+        let file = create_temp_file(content);
         let project = parse_project_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(project.title, "Full Project");
@@ -181,7 +174,7 @@ title: Statusless Project
 area: "[[Personal]]"
 ---
 "#;
-        let file = create_temp_project(content);
+        let file = create_temp_file(content);
         let project = parse_project_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(project.title, "Statusless Project");

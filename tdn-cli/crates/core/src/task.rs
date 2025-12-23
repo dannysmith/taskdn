@@ -132,14 +132,7 @@ pub fn parse_task_file(file_path: String) -> Result<Task> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
-
-    fn create_temp_task(content: &str) -> NamedTempFile {
-        let mut file = NamedTempFile::new().unwrap();
-        file.write_all(content.as_bytes()).unwrap();
-        file
-    }
+    use crate::test_utils::helpers::create_temp_file;
 
     #[test]
     fn parse_minimal_task() {
@@ -149,7 +142,7 @@ status: ready
 ---
 Some body content.
 "#;
-        let file = create_temp_task(content);
+        let file = create_temp_file(content);
         let task = parse_task_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(task.title, "Test Task");
@@ -173,7 +166,7 @@ area: "[[Work]]"
 ## Notes
 Some notes here.
 "#;
-        let file = create_temp_task(content);
+        let file = create_temp_file(content);
         let task = parse_task_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(task.title, "Full Task");
@@ -197,7 +190,7 @@ status: ready
 ---
 Body content.
 "#;
-        let file = create_temp_task(content);
+        let file = create_temp_file(content);
         let result = parse_task_file(file.path().to_str().unwrap().to_string());
         assert!(result.is_err());
     }
@@ -210,7 +203,7 @@ status: invalid-status
 ---
 Body.
 "#;
-        let file = create_temp_task(content);
+        let file = create_temp_file(content);
         let result = parse_task_file(file.path().to_str().unwrap().to_string());
         assert!(result.is_err());
     }
@@ -221,7 +214,7 @@ Body.
 title: Test
 status ready
 ---"#;
-        let file = create_temp_task(content);
+        let file = create_temp_file(content);
         let result = parse_task_file(file.path().to_str().unwrap().to_string());
         assert!(result.is_err());
     }

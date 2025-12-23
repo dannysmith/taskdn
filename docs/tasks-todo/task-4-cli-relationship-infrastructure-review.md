@@ -621,9 +621,9 @@ if (options.area) {
 
 ### Phase 2
 
-- [ ] Extracted shared Rust test utilities
-- [ ] All tests pass
-- [ ] `bun run check` passes
+- [x] Extracted shared Rust test utilities
+- [x] All tests pass
+- [x] `bun run check` passes
 
 ### Phase 3
 

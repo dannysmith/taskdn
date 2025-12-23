@@ -94,14 +94,7 @@ pub fn parse_area_file(file_path: String) -> Result<Area> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Write;
-    use tempfile::NamedTempFile;
-
-    fn create_temp_area(content: &str) -> NamedTempFile {
-        let mut file = NamedTempFile::new().unwrap();
-        file.write_all(content.as_bytes()).unwrap();
-        file
-    }
+    use crate::test_utils::helpers::create_temp_file;
 
     #[test]
     fn parse_minimal_area() {
@@ -110,7 +103,7 @@ title: Test Area
 ---
 Some body content.
 "#;
-        let file = create_temp_area(content);
+        let file = create_temp_file(content);
         let area = parse_area_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(area.title, "Test Area");
@@ -129,7 +122,7 @@ description: A test area
 ## Notes
 Some notes here.
 "#;
-        let file = create_temp_area(content);
+        let file = create_temp_file(content);
         let area = parse_area_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(area.title, "Full Area");
@@ -146,7 +139,7 @@ title: Archived Area
 status: archived
 ---
 "#;
-        let file = create_temp_area(content);
+        let file = create_temp_file(content);
         let area = parse_area_file(file.path().to_str().unwrap().to_string()).unwrap();
 
         assert_eq!(area.title, "Archived Area");
