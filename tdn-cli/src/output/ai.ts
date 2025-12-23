@@ -5,7 +5,9 @@ import type {
   TaskResult,
   TaskListResult,
   ProjectResult,
+  ProjectListResult,
   AreaResult,
+  AreaListResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
 
@@ -147,6 +149,92 @@ function formatTaskList(tasks: Task[]): string {
 }
 
 /**
+ * Format a project for list output in AI mode (compact, no body)
+ * Uses ### heading (one level below the section heading)
+ */
+function formatProjectListItem(project: Project): string {
+  const lines: string[] = [];
+
+  lines.push(`### ${project.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${project.path}`);
+
+  if (project.status) {
+    lines.push(`- **status:** ${toKebabCase(project.status)}`);
+  }
+  if (project.area) {
+    lines.push(`- **area:** ${project.area}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format a list of projects for AI mode
+ */
+function formatProjectList(projects: Project[]): string {
+  const lines: string[] = [];
+
+  lines.push(`## Projects (${projects.length})`);
+  lines.push('');
+
+  if (projects.length === 0) {
+    lines.push('No projects match the specified criteria.');
+    return lines.join('\n');
+  }
+
+  for (const project of projects) {
+    lines.push(formatProjectListItem(project));
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format an area for list output in AI mode (compact, no body)
+ * Uses ### heading (one level below the section heading)
+ */
+function formatAreaListItem(area: Area): string {
+  const lines: string[] = [];
+
+  lines.push(`### ${area.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${area.path}`);
+
+  if (area.status) {
+    lines.push(`- **status:** ${toKebabCase(area.status)}`);
+  }
+  if (area.areaType) {
+    lines.push(`- **type:** ${area.areaType}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format a list of areas for AI mode
+ */
+function formatAreaList(areas: Area[]): string {
+  const lines: string[] = [];
+
+  lines.push(`## Areas (${areas.length})`);
+  lines.push('');
+
+  if (areas.length === 0) {
+    lines.push('No areas match the specified criteria.');
+    return lines.join('\n');
+  }
+
+  for (const area of areas) {
+    lines.push(formatAreaListItem(area));
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
  * AI-mode formatter - structured Markdown optimized for LLM consumption
  */
 export const aiFormatter: Formatter = {
@@ -164,9 +252,17 @@ export const aiFormatter: Formatter = {
         const projectResult = result as ProjectResult;
         return formatProject(projectResult.project);
       }
+      case 'project-list': {
+        const listResult = result as ProjectListResult;
+        return formatProjectList(listResult.projects);
+      }
       case 'area': {
         const areaResult = result as AreaResult;
         return formatArea(areaResult.area);
+      }
+      case 'area-list': {
+        const listResult = result as AreaListResult;
+        return formatAreaList(listResult.areas);
       }
       case 'context':
         return '## Context\n\n(stub output)';

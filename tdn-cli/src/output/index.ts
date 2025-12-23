@@ -6,7 +6,9 @@ import type {
   TaskResult,
   TaskListResult,
   ProjectResult,
+  ProjectListResult,
   AreaResult,
+  AreaListResult,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
@@ -21,7 +23,9 @@ export type {
   TaskResult,
   TaskListResult,
   ProjectResult,
+  ProjectListResult,
   AreaResult,
+  AreaListResult,
 };
 export { getOutputMode };
 

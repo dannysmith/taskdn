@@ -6,7 +6,9 @@ import type {
   TaskResult,
   TaskListResult,
   ProjectResult,
+  ProjectListResult,
   AreaResult,
+  AreaListResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
 
@@ -169,6 +171,138 @@ function formatTaskList(tasks: Task[]): string {
 }
 
 /**
+ * Format a list of projects for human output
+ */
+function formatProjectList(projects: Project[]): string {
+  const lines: string[] = [];
+
+  // Header with count
+  lines.push(bold(blue(`Projects (${projects.length})`)));
+  lines.push('');
+
+  if (projects.length === 0) {
+    lines.push(dim('No projects match the specified criteria.'));
+    return lines.join('\n');
+  }
+
+  // Group projects by status
+  const statusOrder = ['InProgress', 'Planning', 'Blocked', 'Ready', 'Paused', 'Done'];
+  const grouped = new Map<string, Project[]>();
+  const noStatus: Project[] = [];
+
+  for (const project of projects) {
+    if (!project.status) {
+      noStatus.push(project);
+    } else {
+      const status = project.status;
+      if (!grouped.has(status)) {
+        grouped.set(status, []);
+      }
+      grouped.get(status)!.push(project);
+    }
+  }
+
+  // Output groups in order
+  for (const status of statusOrder) {
+    const groupProjects = grouped.get(status);
+    if (!groupProjects || groupProjects.length === 0) continue;
+
+    lines.push(`  ${formatStatus(status)}`);
+    for (const project of groupProjects) {
+      let titleLine = `  ${bold(project.title)}`;
+      if (project.area) {
+        titleLine += `  ${dim('area:')} ${project.area}`;
+      }
+      lines.push(titleLine);
+      lines.push(`    ${dim(project.path)}`);
+    }
+    lines.push('');
+  }
+
+  // Output projects without status at the end
+  if (noStatus.length > 0) {
+    lines.push(`  ${dim('(no status)')}`);
+    for (const project of noStatus) {
+      let titleLine = `  ${bold(project.title)}`;
+      if (project.area) {
+        titleLine += `  ${dim('area:')} ${project.area}`;
+      }
+      lines.push(titleLine);
+      lines.push(`    ${dim(project.path)}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format a list of areas for human output
+ */
+function formatAreaList(areas: Area[]): string {
+  const lines: string[] = [];
+
+  // Header with count
+  lines.push(bold(blue(`Areas (${areas.length})`)));
+  lines.push('');
+
+  if (areas.length === 0) {
+    lines.push(dim('No areas match the specified criteria.'));
+    return lines.join('\n');
+  }
+
+  // Group areas by status
+  const statusOrder = ['Active', 'Archived'];
+  const grouped = new Map<string, Area[]>();
+  const noStatus: Area[] = [];
+
+  for (const area of areas) {
+    if (!area.status) {
+      noStatus.push(area);
+    } else {
+      const status = area.status;
+      if (!grouped.has(status)) {
+        grouped.set(status, []);
+      }
+      grouped.get(status)!.push(area);
+    }
+  }
+
+  // Output groups in order
+  for (const status of statusOrder) {
+    const groupAreas = grouped.get(status);
+    if (!groupAreas || groupAreas.length === 0) continue;
+
+    lines.push(`  ${formatStatus(status)}`);
+    for (const area of groupAreas) {
+      let titleLine = `  ${bold(area.title)}`;
+      if (area.areaType) {
+        titleLine += `  ${dim('type:')} ${area.areaType}`;
+      }
+      lines.push(titleLine);
+      lines.push(`    ${dim(area.path)}`);
+    }
+    lines.push('');
+  }
+
+  // Output areas without status at the end
+  if (noStatus.length > 0) {
+    lines.push(`  ${dim('(no status)')}`);
+    for (const area of noStatus) {
+      let titleLine = `  ${bold(area.title)}`;
+      if (area.areaType) {
+        titleLine += `  ${dim('type:')} ${area.areaType}`;
+      }
+      lines.push(titleLine);
+      lines.push(`    ${dim(area.path)}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
  * Human-readable formatter with colors and styling
  */
 export const humanFormatter: Formatter = {
@@ -186,9 +320,17 @@ export const humanFormatter: Formatter = {
         const projectResult = result as ProjectResult;
         return formatProject(projectResult.project);
       }
+      case 'project-list': {
+        const listResult = result as ProjectListResult;
+        return formatProjectList(listResult.projects);
+      }
       case 'area': {
         const areaResult = result as AreaResult;
         return formatArea(areaResult.area);
+      }
+      case 'area-list': {
+        const listResult = result as AreaListResult;
+        return formatAreaList(listResult.areas);
       }
       case 'context':
         return bold(blue('Context')) + dim(' (stub output)');

@@ -15,8 +15,8 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `show <path>` - Show area by path (auto-detected)
 - [ ] `show` fuzzy matching (human mode)
 - [x] `list` - List active tasks
-- [ ] `list projects` - List projects
-- [ ] `list areas` - List areas
+- [x] `list projects` - List projects
+- [x] `list areas` - List areas
 - [x] `list --status <status>` - Filter by status
 - [x] `list --status <s1>,<s2>` - Multiple statuses (OR)
 - [ ] `list --project <name>` - Filter by project

@@ -733,7 +733,7 @@ Already available:
 ## Verification
 
 - [x] `list` returns active tasks by default
-- [ ] `list projects` and `list areas` work
+- [x] `list projects` and `list areas` work
 - [x] `--status` filtering works (single and multiple)
 - [ ] `--project` and `--area` filtering works
 - [ ] `--due`, `--overdue`, `--scheduled` work
@@ -776,3 +776,16 @@ Already available:
   - AI mode: `## Tasks (N)` header with `### TaskTitle` headings
   - JSON mode: `{ summary, tasks: [...] }` structure
 - 19 E2E tests covering all output modes and edge cases
+
+### Phase 3: List Projects and Areas - COMPLETE
+
+- Extended `list` command to support `list projects` and `list areas`
+- Added `ProjectListResult` and `AreaListResult` types
+- Active project = status unset OR status NOT IN (done)
+- Active area = status unset OR status = 'active'
+- Added formatters for all three output modes:
+  - Human mode: Grouped by status, shows area/type
+  - AI mode: `## Projects (N)` / `## Areas (N)` with `###` item headings
+  - JSON mode: `{ summary, projects: [...] }` / `{ summary, areas: [...] }`
+- Added `status-done.md` project fixture for exclusion testing
+- 26 new E2E tests (13 for projects, 13 for areas)

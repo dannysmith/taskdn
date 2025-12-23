@@ -45,6 +45,16 @@ export interface AreaResult {
   area: Area;
 }
 
+export interface ProjectListResult {
+  type: 'project-list';
+  projects: Project[];
+}
+
+export interface AreaListResult {
+  type: 'area-list';
+  areas: Area[];
+}
+
 export interface StubResult {
   type: string;
   [key: string]: unknown;
@@ -54,7 +64,9 @@ export type FormattableResult =
   | TaskResult
   | TaskListResult
   | ProjectResult
+  | ProjectListResult
   | AreaResult
+  | AreaListResult
   | StubResult;
 
 /**

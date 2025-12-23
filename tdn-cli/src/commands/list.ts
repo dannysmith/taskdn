@@ -1,8 +1,13 @@
 import { Command } from '@commander-js/extra-typings';
-import { scanTasks } from '@bindings';
-import type { Task } from '@bindings';
+import { scanTasks, scanProjects, scanAreas } from '@bindings';
+import type { Task, Project, Area } from '@bindings';
 import { formatOutput } from '@/output/index.ts';
-import type { GlobalOptions, TaskListResult } from '@/output/index.ts';
+import type {
+  GlobalOptions,
+  TaskListResult,
+  ProjectListResult,
+  AreaListResult,
+} from '@/output/index.ts';
 import { getVaultConfig } from '@/config/index.ts';
 
 /**
@@ -40,6 +45,34 @@ function getToday(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Check if a project is "active" per CLI spec:
+ * - Status is unset OR status NOT IN (done)
+ */
+function isActiveProject(project: Project): boolean {
+  // If no status, treat as active
+  if (!project.status) {
+    return true;
+  }
+
+  // Exclude done projects
+  return project.status !== 'Done';
+}
+
+/**
+ * Check if an area is "active" per CLI spec:
+ * - Status is unset OR status = 'active'
+ */
+function isActiveArea(area: Area): boolean {
+  // If no status, treat as active
+  if (!area.status) {
+    return true;
+  }
+
+  // Only include if status is 'Active'
+  return area.status === 'Active';
 }
 
 interface ListOptions {
@@ -82,17 +115,37 @@ export const listCommand = new Command('list')
     const config = getVaultConfig();
     const today = getToday();
 
-    // For now, only handle tasks
-    if (entityType !== 'tasks') {
-      // TODO: Implement projects and areas in Phase 3
-      const result: TaskListResult = {
-        type: 'task-list',
-        tasks: [],
+    // Handle projects
+    if (entityType === 'projects') {
+      let projects = scanProjects(config);
+
+      // Filter for active projects by default
+      projects = projects.filter((project) => isActiveProject(project));
+
+      const result: ProjectListResult = {
+        type: 'project-list',
+        projects,
       };
       console.log(formatOutput(result, globalOpts));
       return;
     }
 
+    // Handle areas
+    if (entityType === 'areas') {
+      let areas = scanAreas(config);
+
+      // Filter for active areas by default
+      areas = areas.filter((area) => isActiveArea(area));
+
+      const result: AreaListResult = {
+        type: 'area-list',
+        areas,
+      };
+      console.log(formatOutput(result, globalOpts));
+      return;
+    }
+
+    // Handle tasks (default)
     // Scan all tasks from the vault
     let tasks = scanTasks(config);
 

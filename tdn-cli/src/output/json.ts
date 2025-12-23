@@ -4,10 +4,12 @@ import type {
   TaskResult,
   TaskListResult,
   ProjectResult,
+  ProjectListResult,
   AreaResult,
+  AreaListResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
-import type { Task } from '@bindings';
+import type { Task, Project, Area } from '@bindings';
 
 /**
  * Convert a Task to a JSON-serializable object
@@ -26,6 +28,36 @@ function taskToJson(task: Task, includeBody = true) {
     ...(task.updatedAt && { updatedAt: task.updatedAt }),
     ...(task.completedAt && { completedAt: task.completedAt }),
     ...(includeBody && task.body && { body: task.body }),
+  };
+}
+
+/**
+ * Convert a Project to a JSON-serializable object for list output (no body)
+ */
+function projectToJsonForList(project: Project) {
+  return {
+    path: project.path,
+    title: project.title,
+    ...(project.status && { status: toKebabCase(project.status) }),
+    ...(project.area && { area: project.area }),
+    ...(project.startDate && { startDate: project.startDate }),
+    ...(project.endDate && { endDate: project.endDate }),
+    ...(project.description && { description: project.description }),
+    ...(project.blockedBy && project.blockedBy.length > 0 && { blockedBy: project.blockedBy }),
+    ...(project.uniqueId && { uniqueId: project.uniqueId }),
+  };
+}
+
+/**
+ * Convert an Area to a JSON-serializable object for list output (no body)
+ */
+function areaToJsonForList(area: Area) {
+  return {
+    path: area.path,
+    title: area.title,
+    ...(area.status && { status: toKebabCase(area.status) }),
+    ...(area.areaType && { areaType: area.areaType }),
+    ...(area.description && { description: area.description }),
   };
 }
 
@@ -78,6 +110,19 @@ export const jsonFormatter: Formatter = {
         };
         return JSON.stringify(output, null, 2);
       }
+      case 'project-list': {
+        const listResult = result as ProjectListResult;
+        const count = listResult.projects.length;
+        const summary =
+          count === 0
+            ? 'No projects match the specified criteria'
+            : `Found ${count} project${count === 1 ? '' : 's'}`;
+        const output = {
+          summary,
+          projects: listResult.projects.map((p) => projectToJsonForList(p)),
+        };
+        return JSON.stringify(output, null, 2);
+      }
       case 'area': {
         const areaResult = result as AreaResult;
         const area = areaResult.area;
@@ -91,6 +136,19 @@ export const jsonFormatter: Formatter = {
             ...(area.description && { description: area.description }),
             ...(area.body && { body: area.body }),
           },
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'area-list': {
+        const listResult = result as AreaListResult;
+        const count = listResult.areas.length;
+        const summary =
+          count === 0
+            ? 'No areas match the specified criteria'
+            : `Found ${count} area${count === 1 ? '' : 's'}`;
+        const output = {
+          summary,
+          areas: listResult.areas.map((a) => areaToJsonForList(a)),
         };
         return JSON.stringify(output, null, 2);
       }
