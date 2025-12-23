@@ -156,6 +156,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Output formatters (human, AI, JSON)
 - [x] Global options (--ai, --json)
 - [x] CLI framework (Commander.js)
+- [x] Entity lookup wrapper (`lookupTask`, `lookupProject`, `lookupArea`)
 - [ ] Error handling with codes
 - [ ] Interactive prompts (@clack/prompts)
 
