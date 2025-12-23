@@ -9,6 +9,13 @@ import type {
   ProjectListResult,
   AreaResult,
   AreaListResult,
+  AreaContextResultOutput,
+  ProjectContextResultOutput,
+  TaskContextResultOutput,
+  VaultOverviewResult,
+  AreaSummary,
+  VaultSummary,
+  ThisWeekSummary,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
@@ -26,6 +33,13 @@ export type {
   ProjectListResult,
   AreaResult,
   AreaListResult,
+  AreaContextResultOutput,
+  ProjectContextResultOutput,
+  TaskContextResultOutput,
+  VaultOverviewResult,
+  AreaSummary,
+  VaultSummary,
+  ThisWeekSummary,
 };
 export { getOutputMode };
 
