@@ -448,34 +448,38 @@ Examples:
 - **path:** ~/areas/work.md
 - **status:** active
 
+### Body
+
+Area description here...
+
 ## Projects in Work (2)
 
-### Q1 Planning
+### Project: Q1 Planning
 
 - **path:** ~/projects/q1-planning.md
 - **status:** in-progress
-- **tasks:** 5
+- **tasks:** 1
 
-### Client Onboarding
-
-- **path:** ~/projects/client-onboarding.md
-- **status:** ready
-- **tasks:** 3
-
-## Tasks in Work (8)
-
-### Fix login bug
+#### Task: Fix login bug
 
 - **path:** ~/tasks/fix-login-bug.md
 - **status:** in-progress
 - **project:** Q1 Planning
-- **due:** 2025-12-15
+- **due:** 2025-01-15
 
-### Write documentation
+### Project: Client Onboarding
 
-- **path:** ~/tasks/write-docs.md
+- **path:** ~/projects/client-onboarding.md
 - **status:** ready
-- **project:** Q1 Planning
+- **tasks:** 0
+
+## Tasks Directly in Area: Work (1)
+
+#### Task: Fix Thing
+
+- **path:** ~/tasks/fix-thing.md
+- **status:** in-progress
+- **due:** 2025-01-16
 ```
 
 **Body inclusion:** Task/project/area bodies are NOT included by default. Use `--with-bodies` to include them.

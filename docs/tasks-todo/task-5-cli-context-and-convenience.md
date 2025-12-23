@@ -15,6 +15,7 @@ Implement the `context` command for hierarchical entity views, and convenience c
 `context area "Work"` returns the area plus its projects and tasks.
 
 **Output structure (AI mode):**
+
 ```markdown
 ## Area: Work
 
@@ -27,26 +28,32 @@ Area description here...
 
 ## Projects in Work (2)
 
-### Q1 Planning
+### Project: Q1 Planning
 
 - **path:** ~/projects/q1-planning.md
 - **status:** in-progress
-- **tasks:** 5
+- **tasks:** 1
 
-### Client Onboarding
-
-- **path:** ~/projects/client-onboarding.md
-- **status:** ready
-- **tasks:** 3
-
-## Tasks in Work (8)
-
-### Fix login bug
+#### Task: Fix login bug
 
 - **path:** ~/tasks/fix-login-bug.md
 - **status:** in-progress
 - **project:** Q1 Planning
 - **due:** 2025-01-15
+
+### Project: Client Onboarding
+
+- **path:** ~/projects/client-onboarding.md
+- **status:** ready
+- **tasks:** 0
+
+## Tasks Directly in Area: Work (1)
+
+#### Task: Fix Thing
+
+- **path:** ~/tasks/fix-thing.md
+- **status:** in-progress
+- **due:** 2025-01-16
 ```
 
 **Implementation:**
@@ -54,7 +61,7 @@ Area description here...
 Uses `get_area_context()` from Task 4's relationship infrastructure:
 
 ```typescript
-const context = getAreaContext(config, areaName);
+const context = getAreaContext(config, areaName)
 
 if (!context.area) {
   // Handle area not found
@@ -67,6 +74,7 @@ if (!context.area) {
 ```
 
 The Rust function handles:
+
 - Wikilink parsing (via `extract_wikilink_name`)
 - Finding projects with matching area reference
 - Finding tasks with direct area OR via matched projects
@@ -81,7 +89,7 @@ The Rust function handles:
 Uses `get_project_context()` from Task 4's relationship infrastructure:
 
 ```typescript
-const context = getProjectContext(config, projectName);
+const context = getProjectContext(config, projectName)
 
 if (!context.project) {
   // Handle project not found
@@ -94,6 +102,7 @@ if (!context.project) {
 ```
 
 **Output structure (AI mode):**
+
 ```markdown
 ## Project: Q1 Planning
 
@@ -133,6 +142,7 @@ Project notes...
 `context task ~/tasks/foo.md` returns task + parent project + parent area.
 
 **Output structure (AI mode):**
+
 ```markdown
 ## Task: Fix login bug
 
@@ -165,6 +175,7 @@ Task details...
 `context --ai` with no arguments returns vault overview.
 
 **Output structure:**
+
 ```markdown
 ## Vault Overview
 
@@ -205,6 +216,7 @@ Task details...
 ### Phase 5: Today Command
 
 **Note from Task 4 Review:** Extract date utilities from `list.ts` to `src/lib/date.ts` when implementing this phase:
+
 - `getToday()`, `formatDate()`, `getTomorrow()`, `getEndOfWeek()`, `getStartOfWeek()`
 
 `taskdn today` - Tasks due today + scheduled for today.
@@ -218,6 +230,7 @@ taskdn today --json
 **Equivalent to:** `taskdn list --due today --scheduled today` (with OR logic between them)
 
 **Output includes:**
+
 - Overdue tasks (highlighted)
 - Due today
 - Scheduled for today
@@ -239,6 +252,7 @@ taskdn inbox --ai
 `taskdn next` - Smart prioritization of actionable tasks.
 
 **Priority order (from CLI spec):**
+
 1. Overdue tasks (highest)
 2. Due today
 3. Due this week
@@ -249,6 +263,7 @@ taskdn inbox --ai
 **Output:** Top N tasks (default 10?) in priority order.
 
 **Implementation:**
+
 1. Get all active tasks
 2. Score each task based on priority factors
 3. Sort by score descending
@@ -267,48 +282,48 @@ taskdn context area "Work" --with-bodies --ai
 ```typescript
 describe('taskdn context', () => {
   describe('context area', () => {
-    test('includes area details');
-    test('includes child projects');
-    test('includes tasks in area');
-    test('respects --with-bodies flag');
-  });
+    test('includes area details')
+    test('includes child projects')
+    test('includes tasks in area')
+    test('respects --with-bodies flag')
+  })
 
   describe('context project', () => {
-    test('includes project details');
-    test('includes parent area');
-    test('includes tasks in project');
-  });
+    test('includes project details')
+    test('includes parent area')
+    test('includes tasks in project')
+  })
 
   describe('context task', () => {
-    test('includes task details');
-    test('includes parent project');
-    test('includes parent area');
-  });
+    test('includes task details')
+    test('includes parent project')
+    test('includes parent area')
+  })
 
   describe('vault overview', () => {
-    test('returns overview in AI mode with no args');
-    test('errors in human mode with no args');
-    test('includes area summaries');
-    test('includes this week section');
-  });
-});
+    test('returns overview in AI mode with no args')
+    test('errors in human mode with no args')
+    test('includes area summaries')
+    test('includes this week section')
+  })
+})
 
 describe('convenience commands', () => {
   describe('today', () => {
-    test('shows due today');
-    test('shows scheduled today');
-    test('shows overdue');
-  });
+    test('shows due today')
+    test('shows scheduled today')
+    test('shows overdue')
+  })
 
   describe('inbox', () => {
-    test('shows only inbox status tasks');
-  });
+    test('shows only inbox status tasks')
+  })
 
   describe('next', () => {
-    test('returns prioritized list');
-    test('overdue tasks appear first');
-  });
-});
+    test('returns prioritized list')
+    test('overdue tasks appear first')
+  })
+})
 ```
 
 ## Fixture Requirements
