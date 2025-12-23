@@ -1,5 +1,12 @@
 import { describe, test, expect } from 'bun:test';
-import { parseTaskFile, parseProjectFile } from '@bindings';
+import {
+  parseTaskFile,
+  parseProjectFile,
+  scanTasks,
+  scanProjects,
+  scanAreas,
+} from '@bindings';
+import type { VaultConfig } from '@bindings';
 import { fixturePath } from '../helpers/cli';
 
 describe('NAPI bindings', () => {
@@ -102,6 +109,84 @@ describe('NAPI bindings', () => {
       expect(project.title).toBe('Project Without Status');
       expect(project.status).toBeUndefined();
       expect(project.area).toBe('[[Work]]');
+    });
+  });
+
+  describe('vault scanning bindings', () => {
+    const config: VaultConfig = {
+      tasksDir: fixturePath('vault/tasks'),
+      projectsDir: fixturePath('vault/projects'),
+      areasDir: fixturePath('vault/areas'),
+    };
+
+    describe('scanTasks', () => {
+      test('returns tasks from fixture directory', () => {
+        const tasks = scanTasks(config);
+        expect(tasks.length).toBeGreaterThan(0);
+        expect(tasks.some((t) => t.title === 'Minimal Task')).toBe(true);
+      });
+
+      test('returns tasks with all required fields', () => {
+        const tasks = scanTasks(config);
+        for (const task of tasks) {
+          expect(task.path).toBeDefined();
+          expect(task.title).toBeDefined();
+          expect(task.status).toBeDefined();
+        }
+      });
+
+      test('does not include files from subdirectories', () => {
+        // The archive/ subdirectory is not scanned
+        const tasks = scanTasks(config);
+        const archiveTasks = tasks.filter((t) => t.path.includes('archive/'));
+        expect(archiveTasks.length).toBe(0);
+      });
+    });
+
+    describe('scanProjects', () => {
+      test('returns projects from fixture directory', () => {
+        const projects = scanProjects(config);
+        expect(projects.length).toBeGreaterThan(0);
+        expect(projects.some((p) => p.title === 'Minimal Project')).toBe(true);
+      });
+
+      test('returns projects with all required fields', () => {
+        const projects = scanProjects(config);
+        for (const project of projects) {
+          expect(project.path).toBeDefined();
+          expect(project.title).toBeDefined();
+          // status is optional for projects
+        }
+      });
+    });
+
+    describe('scanAreas', () => {
+      test('returns areas from fixture directory', () => {
+        const areas = scanAreas(config);
+        expect(areas.length).toBeGreaterThan(0);
+        expect(areas.some((a) => a.title === 'Minimal Area')).toBe(true);
+      });
+
+      test('returns areas with all required fields', () => {
+        const areas = scanAreas(config);
+        for (const area of areas) {
+          expect(area.path).toBeDefined();
+          expect(area.title).toBeDefined();
+          // status is optional for areas
+        }
+      });
+    });
+
+    test('returns empty array for nonexistent directory', () => {
+      const emptyConfig: VaultConfig = {
+        tasksDir: '/nonexistent/path/tasks',
+        projectsDir: '/nonexistent/path/projects',
+        areasDir: '/nonexistent/path/areas',
+      };
+
+      expect(scanTasks(emptyConfig)).toEqual([]);
+      expect(scanProjects(emptyConfig)).toEqual([]);
+      expect(scanAreas(emptyConfig)).toEqual([]);
     });
   });
 });
