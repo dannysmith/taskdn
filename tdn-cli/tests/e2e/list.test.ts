@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { runCli, fixturePath } from '../helpers/cli';
+import { runCli } from '../helpers/cli';
 
 describe('taskdn list', () => {
   describe('default behavior (active tasks)', () => {

@@ -220,16 +220,14 @@ impl VaultIndex {
         }
 
         // 3. Check for tasks with unresolvable project references (for warnings)
-        for (task_idx, task) in self.tasks.iter().enumerate() {
+        for &task_idx in &task_indices {
+            let task = &self.tasks[task_idx];
             if let Some(project_ref) = &task.project
                 && let Some(project_name) = extract_wikilink_name(project_ref)
                 && !self
                     .project_by_name
                     .contains_key(&project_name.to_lowercase())
-                && task_indices.contains(&task_idx)
             {
-                // Only warn if this task would otherwise be in our result set
-                // (has direct area assignment to this area)
                 warnings.push(format!(
                     "Task '{}' references unknown project '{}'",
                     task.title, project_name

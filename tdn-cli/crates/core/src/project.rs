@@ -187,4 +187,17 @@ area: "[[Personal]]"
         let result = parse_project_file("/nonexistent/path.md".to_string());
         assert!(result.is_err());
     }
+
+    #[test]
+    fn parse_project_missing_title() {
+        let content = r#"---
+status: planning
+area: "[[Work]]"
+---
+Body content.
+"#;
+        let file = create_temp_file(content);
+        let result = parse_project_file(file.path().to_str().unwrap().to_string());
+        assert!(result.is_err());
+    }
 }
