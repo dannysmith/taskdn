@@ -189,4 +189,40 @@ Some notes here.
         let result = parse_task_file("/nonexistent/path.md".to_string());
         assert!(result.is_err());
     }
+
+    #[test]
+    fn parse_task_missing_title() {
+        let content = r#"---
+status: ready
+---
+Body content.
+"#;
+        let file = create_temp_task(content);
+        let result = parse_task_file(file.path().to_str().unwrap().to_string());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_task_invalid_status() {
+        let content = r#"---
+title: Test
+status: invalid-status
+---
+Body.
+"#;
+        let file = create_temp_task(content);
+        let result = parse_task_file(file.path().to_str().unwrap().to_string());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_task_malformed_yaml() {
+        let content = r#"---
+title: Test
+status ready
+---"#;
+        let file = create_temp_task(content);
+        let result = parse_task_file(file.path().to_str().unwrap().to_string());
+        assert!(result.is_err());
+    }
 }

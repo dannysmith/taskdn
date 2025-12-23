@@ -56,6 +56,24 @@ function formatHuman(error: CliError): string {
       }
       break;
 
+    case 'MISSING_FIELD':
+      lines.push('');
+      lines.push(dim('File:') + ` ${error.filePath}`);
+      lines.push(dim('Missing field:') + ` ${error.fieldName}`);
+      break;
+
+    case 'REFERENCE_ERROR':
+      lines.push('');
+      lines.push(dim('File:') + ` ${error.filePath}`);
+      lines.push(dim('Broken reference:') + ` ${error.brokenReference}`);
+      break;
+
+    case 'PERMISSION_ERROR':
+      lines.push('');
+      lines.push(dim('File:') + ` ${error.filePath}`);
+      lines.push(dim('Operation:') + ` ${error.operation}`);
+      break;
+
     case 'CONFIG_ERROR':
       if (error.suggestion) {
         lines.push('');
@@ -280,6 +298,10 @@ export function formatError(error: CliError, mode: OutputMode): string {
       return formatAi(error);
     case 'json':
       return formatJson(error);
+    default: {
+      const _exhaustive: never = mode;
+      throw new Error(`Unhandled output mode: ${_exhaustive}`);
+    }
   }
 }
 
