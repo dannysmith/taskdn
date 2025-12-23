@@ -121,7 +121,15 @@ function formatTaskTitle(title: string, status: string): string {
  */
 function renderMarkdownBody(body: string): string {
   // marked.parse returns string when async is false (default)
-  const rendered = marked.parse(body) as string;
+  let rendered = marked.parse(body) as string;
+
+  // Workaround for marked-terminal bug: it renders GFM checkboxes twice
+  // (once in listitem, once from the checkbox token). Remove duplicates.
+  rendered = rendered.replace(/\[[ X]\] {1,2}\[[ xX]\] /g, (match) => {
+    // Keep just the first checkbox (the one from listitem)
+    return match.slice(0, 4) + ' ';
+  });
+
   // Remove trailing newlines that marked adds
   return rendered.trimEnd();
 }
