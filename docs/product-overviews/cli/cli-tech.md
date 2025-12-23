@@ -182,6 +182,65 @@ BatchResult {
 
 Status enums should be marked non-exhaustive to allow adding new statuses without breaking existing compiled code.
 
+### Read vs Write Separation
+
+The Rust core maintains separate approaches for reading and writing files. This separation emerged from the Task 4 architecture review.
+
+**Read operations** use typed "parsed view" structs:
+- `Task`, `Project`, `Area` are optimized for querying and display
+- Fields are typed (enums, Options) for easy filtering
+- Shape may differ from storage (e.g., `projects: [...]` → `project: Option<String>`)
+- Unknown frontmatter fields are discarded (not needed for reads)
+
+**Write operations** manipulate raw YAML to preserve round-trip fidelity:
+- Read original file content
+- Parse frontmatter as `serde_yaml::Value` (preserves structure)
+- Apply typed updates to specific fields
+- Serialize back with unknown fields intact
+- Reconstruct file with original body content
+
+**Why this separation:**
+
+| Concern | Read Approach | Write Approach |
+|---------|---------------|----------------|
+| Unknown fields | Discard (not needed) | Must preserve (S3 requirement) |
+| Date format | Parse to string | Must preserve original format |
+| Reference format | Store as string | Must preserve wikilink vs path |
+| Type safety | Full types for filtering | Minimal—just field updates |
+| Performance | Fast, typed access | Slightly slower (raw YAML manipulation) |
+
+**Key insight:** Don't try to make one struct serve both purposes. The `Task` struct is a "read view" that loses information. That's fine—it serves reads well. Write operations work with the raw file and apply targeted changes.
+
+**Implementation pattern for writes:**
+```rust
+pub fn update_task_file(path: String, updates: Vec<FieldUpdate>) -> Result<Task> {
+    // 1. Read original file
+    let content = fs::read_to_string(&path)?;
+
+    // 2. Parse frontmatter as generic YAML
+    let matter = Matter::<YAML>::new();
+    let parsed = matter.parse(&content);
+    let mut yaml: serde_yaml::Value = /* extract and preserve */;
+
+    // 3. Apply updates to specific fields
+    for update in updates {
+        apply_field_update(&mut yaml, update)?;
+    }
+
+    // 4. Serialize and reconstruct file
+    let new_frontmatter = serde_yaml::to_string(&yaml)?;
+    let new_content = format!("---\n{}---\n{}", new_frontmatter, parsed.content);
+
+    // 5. Atomic write
+    atomic_write(&path, &new_content)?;
+
+    // 6. Return fresh parsed view
+    parse_task_file(path)
+}
+```
+
+See Task 6 for full write operation implementation details.
+
 ---
 
 ## SDK Extraction for Desktop App

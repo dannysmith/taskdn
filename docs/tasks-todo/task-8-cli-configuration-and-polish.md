@@ -94,12 +94,15 @@ taskdn doctor --json
 | System | Config file exists and is valid |
 | System | Tasks/projects/areas directories exist and are accessible |
 | File | YAML frontmatter is parseable |
-| File | Required fields present (title, status) |
+| File | Required fields present (title, status for tasks) |
 | File | Status values are valid |
 | File | Date fields are valid format |
 | File | Tasks have at most one project |
+| File | `taskdn-type` consistency (if any file in a directory uses it, all should) |
 | References | Project references point to existing projects |
 | References | Area references point to existing areas |
+
+**Note on `taskdn-type` check:** Per S1 spec sections 4.4 and 5.4, if ANY file in a directory contains `taskdn-type: project` (or `area`), files without this field should be ignored. Doctor should warn about this inconsistency.
 
 **Human mode output:**
 ```

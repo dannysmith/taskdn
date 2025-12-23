@@ -18,6 +18,18 @@ When writing files, we must preserve what we don't understand:
 
 This is critical because users extend files with custom fields.
 
+**Key Architecture Decision (from Task 4 Review):**
+
+The existing read-focused structs (`Task`, `Project`, `Area`) are "parsed views" that discard information for efficient querying. Write operations need a different approach:
+
+- **Don't** try to round-trip through the typed structs
+- **Do** manipulate raw YAML (`serde_yaml::Value`) to preserve structure
+- **Do** apply targeted field updates rather than full rewrites
+
+See `cli-tech.md` "Read vs Write Separation" section for the full pattern.
+
+This means Phase 1 creates **new** write infrastructure rather than modifying the existing parsers.
+
 ## Phases
 
 ### Phase 1: File Writing Infrastructure in Rust

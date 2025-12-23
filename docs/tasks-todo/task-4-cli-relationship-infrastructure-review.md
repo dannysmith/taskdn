@@ -28,23 +28,23 @@ We have now implemented enough working features that we can identify architectur
 
 ### Rust Core (`crates/core/src/`)
 
-| File | Purpose | Lines | Key Types |
-|------|---------|-------|-----------|
-| `lib.rs` | Module exports, NAPI macro | ~10 | - |
-| `task.rs` | Task parsing | ~230 | `TaskStatus`, `TaskFrontmatter`, `Task`, `parse_task_file()` |
-| `project.rs` | Project parsing | ~200 | `ProjectStatus`, `ProjectFrontmatter`, `Project`, `parse_project_file()` |
-| `area.rs` | Area parsing | ~165 | `AreaStatus`, `AreaFrontmatter`, `Area`, `parse_area_file()` |
-| `vault.rs` | Directory scanning, fuzzy search | ~440 | `VaultConfig`, `scan_*()`, `find_*_by_title()` |
+| File         | Purpose                          | Lines | Key Types                                                                |
+| ------------ | -------------------------------- | ----- | ------------------------------------------------------------------------ |
+| `lib.rs`     | Module exports, NAPI macro       | ~10   | -                                                                        |
+| `task.rs`    | Task parsing                     | ~230  | `TaskStatus`, `TaskFrontmatter`, `Task`, `parse_task_file()`             |
+| `project.rs` | Project parsing                  | ~200  | `ProjectStatus`, `ProjectFrontmatter`, `Project`, `parse_project_file()` |
+| `area.rs`    | Area parsing                     | ~165  | `AreaStatus`, `AreaFrontmatter`, `Area`, `parse_area_file()`             |
+| `vault.rs`   | Directory scanning, fuzzy search | ~440  | `VaultConfig`, `scan_*()`, `find_*_by_title()`                           |
 
 ### TypeScript Layer (`src/`)
 
-| Directory | Purpose | Key Files |
-|-----------|---------|-----------|
+| Directory   | Purpose                     | Key Files                                                              |
+| ----------- | --------------------------- | ---------------------------------------------------------------------- |
 | `commands/` | CLI command implementations | `list.ts` (445 lines), `show.ts`, `add.ts` (stub), `context.ts` (stub) |
-| `output/` | Output formatters | `human.ts`, `ai.ts`, `json.ts`, `types.ts` |
-| `errors/` | Error types and formatting | `types.ts`, `format.ts` |
-| `config/` | Vault configuration | `index.ts` |
-| `lib/` | Shared utilities | `entity-lookup.ts` |
+| `output/`   | Output formatters           | `human.ts`, `ai.ts`, `json.ts`, `types.ts`                             |
+| `errors/`   | Error types and formatting  | `types.ts`, `format.ts`                                                |
+| `config/`   | Vault configuration         | `index.ts`                                                             |
+| `lib/`      | Shared utilities            | `entity-lookup.ts`                                                     |
 
 ### NAPI Bindings (`bindings/`)
 
@@ -61,12 +61,14 @@ Review the current codebase critically, focusing on patterns that can reduce dup
 #### 1.1 Rust Parser Architecture Review
 
 **Files to examine:**
+
 - `crates/core/src/task.rs`
 - `crates/core/src/project.rs`
 - `crates/core/src/area.rs`
 - `crates/core/src/vault.rs`
 
 **Current pattern (repeated 3 times):**
+
 ```rust
 // 1. Status enum
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -94,11 +96,13 @@ pub fn parse_entity_file(file_path: String) -> Result<Entity> {
 **Questions to answer:**
 
 1. **Is the Frontmatter/Entity separation appropriate?**
+
    - Current: TaskFrontmatter (internal) → Task (NAPI)
    - This allows frontmatter field names (kebab-case) to differ from NAPI field names (camelCase)
    - Worth keeping? Or could we use serde aliases?
 
 2. **Should there be a shared Entity trait or parsing infrastructure?**
+
    - All three parsers have identical structure: read file → gray_matter parse → validate → build struct
    - Options:
      - **Trait-based:** `trait Entity { fn from_frontmatter(...) }` with generic parse function
@@ -107,11 +111,13 @@ pub fn parse_entity_file(file_path: String) -> Result<Entity> {
    - Consider: Task 6 (write operations) will need round-trip fidelity. Does shared infrastructure help or hinder?
 
 3. **Is error handling consistent?**
+
    - All parsers use `napi::Result<T>` with `Error::new(Status::GenericFailure, message)`
    - Error messages follow pattern: "File not found:", "Failed to read file:", "Failed to parse frontmatter:", "No frontmatter found"
    - Is this granular enough? Does TypeScript layer need to distinguish error types?
 
 4. **Are there obvious DRY violations?**
+
    - Test helper functions (`create_temp_task`, `create_temp_project`, `create_temp_area`) are identical
    - Could extract to shared test module
 
@@ -122,6 +128,7 @@ pub fn parse_entity_file(file_path: String) -> Result<Entity> {
 #### 1.2 TypeScript Layer Review
 
 **Files to examine:**
+
 - `src/commands/list.ts` (largest command, 445 lines)
 - `src/output/*.ts` (formatter implementations)
 - `src/errors/*.ts` (error handling)
@@ -130,14 +137,17 @@ pub fn parse_entity_file(file_path: String) -> Result<Entity> {
 **Questions to answer:**
 
 1. **Is the Formatter interface pattern working well?**
+
    - Current: discriminated union `FormattableResult` with switch/case in each formatter
    - Does this scale as we add more result types?
 
 2. **Are there repeated patterns in list.ts?**
+
    - Multiple status/filter checks with similar structure
    - Date handling utilities - should these move to a shared module?
 
 3. **Error handling flow:**
+
    - Rust throws → JS catches → pattern match on message string → create CliError
    - Is matching on error message fragile? Should Rust return structured error types?
 
@@ -148,6 +158,7 @@ pub fn parse_entity_file(file_path: String) -> Result<Entity> {
 #### 1.3 Review Deliverable
 
 At the end of Phase 1, produce a summary of findings:
+
 - List of identified refactoring opportunities (prioritized)
 - Recommendation for each: do now, defer, or skip
 - Any blocking issues for Phase 3
@@ -156,24 +167,94 @@ At the end of Phase 1, produce a summary of findings:
 
 ---
 
+### Phase 1.1 Findings (Completed)
+
+**Summary:** The Rust core is well-structured for read operations. The duplication across entity modules is tolerable. Minimal refactoring recommended.
+
+#### Key Decisions
+
+1. **Frontmatter/Entity separation: Keep as-is**
+   - The separation (e.g., `TaskFrontmatter` → `Task`) is appropriate
+   - YAML uses kebab-case; TypeScript expects camelCase
+   - Shape differs: `projects: [...]` array → `project: Option<String>` singular
+   - Serde aliases wouldn't handle all transformations
+
+2. **Shared parsing infrastructure: Skip**
+   - Trait-based or macro-based approaches add complexity without proportional benefit
+   - Only 3 entity types with non-trivial field mappings
+   - Current "explicit" code is more readable than abstraction machinery
+
+3. **Error handling: Defer to later task**
+   - Current string-based errors work but are fragile
+   - Structured error types would help Task 6, but not blocking
+   - Can be improved incrementally
+
+4. **Round-trip fidelity for Task 6: Critical finding**
+   - Current parsers discard information (unknown fields, date format, reference format)
+   - This is fine for read operations—they're "parsed views"
+   - Write operations need a different approach: manipulate raw YAML, not typed structs
+   - See cli-tech.md "Read vs Write Separation" section for architecture
+
+#### Refactoring Recommendations
+
+| Priority | Item | Decision |
+|----------|------|----------|
+| **High** | Extract shared Rust test utilities | Do in Phase 2 |
+| **Low** | Structured error types | Defer to Task 7 |
+| **Skip** | Generic parsing trait | Not needed for 3 types |
+| **Skip** | Generalize `find_*_by_title` | Only 24 lines saved |
+
+#### Blocking Issues for Phase 3
+
+**None.** Current architecture supports VaultIndex and wikilink parsing as additive changes.
+
+---
+
 ### Phase 2: Refactor
 
-Based on Phase 1 findings, implement agreed-upon refactors. Prioritize changes that:
-1. Reduce complexity for Phase 3 (relationship infrastructure)
-2. Set up patterns needed for Task 6 (write operations)
-3. Have clear, bounded scope
+Based on Phase 1 findings, implement the following refactors:
 
-**Likely candidates (to be confirmed in Phase 1):**
+#### 2.1 Extract Shared Rust Test Utilities
 
-- Extract shared test utilities in Rust
-- Consider generic/trait-based parsing if appropriate
-- Improve error type handling if needed
-- Consolidate date utilities in TypeScript
+Each parser module has an identical helper:
+```rust
+fn create_temp_task(content: &str) -> NamedTempFile {
+    let mut file = NamedTempFile::new().unwrap();
+    file.write_all(content.as_bytes()).unwrap();
+    file
+}
+```
 
-**After refactoring:**
+Extract to a shared test module in `lib.rs` or `test_utils.rs`:
+```rust
+#[cfg(test)]
+pub mod test_utils {
+    use std::io::Write;
+    use tempfile::NamedTempFile;
+
+    pub fn create_temp_file(content: &str) -> NamedTempFile {
+        let mut file = NamedTempFile::new().unwrap();
+        file.write_all(content.as_bytes()).unwrap();
+        file
+    }
+}
+```
+
+Update `task.rs`, `project.rs`, `area.rs` to use `crate::test_utils::create_temp_file`.
+
+#### 2.2 Remove Unused Dependency
+
+Cargo.toml includes `thiserror = "2"` but it's not used. Either:
+- Remove it (if not planning to use structured errors soon)
+- Keep it (if planning to add structured errors in Task 7)
+
+**Decision:** Keep it—we'll likely use it for structured errors in Task 7.
+
+#### 2.3 After Refactoring
+
 - Run `bun run fix` and `bun run check`
 - Ensure all existing tests pass
-- Update any documentation affected by changes
+- Verify bindings regenerate correctly
 
 ---
 
@@ -186,6 +267,7 @@ Implement infrastructure for resolving wikilink references between entities.
 Create a utility to extract names from wikilink syntax. Per S1 spec Section 1 (Terminology):
 
 **WikiLink formats:**
+
 - Basic: `[[Page Name]]`
 - With display text: `[[Page Name|Display Text]]`
 - With heading: `[[Page Name#Heading]]`
@@ -208,6 +290,7 @@ pub fn extract_wikilink_name(reference: &str) -> Option<&str>
 ```
 
 **Tests:**
+
 ```rust
 #[cfg(test)]
 mod tests {
@@ -401,25 +484,25 @@ Update the `--area` filter in the list command to use proper relationship traver
 ```typescript
 // Before (in list.ts)
 if (options.area) {
-  const areaQuery = options.area.toLowerCase();
+  const areaQuery = options.area.toLowerCase()
   tasks = tasks.filter((task) => {
-    if (!task.area) return false;
-    return task.area.toLowerCase().includes(areaQuery);
-  });
+    if (!task.area) return false
+    return task.area.toLowerCase().includes(areaQuery)
+  })
 }
 
 // After
 if (options.area) {
-  const index = buildVaultIndex(config);
-  const areaMatch = index.areas.find(a =>
+  const index = buildVaultIndex(config)
+  const areaMatch = index.areas.find((a) =>
     a.title.toLowerCase().includes(options.area.toLowerCase())
-  );
+  )
   if (areaMatch) {
-    const areaIdx = index.areas.indexOf(areaMatch);
-    const tasksInArea = getTasksInArea(index, areaIdx); // includes via projects
-    tasks = tasks.filter(t => tasksInArea.some(ta => ta.path === t.path));
+    const areaIdx = index.areas.indexOf(areaMatch)
+    const tasksInArea = getTasksInArea(index, areaIdx) // includes via projects
+    tasks = tasks.filter((t) => tasksInArea.some((ta) => ta.path === t.path))
   } else {
-    tasks = []; // No matching area
+    tasks = [] // No matching area
   }
 }
 ```
@@ -429,16 +512,19 @@ if (options.area) {
 #### 3.5 Testing Strategy
 
 **Rust unit tests for wikilink parsing:**
+
 - All format variations
 - Edge cases (empty, whitespace, malformed)
 
 **Rust unit tests for VaultIndex:**
+
 - Build from empty directories
 - Build with orphan entities (tasks without project/area)
 - Build with unresolvable references
 - Relationship queries return correct results
 
 **E2E tests for updated list --area:**
+
 - Task with direct area assignment found
 - Task with project in area found (indirect)
 - Task with both direct and indirect (deduplicated)
@@ -449,17 +535,20 @@ if (options.area) {
 ## Verification Checklist
 
 ### Phase 1
-- [ ] Reviewed all Rust parser files
-- [ ] Reviewed TypeScript command layer
-- [ ] Documented refactoring opportunities
-- [ ] Prioritized recommendations
+
+- [x] Reviewed all Rust parser files (1.1 complete)
+- [ ] Reviewed TypeScript command layer (1.2 pending)
+- [x] Documented refactoring opportunities
+- [x] Prioritized recommendations
 
 ### Phase 2
-- [ ] Implemented agreed refactors
+
+- [ ] Extracted shared Rust test utilities
 - [ ] All tests pass
 - [ ] `bun run check` passes
 
 ### Phase 3
+
 - [ ] `extract_wikilink_name()` implemented with tests
 - [ ] `VaultIndex` struct implemented
 - [ ] `build_vault_index()` exported via NAPI

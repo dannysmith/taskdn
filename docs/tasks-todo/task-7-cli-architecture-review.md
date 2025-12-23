@@ -35,12 +35,15 @@ This is the right time to step back and ensure the architecture is sound before 
 
 Evaluate the "external" API exposed via NAPI.
 
+**Deferred from Task 4:** Structured error types were identified as a "low priority" improvement in the Task 4 review. Consider implementing during this review phase. The current approach uses string-based error messages which TypeScript pattern-matches on—this works but is fragile.
+
 **Questions to answer:**
 - Is the API surface appropriate? Too large? Too granular?
 - Are function signatures consistent?
 - Is error handling consistent across all functions?
 - Are return types appropriate for TypeScript consumption?
 - Should any internal functions be exposed? Any exposed functions be internal?
+- Should we implement structured error types now?
 
 **Checklist:**
 - [ ] List all `#[napi]` functions
@@ -48,22 +51,28 @@ Evaluate the "external" API exposed via NAPI.
 - [ ] Review each for error handling pattern
 - [ ] Identify any missing functions
 - [ ] Identify any functions that should be merged or split
+- [ ] Decision on structured error types
 
 ### Phase 2: Read/Write Pattern Review
 
 Evaluate the file I/O patterns.
 
+**Context from Task 4:** The "Read vs Write Separation" pattern (see `cli-tech.md`) was established during Task 4 review. Read operations use typed "parsed view" structs; write operations manipulate raw YAML. Verify this pattern is working as designed.
+
 **Questions to answer:**
 - Is read performance acceptable for large vaults?
-- Is write round-trip fidelity working correctly?
+- Is write round-trip fidelity working correctly per S3 spec?
 - Are batch operations efficient (not reading same file multiple times)?
 - Is error recovery appropriate (partial failures)?
+- Is the read/write separation pattern working well in practice?
 
 **Specific checks:**
 - [ ] Profile vault scanning for 1000+ files (if possible)
 - [ ] Verify unknown frontmatter fields survive read/write
-- [ ] Verify date format preservation
+- [ ] Verify date format preservation (date vs datetime)
+- [ ] Verify file reference format preservation (wikilink vs path)
 - [ ] Verify batch operations report partial failures correctly
+- [ ] Verify YAML field ordering is reasonably preserved
 
 ### Phase 3: Type Design Review
 

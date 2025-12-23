@@ -150,6 +150,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [ ] Vault index (relationships)
 - [ ] File writing with round-trip fidelity
 - [ ] Batch operations
+- [ ] `taskdn-type` field support for mixed-content directories (S1 4.4, 5.4)
 
 ### TypeScript Layer
 
