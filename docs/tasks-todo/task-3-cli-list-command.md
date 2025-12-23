@@ -732,9 +732,9 @@ Already available:
 
 ## Verification
 
-- [ ] `list` returns active tasks by default
+- [x] `list` returns active tasks by default
 - [ ] `list projects` and `list areas` work
-- [ ] `--status` filtering works (single and multiple)
+- [x] `--status` filtering works (single and multiple)
 - [ ] `--project` and `--area` filtering works
 - [ ] `--due`, `--overdue`, `--scheduled` work
 - [ ] `--sort` and `--limit` work
@@ -742,9 +742,9 @@ Already available:
 - [ ] `--query` text search works
 - [ ] Fuzzy entity lookup functions exported from Rust
 - [ ] TypeScript lookup wrapper categorizes results correctly
-- [ ] All output modes produce correct format (human, AI, JSON)
-- [ ] Empty results handled gracefully (exit 0, explicit message)
-- [ ] `tdn-cli/docs/cli-progress.md` updated
+- [x] All output modes produce correct format (human, AI, JSON)
+- [x] Empty results handled gracefully (exit 0, explicit message)
+- [x] `tdn-cli/docs/cli-progress.md` updated
 
 ---
 
@@ -755,3 +755,24 @@ Already available:
 - Filter combination: same filter = OR, different filters = AND
 - Short flags (`-s`, `-p`, `-a`, `-d`, `-q`, `-l`) are implemented in Task 8
 - Consider performance: for large vaults, move filtering to Rust if needed
+
+## Progress
+
+### Phase 1: Vault Scanning in Rust - COMPLETE
+
+- Created `crates/core/src/vault.rs` with `VaultConfig` and `scanTasks`, `scanProjects`, `scanAreas`
+- Scans `.md` files in top-level directory only (excludes subdirectories like `archive/`)
+- Skips malformed files, returns empty for nonexistent directories
+- 7 Rust unit tests + 8 TypeScript integration tests
+- Created `src/config/index.ts` for vault configuration (env vars, config files)
+
+### Phase 2: Basic List (Active Tasks) - COMPLETE
+
+- Implemented `list` command with active task filtering
+- Active = not done/dropped/icebox, not deferred (defer-until > today), not in archive/
+- Implemented `--status` filter with comma-separated OR logic
+- Implemented all three output formatters for task-list:
+  - Human mode: Grouped by status, colored output
+  - AI mode: `## Tasks (N)` header with `### TaskTitle` headings
+  - JSON mode: `{ summary, tasks: [...] }` structure
+- 19 E2E tests covering all output modes and edge cases

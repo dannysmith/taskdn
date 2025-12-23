@@ -14,11 +14,11 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `show <path>` - Show project by path (auto-detected)
 - [x] `show <path>` - Show area by path (auto-detected)
 - [ ] `show` fuzzy matching (human mode)
-- [ ] `list` - List active tasks
+- [x] `list` - List active tasks
 - [ ] `list projects` - List projects
 - [ ] `list areas` - List areas
-- [ ] `list --status <status>` - Filter by status
-- [ ] `list --status <s1>,<s2>` - Multiple statuses (OR)
+- [x] `list --status <status>` - Filter by status
+- [x] `list --status <s1>,<s2>` - Multiple statuses (OR)
 - [ ] `list --project <name>` - Filter by project
 - [ ] `list --area <name>` - Filter by area
 - [ ] `list --due today/tomorrow/this-week` - Due date filter
@@ -87,12 +87,12 @@ Checklist tracking implementation of all CLI commands and features.
 
 ## Output Modes
 
-- [ ] Human mode (default) - Colors, formatting
-- [ ] `--ai` mode - Structured Markdown
-- [ ] `--json` mode - JSON with summary
-- [ ] Errors in human mode (stderr)
-- [ ] Errors in AI mode (stdout, structured)
-- [ ] Errors in JSON mode (stdout, JSON)
+- [x] Human mode (default) - Colors, formatting
+- [x] `--ai` mode - Structured Markdown
+- [x] `--json` mode - JSON with summary
+- [x] Errors in human mode (stderr)
+- [x] Errors in AI mode (stdout, structured)
+- [x] Errors in JSON mode (stdout, JSON)
 
 ---
 
@@ -144,7 +144,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Task parsing (`parseTaskFile`)
 - [x] Project parsing (`parseProjectFile`)
 - [x] Area parsing (`parseAreaFile`)
-- [ ] Vault scanning
+- [x] Vault scanning (`scanTasks`, `scanProjects`, `scanAreas`)
 - [ ] Wikilink parsing utility
 - [ ] Vault index (relationships)
 - [ ] File writing with round-trip fidelity
@@ -162,9 +162,9 @@ Checklist tracking implementation of all CLI commands and features.
 
 ## Exit Codes
 
-- [ ] `0` - Success (including empty results)
-- [ ] `1` - Runtime error
-- [ ] `2` - Usage error
+- [x] `0` - Success (including empty results)
+- [x] `1` - Runtime error
+- [x] `2` - Usage error
 
 ---
 
