@@ -736,7 +736,7 @@ Already available:
 - [x] `list projects` and `list areas` work
 - [x] `--status` filtering works (single and multiple)
 - [x] `--project` and `--area` filtering works
-- [ ] `--due`, `--overdue`, `--scheduled` work
+- [x] `--due`, `--overdue`, `--scheduled` work
 - [ ] `--sort` and `--limit` work
 - [ ] All inclusion flags work
 - [ ] `--query` text search works
@@ -804,3 +804,22 @@ Already available:
   - Project filtering (substring match, case-insensitive, empty results)
   - Area filtering (substring match, case-insensitive, empty results)
   - Combined filters (project+area, status+project)
+
+### Phase 6: Date Filters - COMPLETE
+
+- Implemented date mocking via `TASKDN_MOCK_DATE` environment variable for testing
+- Added date utility functions: `getTomorrow()`, `getEndOfWeek()`, `formatDate()`
+- Implemented `--due` filter with values: `today`, `tomorrow`, `this-week`
+- Implemented `--overdue` filter for tasks with due date before today
+- Implemented `--scheduled` filter with value: `today`
+- Created 5 new fixture files for date testing:
+  - `due-fixed-date.md` (due: 2025-06-15)
+  - `due-tomorrow.md` (due: 2025-06-16)
+  - `due-this-week.md` (due: 2025-06-18)
+  - `due-past.md` (due: 2020-01-01, always overdue)
+  - `scheduled-fixed-date.md` (scheduled: 2025-06-15)
+- 17 new E2E tests covering:
+  - `--due today/tomorrow/this-week` in all output modes
+  - `--overdue` with empty results and active task filtering
+  - `--scheduled today` in all output modes
+  - Combined filters (date + status, date + project)

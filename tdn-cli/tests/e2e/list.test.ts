@@ -434,3 +434,216 @@ describe('taskdn list areas', () => {
     });
   });
 });
+
+// ============================================================================
+// Phase 6: Date Filters
+// ============================================================================
+
+// Fixtures use these dates:
+// - due-fixed-date.md: due: 2025-06-15
+// - due-tomorrow.md: due: 2025-06-16
+// - due-this-week.md: due: 2025-06-18
+// - due-past.md: due: 2020-01-01 (always overdue)
+// - scheduled-fixed-date.md: scheduled: 2025-06-15
+// - full-metadata.md: due: 2025-01-20, scheduled: 2025-01-18
+
+// We mock "today" as 2025-06-15 (a Sunday) for predictable date comparisons
+// End of week (Sunday) from 2025-06-15 is 2025-06-15 itself
+// So "this-week" on 2025-06-15 means just that day (Sunday)
+// Let's mock it as 2025-06-16 (a Monday) instead for better testing
+// End of week from Monday 2025-06-16 is Sunday 2025-06-22
+// So "this-week" includes 2025-06-16 through 2025-06-22
+
+const MOCK_TODAY = '2025-06-16';
+
+describe('taskdn list --due filter', () => {
+  test('--due today returns tasks due on mocked date', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--due', 'today', '--json'], {
+      env: { TASKDN_MOCK_DATE: MOCK_TODAY },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    expect(output.tasks.every((t: { due: string }) => t.due === MOCK_TODAY)).toBe(true);
+  });
+
+  test('--due tomorrow returns tasks due on tomorrow', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--due', 'tomorrow', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    // Tomorrow from 2025-06-15 is 2025-06-16
+    expect(output.tasks.every((t: { due: string }) => t.due === '2025-06-16')).toBe(true);
+  });
+
+  test('--due this-week returns tasks due within the current week', async () => {
+    // Mock today as Monday 2025-06-16, week ends Sunday 2025-06-22
+    const { stdout, exitCode } = await runCli(['list', '--due', 'this-week', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-16' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    // Should include tasks due between 2025-06-16 and 2025-06-22
+    expect(
+      output.tasks.every((t: { due: string }) => t.due >= '2025-06-16' && t.due <= '2025-06-22')
+    ).toBe(true);
+  });
+
+  test('returns empty when no tasks are due on that date', async () => {
+    // Mock a date where no fixtures have tasks due
+    const { stdout, exitCode } = await runCli(['list', '--due', 'today', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2099-01-01' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toEqual([]);
+  });
+
+  test('works in AI mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--due', 'today', '--ai'], {
+      env: { TASKDN_MOCK_DATE: MOCK_TODAY },
+    });
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('## Tasks');
+  });
+
+  test('works in human mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--due', 'today'], {
+      env: { TASKDN_MOCK_DATE: MOCK_TODAY },
+    });
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Task Due Tomorrow'); // due-tomorrow.md has due: 2025-06-16
+  });
+});
+
+describe('taskdn list --overdue filter', () => {
+  test('returns tasks with due date before today', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--overdue', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    // All tasks should have due date before the mock date
+    expect(output.tasks.every((t: { due: string }) => t.due < '2025-06-15')).toBe(true);
+  });
+
+  test('excludes tasks without due date', async () => {
+    const { stdout } = await runCli(['list', '--overdue', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    const output = JSON.parse(stdout);
+    // All tasks should have a due date
+    expect(output.tasks.every((t: { due?: string }) => t.due !== undefined)).toBe(true);
+  });
+
+  test('includes only active tasks (not done/dropped)', async () => {
+    const { stdout } = await runCli(['list', '--overdue', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    const output = JSON.parse(stdout);
+    expect(
+      output.tasks.every((t: { status: string }) => t.status !== 'done' && t.status !== 'dropped')
+    ).toBe(true);
+  });
+
+  test('returns empty when no tasks are overdue', async () => {
+    // Mock a date in the past where no fixtures would be overdue
+    const { stdout, exitCode } = await runCli(['list', '--overdue', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2019-01-01' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toEqual([]);
+  });
+
+  test('works in AI mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--overdue', '--ai'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('## Tasks');
+  });
+
+  test('works in human mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--overdue'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Task Due In Past');
+  });
+});
+
+describe('taskdn list --scheduled filter', () => {
+  test('--scheduled today returns tasks scheduled for mocked date', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--scheduled', 'today', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    expect(output.tasks.every((t: { scheduled: string }) => t.scheduled === '2025-06-15')).toBe(
+      true
+    );
+  });
+
+  test('returns empty when no tasks are scheduled for that date', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--scheduled', 'today', '--json'], {
+      env: { TASKDN_MOCK_DATE: '2099-01-01' },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toEqual([]);
+  });
+
+  test('works in AI mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--scheduled', 'today', '--ai'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('## Tasks');
+  });
+
+  test('works in human mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--scheduled', 'today'], {
+      env: { TASKDN_MOCK_DATE: '2025-06-15' },
+    });
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Task Scheduled Fixed Date');
+  });
+});
+
+describe('date filter combinations', () => {
+  test('--due today AND --status ready uses AND logic', async () => {
+    const { stdout, exitCode } = await runCli(
+      ['list', '--due', 'today', '--status', 'ready', '--json'],
+      {
+        env: { TASKDN_MOCK_DATE: MOCK_TODAY },
+      }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(
+      output.tasks.every(
+        (t: { due: string; status: string }) => t.due === MOCK_TODAY && t.status === 'ready'
+      )
+    ).toBe(true);
+  });
+
+  test('--overdue AND --project uses AND logic', async () => {
+    // There's no task that is both overdue AND has a specific project in fixtures
+    // So this should return empty (but still exit 0)
+    const { stdout, exitCode } = await runCli(
+      ['list', '--overdue', '--project', 'Nonexistent', '--json'],
+      {
+        env: { TASKDN_MOCK_DATE: '2025-06-15' },
+      }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toEqual([]);
+  });
+});

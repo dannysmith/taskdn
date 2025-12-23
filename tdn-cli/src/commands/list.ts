@@ -37,14 +37,53 @@ function isActiveTask(task: Task, today: string): boolean {
 }
 
 /**
- * Get today's date in YYYY-MM-DD format
+ * Get today's date in YYYY-MM-DD format.
+ * Supports TASKDN_MOCK_DATE env var for testing.
  */
 function getToday(): string {
+  // Support mocking for tests
+  const mockDate = process.env.TASKDN_MOCK_DATE;
+  if (mockDate && /^\d{4}-\d{2}-\d{2}$/.test(mockDate)) {
+    return mockDate;
+  }
+
   const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Format a Date object as YYYY-MM-DD string
+ */
+function formatDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Get tomorrow's date in YYYY-MM-DD format
+ */
+function getTomorrow(today: string): string {
+  const date = new Date(today + 'T00:00:00');
+  date.setDate(date.getDate() + 1);
+  return formatDate(date);
+}
+
+/**
+ * Get the end of week (Sunday) for the given date in YYYY-MM-DD format.
+ * Week starts on Monday (day 1) and ends on Sunday (day 0).
+ */
+function getEndOfWeek(today: string): string {
+  const date = new Date(today + 'T00:00:00');
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  // Calculate days until Sunday
+  const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+  date.setDate(date.getDate() + daysUntilSunday);
+  return formatDate(date);
 }
 
 /**
@@ -81,6 +120,7 @@ interface ListOptions {
   area?: string;
   due?: string;
   overdue?: boolean;
+  scheduled?: string;
   query?: string;
   sort?: string;
   desc?: boolean;
@@ -106,6 +146,7 @@ export const listCommand = new Command('list')
   .option('--area <area>', 'Filter by area name')
   .option('--due <when>', 'Filter by due date (today, tomorrow, this-week)')
   .option('--overdue', 'Show overdue tasks')
+  .option('--scheduled <when>', 'Filter by scheduled date (today)')
   .option('--query <text>', 'Search in title and body')
   .option('--sort <field>', 'Sort by field (due, created, updated, title)')
   .option('--desc', 'Sort descending')
@@ -181,6 +222,60 @@ export const listCommand = new Command('list')
         if (!task.area) return false;
         return task.area.toLowerCase().includes(areaQuery);
       });
+    }
+
+    // Apply --due filter if provided
+    if (options.due) {
+      const dueValue = options.due.toLowerCase();
+      let targetDate: string | null = null;
+      let endDate: string | null = null;
+
+      if (dueValue === 'today') {
+        targetDate = today;
+      } else if (dueValue === 'tomorrow') {
+        targetDate = getTomorrow(today);
+      } else if (dueValue === 'this-week') {
+        targetDate = today;
+        endDate = getEndOfWeek(today);
+      }
+
+      if (targetDate) {
+        tasks = tasks.filter((task) => {
+          if (!task.due) return false;
+          if (endDate) {
+            // Range filter: today through end of week
+            return task.due >= targetDate && task.due <= endDate;
+          }
+          // Exact date match
+          return task.due === targetDate;
+        });
+      }
+    }
+
+    // Apply --overdue filter if provided
+    if (options.overdue) {
+      tasks = tasks.filter((task) => {
+        if (!task.due) return false;
+        // Task is overdue if due date is before today
+        return task.due < today;
+      });
+    }
+
+    // Apply --scheduled filter if provided
+    if (options.scheduled) {
+      const scheduledValue = options.scheduled.toLowerCase();
+      let targetDate: string | null = null;
+
+      if (scheduledValue === 'today') {
+        targetDate = today;
+      }
+
+      if (targetDate) {
+        tasks = tasks.filter((task) => {
+          if (!task.scheduled) return false;
+          return task.scheduled === targetDate;
+        });
+      }
     }
 
     const result: TaskListResult = {
