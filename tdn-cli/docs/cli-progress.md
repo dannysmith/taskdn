@@ -19,8 +19,8 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `list areas` - List areas
 - [x] `list --status <status>` - Filter by status
 - [x] `list --status <s1>,<s2>` - Multiple statuses (OR)
-- [ ] `list --project <name>` - Filter by project
-- [ ] `list --area <name>` - Filter by area
+- [x] `list --project <name>` - Filter by project
+- [x] `list --area <name>` - Filter by area
 - [ ] `list --due today/tomorrow/this-week` - Due date filter
 - [ ] `list --overdue` - Overdue tasks
 - [ ] `list --scheduled today` - Scheduled filter

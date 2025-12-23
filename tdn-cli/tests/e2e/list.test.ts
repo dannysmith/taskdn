@@ -126,6 +126,128 @@ describe('taskdn list', () => {
       expect(stdout).toContain('Tasks (0)');
     });
   });
+
+  describe('--status filter', () => {
+    test('filters by single status', async () => {
+      const { stdout } = await runCli(['list', '--status', 'ready', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+      expect(output.tasks.every((t: { status: string }) => t.status === 'ready')).toBe(true);
+    });
+
+    test('filters by multiple statuses (OR logic)', async () => {
+      const { stdout } = await runCli(['list', '--status', 'ready,in-progress', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+      expect(
+        output.tasks.every(
+          (t: { status: string }) => t.status === 'ready' || t.status === 'in-progress'
+        )
+      ).toBe(true);
+    });
+
+    test('returns empty when status matches nothing', async () => {
+      // Use a status that exists but no active tasks have it in fixtures
+      const { stdout, exitCode } = await runCli(['list', '--status', 'nonexistent', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks).toEqual([]);
+    });
+
+    test('works in AI mode', async () => {
+      const { stdout } = await runCli(['list', '--status', 'ready', '--ai']);
+      expect(stdout).toContain('## Tasks');
+      expect(stdout).toContain('Minimal Task');
+    });
+
+    test('works in human mode', async () => {
+      const { stdout } = await runCli(['list', '--status', 'in-progress']);
+      expect(stdout).toContain('in-progress');
+      expect(stdout).toContain('Full Metadata Task');
+    });
+  });
+
+  describe('--project filter', () => {
+    test('filters by project name (substring match)', async () => {
+      const { stdout } = await runCli(['list', '--project', 'Test', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+      expect(
+        output.tasks.every((t: { project?: string }) => t.project?.toLowerCase().includes('test'))
+      ).toBe(true);
+    });
+
+    test('is case-insensitive', async () => {
+      const { stdout: upper } = await runCli(['list', '--project', 'TEST', '--json']);
+      const { stdout: lower } = await runCli(['list', '--project', 'test', '--json']);
+      expect(JSON.parse(upper).tasks.length).toBe(JSON.parse(lower).tasks.length);
+    });
+
+    test('returns empty when no tasks match project', async () => {
+      const { stdout, exitCode } = await runCli(['list', '--project', 'nonexistent', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks).toEqual([]);
+    });
+  });
+
+  describe('--area filter', () => {
+    test('filters by area name (substring match)', async () => {
+      const { stdout } = await runCli(['list', '--area', 'Work', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+      expect(
+        output.tasks.every((t: { area?: string }) => t.area?.toLowerCase().includes('work'))
+      ).toBe(true);
+    });
+
+    test('is case-insensitive', async () => {
+      const { stdout: upper } = await runCli(['list', '--area', 'WORK', '--json']);
+      const { stdout: lower } = await runCli(['list', '--area', 'work', '--json']);
+      expect(JSON.parse(upper).tasks.length).toBe(JSON.parse(lower).tasks.length);
+    });
+
+    test('returns empty when no tasks match area', async () => {
+      const { stdout, exitCode } = await runCli(['list', '--area', 'nonexistent', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks).toEqual([]);
+    });
+  });
+
+  describe('combined filters', () => {
+    test('--project AND --area uses AND logic', async () => {
+      const { stdout } = await runCli(['list', '--project', 'Test', '--area', 'Work', '--json']);
+      const output = JSON.parse(stdout);
+      // Full Metadata Task has both project=Test Project and area=Work
+      expect(output.tasks.length).toBeGreaterThan(0);
+      expect(
+        output.tasks.every(
+          (t: { project?: string; area?: string }) =>
+            t.project?.toLowerCase().includes('test') && t.area?.toLowerCase().includes('work')
+        )
+      ).toBe(true);
+    });
+
+    test('--status AND --project uses AND logic', async () => {
+      const { stdout } = await runCli([
+        'list',
+        '--status',
+        'in-progress',
+        '--project',
+        'Test',
+        '--json',
+      ]);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+      expect(
+        output.tasks.every(
+          (t: { status: string; project?: string }) =>
+            t.status === 'in-progress' && t.project?.toLowerCase().includes('test')
+        )
+      ).toBe(true);
+    });
+  });
 });
 
 describe('taskdn list projects', () => {

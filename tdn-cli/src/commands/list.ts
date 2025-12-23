@@ -165,6 +165,24 @@ export const listCommand = new Command('list')
       });
     }
 
+    // Apply project filter if provided (case-insensitive substring match)
+    if (options.project) {
+      const projectQuery = options.project.toLowerCase();
+      tasks = tasks.filter((task) => {
+        if (!task.project) return false;
+        return task.project.toLowerCase().includes(projectQuery);
+      });
+    }
+
+    // Apply area filter if provided (case-insensitive substring match)
+    if (options.area) {
+      const areaQuery = options.area.toLowerCase();
+      tasks = tasks.filter((task) => {
+        if (!task.area) return false;
+        return task.area.toLowerCase().includes(areaQuery);
+      });
+    }
+
     const result: TaskListResult = {
       type: 'task-list',
       tasks,

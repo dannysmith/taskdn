@@ -735,7 +735,7 @@ Already available:
 - [x] `list` returns active tasks by default
 - [x] `list projects` and `list areas` work
 - [x] `--status` filtering works (single and multiple)
-- [ ] `--project` and `--area` filtering works
+- [x] `--project` and `--area` filtering works
 - [ ] `--due`, `--overdue`, `--scheduled` work
 - [ ] `--sort` and `--limit` work
 - [ ] All inclusion flags work
@@ -789,3 +789,18 @@ Already available:
   - JSON mode: `{ summary, projects: [...] }` / `{ summary, areas: [...] }`
 - Added `status-done.md` project fixture for exclusion testing
 - 26 new E2E tests (13 for projects, 13 for areas)
+
+### Phase 4: Status Filtering - COMPLETE
+
+- `--status` filter was implemented in Phase 2
+- Added comprehensive tests for single status, multiple statuses (OR logic), empty results
+- 5 new E2E tests verifying status filter behavior
+
+### Phase 5: Project/Area Filtering - COMPLETE
+
+- Implemented `--project` and `--area` flags with case-insensitive substring matching
+- Combined filters use AND logic (e.g., `--project "Test" --area "Work"`)
+- 8 new E2E tests covering:
+  - Project filtering (substring match, case-insensitive, empty results)
+  - Area filtering (substring match, case-insensitive, empty results)
+  - Combined filters (project+area, status+project)
