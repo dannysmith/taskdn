@@ -1,3 +1,4 @@
+import { reset } from 'ansis';
 import type {
   OutputMode,
   Formatter,
@@ -58,10 +59,11 @@ export function getFormatter(mode: OutputMode): Formatter {
 }
 
 /**
- * Format a result using the appropriate formatter based on global options
+ * Format a result using the appropriate formatter based on global options.
+ * Prepends ANSI reset code to prevent color bleed from terminal prompt.
  */
 export function formatOutput(result: FormattableResult, options: GlobalOptions): string {
   const mode = getOutputMode(options);
   const formatter = getFormatter(mode);
-  return formatter.format(result);
+  return reset.open + formatter.format(result);
 }

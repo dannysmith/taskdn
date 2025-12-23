@@ -107,13 +107,14 @@ function formatTaskCheckbox(status: string): string {
 }
 
 /**
- * Format task title with appropriate styling based on status
+ * Format task title with appropriate styling based on status.
+ * Not bold - the checkbox provides visual distinction.
  */
 function formatTaskTitle(title: string, status: string): string {
   if (status === 'Done' || status === 'Dropped') {
     return dim(strikethrough(title));
   }
-  return bold(title);
+  return title;
 }
 
 /**
@@ -309,8 +310,8 @@ function formatTaskList(tasks: Task[]): string {
     const groupTasks = grouped.get(status);
     if (!groupTasks || groupTasks.length === 0) continue;
 
-    // Status as section header
-    lines.push(`  ${bold(toKebabCase(status))}`);
+    // Status as section header (dim to distinguish from titles)
+    lines.push(`  ${dim(toKebabCase(status))}`);
 
     for (const task of groupTasks) {
       const checkbox = formatTaskCheckbox(status);
@@ -327,7 +328,7 @@ function formatTaskList(tasks: Task[]): string {
       }
 
       // Build the line
-      let taskLine = `  ${checkbox} ${title}`;
+      let taskLine = `    ${checkbox} ${title}`;
       if (context) {
         taskLine += `  ${dim(context)}`;
       }
@@ -380,11 +381,11 @@ function formatProjectList(projects: Project[]): string {
     const groupProjects = grouped.get(status);
     if (!groupProjects || groupProjects.length === 0) continue;
 
-    // Status as section header
-    lines.push(`  ${bold(toKebabCase(status))}`);
+    // Status as section header (dim to distinguish from titles)
+    lines.push(`  ${dim(toKebabCase(status))}`);
 
     for (const project of groupProjects) {
-      let projectLine = `  ${bold(project.title)}`;
+      let projectLine = `    ${bold(project.title)}`;
       if (project.area) {
         projectLine += `  ${dim(project.area)}`;
       }
@@ -395,9 +396,9 @@ function formatProjectList(projects: Project[]): string {
 
   // Output projects without status at the end
   if (noStatus.length > 0) {
-    lines.push(`  ${bold(dim('(no status)'))}`);
+    lines.push(`  ${dim('(no status)')}`);
     for (const project of noStatus) {
-      let projectLine = `  ${bold(project.title)}`;
+      let projectLine = `    ${bold(project.title)}`;
       if (project.area) {
         projectLine += `  ${dim(project.area)}`;
       }
@@ -447,11 +448,11 @@ function formatAreaList(areas: Area[]): string {
     const groupAreas = grouped.get(status);
     if (!groupAreas || groupAreas.length === 0) continue;
 
-    // Status as section header
-    lines.push(`  ${bold(toKebabCase(status))}`);
+    // Status as section header (dim to distinguish from titles)
+    lines.push(`  ${dim(toKebabCase(status))}`);
 
     for (const area of groupAreas) {
-      let areaLine = `  ${bold(area.title)}`;
+      let areaLine = `    ${bold(area.title)}`;
       if (area.areaType) {
         areaLine += `  ${dim(area.areaType)}`;
       }
@@ -462,9 +463,9 @@ function formatAreaList(areas: Area[]): string {
 
   // Output areas without status at the end
   if (noStatus.length > 0) {
-    lines.push(`  ${bold(dim('(no status)'))}`);
+    lines.push(`  ${dim('(no status)')}`);
     for (const area of noStatus) {
-      let areaLine = `  ${bold(area.title)}`;
+      let areaLine = `    ${bold(area.title)}`;
       if (area.areaType) {
         areaLine += `  ${dim(area.areaType)}`;
       }
