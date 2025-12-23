@@ -1,15 +1,54 @@
+import { resolve, isAbsolute, join } from 'path';
+import { homedir } from 'os';
 import { Command } from '@commander-js/extra-typings';
-import { getAreaContext, getProjectContext } from '@bindings';
+import { getAreaContext, getProjectContext, getTaskContext } from '@bindings';
 import type { Task } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type {
   GlobalOptions,
   AreaContextResultOutput,
   ProjectContextResultOutput,
+  TaskContextResultOutput,
 } from '@/output/index.ts';
 import { getVaultConfig } from '@/config/index.ts';
 import { createError } from '@/errors/types.ts';
 import { formatError } from '@/errors/format.ts';
+
+/**
+ * Check if an identifier looks like a file path vs a title.
+ * Returns true if the identifier appears to be a path.
+ */
+function isPathLike(identifier: string): boolean {
+  return (
+    identifier.startsWith('/') ||
+    identifier.startsWith('~') ||
+    identifier.startsWith('./') ||
+    identifier.startsWith('../') ||
+    identifier.includes('/') ||
+    identifier.endsWith('.md')
+  );
+}
+
+/**
+ * Resolve a path-like identifier to an absolute path.
+ * - Expands ~ to home directory
+ * - Resolves relative paths (with /) against CWD
+ * - Resolves bare filenames (.md) against tasks directory
+ */
+function resolveTaskPath(identifier: string, tasksDir: string): string {
+  if (identifier.startsWith('~')) {
+    return identifier.replace(/^~/, homedir());
+  }
+  if (isAbsolute(identifier)) {
+    return identifier;
+  }
+  // If it contains a path separator, resolve relative to CWD
+  if (identifier.includes('/')) {
+    return resolve(identifier);
+  }
+  // Bare filename (e.g., "my-task.md") - resolve relative to tasks dir
+  return join(tasksDir, identifier);
+}
 
 /**
  * Group tasks by their project path
@@ -188,13 +227,62 @@ export const contextCommand = new Command('context')
       return;
     }
 
-    // Stub implementation for task entity type
-    const result = {
-      type: 'context',
-      entityType,
-      target,
-      data: '(stub) expanded context would go here',
-    };
+    // Handle task context
+    if (entityType === 'task') {
+      if (!target) {
+        console.error('Error: Please specify a task title or path.');
+        console.error('\nExamples:');
+        console.error('  taskdn context task "Fix login bug"');
+        console.error('  taskdn context task ~/tasks/fix-login-bug.md');
+        process.exit(2);
+      }
 
-    console.log(formatOutput(result, globalOpts));
+      const config = getVaultConfig();
+
+      // Determine if target is a path or title, and resolve if path-like
+      const identifier = isPathLike(target) ? resolveTaskPath(target, config.tasksDir) : target;
+
+      const result = getTaskContext(config, identifier);
+
+      // Check for ambiguous matches
+      if (result.ambiguousMatches.length > 0) {
+        const matchPaths = result.ambiguousMatches.map((t) => t.path);
+        const error = createError.ambiguous(target, matchPaths);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      if (!result.task) {
+        // Task not found
+        const error = createError.notFound('task', target);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      const output: TaskContextResultOutput = {
+        type: 'task-context',
+        task: result.task,
+        project: result.project ?? null,
+        area: result.area ?? null,
+        warnings: result.warnings,
+      };
+
+      console.log(formatOutput(output, globalOpts));
+      return;
+    }
+
+    // Unknown entity type
+    console.error(`Error: Unknown entity type '${entityType}'.`);
+    console.error('\nSupported types: area, project, task');
+    process.exit(2);
   });

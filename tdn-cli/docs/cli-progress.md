@@ -41,7 +41,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `list --query <text>` - Text search
 - [x] `context area <name>` - Area with projects and tasks
 - [x] `context project <name>` - Project with tasks and parent
-- [ ] `context task <path>` - Task with parents
+- [x] `context task <path>` - Task with parents
 - [ ] `context --ai` (no args) - Vault overview
 - [ ] `context --with-bodies` - Include all bodies
 
@@ -147,7 +147,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Vault scanning (`scanTasks`, `scanProjects`, `scanAreas`)
 - [x] Fuzzy entity lookup (`findTasksByTitle`, `findProjectsByTitle`, `findAreasByTitle`)
 - [x] Wikilink parsing utility (`extractWikilinkName`)
-- [x] Vault index & relationship queries (`getTasksInArea`, `getProjectsInArea`, `getAreaContext`, `getProjectContext`)
+- [x] Vault index & relationship queries (`getTasksInArea`, `getProjectsInArea`, `getAreaContext`, `getProjectContext`, `getTaskContext`)
 - [ ] File writing with round-trip fidelity
 - [ ] Batch operations
 - [ ] `taskdn-type` field support for mixed-content directories (S1 4.4, 5.4)

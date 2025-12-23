@@ -22,7 +22,7 @@ The following Rust functions are available via `@bindings`:
 | `getProjectsInArea()`  | Projects in an area (optimized: no task file reads)  | `Project[]`                              |
 | `extractWikilinkName()`| Extract target name from wikilink syntax             | `string \| null`                         |
 
-**To be added in Phase 3:**
+**Added in Phase 3:**
 
 | Function               | Purpose                                              | Returns                                  |
 | ---------------------- | ---------------------------------------------------- | ---------------------------------------- |
@@ -316,7 +316,7 @@ E2E tests added in `tests/e2e/context-project.test.ts` (20 tests).
 
 ---
 
-## Phase 3: Context Task Command
+## Phase 3: Context Task Command ✅ COMPLETE
 
 `context task ~/tasks/foo.md` returns task + parent project + parent area.
 
@@ -408,15 +408,20 @@ describe('context task', () => {
 });
 ```
 
+### 3.3 Tests ✅
+
+E2E tests added in `tests/e2e/context-task.test.ts` (20 tests).
+Rust unit tests added in `crates/core/src/vault_index.rs` (7 tests for `get_task_context`).
+
 ### Phase 3 Verification
 
-- [ ] `context task ~/tasks/foo.md` returns task details
-- [ ] Includes parent project (if any)
-- [ ] Includes parent area (via project or direct)
-- [ ] Body included for primary entity (task)
-- [ ] NOT_FOUND error for missing task
-- [ ] Works in all output modes
-- [ ] E2E tests pass
+- [x] `context task ~/tasks/foo.md` returns task details
+- [x] Includes parent project (if any)
+- [x] Includes parent area (via project or direct)
+- [x] Body included for primary entity (task)
+- [x] NOT_FOUND error for missing task
+- [x] Works in all output modes
+- [x] E2E tests pass
 
 ---
 
@@ -858,7 +863,7 @@ For date-dependent tests (today, overdue, this week), use `TASKDN_MOCK_DATE` env
 
 - [x] `context area` shows area + projects + tasks
 - [x] `context project` shows project + tasks + parent area
-- [ ] `context task` shows task + parent project + area
+- [x] `context task` shows task + parent project + area
 - [ ] `context --ai` (no args) shows vault overview
 - [x] `context` (human, no args) shows helpful error
 - [ ] `--with-bodies` includes all bodies

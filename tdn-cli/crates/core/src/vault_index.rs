@@ -59,6 +59,23 @@ pub struct ProjectContextResult {
     pub warnings: Vec<String>,
 }
 
+/// Full context for a task (for context command)
+#[derive(Debug, Clone)]
+#[napi(object)]
+pub struct TaskContextResult {
+    /// The task, or None if not found or ambiguous
+    pub task: Option<Task>,
+    /// Parent project if any
+    pub project: Option<Project>,
+    /// Parent area (direct or via project)
+    pub area: Option<Area>,
+    /// Warnings about broken references
+    pub warnings: Vec<String>,
+    /// Multiple tasks matched the identifier (ambiguous lookup)
+    /// Only populated when lookup by title matches multiple tasks
+    pub ambiguous_matches: Vec<Task>,
+}
+
 // =============================================================================
 // Internal VaultIndex (not NAPI-exported)
 // =============================================================================
@@ -73,6 +90,8 @@ struct VaultIndex {
     area_by_name: HashMap<String, usize>,
     /// Map from lowercase project name to index in `projects`
     project_by_name: HashMap<String, usize>,
+    /// Map from lowercase task title to indices in `tasks` (Vec because titles may not be unique)
+    task_by_title: HashMap<String, Vec<usize>>,
     /// Map from project index to list of task indices
     tasks_by_project: HashMap<usize, Vec<usize>>,
     /// Map from area index to list of task indices (direct assignment)
@@ -130,6 +149,15 @@ impl VaultIndex {
             }
         }
 
+        // Build task title lookup (case-insensitive, allows multiple tasks with same title)
+        let mut task_by_title: HashMap<String, Vec<usize>> = HashMap::new();
+        for (task_idx, task) in tasks.iter().enumerate() {
+            task_by_title
+                .entry(task.title.to_lowercase())
+                .or_default()
+                .push(task_idx);
+        }
+
         // Build tasks-by-project and tasks-by-area indices
         let mut tasks_by_project: HashMap<usize, Vec<usize>> = HashMap::new();
         let mut tasks_by_area: HashMap<usize, Vec<usize>> = HashMap::new();
@@ -161,6 +189,7 @@ impl VaultIndex {
             areas,
             area_by_name,
             project_by_name,
+            task_by_title,
             tasks_by_project,
             tasks_by_area,
             projects_by_area,
@@ -179,6 +208,15 @@ impl VaultIndex {
         self.project_by_name
             .get(&name.to_lowercase())
             .map(|&idx| &self.projects[idx])
+    }
+
+    /// Find tasks by title (case-insensitive).
+    /// Returns all tasks with matching title (may be empty, one, or multiple).
+    fn find_tasks_by_title(&self, title: &str) -> Vec<&Task> {
+        self.task_by_title
+            .get(&title.to_lowercase())
+            .map(|indices| indices.iter().map(|&i| &self.tasks[i]).collect())
+            .unwrap_or_default()
     }
 
     /// Get projects in an area.
@@ -257,6 +295,36 @@ impl VaultIndex {
         let area_ref = project.area.as_ref()?;
         let area_name = extract_wikilink_name(area_ref)?;
         self.find_area(area_name)
+    }
+
+    /// Get the project for a task (via project reference).
+    fn get_project_for_task(&self, task: &Task) -> Option<&Project> {
+        let project_ref = task.project.as_ref()?;
+        let project_name = extract_wikilink_name(project_ref)?;
+        self.find_project(project_name)
+    }
+
+    /// Get the area for a task (direct or via project).
+    fn get_area_for_task(&self, task: &Task) -> Option<&Area> {
+        // First try direct area reference
+        if let Some(area_ref) = &task.area
+            && let Some(area_name) = extract_wikilink_name(area_ref)
+            && let Some(area) = self.find_area(area_name)
+        {
+            return Some(area);
+        }
+
+        // Fall back to area via project
+        if let Some(project) = self.get_project_for_task(task) {
+            return self.get_area_for_project(project);
+        }
+
+        None
+    }
+
+    /// Find a task by path.
+    fn find_task_by_path(&self, path: &str) -> Option<&Task> {
+        self.tasks.iter().find(|t| t.path == path)
     }
 }
 
@@ -347,6 +415,97 @@ pub fn get_project_context(config: VaultConfig, project_name: String) -> Project
         area,
         tasks,
         warnings,
+    }
+}
+
+/// Check if a string looks like a file path (vs a title).
+/// Returns true if the identifier starts with `/` (absolute path).
+fn is_path_identifier(identifier: &str) -> bool {
+    identifier.starts_with('/')
+}
+
+/// Get full context for a task (for context command).
+/// Accepts either a task path (absolute, starting with `/`) or a task title.
+/// - If identifier is a path: looks up by exact path match
+/// - If identifier is a title: looks up by case-insensitive title match
+/// - If multiple tasks match the title, returns them in `ambiguous_matches`
+#[napi]
+pub fn get_task_context(config: VaultConfig, identifier: String) -> TaskContextResult {
+    let index = VaultIndex::build(&config);
+    let mut warnings = Vec::new();
+
+    // Determine if this is a path or title lookup
+    let (task, ambiguous_matches) = if is_path_identifier(&identifier) {
+        // Path lookup - find by exact path
+        let task = index.find_task_by_path(&identifier).cloned();
+        (task, Vec::new())
+    } else {
+        // Title lookup - case-insensitive, may have multiple matches
+        let matches = index.find_tasks_by_title(&identifier);
+        match matches.len() {
+            0 => (None, Vec::new()),
+            1 => (Some(matches[0].clone()), Vec::new()),
+            _ => {
+                // Multiple matches - return them as ambiguous
+                let ambiguous: Vec<Task> = matches.into_iter().cloned().collect();
+                (None, ambiguous)
+            }
+        }
+    };
+
+    // If ambiguous, return early with just the matches
+    if !ambiguous_matches.is_empty() {
+        return TaskContextResult {
+            task: None,
+            project: None,
+            area: None,
+            warnings: Vec::new(),
+            ambiguous_matches,
+        };
+    }
+
+    // Get parent project if task exists and has project reference
+    let project = task
+        .as_ref()
+        .and_then(|t| index.get_project_for_task(t))
+        .cloned();
+
+    // Warn if task has project reference but project not found
+    if let Some(ref t) = task
+        && let Some(project_ref) = &t.project
+        && let Some(project_name) = extract_wikilink_name(project_ref)
+        && index.find_project(project_name).is_none()
+    {
+        warnings.push(format!(
+            "Task '{}' references unknown project '{}'",
+            t.title, project_name
+        ));
+    }
+
+    // Get parent area (direct or via project)
+    let area = task
+        .as_ref()
+        .and_then(|t| index.get_area_for_task(t))
+        .cloned();
+
+    // Warn if task has direct area reference but area not found
+    if let Some(ref t) = task
+        && let Some(area_ref) = &t.area
+        && let Some(area_name) = extract_wikilink_name(area_ref)
+        && index.find_area(area_name).is_none()
+    {
+        warnings.push(format!(
+            "Task '{}' references unknown area '{}'",
+            t.title, area_name
+        ));
+    }
+
+    TaskContextResult {
+        task,
+        project,
+        area,
+        warnings,
+        ambiguous_matches: Vec::new(),
     }
 }
 
@@ -809,5 +968,285 @@ mod tests {
         assert!(result.project.is_some());
         assert!(result.area.is_none());
         assert!(result.warnings.is_empty());
+    }
+
+    // =========================================================================
+    // get_task_context Tests
+    // =========================================================================
+
+    #[test]
+    fn get_task_context_returns_complete_context() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.areas_dir),
+            "work.md",
+            "---\ntitle: Work\n---\n",
+        );
+        write_file(
+            Path::new(&config.projects_dir),
+            "q1.md",
+            "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
+        );
+        let task_path = format!("{}/task1.md", config.tasks_dir);
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Task One\nstatus: ready\nprojects:\n  - \"[[Q1]]\"\n---\n",
+        );
+
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert_eq!(result.task.unwrap().title, "Task One");
+        assert!(result.project.is_some());
+        assert_eq!(result.project.unwrap().title, "Q1");
+        assert!(result.area.is_some());
+        assert_eq!(result.area.unwrap().title, "Work");
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn get_task_context_returns_none_for_unknown_task() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        let result = get_task_context(config, "/nonexistent/task.md".to_string());
+
+        assert!(result.task.is_none());
+        assert!(result.project.is_none());
+        assert!(result.area.is_none());
+    }
+
+    #[test]
+    fn get_task_context_handles_task_with_direct_area() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.areas_dir),
+            "work.md",
+            "---\ntitle: Work\n---\n",
+        );
+        let task_path = format!("{}/task1.md", config.tasks_dir);
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Direct Area Task\nstatus: ready\narea: \"[[Work]]\"\n---\n",
+        );
+
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert!(result.project.is_none()); // No project reference
+        assert!(result.area.is_some()); // Direct area
+        assert_eq!(result.area.unwrap().title, "Work");
+    }
+
+    #[test]
+    fn get_task_context_handles_task_without_parents() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        let task_path = format!("{}/task1.md", config.tasks_dir);
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Orphan Task\nstatus: ready\n---\n",
+        );
+
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert!(result.project.is_none());
+        assert!(result.area.is_none());
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn get_task_context_warns_on_broken_project_reference() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        let task_path = format!("{}/task1.md", config.tasks_dir);
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Broken Project Task\nstatus: ready\nprojects:\n  - \"[[Nonexistent Project]]\"\n---\n",
+        );
+
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert!(result.project.is_none());
+        assert_eq!(result.warnings.len(), 1);
+        assert!(result.warnings[0].contains("Nonexistent Project"));
+    }
+
+    #[test]
+    fn get_task_context_warns_on_broken_area_reference() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        let task_path = format!("{}/task1.md", config.tasks_dir);
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Broken Area Task\nstatus: ready\narea: \"[[Nonexistent Area]]\"\n---\n",
+        );
+
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert!(result.area.is_none());
+        assert_eq!(result.warnings.len(), 1);
+        assert!(result.warnings[0].contains("Nonexistent Area"));
+    }
+
+    #[test]
+    fn get_task_context_prefers_direct_area_over_project_area() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.areas_dir),
+            "personal.md",
+            "---\ntitle: Personal\n---\n",
+        );
+        write_file(
+            Path::new(&config.areas_dir),
+            "work.md",
+            "---\ntitle: Work\n---\n",
+        );
+        write_file(
+            Path::new(&config.projects_dir),
+            "q1.md",
+            "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
+        );
+        let task_path = format!("{}/task1.md", config.tasks_dir);
+        // Task has direct area "Personal" but project is in "Work"
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Mixed Task\nstatus: ready\narea: \"[[Personal]]\"\nprojects:\n  - \"[[Q1]]\"\n---\n",
+        );
+
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert!(result.project.is_some());
+        // Direct area takes precedence
+        assert!(result.area.is_some());
+        assert_eq!(result.area.unwrap().title, "Personal");
+    }
+
+    // =========================================================================
+    // Title-based Task Lookup Tests
+    // =========================================================================
+
+    #[test]
+    fn get_task_context_finds_task_by_title() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "my-task.md",
+            "---\ntitle: My Unique Task\nstatus: ready\n---\n",
+        );
+
+        // Look up by title (not path)
+        let result = get_task_context(config, "My Unique Task".to_string());
+
+        assert!(result.task.is_some());
+        assert_eq!(result.task.unwrap().title, "My Unique Task");
+        assert!(result.ambiguous_matches.is_empty());
+    }
+
+    #[test]
+    fn get_task_context_title_lookup_is_case_insensitive() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "my-task.md",
+            "---\ntitle: My Unique Task\nstatus: ready\n---\n",
+        );
+
+        // Look up by lowercase title
+        let result = get_task_context(config, "my unique task".to_string());
+
+        assert!(result.task.is_some());
+        assert_eq!(result.task.unwrap().title, "My Unique Task");
+    }
+
+    #[test]
+    fn get_task_context_returns_ambiguous_for_duplicate_titles() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-a.md",
+            "---\ntitle: Duplicate Title\nstatus: ready\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-b.md",
+            "---\ntitle: Duplicate Title\nstatus: in-progress\n---\n",
+        );
+
+        let result = get_task_context(config, "Duplicate Title".to_string());
+
+        // task should be None when ambiguous
+        assert!(result.task.is_none());
+        // Should have 2 ambiguous matches
+        assert_eq!(result.ambiguous_matches.len(), 2);
+    }
+
+    #[test]
+    fn get_task_context_uses_path_lookup_for_absolute_paths() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        let task_path = format!("{}/my-task.md", config.tasks_dir);
+        write_file(
+            Path::new(&config.tasks_dir),
+            "my-task.md",
+            "---\ntitle: My Task\nstatus: ready\n---\n",
+        );
+
+        // Look up by absolute path (starts with /)
+        let result = get_task_context(config, task_path);
+
+        assert!(result.task.is_some());
+        assert_eq!(result.task.unwrap().title, "My Task");
+        assert!(result.ambiguous_matches.is_empty());
+    }
+
+    #[test]
+    fn get_task_context_path_lookup_returns_none_for_nonexistent() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        // Look up by absolute path that doesn't exist
+        let result = get_task_context(config, "/nonexistent/task.md".to_string());
+
+        assert!(result.task.is_none());
+        assert!(result.ambiguous_matches.is_empty());
+    }
+
+    #[test]
+    fn get_task_context_title_lookup_returns_none_for_nonexistent() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        // Look up by title that doesn't exist
+        let result = get_task_context(config, "Nonexistent Task Title".to_string());
+
+        assert!(result.task.is_none());
+        assert!(result.ambiguous_matches.is_empty());
     }
 }
