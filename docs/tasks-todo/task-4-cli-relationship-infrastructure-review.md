@@ -210,6 +210,84 @@ At the end of Phase 1, produce a summary of findings:
 
 ---
 
+### Phase 1.2 Findings (Completed)
+
+**Summary:** TypeScript layer is well-structured with clean type safety. The Formatter pattern works well at current scale. Minor opportunities for extraction, but no urgent refactoring needed.
+
+#### Files Reviewed
+
+| File | Lines | Purpose |
+|------|-------|---------|
+| `src/commands/list.ts` | 446 | List command with all filters/sorting |
+| `src/commands/show.ts` | 104 | Show single entity |
+| `src/output/types.ts` | 88 | Types, Formatter interface, `toKebabCase()` |
+| `src/output/human.ts` | 342 | Human-readable colored output |
+| `src/output/ai.ts` | 274 | Structured markdown for LLMs |
+| `src/output/json.ts` | 149 | JSON output |
+| `src/errors/types.ts` | 247 | Comprehensive error type system |
+| `src/errors/format.ts` | 330 | Error formatting for all modes |
+| `src/lib/entity-lookup.ts` | 211 | Unified lookup with `LookupResult<T>` |
+| `src/config/index.ts` | 105 | Config loading with precedence |
+
+#### Key Observations
+
+1. **Formatter Interface Pattern: Working Well**
+   - Discriminated union `FormattableResult` with switch/case in each formatter
+   - Currently 6 result types—adding more requires updating all 3 formatters
+   - Acceptable at current scale; revisit if we exceed ~12 result types
+
+2. **Error System: Comprehensive**
+   - Well-designed discriminated union (`CliError`) with specific error types
+   - `createError` helper functions provide clean API
+   - All error types have human/AI/JSON formatting
+   - Exit codes mapped per error type
+
+3. **Entity Lookup: Good Abstraction**
+   - `LookupResult<T>` with types: `'exact' | 'single' | 'multiple' | 'none'`
+   - Handles both path queries and title queries
+   - **Ready for relationship resolution**—can use same pattern for wikilink lookups
+
+4. **Type Safety: Excellent**
+   - No `any` types found
+   - Proper discriminated unions throughout
+   - Type guards provided (`isCliError`)
+   - Clean interface with Rust bindings via `@bindings`
+
+5. **Error Handling Flow**
+   - Only `show.ts` currently catches/formats errors
+   - Pattern: catch → detect type from message string → create CliError → format
+   - String matching on Rust errors is fragile but functional
+   - Will improve if Rust structured errors added (Task 7)
+
+6. **Date Utilities in list.ts**
+   - 5 date functions: `getToday()`, `formatDate()`, `getTomorrow()`, `getEndOfWeek()`, `getStartOfWeek()`
+   - Currently only used in list.ts
+   - Will be needed for `today` command (Task 5) and write operations (Task 6)
+   - **Candidate for extraction** when implementing Task 5
+
+7. **Known TODO**
+   - `show.ts:22-29`: `detectEntityType()` uses path heuristics instead of config dirs
+   - Comment notes this should use vault config when available
+   - Not blocking; can fix when enhancing show command
+
+#### Refactoring Recommendations
+
+| Priority | Item | Decision |
+|----------|------|----------|
+| **Medium** | Extract date utilities to `src/lib/date.ts` | Do when implementing Task 5 `today` command |
+| **Low** | Fix `detectEntityType()` to use config | Defer—works correctly for now |
+| **Skip** | Abstract formatter pattern further | Current switch/case is clear |
+| **Skip** | Extract status constants/colors | Not reused enough to justify |
+
+#### TypeScript Layer Summary for Phase 3
+
+**Good to proceed.** The existing infrastructure supports relationship features:
+- `entity-lookup.ts` pattern can resolve wikilink references
+- Error types include `REFERENCE_ERROR` for broken references
+- Formatter pattern can accommodate new result types (context command output)
+
+---
+
 ### Phase 2: Refactor
 
 Based on Phase 1 findings, implement the following refactors:
@@ -537,7 +615,7 @@ if (options.area) {
 ### Phase 1
 
 - [x] Reviewed all Rust parser files (1.1 complete)
-- [ ] Reviewed TypeScript command layer (1.2 pending)
+- [x] Reviewed TypeScript command layer (1.2 complete)
 - [x] Documented refactoring opportunities
 - [x] Prioritized recommendations
 

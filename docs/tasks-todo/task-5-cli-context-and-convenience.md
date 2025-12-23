@@ -174,6 +174,9 @@ Task details...
 
 ### Phase 5: Today Command
 
+**Note from Task 4 Review:** Extract date utilities from `list.ts` to `src/lib/date.ts` when implementing this phase:
+- `getToday()`, `formatDate()`, `getTomorrow()`, `getEndOfWeek()`, `getStartOfWeek()`
+
 `taskdn today` - Tasks due today + scheduled for today.
 
 ```bash
