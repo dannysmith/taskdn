@@ -27,17 +27,17 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `list --sort <field>` - Sort results
 - [x] `list --desc` - Descending sort
 - [x] `list --limit <n>` - Limit results
-- [ ] `list --include-done` - Include completed
-- [ ] `list --include-dropped` - Include dropped
-- [ ] `list --include-closed` - Include done + dropped
-- [ ] `list --include-icebox` - Include icebox
-- [ ] `list --include-deferred` - Include deferred
-- [ ] `list --include-archived` - Include archived
-- [ ] `list --only-archived` - Archived only
-- [ ] `list --completed-after <date>` - Completion date filter
-- [ ] `list --completed-before <date>` - Completion date filter
-- [ ] `list --completed-today` - Completed today
-- [ ] `list --completed-this-week` - Completed this week
+- [x] `list --include-done` - Include completed
+- [x] `list --include-dropped` - Include dropped
+- [x] `list --include-closed` - Include done + dropped
+- [x] `list --include-icebox` - Include icebox
+- [x] `list --include-deferred` - Include deferred
+- [x] `list --include-archived` - Include archived
+- [x] `list --only-archived` - Archived only
+- [x] `list --completed-after <date>` - Completion date filter
+- [x] `list --completed-before <date>` - Completion date filter
+- [x] `list --completed-today` - Completed today
+- [x] `list --completed-this-week` - Completed this week
 - [ ] `list --query <text>` - Text search
 - [ ] `context area <name>` - Area with projects and tasks
 - [ ] `context project <name>` - Project with tasks and parent

@@ -11,32 +11,6 @@ import type {
 import { getVaultConfig } from '@/config/index.ts';
 
 /**
- * Check if a task is "active" per CLI spec:
- * - Status NOT IN (done, dropped, icebox)
- * - defer-until is unset or <= today
- * - Not in archive/ subdirectory
- */
-function isActiveTask(task: Task, today: string): boolean {
-  // Exclude done, dropped, icebox
-  const inactiveStatuses = ['Done', 'Dropped', 'Icebox'];
-  if (inactiveStatuses.includes(task.status)) {
-    return false;
-  }
-
-  // Exclude deferred tasks (defer-until > today)
-  if (task.deferUntil && task.deferUntil > today) {
-    return false;
-  }
-
-  // Exclude archived tasks (path contains /archive/)
-  if (task.path.includes('/archive/')) {
-    return false;
-  }
-
-  return true;
-}
-
-/**
  * Get today's date in YYYY-MM-DD format.
  * Supports TASKDN_MOCK_DATE env var for testing.
  */
@@ -87,6 +61,19 @@ function getEndOfWeek(today: string): string {
 }
 
 /**
+ * Get the start of week (Monday) for the given date in YYYY-MM-DD format.
+ * Week starts on Monday (day 1) and ends on Sunday (day 0).
+ */
+function getStartOfWeek(today: string): string {
+  const date = new Date(today + 'T00:00:00');
+  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  // Calculate days since Monday (Sunday = 6 days ago, Monday = 0)
+  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  date.setDate(date.getDate() - daysSinceMonday);
+  return formatDate(date);
+}
+
+/**
  * Check if a project is "active" per CLI spec:
  * - Status is unset OR status NOT IN (done)
  */
@@ -125,6 +112,19 @@ interface ListOptions {
   sort?: string;
   desc?: boolean;
   limit?: string;
+  // Inclusion flags
+  includeDone?: boolean;
+  includeDropped?: boolean;
+  includeClosed?: boolean;
+  includeIcebox?: boolean;
+  includeDeferred?: boolean;
+  includeArchived?: boolean;
+  onlyArchived?: boolean;
+  // Completed date filters
+  completedAfter?: string;
+  completedBefore?: string;
+  completedToday?: boolean;
+  completedThisWeek?: boolean;
 }
 
 /**
@@ -151,6 +151,17 @@ export const listCommand = new Command('list')
   .option('--sort <field>', 'Sort by field (due, created, updated, title)')
   .option('--desc', 'Sort descending')
   .option('--limit <n>', 'Limit number of results')
+  .option('--include-done', 'Include completed tasks')
+  .option('--include-dropped', 'Include dropped tasks')
+  .option('--include-closed', 'Include done and dropped tasks')
+  .option('--include-icebox', 'Include icebox tasks')
+  .option('--include-deferred', 'Include deferred tasks')
+  .option('--include-archived', 'Include archived tasks')
+  .option('--only-archived', 'Show only archived tasks')
+  .option('--completed-after <date>', 'Filter by completion date (after)')
+  .option('--completed-before <date>', 'Filter by completion date (before)')
+  .option('--completed-today', 'Filter for tasks completed today')
+  .option('--completed-this-week', 'Filter for tasks completed this week')
   .action((entityType, options: ListOptions, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;
     const config = getVaultConfig();
@@ -188,10 +199,65 @@ export const listCommand = new Command('list')
 
     // Handle tasks (default)
     // Scan all tasks from the vault
-    let tasks = scanTasks(config);
+    let tasks: Task[] = [];
 
-    // Filter for active tasks by default
-    tasks = tasks.filter((task) => isActiveTask(task, today));
+    if (options.onlyArchived) {
+      // Only scan archive directory
+      const archiveConfig = {
+        ...config,
+        tasksDir: `${config.tasksDir}/archive`,
+      };
+      tasks = scanTasks(archiveConfig);
+    } else {
+      // Scan main tasks directory
+      tasks = scanTasks(config);
+
+      // Apply active task filtering based on inclusion flags
+      tasks = tasks.filter((task) => {
+        // Build set of statuses to exclude (can be overridden by include flags)
+        const excludedStatuses = new Set<string>();
+
+        if (!options.includeDone && !options.includeClosed) {
+          excludedStatuses.add('Done');
+        }
+        if (!options.includeDropped && !options.includeClosed) {
+          excludedStatuses.add('Dropped');
+        }
+        if (!options.includeIcebox) {
+          excludedStatuses.add('Icebox');
+        }
+
+        if (excludedStatuses.has(task.status)) {
+          return false;
+        }
+
+        // Handle deferred tasks
+        if (!options.includeDeferred) {
+          if (task.deferUntil && task.deferUntil > today) {
+            return false;
+          }
+        }
+
+        // Exclude archived tasks unless --include-archived is set
+        // (this check is for tasks that might have /archive/ in path from main scan)
+        if (!options.includeArchived && task.path.includes('/archive/')) {
+          return false;
+        }
+
+        return true;
+      });
+
+      // Also scan archive if --include-archived is set (after main filtering)
+      // Archived tasks are included regardless of their status
+      if (options.includeArchived) {
+        const archiveConfig = {
+          ...config,
+          tasksDir: `${config.tasksDir}/archive`,
+        };
+        const archivedTasks = scanTasks(archiveConfig);
+        tasks = [...tasks, ...archivedTasks];
+      }
+    }
 
     // Apply status filter if provided
     if (options.status) {
@@ -276,6 +342,39 @@ export const listCommand = new Command('list')
           return task.scheduled === targetDate;
         });
       }
+    }
+
+    // Apply completed date filters
+    if (options.completedAfter) {
+      tasks = tasks.filter((task) => {
+        if (!task.completedAt) return false;
+        return task.completedAt >= options.completedAfter!;
+      });
+    }
+
+    if (options.completedBefore) {
+      tasks = tasks.filter((task) => {
+        if (!task.completedAt) return false;
+        return task.completedAt < options.completedBefore!;
+      });
+    }
+
+    if (options.completedToday) {
+      tasks = tasks.filter((task) => {
+        if (!task.completedAt) return false;
+        // Compare just the date portion (first 10 chars of YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS)
+        return task.completedAt.substring(0, 10) === today;
+      });
+    }
+
+    if (options.completedThisWeek) {
+      const endOfWeek = getEndOfWeek(today);
+      const startOfWeek = getStartOfWeek(today);
+      tasks = tasks.filter((task) => {
+        if (!task.completedAt) return false;
+        const completedDate = task.completedAt.substring(0, 10);
+        return completedDate >= startOfWeek && completedDate <= endOfWeek;
+      });
     }
 
     // Apply sorting if --sort is provided

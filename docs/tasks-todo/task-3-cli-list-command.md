@@ -738,7 +738,7 @@ Already available:
 - [x] `--project` and `--area` filtering works
 - [x] `--due`, `--overdue`, `--scheduled` work
 - [x] `--sort` and `--limit` work
-- [ ] All inclusion flags work
+- [x] All inclusion flags work
 - [ ] `--query` text search works
 - [ ] Fuzzy entity lookup functions exported from Rust
 - [ ] TypeScript lookup wrapper categorizes results correctly
@@ -838,3 +838,26 @@ Already available:
   - Items without sort field appearing last
   - Limit applied after sorting
   - Combined with other filters
+
+### Phase 8: Inclusion Flags - COMPLETE
+
+- Implemented all inclusion flags:
+  - `--include-done` - Include tasks with status=done
+  - `--include-dropped` - Include tasks with status=dropped
+  - `--include-closed` - Include both done and dropped
+  - `--include-icebox` - Include tasks with status=icebox
+  - `--include-deferred` - Include tasks with defer-until > today
+  - `--include-archived` - Include tasks from archive/ subdirectory
+  - `--only-archived` - Show only archived tasks
+- Implemented completed date filters:
+  - `--completed-after <date>` - Filter by completedAt >= date
+  - `--completed-before <date>` - Filter by completedAt < date
+  - `--completed-today` - Filter for completedAt = today
+  - `--completed-this-week` - Filter for completedAt within current week
+- Added `getStartOfWeek()` utility function for week range calculation
+- Created 3 new fixture files:
+  - `deferred-future.md` (defer-until: 2099-01-01)
+  - `completed-recent.md` (status: done, completed-at: 2025-06-14)
+  - `archive/archived-task.md` (for archive testing)
+- Archived tasks are included regardless of their status (they're explicitly requested)
+- 14 new E2E tests covering all inclusion flags and completed date filters

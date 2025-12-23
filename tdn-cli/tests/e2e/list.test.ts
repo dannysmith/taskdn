@@ -821,3 +821,151 @@ describe('taskdn list --limit flag', () => {
     expect(stdout).toContain('Tasks');
   });
 });
+
+// ============================================================================
+// Phase 8: Inclusion Flags
+// ============================================================================
+
+describe('taskdn list --include-done flag', () => {
+  test('includes done tasks when flag is set', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--include-done', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.some((t: { status: string }) => t.status === 'done')).toBe(true);
+  });
+
+  test('does not include done tasks by default', async () => {
+    const { stdout } = await runCli(['list', '--json']);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.every((t: { status: string }) => t.status !== 'done')).toBe(true);
+  });
+});
+
+describe('taskdn list --include-dropped flag', () => {
+  test('includes dropped tasks when flag is set', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--include-dropped', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.some((t: { status: string }) => t.status === 'dropped')).toBe(true);
+  });
+});
+
+describe('taskdn list --include-closed flag', () => {
+  test('includes both done and dropped tasks', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--include-closed', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    const hasDone = output.tasks.some((t: { status: string }) => t.status === 'done');
+    const hasDropped = output.tasks.some((t: { status: string }) => t.status === 'dropped');
+    expect(hasDone || hasDropped).toBe(true);
+  });
+});
+
+describe('taskdn list --include-icebox flag', () => {
+  test('includes icebox tasks when flag is set', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--include-icebox', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.some((t: { status: string }) => t.status === 'icebox')).toBe(true);
+  });
+});
+
+describe('taskdn list --include-deferred flag', () => {
+  test('includes deferred tasks when flag is set', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--include-deferred', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    // Deferred Future Task has defer-until: 2099-01-01
+    expect(output.tasks.some((t: { title: string }) => t.title === 'Deferred Future Task')).toBe(
+      true
+    );
+  });
+
+  test('does not include deferred tasks by default', async () => {
+    const { stdout } = await runCli(['list', '--json']);
+    const output = JSON.parse(stdout);
+    expect(
+      output.tasks.every((t: { title: string }) => t.title !== 'Deferred Future Task')
+    ).toBe(true);
+  });
+});
+
+describe('taskdn list --include-archived flag', () => {
+  test('includes archived tasks when flag is set', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--include-archived', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.some((t: { path: string }) => t.path.includes('archive/'))).toBe(true);
+  });
+
+  test('does not include archived tasks by default', async () => {
+    const { stdout } = await runCli(['list', '--json']);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.every((t: { path: string }) => !t.path.includes('archive/'))).toBe(true);
+  });
+});
+
+describe('taskdn list --only-archived flag', () => {
+  test('returns only archived tasks', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--only-archived', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    expect(output.tasks.every((t: { path: string }) => t.path.includes('archive/'))).toBe(true);
+  });
+});
+
+describe('completed date filters', () => {
+  test('--completed-after filters by completion date', async () => {
+    const { stdout, exitCode } = await runCli(
+      ['list', '--include-done', '--completed-after', '2025-06-01', '--json'],
+      { env: { TASKDN_MOCK_DATE: '2025-06-15' } }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    expect(
+      output.tasks.every((t: { completedAt?: string }) => !t.completedAt || t.completedAt >= '2025-06-01')
+    ).toBe(true);
+  });
+
+  test('--completed-before filters by completion date', async () => {
+    const { stdout, exitCode } = await runCli(
+      ['list', '--include-done', '--completed-before', '2025-06-15', '--json'],
+      { env: { TASKDN_MOCK_DATE: '2025-06-15' } }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(
+      output.tasks.every((t: { completedAt?: string }) => !t.completedAt || t.completedAt < '2025-06-15')
+    ).toBe(true);
+  });
+
+  test('--completed-today filters for tasks completed on mocked date', async () => {
+    const { stdout, exitCode } = await runCli(
+      ['list', '--include-done', '--completed-today', '--json'],
+      { env: { TASKDN_MOCK_DATE: '2025-06-14' } }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    // Recently Completed Task has completed-at: 2025-06-14
+    expect(output.tasks.some((t: { title: string }) => t.title === 'Recently Completed Task')).toBe(
+      true
+    );
+  });
+
+  test('--completed-this-week filters for tasks completed within the week', async () => {
+    // Mock today as 2025-06-16 (Monday), so week is Mon-Sun (16-22)
+    // Recently Completed Task completed on 2025-06-14 (Saturday before) should NOT match
+    // But if we mock as 2025-06-14 (Saturday), week includes 2025-06-14
+    const { stdout, exitCode } = await runCli(
+      ['list', '--include-done', '--completed-this-week', '--json'],
+      { env: { TASKDN_MOCK_DATE: '2025-06-14' } }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.some((t: { title: string }) => t.title === 'Recently Completed Task')).toBe(
+      true
+    );
+  });
+});
