@@ -146,8 +146,8 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Area parsing (`parseAreaFile`)
 - [x] Vault scanning (`scanTasks`, `scanProjects`, `scanAreas`)
 - [x] Fuzzy entity lookup (`findTasksByTitle`, `findProjectsByTitle`, `findAreasByTitle`)
-- [ ] Wikilink parsing utility
-- [ ] Vault index (relationships)
+- [x] Wikilink parsing utility (`extractWikilinkName`)
+- [x] Vault index & relationship queries (`getTasksInArea`, `getProjectsInArea`, `getAreaContext`, `getProjectContext`)
 - [ ] File writing with round-trip fidelity
 - [ ] Batch operations
 - [ ] `taskdn-type` field support for mixed-content directories (S1 4.4, 5.4)

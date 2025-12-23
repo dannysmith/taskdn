@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { Command } from '@commander-js/extra-typings';
-import { scanTasks, scanProjects, scanAreas } from '@bindings';
+import { scanTasks, scanProjects, scanAreas, getTasksInArea } from '@bindings';
 import type { Task, Project, Area } from '@bindings';
 import { formatOutput } from '@/output/index.ts';
 import type {
@@ -209,11 +209,20 @@ export const listCommand = new Command('list')
         tasksDir: join(config.tasksDir, 'archive'),
       };
       tasks = scanTasks(archiveConfig);
+    } else if (options.area) {
+      // Use relationship-aware query for area filtering
+      // This finds tasks with direct area assignment AND tasks via projects
+      const result = getTasksInArea(config, options.area);
+      tasks = result.tasks;
+      // Note: result.warnings could be displayed if needed
     } else {
       // Scan main tasks directory
       tasks = scanTasks(config);
+    }
 
-      // Apply active task filtering based on inclusion flags
+    // Apply active task filtering based on inclusion flags
+    // (Skip for --only-archived since those have different semantics)
+    if (!options.onlyArchived) {
       tasks = tasks.filter((task) => {
         // Build set of statuses to exclude (can be overridden by include flags)
         const excludedStatuses = new Set<string>();
@@ -250,7 +259,8 @@ export const listCommand = new Command('list')
 
       // Also scan archive if --include-archived is set (after main filtering)
       // Archived tasks are included regardless of their status
-      if (options.includeArchived) {
+      // Note: When --area is used, we don't scan archive (getTasksInArea handles main dir only)
+      if (options.includeArchived && !options.area) {
         const archiveConfig = {
           ...config,
           tasksDir: join(config.tasksDir, 'archive'),
@@ -282,14 +292,8 @@ export const listCommand = new Command('list')
       });
     }
 
-    // Apply area filter if provided (case-insensitive substring match)
-    if (options.area) {
-      const areaQuery = options.area.toLowerCase();
-      tasks = tasks.filter((task) => {
-        if (!task.area) return false;
-        return task.area.toLowerCase().includes(areaQuery);
-      });
-    }
+    // Note: --area filter is handled earlier via getTasksInArea() which
+    // properly resolves relationships (tasks via projects + direct area assignment)
 
     // Apply --due filter if provided
     if (options.due) {

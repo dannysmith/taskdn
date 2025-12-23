@@ -35,6 +35,26 @@ function getLocalConfigPath(): string {
 }
 
 /**
+ * Validate that a parsed JSON object conforms to the ConfigFile schema
+ */
+function validateConfigFile(parsed: unknown): ConfigFile {
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error(`expected object, got ${typeof parsed}`);
+  }
+
+  const obj = parsed as Record<string, unknown>;
+  const validKeys = ['tasksDir', 'projectsDir', 'areasDir'];
+
+  for (const key of validKeys) {
+    if (key in obj && typeof obj[key] !== 'string') {
+      throw new Error(`${key} must be a string, got ${typeof obj[key]}`);
+    }
+  }
+
+  return obj as ConfigFile;
+}
+
+/**
  * Read and parse a JSON config file, returning null if it doesn't exist or is invalid
  */
 function readConfigFile(path: string): ConfigFile | null {
@@ -44,7 +64,8 @@ function readConfigFile(path: string): ConfigFile | null {
 
   try {
     const content = readFileSync(path, 'utf-8');
-    return JSON.parse(content) as ConfigFile;
+    const parsed = JSON.parse(content);
+    return validateConfigFile(parsed);
   } catch (error) {
     console.warn(
       `Warning: Failed to parse config file ${path}: ${error instanceof Error ? error.message : error}`

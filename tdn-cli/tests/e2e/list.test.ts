@@ -192,13 +192,12 @@ describe('taskdn list', () => {
   });
 
   describe('--area filter', () => {
-    test('filters by area name (substring match)', async () => {
+    test('filters by area name', async () => {
+      // Uses relationship-aware query: finds tasks with direct area assignment
+      // AND tasks via projects in that area
       const { stdout } = await runCli(['list', '--area', 'Work', '--json']);
       const output = JSON.parse(stdout);
       expect(output.tasks.length).toBeGreaterThan(0);
-      expect(
-        output.tasks.every((t: { area?: string }) => t.area?.toLowerCase().includes('work'))
-      ).toBe(true);
     });
 
     test('is case-insensitive', async () => {
@@ -217,14 +216,21 @@ describe('taskdn list', () => {
 
   describe('combined filters', () => {
     test('--project AND --area uses AND logic', async () => {
-      const { stdout } = await runCli(['list', '--project', 'Test', '--area', 'Work', '--json']);
+      // Test Project is in Work area
+      const { stdout } = await runCli([
+        'list',
+        '--project',
+        'Test Project',
+        '--area',
+        'Work',
+        '--json',
+      ]);
       const output = JSON.parse(stdout);
-      // Full Metadata Task has both project=Test Project and area=Work
+      // Tasks with project=Test Project are in Work area (via project relationship)
       expect(output.tasks.length).toBeGreaterThan(0);
       expect(
         output.tasks.every(
-          (t: { project?: string; area?: string }) =>
-            t.project?.toLowerCase().includes('test') && t.area?.toLowerCase().includes('work')
+          (t: { project?: string }) => t.project?.toLowerCase().includes('test project')
         )
       ).toBe(true);
     });

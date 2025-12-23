@@ -776,15 +776,15 @@ if (entityType === 'area') {
 ### Phase 3
 
 - [x] `extract_wikilink_name()` implemented with tests
-- [ ] Internal `VaultIndex` struct implemented
-- [ ] `get_tasks_in_area()` exported via NAPI
-- [ ] `get_projects_in_area()` exported via NAPI (optimized - no task files)
-- [ ] `get_area_context()` exported via NAPI
-- [ ] `get_project_context()` exported via NAPI
-- [ ] `list --area` updated to use `get_tasks_in_area()`
-- [ ] Unit tests for VaultIndex and NAPI functions
-- [ ] E2E tests for relationship-aware queries
-- [ ] `tdn-cli/docs/cli-progress.md` updated
+- [x] Internal `VaultIndex` struct implemented
+- [x] `get_tasks_in_area()` exported via NAPI
+- [x] `get_projects_in_area()` exported via NAPI (optimized - no task files)
+- [x] `get_area_context()` exported via NAPI
+- [x] `get_project_context()` exported via NAPI
+- [x] `list --area` updated to use `get_tasks_in_area()`
+- [x] Unit tests for VaultIndex and NAPI functions
+- [x] E2E tests for relationship-aware queries
+- [x] `tdn-cli/docs/cli-progress.md` updated
 
 ---
 
