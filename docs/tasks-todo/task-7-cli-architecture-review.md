@@ -17,6 +17,7 @@ This is a comprehensive review checkpoint after implementing all core functional
 ## Why This Checkpoint Exists
 
 At this point we have:
+
 - All entity parsing (tasks, projects, areas)
 - Vault scanning and indexing
 - Relationship traversal
@@ -38,6 +39,7 @@ Evaluate the "external" API exposed via NAPI.
 **Deferred from Task 4:** Structured error types were identified as a "low priority" improvement in the Task 4 review. Consider implementing during this review phase. The current approach uses string-based error messages which TypeScript pattern-matches on—this works but is fragile.
 
 **Questions to answer:**
+
 - Is the API surface appropriate? Too large? Too granular?
 - Are function signatures consistent?
 - Is error handling consistent across all functions?
@@ -46,6 +48,7 @@ Evaluate the "external" API exposed via NAPI.
 - Should we implement structured error types now?
 
 **Checklist:**
+
 - [ ] List all `#[napi]` functions
 - [ ] Review each for naming consistency
 - [ ] Review each for error handling pattern
@@ -60,6 +63,7 @@ Evaluate the file I/O patterns.
 **Context from Task 4:** The "Read vs Write Separation" pattern (see `cli-tech.md`) was established during Task 4 review. Read operations use typed "parsed view" structs; write operations manipulate raw YAML. Verify this pattern is working as designed.
 
 **Questions to answer:**
+
 - Is read performance acceptable for large vaults?
 - Is write round-trip fidelity working correctly per S3 spec?
 - Are batch operations efficient (not reading same file multiple times)?
@@ -67,6 +71,7 @@ Evaluate the file I/O patterns.
 - Is the read/write separation pattern working well in practice?
 
 **Specific checks:**
+
 - [ ] Profile vault scanning for 1000+ files (if possible)
 - [ ] Verify unknown frontmatter fields survive read/write
 - [ ] Verify date format preservation (date vs datetime)
@@ -79,12 +84,14 @@ Evaluate the file I/O patterns.
 Evaluate Rust type design.
 
 **Questions to answer:**
+
 - Do we have all the types we need?
 - Are enums marked `#[non_exhaustive]` where appropriate?
 - Is the `Option<Option<T>>` pattern used correctly for updates?
 - Are there redundant types that could be consolidated?
 
 **Checklist:**
+
 - [ ] Review all public structs
 - [ ] Review all enums
 - [ ] Check for missing types
@@ -96,6 +103,7 @@ Evaluate Rust type design.
 Execute identified refactoring opportunities.
 
 **Common patterns to look for:**
+
 - Duplicated parsing logic
 - Inconsistent error creation
 - Functions that are too long
@@ -103,6 +111,7 @@ Execute identified refactoring opportunities.
 - Dead code
 
 **Approach:**
+
 1. List all identified issues from phases 1-3
 2. Prioritize by impact vs effort
 3. Execute high-value refactors
@@ -113,6 +122,7 @@ Execute identified refactoring opportunities.
 Evaluate TypeScript code organization.
 
 **Questions to answer:**
+
 - Is the command structure consistent?
 - Are formatters well-organized?
 - Is there duplicated logic that should be extracted?
@@ -120,6 +130,7 @@ Evaluate TypeScript code organization.
 - Is error handling consistent?
 
 **Checklist:**
+
 - [ ] Review `src/commands/` structure
 - [ ] Review `src/output/` structure
 - [ ] Check for duplicated formatting logic
@@ -131,6 +142,7 @@ Evaluate TypeScript code organization.
 Execute identified refactoring opportunities.
 
 **Common patterns to look for:**
+
 - Duplicated output formatting
 - Inconsistent option handling
 - Missing utility functions
@@ -141,6 +153,7 @@ Execute identified refactoring opportunities.
 Evaluate test coverage and quality.
 
 **Questions to answer:**
+
 - Are all commands tested in all output modes?
 - Are error cases covered?
 - Are edge cases covered?
@@ -153,9 +166,11 @@ Evaluate test coverage and quality.
 Update developer documentation to reflect current architecture.
 
 **Documents to review/update:**
+
 - `tdn-cli/docs/developer/architecture-guide.md`
 - `tdn-cli/docs/developer/testing.md`
-- Any new documents needed
+- Any new documents needed in `tdn-cli/docs/developer/`
+- `docs/product-overviews/cli-tech.md`
 
 ## Verification
 
@@ -172,6 +187,7 @@ Update developer documentation to reflect current architecture.
 ## Output
 
 This task should produce:
+
 1. A cleaner, more maintainable codebase
 2. Updated documentation
 3. A list of any deferred improvements (for future consideration)

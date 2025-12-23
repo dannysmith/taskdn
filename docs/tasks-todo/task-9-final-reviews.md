@@ -4,6 +4,7 @@
 
 the output of each review should write a full and detailed analysis document to disk. These documents can then be assessed for recommendations to change. The focus should be on fundamental problems or issues and things that we can generally improve to make this a more robust and higher quality code base. Each review should be conducted and then theoutput doc reviewed in a new session. Changes from one review should be implemented in full before running the next review.
 
+- [ ] Feature conformity with S1 and S2 specs
 - [ ] Performance issues
 - [ ] "Clean Code"
 - [ ] Error handling
