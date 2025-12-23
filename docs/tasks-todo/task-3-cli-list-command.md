@@ -223,6 +223,60 @@ taskdn list -q "bug fix"
 
 **Matching:** Case-insensitive substring.
 
+### Phase 10: Fuzzy Entity Lookup Utility
+
+> **Consolidated from Task 2 Phase 6**
+>
+> This phase provides the shared fuzzy lookup infrastructure used by `show`, `complete`, `drop`, `status`, `update`, and `archive` commands. Interactive prompts for disambiguation are handled in Task 8 Phase 4.
+
+Create shared utility functions for finding entities by name (case-insensitive substring matching).
+
+**Add to `vault.rs`:**
+```rust
+/// Find tasks matching a query (case-insensitive substring on title)
+#[napi]
+pub fn find_tasks_by_title(config: &VaultConfig, query: &str) -> Vec<Task>
+
+/// Find projects matching a query
+#[napi]
+pub fn find_projects_by_title(config: &VaultConfig, query: &str) -> Vec<Project>
+
+/// Find areas matching a query
+#[napi]
+pub fn find_areas_by_title(config: &VaultConfig, query: &str) -> Vec<Area>
+```
+
+**Behavior:**
+- Scan the relevant directory (reuse `scan_*` functions)
+- Filter by case-insensitive substring match on title
+- Return all matches (disambiguation handled at command layer)
+
+**TypeScript wrapper for commands:**
+```typescript
+// src/lib/entity-lookup.ts
+export interface LookupResult<T> {
+  type: 'exact' | 'single' | 'multiple' | 'none';
+  matches: T[];
+}
+
+export async function lookupTask(query: string): Promise<LookupResult<Task>> {
+  // 1. Check if query is a path - return exact match
+  // 2. Otherwise, call findTasksByTitle
+  // 3. Categorize result: none, single, multiple
+}
+```
+
+**Test cases:**
+```typescript
+describe('fuzzy entity lookup', () => {
+  test('finds task by exact title');
+  test('finds task by partial title (case-insensitive)');
+  test('returns multiple matches when ambiguous');
+  test('returns empty when no matches');
+  test('prefers path if query looks like a path');
+});
+```
+
 ## Fixture Requirements
 
 Need additional fixtures for comprehensive testing:
@@ -278,6 +332,8 @@ tests/fixtures/vault/tasks/
 - [ ] `--sort` and `--limit` work
 - [ ] All inclusion flags work
 - [ ] `--query` text search works
+- [ ] Fuzzy entity lookup functions exported from Rust
+- [ ] TypeScript lookup wrapper categorizes results correctly
 - [ ] All output modes produce correct format
 - [ ] Empty results handled gracefully
 - [ ] cli-progress.md updated

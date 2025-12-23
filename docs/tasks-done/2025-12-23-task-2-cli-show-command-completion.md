@@ -160,19 +160,11 @@ Update error handling to use error codes from Task 1.
 - **details:** Expected ':' but found '='
 ```
 
-### Phase 6: Fuzzy Matching for Show (Human Mode)
+### ~~Phase 6: Fuzzy Matching for Show~~ (MOVED)
 
-When path doesn't exist but looks like a name, search for matches.
-
-**Example:**
-```bash
-taskdn show "login bug"
-# If multiple matches, prompt user to select
-# If single match, show it
-# If no matches, error with suggestions
-```
-
-**For AI mode:** Return AMBIGUOUS error with list of matches.
+> **Moved to Task 3 Phase 10 + Task 8 Phase 4**
+>
+> Fuzzy matching requires vault scanning infrastructure (Task 3 Phase 1) and interactive prompts (Task 8 Phase 4). The implementation is consolidated there to avoid duplication across commands (show, complete, drop, etc.).
 
 ## Test Cases to Write
 
@@ -209,12 +201,7 @@ describe('error handling', () => {
   test('PARSE_ERROR includes line number');
 });
 
-// Phase 6: Fuzzy matching
-describe('fuzzy matching', () => {
-  test('finds task by partial title');
-  test('prompts when multiple matches (human mode)');
-  test('returns AMBIGUOUS error (AI mode)');
-});
+// Phase 6: Fuzzy matching (MOVED to Task 3 Phase 10 + Task 8 Phase 4)
 ```
 
 ## Verification
@@ -224,7 +211,7 @@ describe('fuzzy matching', () => {
 - [x] `show <project-path>` works for all output modes
 - [x] `show <area-path>` works for all output modes
 - [x] Error codes appear in AI/JSON output
-- [ ] Fuzzy matching works in human mode
+- [ ] ~~Fuzzy matching works in human mode~~ (Moved to Task 3/8)
 - [x] All E2E tests pass
 - [x] cli-progress.md updated
 

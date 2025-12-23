@@ -129,11 +129,15 @@ Summary: 3 issues in 57 files checked
 | 1 | Issues found (command succeeded, but problems exist) |
 | 2 | Command failed to run (couldn't read config, etc.) |
 
-### Phase 4: Interactive Prompts
+### Phase 4: Interactive Prompts & Fuzzy Disambiguation
+
+> **Includes fuzzy disambiguation from Task 2 Phase 6**
+>
+> This phase wires up interactive prompts to all commands that accept entity names: `show`, `complete`, `drop`, `status`, `update`, `archive`. Uses the fuzzy lookup utility from Task 3 Phase 10.
 
 Implement interactive features for human mode.
 
-**Fuzzy match disambiguation:**
+**Fuzzy match disambiguation (human mode):**
 When a fuzzy search returns multiple matches:
 ```
 ? Multiple tasks match "login":
@@ -148,6 +152,29 @@ When a fuzzy search returns multiple matches:
     ~/tasks/login-tests.md
 
   Select one (or press Ctrl-C to cancel):
+```
+
+**Commands that use disambiguation:**
+- `show <name>` - show a task/project/area by name
+- `complete <name>` - mark task complete
+- `drop <name>` - mark task dropped
+- `status <name> <status>` - change status
+- `update <name>` - update fields
+- `archive <name>` - archive entity
+
+**AI/JSON mode behavior:**
+When multiple matches found, return `AMBIGUOUS` error:
+```json
+{
+  "error": true,
+  "code": "AMBIGUOUS",
+  "message": "Multiple tasks match 'login'",
+  "matches": [
+    {"title": "Fix login bug", "path": "~/tasks/fix-login-bug.md"},
+    {"title": "Login page redesign", "path": "~/tasks/login-redesign.md"}
+  ],
+  "suggestion": "Use a more specific name or provide the full path"
+}
 ```
 
 **Confirmation prompts:**
@@ -166,6 +193,17 @@ When `taskdn add` is called with no arguments:
 
 Creating task...
 ✓ Created ~/tasks/review-quarterly-report.md
+```
+
+**Test cases for fuzzy disambiguation:**
+```typescript
+describe('fuzzy matching prompts', () => {
+  test('shows prompt when multiple matches (human mode)');
+  test('returns AMBIGUOUS error with matches (AI mode)');
+  test('returns AMBIGUOUS error with matches (JSON mode)');
+  test('proceeds without prompt for single match');
+  test('returns NOT_FOUND when no matches');
+});
 ```
 
 ### Phase 5: Short Flags
@@ -289,7 +327,8 @@ describe('piping', () => {
 - [ ] `init` creates config interactively and non-interactively
 - [ ] `config` shows and sets values
 - [ ] `doctor` checks all aspects and reports issues
-- [ ] Interactive prompts work for disambiguation
+- [ ] Fuzzy disambiguation prompts work for show, complete, drop, etc.
+- [ ] AMBIGUOUS error returned in AI/JSON mode for multiple matches
 - [ ] Interactive prompts work for `add` with no args
 - [ ] Short flags work for all common options
 - [ ] `--stdin` accepts piped input
