@@ -1,4 +1,8 @@
-import { bold, blue, dim, cyan, yellow, green, red } from 'ansis';
+import { bold, blue, dim, cyan, yellow, green, red, strikethrough } from 'ansis';
+import boxen from 'boxen';
+import { marked } from 'marked';
+import { markedTerminal } from 'marked-terminal';
+import { log } from '@clack/prompts';
 import type { Task, Project, Area } from '@bindings';
 import type {
   Formatter,
@@ -15,6 +19,150 @@ import type {
   VaultOverviewResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
+
+// Configure marked-terminal with our color palette
+marked.use(
+  markedTerminal({
+    firstHeading: bold,
+    heading: bold,
+    strong: bold,
+    em: (s: string) => s, // italic not well supported in all terminals
+    codespan: cyan,
+    code: dim,
+    blockquote: dim,
+    listitem: (s: string) => s,
+    // Disable table borders for cleaner output
+    tableOptions: {
+      chars: {
+        top: '',
+        'top-mid': '',
+        'top-left': '',
+        'top-right': '',
+        bottom: '',
+        'bottom-mid': '',
+        'bottom-left': '',
+        'bottom-right': '',
+        left: '',
+        'left-mid': '',
+        mid: '',
+        'mid-mid': '',
+        right: '',
+        'right-mid': '',
+        middle: ' ',
+      },
+    },
+  })
+);
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Extract filename from a full path
+ */
+function extractFilename(path: string): string {
+  return path.split('/').pop() ?? path;
+}
+
+/**
+ * Format a short date for list views (e.g., "Jan 20")
+ */
+function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Format a long date for detail views (e.g., "20 January 2025")
+ */
+function formatLongDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+/**
+ * Create a horizontal separator line
+ */
+function formatSeparator(width: number = 60): string {
+  return dim('─'.repeat(width));
+}
+
+/**
+ * Get checkbox symbol for task status
+ */
+function formatTaskCheckbox(status: string): string {
+  const symbols: Record<string, string> = {
+    Done: dim('[✓]'),
+    Dropped: dim('[✗]'),
+    InProgress: yellow('[▸]'),
+    Ready: '[ ]',
+    Blocked: red('[!]'),
+    Inbox: blue('[?]'),
+    Icebox: dim('[❄]'),
+  };
+  return symbols[status] ?? '[ ]';
+}
+
+/**
+ * Format task title with appropriate styling based on status
+ */
+function formatTaskTitle(title: string, status: string): string {
+  if (status === 'Done' || status === 'Dropped') {
+    return dim(strikethrough(title));
+  }
+  return bold(title);
+}
+
+/**
+ * Render markdown body with syntax highlighting
+ */
+function renderMarkdownBody(body: string): string {
+  // marked.parse returns string when async is false (default)
+  const rendered = marked.parse(body) as string;
+  // Remove trailing newlines that marked adds
+  return rendered.trimEnd();
+}
+
+/**
+ * Create a boxed header for entities
+ */
+function formatEntityHeader(
+  title: string,
+  filename: string,
+  status?: string,
+  checkbox?: string
+): string {
+  // Build the content line
+  const leftPart = checkbox ? `${checkbox} ${bold(title)}` : bold(title);
+  const rightPart = status ? formatStatus(status) : '';
+  const filenamePart = dim(filename);
+
+  // Calculate spacing for alignment
+  // Note: We need to account for ANSI codes not taking up visual space
+  const contentParts = [leftPart, filenamePart, rightPart].filter(Boolean);
+  const content = contentParts.join('  ');
+
+  return (
+    '\n' +
+    boxen(content, {
+      borderStyle: 'single',
+      padding: { left: 1, right: 1, top: 0, bottom: 0 },
+      borderColor: 'gray',
+    })
+  );
+}
+
+/**
+ * Log warnings using clack's log.warn
+ */
+function formatWarnings(warnings: string[]): void {
+  for (const warning of warnings) {
+    log.warn(warning);
+  }
+}
 
 /**
  * Format a status with appropriate color (works for tasks, projects, and areas)
@@ -41,87 +189,80 @@ function formatStatus(status: string): string {
 }
 
 /**
- * Format a single task for human output
+ * Format a single task for human output (show command)
  */
 function formatTask(task: Task): string {
   const lines: string[] = [];
 
-  // Title with status
-  lines.push(bold(task.title) + '  ' + formatStatus(task.status));
-  lines.push(dim(task.path));
+  // Boxed header with checkbox, title, filename, status
+  const checkbox = formatTaskCheckbox(task.status);
+  const titleText = task.status === 'Done' || task.status === 'Dropped' ? task.title : task.title;
+  lines.push(formatEntityHeader(titleText, extractFilename(task.path), task.status, checkbox));
   lines.push('');
 
   // Metadata
-  if (task.due) lines.push(`${dim('Due:')} ${task.due}`);
-  if (task.scheduled) lines.push(`${dim('Scheduled:')} ${task.scheduled}`);
-  if (task.project) lines.push(`${dim('Project:')} ${cyan(task.project)}`);
-  if (task.area) lines.push(`${dim('Area:')} ${cyan(task.area)}`);
+  if (task.due) lines.push(`  ${dim('Due:')} ${formatLongDate(task.due)}`);
+  if (task.scheduled) lines.push(`  ${dim('Scheduled:')} ${formatLongDate(task.scheduled)}`);
+  if (task.project) lines.push(`  ${dim('Project:')} ${cyan(task.project)}`);
+  if (task.area) lines.push(`  ${dim('Area:')} ${cyan(task.area)}`);
 
-  // Body
+  // Body with markdown rendering
   if (task.body) {
     lines.push('');
-    lines.push(task.body);
+    lines.push(renderMarkdownBody(task.body));
   }
 
   return lines.join('\n');
 }
 
 /**
- * Format a single project for human output
+ * Format a single project for human output (show command)
  */
 function formatProject(project: Project): string {
   const lines: string[] = [];
 
-  // Title with status (status is optional for projects)
-  if (project.status) {
-    lines.push(bold(project.title) + '  ' + formatStatus(project.status));
-  } else {
-    lines.push(bold(project.title));
-  }
-  lines.push(dim(project.path));
+  // Boxed header with title, filename, status
+  lines.push(
+    formatEntityHeader(project.title, extractFilename(project.path), project.status ?? undefined)
+  );
   lines.push('');
 
   // Metadata
-  if (project.startDate) lines.push(`${dim('Start Date:')} ${project.startDate}`);
-  if (project.endDate) lines.push(`${dim('End Date:')} ${project.endDate}`);
-  if (project.area) lines.push(`${dim('Area:')} ${cyan(project.area)}`);
-  if (project.description) lines.push(`${dim('Description:')} ${project.description}`);
+  if (project.startDate) lines.push(`  ${dim('Start Date:')} ${formatLongDate(project.startDate)}`);
+  if (project.endDate) lines.push(`  ${dim('End Date:')} ${formatLongDate(project.endDate)}`);
+  if (project.area) lines.push(`  ${dim('Area:')} ${cyan(project.area)}`);
+  if (project.description) lines.push(`  ${dim('Description:')} ${project.description}`);
   if (project.blockedBy && project.blockedBy.length > 0) {
-    lines.push(`${dim('Blocked By:')} ${project.blockedBy.join(', ')}`);
+    lines.push(`  ${dim('Blocked By:')} ${project.blockedBy.join(', ')}`);
   }
 
-  // Body
+  // Body with markdown rendering
   if (project.body) {
     lines.push('');
-    lines.push(project.body);
+    lines.push(renderMarkdownBody(project.body));
   }
 
   return lines.join('\n');
 }
 
 /**
- * Format a single area for human output
+ * Format a single area for human output (show command)
  */
 function formatArea(area: Area): string {
   const lines: string[] = [];
 
-  // Title with status (status is optional for areas)
-  if (area.status) {
-    lines.push(bold(area.title) + '  ' + formatStatus(area.status));
-  } else {
-    lines.push(bold(area.title));
-  }
-  lines.push(dim(area.path));
+  // Boxed header with title, filename, status
+  lines.push(formatEntityHeader(area.title, extractFilename(area.path), area.status ?? undefined));
   lines.push('');
 
   // Metadata
-  if (area.areaType) lines.push(`${dim('Type:')} ${area.areaType}`);
-  if (area.description) lines.push(`${dim('Description:')} ${area.description}`);
+  if (area.areaType) lines.push(`  ${dim('Type:')} ${area.areaType}`);
+  if (area.description) lines.push(`  ${dim('Description:')} ${area.description}`);
 
-  // Body
+  // Body with markdown rendering
   if (area.body) {
     lines.push('');
-    lines.push(area.body);
+    lines.push(renderMarkdownBody(area.body));
   }
 
   return lines.join('\n');
@@ -134,11 +275,12 @@ function formatTaskList(tasks: Task[]): string {
   const lines: string[] = [];
 
   // Header with count
-  lines.push(bold(blue(`Tasks (${tasks.length})`)));
+  lines.push('');
+  lines.push(bold(`Tasks (${tasks.length})`));
   lines.push('');
 
   if (tasks.length === 0) {
-    lines.push(dim('No tasks match the specified criteria.'));
+    lines.push(dim('  No tasks match the specified criteria.'));
     return lines.join('\n');
   }
 
@@ -159,14 +301,32 @@ function formatTaskList(tasks: Task[]): string {
     const groupTasks = grouped.get(status);
     if (!groupTasks || groupTasks.length === 0) continue;
 
-    lines.push(`  ${formatStatus(status)}`);
+    // Status as section header
+    lines.push(`  ${bold(toKebabCase(status))}`);
+
     for (const task of groupTasks) {
-      let titleLine = `  ${bold(task.title)}`;
-      if (task.due) {
-        titleLine += `  ${dim('due:')} ${task.due}`;
+      const checkbox = formatTaskCheckbox(status);
+      const title = formatTaskTitle(task.title, status);
+
+      // Build context string (Area/Project or just Area)
+      let context = '';
+      if (task.area && task.project) {
+        context = `${task.area}/${task.project}`;
+      } else if (task.area) {
+        context = task.area;
+      } else if (task.project) {
+        context = task.project;
       }
-      lines.push(titleLine);
-      lines.push(`    ${dim(task.path)}`);
+
+      // Build the line
+      let taskLine = `  ${checkbox} ${title}`;
+      if (context) {
+        taskLine += `  ${dim(context)}`;
+      }
+      if (task.due) {
+        taskLine += `  ${dim('due')} ${formatShortDate(task.due)}`;
+      }
+      lines.push(taskLine);
     }
     lines.push('');
   }
@@ -181,11 +341,12 @@ function formatProjectList(projects: Project[]): string {
   const lines: string[] = [];
 
   // Header with count
-  lines.push(bold(blue(`Projects (${projects.length})`)));
+  lines.push('');
+  lines.push(bold(`Projects (${projects.length})`));
   lines.push('');
 
   if (projects.length === 0) {
-    lines.push(dim('No projects match the specified criteria.'));
+    lines.push(dim('  No projects match the specified criteria.'));
     return lines.join('\n');
   }
 
@@ -211,28 +372,28 @@ function formatProjectList(projects: Project[]): string {
     const groupProjects = grouped.get(status);
     if (!groupProjects || groupProjects.length === 0) continue;
 
-    lines.push(`  ${formatStatus(status)}`);
+    // Status as section header
+    lines.push(`  ${bold(toKebabCase(status))}`);
+
     for (const project of groupProjects) {
-      let titleLine = `  ${bold(project.title)}`;
+      let projectLine = `  ${bold(project.title)}`;
       if (project.area) {
-        titleLine += `  ${dim('area:')} ${project.area}`;
+        projectLine += `  ${dim(project.area)}`;
       }
-      lines.push(titleLine);
-      lines.push(`    ${dim(project.path)}`);
+      lines.push(projectLine);
     }
     lines.push('');
   }
 
   // Output projects without status at the end
   if (noStatus.length > 0) {
-    lines.push(`  ${dim('(no status)')}`);
+    lines.push(`  ${bold(dim('(no status)'))}`);
     for (const project of noStatus) {
-      let titleLine = `  ${bold(project.title)}`;
+      let projectLine = `  ${bold(project.title)}`;
       if (project.area) {
-        titleLine += `  ${dim('area:')} ${project.area}`;
+        projectLine += `  ${dim(project.area)}`;
       }
-      lines.push(titleLine);
-      lines.push(`    ${dim(project.path)}`);
+      lines.push(projectLine);
     }
     lines.push('');
   }
@@ -247,11 +408,12 @@ function formatAreaList(areas: Area[]): string {
   const lines: string[] = [];
 
   // Header with count
-  lines.push(bold(blue(`Areas (${areas.length})`)));
+  lines.push('');
+  lines.push(bold(`Areas (${areas.length})`));
   lines.push('');
 
   if (areas.length === 0) {
-    lines.push(dim('No areas match the specified criteria.'));
+    lines.push(dim('  No areas match the specified criteria.'));
     return lines.join('\n');
   }
 
@@ -277,28 +439,28 @@ function formatAreaList(areas: Area[]): string {
     const groupAreas = grouped.get(status);
     if (!groupAreas || groupAreas.length === 0) continue;
 
-    lines.push(`  ${formatStatus(status)}`);
+    // Status as section header
+    lines.push(`  ${bold(toKebabCase(status))}`);
+
     for (const area of groupAreas) {
-      let titleLine = `  ${bold(area.title)}`;
+      let areaLine = `  ${bold(area.title)}`;
       if (area.areaType) {
-        titleLine += `  ${dim('type:')} ${area.areaType}`;
+        areaLine += `  ${dim(area.areaType)}`;
       }
-      lines.push(titleLine);
-      lines.push(`    ${dim(area.path)}`);
+      lines.push(areaLine);
     }
     lines.push('');
   }
 
   // Output areas without status at the end
   if (noStatus.length > 0) {
-    lines.push(`  ${dim('(no status)')}`);
+    lines.push(`  ${bold(dim('(no status)'))}`);
     for (const area of noStatus) {
-      let titleLine = `  ${bold(area.title)}`;
+      let areaLine = `  ${bold(area.title)}`;
       if (area.areaType) {
-        titleLine += `  ${dim('type:')} ${area.areaType}`;
+        areaLine += `  ${dim(area.areaType)}`;
       }
-      lines.push(titleLine);
-      lines.push(`    ${dim(area.path)}`);
+      lines.push(areaLine);
     }
     lines.push('');
   }
@@ -313,17 +475,17 @@ function formatAreaList(areas: Area[]): string {
 /**
  * Format a task for context output (compact, for lists)
  */
-function formatContextTask(task: Task, indent: string = '  '): string {
-  const lines: string[] = [];
+function formatContextTask(task: Task, indent: string = '    '): string {
+  const checkbox = formatTaskCheckbox(task.status);
+  const title = formatTaskTitle(task.title, task.status);
 
-  let titleLine = `${indent}${bold(task.title)}  ${formatStatus(task.status)}`;
+  let taskLine = `${indent}${checkbox} ${title}`;
+  taskLine += `  ${formatStatus(task.status)}`;
   if (task.due) {
-    titleLine += `  ${dim('due:')} ${task.due}`;
+    taskLine += `  ${dim('due')} ${formatShortDate(task.due)}`;
   }
-  lines.push(titleLine);
-  lines.push(`${indent}  ${dim(task.path)}`);
 
-  return lines.join('\n');
+  return taskLine;
 }
 
 /**
@@ -332,13 +494,16 @@ function formatContextTask(task: Task, indent: string = '  '): string {
 function formatContextProject(project: Project, taskCount: number, indent: string = '  '): string {
   const lines: string[] = [];
 
+  // Project title line with status
   let titleLine = `${indent}${bold(project.title)}`;
   if (project.status) {
     titleLine += `  ${formatStatus(project.status)}`;
   }
-  titleLine += `  ${dim(`(${taskCount} tasks)`)}`;
   lines.push(titleLine);
-  lines.push(`${indent}  ${dim(project.path)}`);
+
+  // Second line: filename and task count
+  const taskCountStr = taskCount === 1 ? '1 task' : `${taskCount} tasks`;
+  lines.push(`${indent}${dim(extractFilename(project.path))}  ${dim(taskCountStr)}`);
 
   return lines.join('\n');
 }
@@ -354,7 +519,7 @@ function formatContextAreaCompact(area: Area, indent: string = '  '): string {
     titleLine += `  ${formatStatus(area.status)}`;
   }
   lines.push(titleLine);
-  lines.push(`${indent}  ${dim(area.path)}`);
+  lines.push(`${indent}${dim(extractFilename(area.path))}`);
 
   return lines.join('\n');
 }
@@ -366,26 +531,27 @@ function formatAreaContext(result: AreaContextResultOutput): string {
   const lines: string[] = [];
   const area = result.area;
 
-  // Primary entity: Area
-  if (area.status) {
-    lines.push(bold(area.title) + '  ' + formatStatus(area.status));
-  } else {
-    lines.push(bold(area.title));
-  }
-  lines.push(dim(area.path));
+  // Boxed header for the area
+  lines.push(formatEntityHeader(area.title, extractFilename(area.path), area.status ?? undefined));
   lines.push('');
 
-  if (area.areaType) lines.push(`${dim('Type:')} ${area.areaType}`);
-  if (area.description) lines.push(`${dim('Description:')} ${area.description}`);
+  // Metadata
+  if (area.areaType) lines.push(`  ${dim('Type:')} ${area.areaType}`);
+  if (area.description) lines.push(`  ${dim('Description:')} ${area.description}`);
 
+  // Body with markdown rendering
   if (area.body) {
     lines.push('');
-    lines.push(area.body);
+    lines.push(renderMarkdownBody(area.body));
   }
 
-  // Projects section
+  // Separator before projects
   lines.push('');
-  lines.push(bold(blue(`Projects (${result.projects.length})`)));
+  lines.push(formatSeparator());
+  lines.push('');
+
+  // Projects section
+  lines.push(bold(`Projects (${result.projects.length})`));
   lines.push('');
 
   if (result.projects.length === 0) {
@@ -398,30 +564,29 @@ function formatAreaContext(result: AreaContextResultOutput): string {
 
       // Tasks under this project (indented further)
       for (const task of projectTasks) {
-        lines.push(formatContextTask(task, '    '));
+        lines.push(formatContextTask(task));
       }
       if (projectTasks.length > 0) lines.push('');
     }
   }
 
-  // Direct tasks
+  // Direct tasks section
   if (result.directTasks.length > 0) {
-    lines.push(bold(blue(`Direct Tasks (${result.directTasks.length})`)));
+    lines.push(formatSeparator());
+    lines.push('');
+    lines.push(bold(`Direct Tasks (${result.directTasks.length})`));
     lines.push('');
 
     for (const task of result.directTasks) {
-      lines.push(formatContextTask(task));
+      lines.push(formatContextTask(task, '  '));
     }
     lines.push('');
   }
 
-  // Warnings
+  // Warnings using clack's log.warn
   if (result.warnings.length > 0) {
-    lines.push(yellow('Warnings:'));
-    for (const warning of result.warnings) {
-      lines.push(`  ${yellow('•')} ${warning}`);
-    }
-    lines.push('');
+    lines.push(''); // Extra space before warnings
+    formatWarnings(result.warnings);
   }
 
   return lines.join('\n').trimEnd();
@@ -434,54 +599,56 @@ function formatProjectContext(result: ProjectContextResultOutput): string {
   const lines: string[] = [];
   const project = result.project;
 
-  // Primary entity: Project
-  if (project.status) {
-    lines.push(bold(project.title) + '  ' + formatStatus(project.status));
-  } else {
-    lines.push(bold(project.title));
-  }
-  lines.push(dim(project.path));
+  // Boxed header for the project
+  lines.push(
+    formatEntityHeader(project.title, extractFilename(project.path), project.status ?? undefined)
+  );
   lines.push('');
 
-  if (project.startDate) lines.push(`${dim('Start Date:')} ${project.startDate}`);
-  if (project.endDate) lines.push(`${dim('End Date:')} ${project.endDate}`);
-  if (project.area) lines.push(`${dim('Area:')} ${cyan(project.area)}`);
-  if (project.description) lines.push(`${dim('Description:')} ${project.description}`);
+  // Metadata
+  if (project.startDate) lines.push(`  ${dim('Start Date:')} ${formatLongDate(project.startDate)}`);
+  if (project.endDate) lines.push(`  ${dim('End Date:')} ${formatLongDate(project.endDate)}`);
+  if (project.area) lines.push(`  ${dim('Area:')} ${cyan(project.area)}`);
+  if (project.description) lines.push(`  ${dim('Description:')} ${project.description}`);
 
+  // Body with markdown rendering
   if (project.body) {
     lines.push('');
-    lines.push(project.body);
+    lines.push(renderMarkdownBody(project.body));
   }
 
-  // Parent area
+  // Parent area section
   if (result.area) {
     lines.push('');
-    lines.push(bold(blue('Parent Area')));
+    lines.push(formatSeparator());
+    lines.push('');
+    lines.push(bold('Parent Area'));
     lines.push('');
     lines.push(formatContextAreaCompact(result.area));
   }
 
-  // Tasks section
+  // Separator before tasks
   lines.push('');
-  lines.push(bold(blue(`Tasks (${result.tasks.length})`)));
+  lines.push(formatSeparator());
+  lines.push('');
+
+  // Tasks section
+  lines.push(bold(`Tasks (${result.tasks.length})`));
   lines.push('');
 
   if (result.tasks.length === 0) {
     lines.push(dim('  No tasks in this project.'));
   } else {
     for (const task of result.tasks) {
-      lines.push(formatContextTask(task));
+      lines.push(formatContextTask(task, '  '));
     }
     lines.push('');
   }
 
-  // Warnings
+  // Warnings using clack's log.warn
   if (result.warnings.length > 0) {
-    lines.push(yellow('Warnings:'));
-    for (const warning of result.warnings) {
-      lines.push(`  ${yellow('•')} ${warning}`);
-    }
-    lines.push('');
+    lines.push(''); // Extra space before warnings
+    formatWarnings(result.warnings);
   }
 
   return lines.join('\n').trimEnd();
@@ -494,26 +661,30 @@ function formatTaskContext(result: TaskContextResultOutput): string {
   const lines: string[] = [];
   const task = result.task;
 
-  // Primary entity: Task
-  lines.push(bold(task.title) + '  ' + formatStatus(task.status));
-  lines.push(dim(task.path));
+  // Boxed header with checkbox
+  const checkbox = formatTaskCheckbox(task.status);
+  lines.push(formatEntityHeader(task.title, extractFilename(task.path), task.status, checkbox));
   lines.push('');
 
-  if (task.due) lines.push(`${dim('Due:')} ${task.due}`);
-  if (task.scheduled) lines.push(`${dim('Scheduled:')} ${task.scheduled}`);
-  if (task.deferUntil) lines.push(`${dim('Defer Until:')} ${task.deferUntil}`);
-  if (task.project) lines.push(`${dim('Project:')} ${cyan(task.project)}`);
-  if (task.area) lines.push(`${dim('Area:')} ${cyan(task.area)}`);
+  // Metadata
+  if (task.due) lines.push(`  ${dim('Due:')} ${formatLongDate(task.due)}`);
+  if (task.scheduled) lines.push(`  ${dim('Scheduled:')} ${formatLongDate(task.scheduled)}`);
+  if (task.deferUntil) lines.push(`  ${dim('Defer Until:')} ${formatLongDate(task.deferUntil)}`);
+  if (task.project) lines.push(`  ${dim('Project:')} ${cyan(task.project)}`);
+  if (task.area) lines.push(`  ${dim('Area:')} ${cyan(task.area)}`);
 
+  // Body with markdown rendering
   if (task.body) {
     lines.push('');
-    lines.push(task.body);
+    lines.push(renderMarkdownBody(task.body));
   }
 
-  // Parent project
+  // Parent project section
   if (result.project) {
     lines.push('');
-    lines.push(bold(blue('Parent Project')));
+    lines.push(formatSeparator());
+    lines.push('');
+    lines.push(bold('Parent Project'));
     lines.push('');
 
     const project = result.project;
@@ -522,24 +693,23 @@ function formatTaskContext(result: TaskContextResultOutput): string {
       titleLine += `  ${formatStatus(project.status)}`;
     }
     lines.push(titleLine);
-    lines.push(`    ${dim(project.path)}`);
+    lines.push(`  ${dim(extractFilename(project.path))}`);
   }
 
-  // Parent area
+  // Parent area section
   if (result.area) {
     lines.push('');
-    lines.push(bold(blue('Parent Area')));
+    lines.push(formatSeparator());
+    lines.push('');
+    lines.push(bold('Parent Area'));
     lines.push('');
     lines.push(formatContextAreaCompact(result.area));
   }
 
-  // Warnings
+  // Warnings using clack's log.warn
   if (result.warnings.length > 0) {
-    lines.push('');
-    lines.push(yellow('Warnings:'));
-    for (const warning of result.warnings) {
-      lines.push(`  ${yellow('•')} ${warning}`);
-    }
+    lines.push(''); // Extra space before warnings
+    formatWarnings(result.warnings);
   }
 
   return lines.join('\n').trimEnd();
@@ -551,7 +721,8 @@ function formatTaskContext(result: TaskContextResultOutput): string {
 function formatVaultOverview(result: VaultOverviewResult): string {
   const lines: string[] = [];
 
-  lines.push(bold(blue('Vault Overview')));
+  lines.push('');
+  lines.push(bold('Vault Overview'));
   lines.push('');
 
   // Areas section
@@ -567,6 +738,10 @@ function formatVaultOverview(result: VaultOverviewResult): string {
       lines.push(`    ${dim('Tasks:')} ${areaSummary.activeTaskCount} active`);
     }
   }
+
+  // Separator
+  lines.push('');
+  lines.push(formatSeparator());
   lines.push('');
 
   // Summary section
@@ -579,6 +754,10 @@ function formatVaultOverview(result: VaultOverviewResult): string {
     lines.push(`  ${dim('Overdue:')} ${result.summary.overdueCount}`);
   }
   lines.push(`  ${dim('In Progress:')} ${result.summary.inProgressCount}`);
+
+  // Separator
+  lines.push('');
+  lines.push(formatSeparator());
   lines.push('');
 
   // This Week section
@@ -587,12 +766,17 @@ function formatVaultOverview(result: VaultOverviewResult): string {
 
   lines.push(`  ${dim('Due:')} ${result.thisWeek.dueTasks.length} tasks`);
   for (const task of result.thisWeek.dueTasks) {
-    lines.push(`    • ${task.title} ${dim(`(${task.due})`)}`);
+    const checkbox = formatTaskCheckbox(task.status);
+    const dueDate = task.due ? formatShortDate(task.due) : '';
+    lines.push(`    ${checkbox} ${task.title}  ${dim(dueDate)}`);
   }
 
+  lines.push('');
   lines.push(`  ${dim('Scheduled:')} ${result.thisWeek.scheduledTasks.length} tasks`);
   for (const task of result.thisWeek.scheduledTasks) {
-    lines.push(`    • ${task.title} ${dim(`(${task.scheduled})`)}`);
+    const checkbox = formatTaskCheckbox(task.status);
+    const scheduledDate = task.scheduled ? formatShortDate(task.scheduled) : '';
+    lines.push(`    ${checkbox} ${task.title}  ${dim(scheduledDate)}`);
   }
 
   return lines.join('\n').trimEnd();

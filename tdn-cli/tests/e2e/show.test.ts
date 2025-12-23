@@ -25,7 +25,7 @@ describe('taskdn show', () => {
       expect(exitCode).toBe(0);
       expect(stdout).toContain('Full Metadata Task');
       expect(stdout).toContain('in-progress');
-      expect(stdout).toContain('2025-01-20'); // due
+      expect(stdout).toContain('20 January 2025'); // due (human-readable format)
       expect(stdout).toContain('Test Project');
       expect(stdout).toContain('Work');
     });
@@ -190,8 +190,8 @@ describe('taskdn show', () => {
       expect(exitCode).toBe(0);
       expect(stdout).toContain('Full Metadata Project');
       expect(stdout).toContain('in-progress');
-      expect(stdout).toContain('2025-01-10'); // start-date
-      expect(stdout).toContain('2025-03-01'); // end-date
+      expect(stdout).toContain('10 January 2025'); // start-date (human-readable format)
+      expect(stdout).toContain('1 March 2025'); // end-date (human-readable format)
       expect(stdout).toContain('Work'); // area
     });
   });

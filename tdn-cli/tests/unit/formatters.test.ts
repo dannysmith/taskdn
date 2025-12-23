@@ -58,7 +58,8 @@ describe('humanFormatter', () => {
     const task = createMockTask({ due: '2025-01-20' });
     const result = humanFormatter.format(createTaskResult(task));
     expect(stripAnsi(result)).toContain('Due:');
-    expect(stripAnsi(result)).toContain('2025-01-20');
+    // Human formatter uses long date format (20 January 2025)
+    expect(stripAnsi(result)).toContain('20 January 2025');
   });
 
   test('includes project when present', () => {
