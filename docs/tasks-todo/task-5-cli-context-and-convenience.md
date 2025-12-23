@@ -55,95 +55,42 @@ interface TasksInAreaResult {
 
 ## Current State
 
-- **context.ts** - Stub exists with command structure and no-args behavior
+- **context.ts** - Implements `context area` command; stubs for project/task/vault-overview
 - **list.ts** - Contains date utilities to be extracted in Phase 5.0
-- **output/types.ts** - Result types exist for show/list; context types need adding
+- **output/types.ts** - All context result types implemented
+- **output/ai.ts, human.ts, json.ts** - Formatters for all context types implemented
 
 ---
 
-## Phase 0: Formatter Infrastructure
+## Phase 0: Formatter Infrastructure ✅ COMPLETE
 
 Before implementing context commands, extend the formatter infrastructure.
 
-### 0.1 Add Context Result Types
+### 0.1 Add Context Result Types ✅
 
-Add to `src/output/types.ts`:
+Added to `src/output/types.ts`:
+- `AreaContextResultOutput`
+- `ProjectContextResultOutput`
+- `TaskContextResultOutput`
+- `VaultOverviewResult` with `AreaSummary`, `VaultSummary`, `ThisWeekSummary`
 
-```typescript
-// Area context result (from context area command)
-export interface AreaContextResultOutput {
-  type: 'area-context';
-  area: Area;
-  projects: Project[];       // Projects in this area
-  projectTasks: Map<string, Task[]>;  // Tasks grouped by project path
-  directTasks: Task[];       // Tasks directly in area (no project)
-  warnings: string[];
-}
+### 0.2 Implement Formatters ✅
 
-// Project context result (from context project command)
-export interface ProjectContextResultOutput {
-  type: 'project-context';
-  project: Project;
-  area: Area | null;         // Parent area if any
-  tasks: Task[];             // Tasks in this project
-  warnings: string[];
-}
-
-// Task context result (from context task command)
-export interface TaskContextResultOutput {
-  type: 'task-context';
-  task: Task;
-  project: Project | null;   // Parent project if any
-  area: Area | null;         // Parent area (direct or via project)
-  warnings: string[];
-}
-
-// Vault overview result (from context --ai with no args)
-export interface VaultOverviewResult {
-  type: 'vault-overview';
-  areas: AreaSummary[];
-  summary: VaultSummary;
-  thisWeek: ThisWeekSummary;
-}
-
-interface AreaSummary {
-  area: Area;
-  projectCount: number;
-  activeTaskCount: number;
-}
-
-interface VaultSummary {
-  totalActiveTasks: number;
-  overdueCount: number;
-  inProgressCount: number;
-}
-
-interface ThisWeekSummary {
-  dueTasks: Task[];
-  scheduledTasks: Task[];
-}
-```
-
-Update `FormattableResult` union to include these types.
-
-### 0.2 Implement Formatters
-
-For each new result type, implement formatting in:
-
-- `src/output/ai.ts` - Structured markdown (per cli-requirements.md)
+Implemented formatting for all context types in:
+- `src/output/ai.ts` - Structured markdown
 - `src/output/human.ts` - Pretty colored output
 - `src/output/json.ts` - JSON with summary
 
 ### Phase 0 Verification
 
-- [ ] New result types added to `types.ts`
-- [ ] `FormattableResult` union updated
-- [ ] Formatters compile without errors
-- [ ] Existing tests still pass
+- [x] New result types added to `types.ts`
+- [x] `FormattableResult` union updated
+- [x] Formatters compile without errors
+- [x] Existing tests still pass
 
 ---
 
-## Phase 1: Context Area Command
+## Phase 1: Context Area Command ✅ COMPLETE
 
 `context area "Work"` returns the area plus its projects and tasks.
 
@@ -258,16 +205,20 @@ describe('context area', () => {
 });
 ```
 
+### 1.3 Tests ✅
+
+E2E tests added in `tests/e2e/context-area.test.ts` (22 tests).
+
 ### Phase 1 Verification
 
-- [ ] `context area "Work"` returns area details
-- [ ] Includes child projects with task counts
-- [ ] Includes tasks organized by project
-- [ ] Includes direct tasks (tasks with area but no project)
-- [ ] Body included for primary entity only (area)
-- [ ] NOT_FOUND error for missing area
-- [ ] Works in human, AI, and JSON modes
-- [ ] E2E tests pass
+- [x] `context area "Work"` returns area details
+- [x] Includes child projects with task counts
+- [x] Includes tasks organized by project
+- [x] Includes direct tasks (tasks with area but no project)
+- [x] Body included for primary entity only (area)
+- [x] NOT_FOUND error for missing area
+- [x] Works in human, AI, and JSON modes
+- [x] E2E tests pass
 
 ---
 
@@ -866,27 +817,30 @@ describe('next command', () => {
 
 ## Fixture Requirements
 
-Existing fixtures in `tests/fixtures/vault/` need enhancement for relationship testing:
+Existing fixtures in `tests/fixtures/vault/` have been enhanced for relationship testing.
 
-### Required Relationships
+### Current Fixtures with Relationships
 
 ```
 tests/fixtures/vault/
 ├── tasks/
-│   ├── in-project-1.md     # project: [[Test Project]]
-│   ├── in-project-2.md     # project: [[Test Project]]
-│   ├── in-area-direct.md   # area: [[Work]], no project
-│   ├── orphan.md           # No project, no area
-│   ├── overdue.md          # due: past date
-│   ├── due-today.md        # due: today
-│   ├── due-this-week.md    # due: within week
-│   └── inbox-task.md       # status: inbox
+│   ├── full-metadata.md      # project: [[Test Project]], area: [[Work]] ✅
+│   ├── in-test-project.md    # project: [[Test Project]] ✅ (added Phase 1)
+│   ├── in-work-direct.md     # area: [[Work]], no project ✅ (added Phase 1)
+│   ├── status-inbox.md       # status: inbox ✅
+│   ├── due-past.md           # due: past date ✅
+│   ├── due-this-week.md      # due: within week ✅
+│   └── ...other status/date fixtures
 ├── projects/
-│   ├── test-project.md     # area: [[Work]]
-│   └── no-area-project.md  # No area
+│   ├── test-project.md       # area: [[Work]] ✅
+│   └── ...other project fixtures
 └── areas/
-    └── work.md
+    └── work.md               # ✅
 ```
+
+### Still Needed (for later phases)
+
+- `no-area-project.md` - Project without area (for Phase 2 edge case)
 
 ### Mock Date Testing
 
@@ -898,11 +852,11 @@ For date-dependent tests (today, overdue, this week), use `TASKDN_MOCK_DATE` env
 
 ### Context Commands
 
-- [ ] `context area` shows area + projects + tasks
+- [x] `context area` shows area + projects + tasks
 - [ ] `context project` shows project + tasks + parent area
 - [ ] `context task` shows task + parent project + area
 - [ ] `context --ai` (no args) shows vault overview
-- [ ] `context` (human, no args) shows helpful error
+- [x] `context` (human, no args) shows helpful error
 - [ ] `--with-bodies` includes all bodies
 
 ### Convenience Commands
@@ -913,12 +867,12 @@ For date-dependent tests (today, overdue, this week), use `TASKDN_MOCK_DATE` env
 
 ### Cross-Cutting
 
-- [ ] All commands work in human, AI, and JSON modes
+- [x] All commands work in human, AI, and JSON modes (for implemented commands)
 - [ ] Date utilities extracted to `src/lib/date.ts`
-- [ ] Error handling follows existing patterns (NOT_FOUND, etc.)
+- [x] Error handling follows existing patterns (NOT_FOUND, etc.)
 - [ ] `cli-progress.md` updated
-- [ ] All E2E tests pass
-- [ ] `bun run check` passes
+- [x] All E2E tests pass
+- [x] `bun run check` passes
 
 ---
 
