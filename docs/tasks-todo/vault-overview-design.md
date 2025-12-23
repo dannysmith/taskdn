@@ -43,11 +43,24 @@ Tree-style display showing organizational hierarchy:
 
 **Status Indicators (suggested):**
 
+_For projects:_
 - `🔵` in-progress
 - `🟢` ready
 - `🟡` planning
-- `⏸️` on-hold
-- `📋` (for direct task counts)
+- `🚫` blocked
+- `⏸️` paused
+- `📋` (for direct task counts under areas)
+
+_For tasks (in count shorthand):_
+- `▶️` in-progress
+- `🟢` ready
+- `📥` inbox
+- `🚫` blocked
+
+**Note on "active":**
+- **Active tasks:** Excludes `done`, `dropped`, `icebox` (icebox = intentionally deferred indefinitely, not actionable)
+- **Active projects:** Excludes `done`
+- **Active areas:** `status: active` or no status field (excludes `archived`)
 
 ### 3. Timeline Section
 
@@ -68,7 +81,7 @@ Time-sensitive items surfaced for awareness (not prescriptive about what needs a
 
 **Actionable Today:**
 
-- Tasks with `deferred-until` equal to today (becoming actionable)
+- Tasks with `defer-until` equal to today (becoming actionable)
 
 **Blocked Tasks:**
 
@@ -97,13 +110,13 @@ This section is critical because in-progress tasks are the "live" work most like
 Body content excerpts for:
 
 - All active areas (excludes archived)
-- All planning/ready/in-progress projects (excludes on-hold, completed, dropped)
+- Projects with status: `planning`, `ready`, `in-progress`, or `blocked` (excludes `paused`, `done`)
 
 **Truncation rule:** First 20 lines OR first 200 words, whichever is shorter. Simple and predictable.
 
 Purpose: Provide "what is this?" context without requiring follow-up reads.
 
-Note: On-hold projects appear in the structure tree but are excluded from excerpts to reduce noise.
+Note: Paused projects appear in the structure tree but are excluded from excerpts to reduce noise.
 
 ### 5.5 Recently Modified Tasks
 
@@ -138,7 +151,7 @@ This approach:
 # Overview
 
 **Stats:** 3 areas · 8 active projects · 34 active tasks · ⚠️ 2 overdue · 📅 3 due today · ▶️ 5 in-progress
-_Active = excludes completed, dropped, archived_
+_Active tasks exclude: done, dropped, icebox. Active projects exclude: done. Active areas exclude: archived._
 
 ---
 
@@ -147,36 +160,36 @@ _Active = excludes completed, dropped, archived_
 ### 📁 Work
 
 Tasks: 18 total (4 direct, 14 via projects)
-├── 🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 3🟢 2🟡 1⏸️)
+├── 🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 4🟢 1📥 1🚫)
 │ ├── ▶️ Fix authentication bug
 │ └── ▶️ Document API v2 endpoints
 ├── 🟢 Client Onboarding [ready] — 4 tasks (0▶️ 4🟢)
-├── 🟡 Q2 Roadmap [planning] — 2 tasks
-├── ⏸️ Legacy Migration [on-hold] — 3 tasks
-└── 📋 Direct: 4 tasks (1▶️ 2🟢 1🟡)
-└── ▶️ Review team capacity
+├── 🟡 Q2 Roadmap [planning] — 2 tasks (2📥)
+├── ⏸️ Legacy Migration [paused] — 3 tasks (1🟢 2📥)
+└── 📋 Direct: 4 tasks (1▶️ 2🟢 1📥)
+    └── ▶️ Review team capacity
 
 ### 📁 Personal
 
 Tasks: 12 total (3 direct, 9 via projects)
-├── 🔵 Home Renovation [in-progress] — 6 tasks (1▶️ 3🟢 2🟡)
+├── 🔵 Home Renovation [in-progress] — 6 tasks (1▶️ 3🟢 2📥)
 │ └── ▶️ Get contractor quotes
-├── 🟢 Tax Prep 2025 [ready] — 3 tasks
+├── 🟢 Tax Prep 2025 [ready] — 3 tasks (3🟢)
 └── 📋 Direct: 3 tasks (1▶️ 2🟢)
-└── ▶️ Schedule dentist appointment
+    └── ▶️ Schedule dentist appointment
 
 ### 📁 Health
 
 Tasks: 4 total (4 direct)
-└── 📋 Direct: 4 tasks (0▶️ 3🟢 1🟡)
+└── 📋 Direct: 4 tasks (0▶️ 3🟢 1📥)
 
 ### Projects with no Area
 
-└── 🟡 Side Project Alpha [planning] — 2 tasks
+└── 🟡 Side Project Alpha [planning] — 2 tasks (2📥)
 
 ### Tasks with no Project or Area
 
-Tasks: 2 (1▶️ 1🟢)
+Tasks: 2 total (1▶️ 1🟢)
 ├── ▶️ Random idea to explore
 └── 🟢 Update personal website
 
@@ -201,7 +214,7 @@ Tasks: 2 (1▶️ 1🟢)
 
 ### Newly Actionable Today (2)
 
-_Tasks with deferred-until: 2025-01-15_
+_Tasks with defer-until: 2025-01-15_
 
 - **Follow up with client** — Client Onboarding → Work
 - **Check test results** — Health (direct)
@@ -286,7 +299,7 @@ Overdue for 6-month checkup. Need to call Dr. Smith's office.
 
 ## Context Excerpts from Active Areas and Projects
 
-_Excludes on-hold, completed, dropped, archived_
+_Areas: excludes archived. Projects: excludes paused, done._
 
 ### Work (Area)
 
@@ -409,17 +422,19 @@ _Excludes on-hold, completed, dropped, archived_
 
 - Tree structure is more compact than nested markdown headers
 - Status emojis replace verbose status labels
-- Task counts use shorthand (2▶️ 3🟢) instead of prose
+- Task counts use shorthand (2▶️ 3🟢  1📥 1🚫) instead of prose
 - Body excerpts are truncated to first meaningful section
 - Reference table only includes entities actually mentioned
 
 ### What's NOT Included (by design)
 
-- **Completed/archived/dropped items**: Not relevant to current work context
+- **Done/dropped/icebox tasks**: Not relevant to current actionable work
+- **Done projects**: Completed, not relevant
+- **Archived areas**: Hidden by user preference
 - **Full task metadata**: Only shown for in-progress tasks
 - **Project metadata beyond status**: Clutters the tree view
 - **Area metadata**: Names and task counts are sufficient
-- **On-hold project excerpts**: Visible in tree but excluded from excerpts (reduce noise)
+- **Paused project excerpts**: Visible in tree but excluded from excerpts (reduce noise)
 
 ---
 
@@ -427,7 +442,7 @@ _Excludes on-hold, completed, dropped, archived_
 
 - **Scheduled horizon**: Fixed at 7 days. Not configurable.
 
-- **On-hold projects**: Included in structure tree, excluded from context excerpts (reduce noise while maintaining visibility).
+- **Paused projects**: Included in structure tree, excluded from context excerpts (reduce noise while maintaining visibility).
 
 - **Blocked tasks**: Yes, surfaced prominently in Timeline section as potential impediments.
 
