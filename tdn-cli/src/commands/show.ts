@@ -1,6 +1,5 @@
 import { resolve } from 'path';
 import { Command } from '@commander-js/extra-typings';
-import { red } from 'ansis';
 import { parseTaskFile, parseProjectFile, parseAreaFile } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type {
@@ -10,6 +9,8 @@ import type {
   AreaResult,
   FormattableResult,
 } from '@/output/index.ts';
+import { createError, type CliError } from '@/errors/types.ts';
+import { formatError } from '@/errors/format.ts';
 
 /**
  * Detect entity type from file path.
@@ -44,9 +45,9 @@ export const showCommand = new Command('show')
 
     // Resolve to absolute path
     const absolutePath = resolve(target);
+    const entityType = detectEntityType(absolutePath);
 
     try {
-      const entityType = detectEntityType(absolutePath);
       let result: FormattableResult;
 
       if (entityType === 'project') {
@@ -73,22 +74,28 @@ export const showCommand = new Command('show')
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
 
-      if (mode === 'json') {
-        console.log(
-          JSON.stringify(
-            {
-              error: true,
-              message,
-              path: absolutePath,
-            },
-            null,
-            2
-          )
-        );
-      } else if (mode === 'ai') {
-        console.log(`## Error\n\n- **message:** ${message}\n- **path:** ${absolutePath}`);
+      // Detect error type from the Rust error message
+      let cliError: CliError;
+      if (message.includes('File not found')) {
+        cliError = createError.notFound(entityType, absolutePath);
+      } else if (
+        message.includes('Failed to parse frontmatter') ||
+        message.includes('No frontmatter found')
+      ) {
+        // Extract details from the parse error message
+        const details = message.replace(/^Failed to parse frontmatter:\s*/, '');
+        cliError = createError.parseError(absolutePath, undefined, details);
       } else {
-        console.error(red(`Error: ${message}`));
+        // Generic parse error for other cases
+        cliError = createError.parseError(absolutePath, undefined, message);
+      }
+
+      // Format and output the error
+      const output = formatError(cliError, mode);
+      if (mode === 'human') {
+        console.error(output);
+      } else {
+        console.log(output);
       }
 
       process.exit(1);

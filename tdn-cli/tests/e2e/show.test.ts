@@ -98,29 +98,35 @@ describe('taskdn show', () => {
     });
   });
 
-  describe('with nonexistent path', () => {
+  // ========================================
+  // ERROR HANDLING TESTS
+  // ========================================
+
+  describe('NOT_FOUND error', () => {
     test('exits with code 1', async () => {
       const { exitCode } = await runCli(['show', '/nonexistent/path.md']);
       expect(exitCode).toBe(1);
     });
 
-    test('shows error message in human mode', async () => {
+    test('shows error with code in human mode', async () => {
       const { stderr } = await runCli(['show', '/nonexistent/path.md']);
+      expect(stderr).toContain('NOT_FOUND');
       expect(stderr).toContain('Error');
     });
 
-    test('shows error in AI mode', async () => {
+    test('shows structured error in AI mode', async () => {
       const { stdout, exitCode } = await runCli([
         'show',
         '/nonexistent/path.md',
         '--ai',
       ]);
       expect(exitCode).toBe(1);
-      expect(stdout).toContain('## Error');
-      expect(stdout).toContain('**message:**');
+      expect(stdout).toContain('## Error: NOT_FOUND');
+      expect(stdout).toContain('- **message:**');
+      expect(stdout).toContain('- **path:**');
     });
 
-    test('shows error in JSON mode', async () => {
+    test('shows error with code in JSON mode', async () => {
       const { stdout, exitCode } = await runCli([
         'show',
         '/nonexistent/path.md',
@@ -129,7 +135,35 @@ describe('taskdn show', () => {
       expect(exitCode).toBe(1);
       const output = JSON.parse(stdout);
       expect(output.error).toBe(true);
+      expect(output.code).toBe('NOT_FOUND');
       expect(output.message).toBeDefined();
+      expect(output.path).toBeDefined();
+    });
+  });
+
+  describe('PARSE_ERROR error', () => {
+    const malformedPath = fixturePath('vault/tasks/malformed.md');
+
+    test('exits with code 1 for malformed YAML', async () => {
+      const { exitCode } = await runCli(['show', malformedPath]);
+      expect(exitCode).toBe(1);
+    });
+
+    test('shows PARSE_ERROR in AI mode', async () => {
+      const { stdout, exitCode } = await runCli(['show', malformedPath, '--ai']);
+      expect(exitCode).toBe(1);
+      expect(stdout).toContain('## Error: PARSE_ERROR');
+      expect(stdout).toContain('- **message:**');
+      expect(stdout).toContain('- **path:**');
+    });
+
+    test('shows PARSE_ERROR in JSON mode', async () => {
+      const { stdout, exitCode } = await runCli(['show', malformedPath, '--json']);
+      expect(exitCode).toBe(1);
+      const output = JSON.parse(stdout);
+      expect(output.error).toBe(true);
+      expect(output.code).toBe('PARSE_ERROR');
+      expect(output.path).toBeDefined();
     });
   });
 

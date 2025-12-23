@@ -223,7 +223,7 @@ describe('fuzzy matching', () => {
 - [x] `parseAreaFile()` exported from Rust bindings
 - [x] `show <project-path>` works for all output modes
 - [x] `show <area-path>` works for all output modes
-- [ ] Error codes appear in AI/JSON output
+- [x] Error codes appear in AI/JSON output
 - [ ] Fuzzy matching works in human mode
 - [x] All E2E tests pass
 - [x] cli-progress.md updated

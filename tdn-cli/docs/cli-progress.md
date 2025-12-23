@@ -98,12 +98,12 @@ Checklist tracking implementation of all CLI commands and features.
 
 ## Error Codes
 
-- [ ] `NOT_FOUND` - File/entity doesn't exist
+- [x] `NOT_FOUND` - File/entity doesn't exist (show command)
 - [ ] `AMBIGUOUS` - Multiple matches
 - [ ] `INVALID_STATUS` - Bad status value
 - [ ] `INVALID_DATE` - Unparseable date
 - [ ] `INVALID_PATH` - Path outside directories
-- [ ] `PARSE_ERROR` - YAML malformed
+- [x] `PARSE_ERROR` - YAML malformed (show command)
 - [ ] `MISSING_FIELD` - Required field absent
 - [ ] `REFERENCE_ERROR` - Reference doesn't exist
 - [ ] `PERMISSION_ERROR` - Can't read/write
