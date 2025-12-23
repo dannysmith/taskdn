@@ -127,3 +127,188 @@ describe('taskdn list', () => {
     });
   });
 });
+
+describe('taskdn list projects', () => {
+  describe('default behavior (active projects)', () => {
+    test('returns exit code 0', async () => {
+      const { exitCode } = await runCli(['list', 'projects']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('lists active projects in human mode', async () => {
+      const { stdout } = await runCli(['list', 'projects']);
+      expect(stdout).toContain('Minimal Project');
+      expect(stdout).toContain('Projects');
+    });
+
+    test('includes projects without status (treated as active)', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--json']);
+      const output = JSON.parse(stdout);
+      // Project Without Status should be included
+      expect(output.projects.some((p: { title: string }) => p.title === 'Project Without Status')).toBe(
+        true
+      );
+    });
+
+    test('excludes done projects', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.projects.every((p: { status?: string }) => p.status !== 'done')).toBe(true);
+    });
+  });
+
+  describe('human mode output', () => {
+    test('shows project count in header', async () => {
+      const { stdout } = await runCli(['list', 'projects']);
+      expect(stdout).toMatch(/Projects \(\d+\)/);
+    });
+
+    test('shows project titles', async () => {
+      const { stdout } = await runCli(['list', 'projects']);
+      expect(stdout).toContain('Minimal Project');
+    });
+  });
+
+  describe('AI mode (--ai)', () => {
+    test('outputs structured markdown', async () => {
+      const { stdout, exitCode } = await runCli(['list', 'projects', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Projects');
+    });
+
+    test('includes path field for each project', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--ai']);
+      expect(stdout).toContain('- **path:**');
+    });
+
+    test('uses project title as heading', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--ai']);
+      expect(stdout).toContain('### Minimal Project');
+    });
+  });
+
+  describe('JSON mode (--json)', () => {
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['list', 'projects', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('includes summary field', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toBeDefined();
+    });
+
+    test('includes projects array', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.projects)).toBe(true);
+    });
+
+    test('each project has required fields', async () => {
+      const { stdout } = await runCli(['list', 'projects', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.projects.length).toBeGreaterThan(0);
+      for (const project of output.projects) {
+        expect(project.path).toBeDefined();
+        expect(project.title).toBeDefined();
+      }
+    });
+  });
+});
+
+describe('taskdn list areas', () => {
+  describe('default behavior (active areas)', () => {
+    test('returns exit code 0', async () => {
+      const { exitCode } = await runCli(['list', 'areas']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('lists active areas in human mode', async () => {
+      const { stdout } = await runCli(['list', 'areas']);
+      expect(stdout).toContain('Minimal Area');
+      expect(stdout).toContain('Areas');
+    });
+
+    test('includes areas without status (treated as active)', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--json']);
+      const output = JSON.parse(stdout);
+      // Minimal Area has no status and should be included
+      expect(output.areas.some((a: { title: string }) => a.title === 'Minimal Area')).toBe(true);
+    });
+
+    test('includes areas with status=active', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--json']);
+      const output = JSON.parse(stdout);
+      // Full Metadata Area has status: active and should be included
+      expect(output.areas.some((a: { title: string }) => a.title === 'Full Metadata Area')).toBe(true);
+    });
+
+    test('excludes archived areas', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.areas.every((a: { status?: string }) => a.status !== 'archived')).toBe(true);
+    });
+  });
+
+  describe('human mode output', () => {
+    test('shows area count in header', async () => {
+      const { stdout } = await runCli(['list', 'areas']);
+      expect(stdout).toMatch(/Areas \(\d+\)/);
+    });
+
+    test('shows area titles', async () => {
+      const { stdout } = await runCli(['list', 'areas']);
+      expect(stdout).toContain('Minimal Area');
+    });
+  });
+
+  describe('AI mode (--ai)', () => {
+    test('outputs structured markdown', async () => {
+      const { stdout, exitCode } = await runCli(['list', 'areas', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Areas');
+    });
+
+    test('includes path field for each area', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--ai']);
+      expect(stdout).toContain('- **path:**');
+    });
+
+    test('uses area title as heading', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--ai']);
+      expect(stdout).toContain('### Minimal Area');
+    });
+  });
+
+  describe('JSON mode (--json)', () => {
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['list', 'areas', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('includes summary field', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toBeDefined();
+    });
+
+    test('includes areas array', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.areas)).toBe(true);
+    });
+
+    test('each area has required fields', async () => {
+      const { stdout } = await runCli(['list', 'areas', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.areas.length).toBeGreaterThan(0);
+      for (const area of output.areas) {
+        expect(area.path).toBeDefined();
+        expect(area.title).toBeDefined();
+      }
+    });
+  });
+});
