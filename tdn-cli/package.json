@@ -8,7 +8,7 @@
     "taskdn": "src/index.ts"
   },
   "scripts": {
-    "start": "bun run src/index.ts",
+    "taskdn": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "napi build --release --platform --package tdn-core -o bindings",
     "build:dev": "napi build --platform --package tdn-core -o bindings",
