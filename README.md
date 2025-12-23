@@ -1,5 +1,20 @@
 # Taskdn
 
+> [!WARNING]
+> This project is new and very much under development. It should not be used at this time.
+
+## Status
+
+| Component          | Status              |
+| ------------------ | ------------------- |
+| **Spec**           | ✅ Unstable          |
+| **CLI**            | ⌛ In Progress       |
+| **Desktop App**    | ❌ Not Started       |
+| **Obsidian Plugin**| ❌ Not Started       |
+| **Extras**         | ❌ Not Started       |
+
+---
+
 A task-management system for **individuals** that feels as slick as [Things](https://culturedcode.com/things/) while storing data as markdown files (with YAML frontmatter) on disk. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
 
 **The core idea:** provide the right user interface in the right context.
