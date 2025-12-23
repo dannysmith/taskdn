@@ -344,6 +344,16 @@ export const listCommand = new Command('list')
       }
     }
 
+    // Apply --query filter if provided (search in title and body)
+    if (options.query) {
+      const queryLower = options.query.toLowerCase();
+      tasks = tasks.filter((task) => {
+        const titleMatch = task.title.toLowerCase().includes(queryLower);
+        const bodyMatch = task.body.toLowerCase().includes(queryLower);
+        return titleMatch || bodyMatch;
+      });
+    }
+
     // Apply completed date filters
     if (options.completedAfter) {
       tasks = tasks.filter((task) => {

@@ -739,7 +739,7 @@ Already available:
 - [x] `--due`, `--overdue`, `--scheduled` work
 - [x] `--sort` and `--limit` work
 - [x] All inclusion flags work
-- [ ] `--query` text search works
+- [x] `--query` text search works
 - [ ] Fuzzy entity lookup functions exported from Rust
 - [ ] TypeScript lookup wrapper categorizes results correctly
 - [x] All output modes produce correct format (human, AI, JSON)
@@ -861,3 +861,17 @@ Already available:
   - `archive/archived-task.md` (for archive testing)
 - Archived tasks are included regardless of their status (they're explicitly requested)
 - 14 new E2E tests covering all inclusion flags and completed date filters
+
+### Phase 9: Text Search - COMPLETE
+
+- Implemented `--query` filter for full-text search in title and body
+- Case-insensitive substring matching
+- Works with all output modes (human, AI, JSON)
+- Combines with other filters using AND logic
+- 8 new E2E tests covering:
+  - Search in title
+  - Search in body (including markdown content)
+  - Case-insensitive matching
+  - Empty results when no matches
+  - All output modes
+  - Combined with status filter (AND logic)

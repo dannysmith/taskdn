@@ -38,7 +38,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `list --completed-before <date>` - Completion date filter
 - [x] `list --completed-today` - Completed today
 - [x] `list --completed-this-week` - Completed this week
-- [ ] `list --query <text>` - Text search
+- [x] `list --query <text>` - Text search
 - [ ] `context area <name>` - Area with projects and tasks
 - [ ] `context project <name>` - Project with tasks and parent
 - [ ] `context task <path>` - Task with parents

@@ -915,6 +915,87 @@ describe('taskdn list --only-archived flag', () => {
   });
 });
 
+// ============================================================================
+// Phase 9: Text Search
+// ============================================================================
+
+describe('taskdn list --query filter', () => {
+  test('searches in task title', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--query', 'Metadata', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    // Full Metadata Task should be included
+    expect(output.tasks.some((t: { title: string }) => t.title === 'Full Metadata Task')).toBe(true);
+  });
+
+  test('searches in task body', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--query', 'subtask', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    // Task With Body has "subtask" in body
+    expect(output.tasks.some((t: { title: string }) => t.title === 'Task With Body')).toBe(true);
+  });
+
+  test('is case-insensitive', async () => {
+    const { stdout: upper } = await runCli(['list', '--query', 'MINIMAL', '--json']);
+    const { stdout: lower } = await runCli(['list', '--query', 'minimal', '--json']);
+    expect(JSON.parse(upper).tasks.length).toBe(JSON.parse(lower).tasks.length);
+    expect(JSON.parse(upper).tasks.length).toBeGreaterThan(0);
+  });
+
+  test('returns empty when no matches', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--query', 'xyznonexistent12345', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toEqual([]);
+  });
+
+  test('works in AI mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--query', 'Metadata', '--ai']);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('## Tasks');
+    expect(stdout).toContain('Full Metadata Task');
+  });
+
+  test('works in human mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--query', 'Metadata']);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Full Metadata Task');
+  });
+
+  test('works with other filters (AND logic)', async () => {
+    const { stdout, exitCode } = await runCli([
+      'list',
+      '--query',
+      'Task',
+      '--status',
+      'ready',
+      '--json',
+    ]);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    expect(
+      output.tasks.every(
+        (t: { status: string; title: string; body: string }) =>
+          t.status === 'ready' &&
+          (t.title.toLowerCase().includes('task') || t.body.toLowerCase().includes('task'))
+      )
+    ).toBe(true);
+  });
+
+  test('matches markdown content in body', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--query', 'markdown', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(0);
+    // Task With Body has "markdown" in body
+    expect(output.tasks.some((t: { title: string }) => t.title === 'Task With Body')).toBe(true);
+  });
+});
+
 describe('completed date filters', () => {
   test('--completed-after filters by completion date', async () => {
     const { stdout, exitCode } = await runCli(
