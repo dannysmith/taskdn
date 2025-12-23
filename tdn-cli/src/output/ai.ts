@@ -3,6 +3,7 @@ import type {
   Formatter,
   FormattableResult,
   TaskResult,
+  TaskListResult,
   ProjectResult,
   AreaResult,
 } from './types.ts';
@@ -101,6 +102,51 @@ function formatArea(area: Area): string {
 }
 
 /**
+ * Format a task for list output in AI mode (compact, no body)
+ * Uses ### heading (one level below the section heading)
+ */
+function formatTaskListItem(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push(`### ${task.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${task.path}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
+
+  if (task.due) lines.push(`- **due:** ${task.due}`);
+  // Per CLI spec: show project, or area if no project
+  if (task.project) {
+    lines.push(`- **project:** ${task.project}`);
+  } else if (task.area) {
+    lines.push(`- **area:** ${task.area}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format a list of tasks for AI mode
+ */
+function formatTaskList(tasks: Task[]): string {
+  const lines: string[] = [];
+
+  lines.push(`## Tasks (${tasks.length})`);
+  lines.push('');
+
+  if (tasks.length === 0) {
+    lines.push('No tasks match the specified criteria.');
+    return lines.join('\n');
+  }
+
+  for (const task of tasks) {
+    lines.push(formatTaskListItem(task));
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
  * AI-mode formatter - structured Markdown optimized for LLM consumption
  */
 export const aiFormatter: Formatter = {
@@ -110,8 +156,10 @@ export const aiFormatter: Formatter = {
         const taskResult = result as TaskResult;
         return formatTask(taskResult.task);
       }
-      case 'task-list':
-        return '## Tasks\n\n(stub output)';
+      case 'task-list': {
+        const listResult = result as TaskListResult;
+        return formatTaskList(listResult.tasks);
+      }
       case 'project': {
         const projectResult = result as ProjectResult;
         return formatProject(projectResult.project);

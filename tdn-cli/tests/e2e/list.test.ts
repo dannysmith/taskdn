@@ -1,0 +1,129 @@
+import { describe, test, expect } from 'bun:test';
+import { runCli, fixturePath } from '../helpers/cli';
+
+describe('taskdn list', () => {
+  describe('default behavior (active tasks)', () => {
+    test('returns exit code 0', async () => {
+      const { exitCode } = await runCli(['list']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('lists active tasks in human mode', async () => {
+      const { stdout } = await runCli(['list']);
+      // Active tasks should be included
+      expect(stdout).toContain('Minimal Task');
+      expect(stdout).toContain('Full Metadata Task');
+    });
+
+    test('excludes done tasks by default', async () => {
+      const { stdout } = await runCli(['list', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.every((t: { status: string }) => t.status !== 'done')).toBe(true);
+    });
+
+    test('excludes dropped tasks by default', async () => {
+      const { stdout } = await runCli(['list', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.every((t: { status: string }) => t.status !== 'dropped')).toBe(true);
+    });
+
+    test('excludes icebox tasks by default', async () => {
+      const { stdout } = await runCli(['list', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.every((t: { status: string }) => t.status !== 'icebox')).toBe(true);
+    });
+  });
+
+  describe('human mode output', () => {
+    test('shows task count in header', async () => {
+      const { stdout } = await runCli(['list']);
+      // Should show something like "Tasks (N)"
+      expect(stdout).toMatch(/Tasks \(\d+\)/);
+    });
+
+    test('shows task titles', async () => {
+      const { stdout } = await runCli(['list']);
+      expect(stdout).toContain('Minimal Task');
+    });
+
+    test('shows task status', async () => {
+      const { stdout } = await runCli(['list']);
+      // Should show status information
+      expect(stdout.toLowerCase()).toMatch(/ready|in-progress|blocked|inbox/);
+    });
+  });
+
+  describe('AI mode (--ai)', () => {
+    test('outputs structured markdown', async () => {
+      const { stdout, exitCode } = await runCli(['list', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks');
+    });
+
+    test('includes path field for each task', async () => {
+      const { stdout } = await runCli(['list', '--ai']);
+      expect(stdout).toContain('- **path:**');
+    });
+
+    test('includes status field for each task', async () => {
+      const { stdout } = await runCli(['list', '--ai']);
+      expect(stdout).toContain('- **status:**');
+    });
+
+    test('uses task title as heading', async () => {
+      const { stdout } = await runCli(['list', '--ai']);
+      expect(stdout).toContain('### Minimal Task');
+    });
+  });
+
+  describe('JSON mode (--json)', () => {
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['list', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('includes summary field', async () => {
+      const { stdout } = await runCli(['list', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toBeDefined();
+    });
+
+    test('includes tasks array', async () => {
+      const { stdout } = await runCli(['list', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.tasks)).toBe(true);
+    });
+
+    test('each task has required fields', async () => {
+      const { stdout } = await runCli(['list', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+      for (const task of output.tasks) {
+        expect(task.path).toBeDefined();
+        expect(task.title).toBeDefined();
+        expect(task.status).toBeDefined();
+      }
+    });
+  });
+
+  describe('empty results', () => {
+    test('returns exit code 0 for empty result', async () => {
+      // Use a filter that matches nothing
+      const { exitCode } = await runCli(['list', '--status', 'nonexistent']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('JSON mode returns empty array with summary', async () => {
+      const { stdout } = await runCli(['list', '--status', 'nonexistent', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.tasks).toEqual([]);
+      expect(output.summary).toBeDefined();
+    });
+
+    test('AI mode indicates no matches', async () => {
+      const { stdout } = await runCli(['list', '--status', 'nonexistent', '--ai']);
+      expect(stdout).toContain('Tasks (0)');
+    });
+  });
+});

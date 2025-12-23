@@ -4,6 +4,7 @@ import type {
   Formatter,
   FormattableResult,
   TaskResult,
+  TaskListResult,
   ProjectResult,
   AreaResult,
 } from './types.ts';
@@ -121,6 +122,53 @@ function formatArea(area: Area): string {
 }
 
 /**
+ * Format a list of tasks for human output
+ */
+function formatTaskList(tasks: Task[]): string {
+  const lines: string[] = [];
+
+  // Header with count
+  lines.push(bold(blue(`Tasks (${tasks.length})`)));
+  lines.push('');
+
+  if (tasks.length === 0) {
+    lines.push(dim('No tasks match the specified criteria.'));
+    return lines.join('\n');
+  }
+
+  // Group tasks by status
+  const statusOrder = ['InProgress', 'Blocked', 'Ready', 'Inbox', 'Icebox', 'Done', 'Dropped'];
+  const grouped = new Map<string, Task[]>();
+
+  for (const task of tasks) {
+    const status = task.status;
+    if (!grouped.has(status)) {
+      grouped.set(status, []);
+    }
+    grouped.get(status)!.push(task);
+  }
+
+  // Output groups in order
+  for (const status of statusOrder) {
+    const groupTasks = grouped.get(status);
+    if (!groupTasks || groupTasks.length === 0) continue;
+
+    lines.push(`  ${formatStatus(status)}`);
+    for (const task of groupTasks) {
+      let titleLine = `  ${bold(task.title)}`;
+      if (task.due) {
+        titleLine += `  ${dim('due:')} ${task.due}`;
+      }
+      lines.push(titleLine);
+      lines.push(`    ${dim(task.path)}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
  * Human-readable formatter with colors and styling
  */
 export const humanFormatter: Formatter = {
@@ -130,8 +178,10 @@ export const humanFormatter: Formatter = {
         const taskResult = result as TaskResult;
         return formatTask(taskResult.task);
       }
-      case 'task-list':
-        return bold(blue('Tasks')) + dim(' (stub output)');
+      case 'task-list': {
+        const listResult = result as TaskListResult;
+        return formatTaskList(listResult.tasks);
+      }
       case 'project': {
         const projectResult = result as ProjectResult;
         return formatProject(projectResult.project);

@@ -2,10 +2,32 @@ import type {
   Formatter,
   FormattableResult,
   TaskResult,
+  TaskListResult,
   ProjectResult,
   AreaResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
+import type { Task } from '@bindings';
+
+/**
+ * Convert a Task to a JSON-serializable object
+ */
+function taskToJson(task: Task, includeBody = true) {
+  return {
+    path: task.path,
+    title: task.title,
+    status: toKebabCase(task.status),
+    ...(task.due && { due: task.due }),
+    ...(task.scheduled && { scheduled: task.scheduled }),
+    ...(task.deferUntil && { deferUntil: task.deferUntil }),
+    ...(task.project && { project: task.project }),
+    ...(task.area && { area: task.area }),
+    ...(task.createdAt && { createdAt: task.createdAt }),
+    ...(task.updatedAt && { updatedAt: task.updatedAt }),
+    ...(task.completedAt && { completedAt: task.completedAt }),
+    ...(includeBody && task.body && { body: task.body }),
+  };
+}
 
 /**
  * JSON formatter - structured data for scripts and programmatic access
@@ -18,20 +40,20 @@ export const jsonFormatter: Formatter = {
         const task = taskResult.task;
         const output = {
           summary: `Task: ${task.title}`,
-          task: {
-            path: task.path,
-            title: task.title,
-            status: toKebabCase(task.status),
-            ...(task.due && { due: task.due }),
-            ...(task.scheduled && { scheduled: task.scheduled }),
-            ...(task.deferUntil && { deferUntil: task.deferUntil }),
-            ...(task.project && { project: task.project }),
-            ...(task.area && { area: task.area }),
-            ...(task.createdAt && { createdAt: task.createdAt }),
-            ...(task.updatedAt && { updatedAt: task.updatedAt }),
-            ...(task.completedAt && { completedAt: task.completedAt }),
-            ...(task.body && { body: task.body }),
-          },
+          task: taskToJson(task),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-list': {
+        const listResult = result as TaskListResult;
+        const count = listResult.tasks.length;
+        const summary =
+          count === 0
+            ? 'No tasks match the specified criteria'
+            : `Found ${count} task${count === 1 ? '' : 's'}`;
+        const output = {
+          summary,
+          tasks: listResult.tasks.map((t) => taskToJson(t, false)),
         };
         return JSON.stringify(output, null, 2);
       }

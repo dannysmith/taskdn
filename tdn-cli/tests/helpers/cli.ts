@@ -10,6 +10,16 @@ export interface CliResult {
   exitCode: number;
 }
 
+/**
+ * Options for running the CLI
+ */
+export interface RunCliOptions {
+  /** Use the test fixtures vault (sets TASKDN_*_DIR env vars) */
+  useFixtureVault?: boolean;
+  /** Additional environment variables to set */
+  env?: Record<string, string>;
+}
+
 // ANSI escape code regex for stripping colors
 const ANSI_REGEX =
   // eslint-disable-next-line no-control-regex
@@ -27,14 +37,38 @@ export function stripAnsi(str: string): string {
  * Output is automatically stripped of ANSI escape codes.
  *
  * @param args - Command line arguments (e.g., ['show', 'path/to/task.md'])
+ * @param options - Optional configuration for the CLI run
  * @returns Promise resolving to stdout, stderr, and exit code
  */
-export async function runCli(args: string[]): Promise<CliResult> {
+export async function runCli(
+  args: string[],
+  options: RunCliOptions = {}
+): Promise<CliResult> {
   const cliPath = resolve(import.meta.dir, '../../src/index.ts');
+  const cwd = resolve(import.meta.dir, '../..');
+
+  // Build environment variables
+  const env: Record<string, string> = { ...process.env } as Record<
+    string,
+    string
+  >;
+
+  // If useFixtureVault is true (default for most tests), set vault paths to fixtures
+  if (options.useFixtureVault !== false) {
+    env.TASKDN_TASKS_DIR = fixturePath('vault/tasks');
+    env.TASKDN_PROJECTS_DIR = fixturePath('vault/projects');
+    env.TASKDN_AREAS_DIR = fixturePath('vault/areas');
+  }
+
+  // Apply any additional env vars
+  if (options.env) {
+    Object.assign(env, options.env);
+  }
 
   const proc = spawn({
     cmd: ['bun', 'run', cliPath, ...args],
-    cwd: resolve(import.meta.dir, '../..'),
+    cwd,
+    env,
     stdout: 'pipe',
     stderr: 'pipe',
   });
