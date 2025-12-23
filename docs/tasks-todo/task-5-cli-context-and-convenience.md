@@ -50,18 +50,48 @@ Area description here...
 ```
 
 **Implementation:**
-1. Parse the area file
-2. Find all projects with `area: [[Work]]` (or matching reference)
-3. Find all tasks with `area: [[Work]]` OR belonging to matched projects
-4. Format hierarchically
 
-**Matching logic:**
-- Area references may be wikilinks (`[[Work]]`) or paths
-- Need to extract the name from wikilinks for comparison
+Uses `get_area_context()` from Task 4's relationship infrastructure:
+
+```typescript
+const context = getAreaContext(config, areaName);
+
+if (!context.area) {
+  // Handle area not found
+}
+
+// context.area - the matched area
+// context.projects - all projects in this area
+// context.tasks - all tasks (direct + via projects)
+// context.warnings - any broken reference warnings
+```
+
+The Rust function handles:
+- Wikilink parsing (via `extract_wikilink_name`)
+- Finding projects with matching area reference
+- Finding tasks with direct area OR via matched projects
+- Deduplication (task with both direct and indirect reference)
 
 ### Phase 2: Context Project Command
 
 `context project "Q1 Planning"` returns project + tasks + parent area.
+
+**Implementation:**
+
+Uses `get_project_context()` from Task 4's relationship infrastructure:
+
+```typescript
+const context = getProjectContext(config, projectName);
+
+if (!context.project) {
+  // Handle project not found
+}
+
+// context.project - the matched project
+// context.area - parent area (if any)
+// context.tasks - all tasks in this project
+// context.warnings - any broken reference warnings
+```
 
 **Output structure (AI mode):**
 ```markdown
@@ -315,6 +345,9 @@ tests/fixtures/vault/
 ## Notes
 
 - Context command is the key command for AI agents - needs to be efficient
-- Consider caching vault scan results within a command execution
-- Wikilink parsing: `[[Name]]` -> extract "Name" for matching
-- The "This Week" section in vault overview needs date range calculation
+- **Relationship resolution is handled by Task 4's Rust functions:**
+  - `get_area_context()` - returns area + projects + tasks in one call
+  - `get_project_context()` - returns project + area + tasks in one call
+  - No need for caching - each function builds what it needs internally
+- **Wikilink parsing** is handled by `extract_wikilink_name()` from Task 4
+- The "This Week" section in vault overview needs date range calculation (use date utilities from list.ts)

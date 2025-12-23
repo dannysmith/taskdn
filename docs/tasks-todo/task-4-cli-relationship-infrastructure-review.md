@@ -577,210 +577,183 @@ pub fn get_area_context(config: VaultConfig, area_name: String) -> AreaContextRe
 - More functions to implement and maintain
 - Can't share index across multiple relationship queries in one command (but this is rare)
 
-#### Questions for Discussion
+#### Decisions Made
 
-1. **API preference:** Expose VaultIndex struct OR query functions? Query functions feel cleaner.
+1. **API preference:** Expose **composite query functions** rather than VaultIndex struct. TypeScript doesn't need to see the index internals.
 
-2. **Where should the `--area` filtering happen?** Currently TypeScript filters. Options:
-   - Keep in TypeScript, call new Rust function when `--area` is used
-   - Move all filtering to Rust
+2. **Filtering:** Move `--area` and `--project` filtering to Rust (required for correctness). Keep other filters in TypeScript for now (flexible, fast enough).
 
-3. **Should `context` command use same infrastructure as `list --area`?** They have overlapping needs but different output requirements.
+3. **Index caching:** Use **composite functions** that build what they need internally. Each high-level operation (like `get_area_context`) builds its index once. No need for TypeScript to manage index lifecycle.
 
-4. **How to handle broken wikilinks?** Current proposal: include in results with warnings field. Alternative: log warning and exclude from results.
+4. **Optimization:** `get_projects_in_area` should NOT read task files (only ~50 project files vs ~1000 task files).
+
+5. **Broken wikilinks handling:**
+   - Downward queries (`getTasksInArea`): Include all matching tasks; broken refs elsewhere are irrelevant
+   - Upward queries (`getAreaForTask`): Return `None` if referenced entity doesn't exist
+   - Display commands (`show`): Show entity normally, warn about broken references
 
 ---
 
-#### 3.2 Vault Index Design
+#### 3.2 Composite Query Functions Design
 
-Design an in-memory index for efficient relationship queries. The index is built once per CLI invocation (no persistence).
+Instead of exposing a `VaultIndex` struct to TypeScript, we expose purpose-built functions that internally manage the index.
 
-**Proposed structure (`crates/core/src/vault_index.rs`):**
+**Key Principle:** Simple operations (like `show task`) should NOT build an index. Only relationship-aware operations build what they need.
+
+**NAPI API (`crates/core/src/vault_index.rs`):**
 
 ```rust
-use std::collections::HashMap;
-use crate::task::Task;
-use crate::project::Project;
-use crate::area::Area;
-use crate::vault::VaultConfig;
+// === Existing simple queries (no index needed) ===
+pub fn scan_tasks(config: VaultConfig) -> Vec<Task>
+pub fn scan_projects(config: VaultConfig) -> Vec<Project>
+pub fn scan_areas(config: VaultConfig) -> Vec<Area>
 
-/// In-memory index of vault entities with relationship mappings.
-/// Built once per CLI invocation for efficient relationship traversal.
-pub struct VaultIndex {
-    // All entities
+// === New relationship-aware queries ===
+
+/// Result for tasks-in-area query
+#[napi(object)]
+pub struct TasksInAreaResult {
     pub tasks: Vec<Task>,
-    pub projects: Vec<Project>,
-    pub areas: Vec<Area>,
+    pub warnings: Vec<String>,  // e.g., "Task 'X' references unknown project 'Y'"
+}
 
-    // Name-to-index lookup (for resolving wikilinks)
-    // Keys are lowercase for case-insensitive matching
+/// Get tasks in an area (direct + via projects).
+/// Reads: areas, projects, tasks. Builds index internally.
+#[napi]
+pub fn get_tasks_in_area(config: VaultConfig, area_name: String) -> TasksInAreaResult
+
+/// Get projects in an area. Does NOT read task files.
+/// Reads: areas, projects only.
+#[napi]
+pub fn get_projects_in_area(config: VaultConfig, area_name: String) -> Vec<Project>
+
+/// Full context for an area (for context command).
+#[napi(object)]
+pub struct AreaContextResult {
+    pub area: Option<Area>,           // None if area not found
+    pub projects: Vec<Project>,       // Projects in this area
+    pub tasks: Vec<Task>,             // Tasks via projects + direct
+    pub warnings: Vec<String>,
+}
+
+#[napi]
+pub fn get_area_context(config: VaultConfig, area_name: String) -> AreaContextResult
+
+/// Full context for a project (for context command).
+#[napi(object)]
+pub struct ProjectContextResult {
+    pub project: Option<Project>,     // None if project not found
+    pub area: Option<Area>,           // Parent area if any
+    pub tasks: Vec<Task>,             // Tasks in this project
+    pub warnings: Vec<String>,
+}
+
+#[napi]
+pub fn get_project_context(config: VaultConfig, project_name: String) -> ProjectContextResult
+```
+
+**Internal Implementation:**
+
+The `VaultIndex` struct remains **private** (not exposed via NAPI):
+
+```rust
+// Private - not exported
+struct VaultIndex {
+    tasks: Vec<Task>,
+    projects: Vec<Project>,
+    areas: Vec<Area>,
     project_by_name: HashMap<String, usize>,
     area_by_name: HashMap<String, usize>,
-
-    // Relationship maps (index → indices)
-    tasks_by_project: HashMap<usize, Vec<usize>>,  // project idx → task indices
-    tasks_by_area: HashMap<usize, Vec<usize>>,     // area idx → task indices (direct assignment)
-    projects_by_area: HashMap<usize, Vec<usize>>,  // area idx → project indices
+    tasks_by_project: HashMap<usize, Vec<usize>>,
+    tasks_by_area: HashMap<usize, Vec<usize>>,
+    projects_by_area: HashMap<usize, Vec<usize>>,
 }
-```
 
-**Key methods:**
-
-```rust
 impl VaultIndex {
-    /// Build index by scanning all directories.
-    /// Files that fail to parse are skipped (matches scan_* behavior).
-    pub fn build(config: &VaultConfig) -> Self;
+    /// Build full index (reads all entity types)
+    fn build(config: &VaultConfig) -> Self { ... }
 
-    /// Get all tasks directly assigned to an area.
-    pub fn tasks_in_area_direct(&self, area_idx: usize) -> Vec<&Task>;
-
-    /// Get all tasks in an area (direct + via projects).
-    pub fn tasks_in_area(&self, area_idx: usize) -> Vec<&Task>;
-
-    /// Get all tasks in a project.
-    pub fn tasks_in_project(&self, project_idx: usize) -> Vec<&Task>;
-
-    /// Get all projects in an area.
-    pub fn projects_in_area(&self, area_idx: usize) -> Vec<&Project>;
-
-    /// Get parent project for a task (if any).
-    pub fn project_for_task(&self, task_idx: usize) -> Option<&Project>;
-
-    /// Get parent area for a task (direct or via project).
-    pub fn area_for_task(&self, task_idx: usize) -> Option<&Area>;
-
-    /// Get parent area for a project (if any).
-    pub fn area_for_project(&self, project_idx: usize) -> Option<&Area>;
-
-    /// Find area by name (case-insensitive).
-    pub fn find_area(&self, name: &str) -> Option<(usize, &Area)>;
-
-    /// Find project by name (case-insensitive).
-    pub fn find_project(&self, name: &str) -> Option<(usize, &Project)>;
+    /// Build index without tasks (for projects-only queries)
+    fn build_without_tasks(config: &VaultConfig) -> Self { ... }
 }
 ```
 
-**Build process:**
-
-1. Scan tasks directory → parse all tasks → store in `tasks`
-2. Scan projects directory → parse all projects → store in `projects`
-3. Scan areas directory → parse all areas → store in `areas`
-4. Build `project_by_name` map (lowercase title → index)
-5. Build `area_by_name` map (lowercase title → index)
-6. For each task with `project` field:
-   - Extract wikilink name
-   - Look up project index
-   - Add to `tasks_by_project[project_idx]`
-7. For each task with `area` field:
-   - Extract wikilink name
-   - Look up area index
-   - Add to `tasks_by_area[area_idx]`
-8. For each project with `area` field:
-   - Extract wikilink name
-   - Look up area index
-   - Add to `projects_by_area[area_idx]`
-
-**Unresolvable references:** Store as warnings but don't fail. This supports a future `doctor` command for detecting broken references.
-
-#### 3.3 NAPI Exposure
-
-Expose the index to TypeScript. **Recommended approach:** Single function returning full index.
+Each NAPI function internally builds the index it needs:
 
 ```rust
-/// Build and return a complete vault index.
-/// This is the primary entry point for relationship-aware queries.
 #[napi]
-pub fn build_vault_index(config: VaultConfig) -> VaultIndex;
-```
+pub fn get_projects_in_area(config: VaultConfig, area_name: String) -> Vec<Project> {
+    let index = VaultIndex::build_without_tasks(&config);  // Skips task files!
+    // Find area, return matching projects
+}
 
-The TypeScript layer receives the full index and can perform any needed queries. This is simpler than exposing individual query functions via NAPI, and the CLI is short-lived so memory is not a concern.
-
-**NAPI struct export:**
-
-```rust
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct VaultIndex {
-    pub tasks: Vec<Task>,
-    pub projects: Vec<Project>,
-    pub areas: Vec<Area>,
-    // Note: HashMaps don't export well to NAPI
-    // Either expose query methods, or serialize relationship data differently
+#[napi]
+pub fn get_area_context(config: VaultConfig, area_name: String) -> AreaContextResult {
+    let index = VaultIndex::build(&config);  // Full index
+    // Build complete context
 }
 ```
 
-**Alternative if HashMap export is problematic:**
-
-```rust
-#[napi(object)]
-pub struct VaultIndex {
-    pub tasks: Vec<Task>,
-    pub projects: Vec<Project>,
-    pub areas: Vec<Area>,
-    // Relationship data as arrays of tuples
-    pub task_project_links: Vec<TaskProjectLink>,  // (task_idx, project_idx)
-    pub task_area_links: Vec<TaskAreaLink>,        // (task_idx, area_idx)
-    pub project_area_links: Vec<ProjectAreaLink>,  // (project_idx, area_idx)
-}
-```
-
-The TypeScript layer would then build lookup maps from these arrays.
-
-#### 3.4 Update List Command
-
-Update the `--area` filter in the list command to use proper relationship traversal.
-
-**Current behavior:** Only finds tasks with direct `area: [[X]]` assignment
-**New behavior:** Finds tasks in area directly OR via their project
+#### 3.3 TypeScript Usage
 
 ```typescript
-// Before (in list.ts)
+// list.ts - when --area is used
 if (options.area) {
-  const areaQuery = options.area.toLowerCase()
-  tasks = tasks.filter((task) => {
-    if (!task.area) return false
-    return task.area.toLowerCase().includes(areaQuery)
-  })
+  // Call Rust function that handles relationship resolution
+  const result = getTasksInArea(config, options.area);
+  tasks = result.tasks;
+  // Optionally display result.warnings
+} else {
+  // No relationship needed - use simple scan
+  tasks = scanTasks(config);
 }
 
-// After
-if (options.area) {
-  const index = buildVaultIndex(config)
-  const areaMatch = index.areas.find((a) =>
-    a.title.toLowerCase().includes(options.area.toLowerCase())
-  )
-  if (areaMatch) {
-    const areaIdx = index.areas.indexOf(areaMatch)
-    const tasksInArea = getTasksInArea(index, areaIdx) // includes via projects
-    tasks = tasks.filter((t) => tasksInArea.some((ta) => ta.path === t.path))
-  } else {
-    tasks = [] // No matching area
+// Apply remaining filters in TypeScript
+if (options.status) { ... }
+if (options.due) { ... }
+```
+
+```typescript
+// context.ts
+if (entityType === 'area') {
+  const context = getAreaContext(config, target);
+  if (!context.area) {
+    // Handle area not found
   }
+  // context.area, context.projects, context.tasks all available
 }
 ```
 
-**Note:** This may require building the index even when not using `--area`. Consider lazy index building or a separate code path.
+#### 3.4 Testing Strategy
 
-#### 3.5 Testing Strategy
-
-**Rust unit tests for wikilink parsing:**
+**Rust unit tests for wikilink parsing:** (Complete - Phase 3.1)
 
 - All format variations
 - Edge cases (empty, whitespace, malformed)
 
-**Rust unit tests for VaultIndex:**
+**Rust unit tests for VaultIndex (internal):**
 
 - Build from empty directories
 - Build with orphan entities (tasks without project/area)
-- Build with unresolvable references
+- Build with unresolvable references (should add warnings, not fail)
 - Relationship queries return correct results
+- `build_without_tasks` doesn't read task files
 
-**E2E tests for updated list --area:**
+**Rust unit tests for NAPI functions:**
 
-- Task with direct area assignment found
-- Task with project in area found (indirect)
-- Task with both direct and indirect (deduplicated)
+- `get_tasks_in_area` returns direct + indirect tasks
+- `get_tasks_in_area` deduplicates (task with direct area AND project in same area)
+- `get_projects_in_area` returns matching projects
+- `get_area_context` returns complete context
+- `get_project_context` returns project + area + tasks
+- All functions handle "not found" gracefully
+
+**E2E tests:**
+
+- `list --area Work` finds tasks via projects
+- `list --area Work` finds tasks with direct area assignment
+- `context area "Work"` returns area + projects + tasks
+- `context project "Q1"` returns project + parent area + tasks
 - Works with all output modes
 
 ---
@@ -803,9 +776,13 @@ if (options.area) {
 ### Phase 3
 
 - [x] `extract_wikilink_name()` implemented with tests
-- [ ] `VaultIndex` struct implemented
-- [ ] `build_vault_index()` exported via NAPI
-- [ ] `--area` filter uses relationship traversal
+- [ ] Internal `VaultIndex` struct implemented
+- [ ] `get_tasks_in_area()` exported via NAPI
+- [ ] `get_projects_in_area()` exported via NAPI (optimized - no task files)
+- [ ] `get_area_context()` exported via NAPI
+- [ ] `get_project_context()` exported via NAPI
+- [ ] `list --area` updated to use `get_tasks_in_area()`
+- [ ] Unit tests for VaultIndex and NAPI functions
 - [ ] E2E tests for relationship-aware queries
 - [ ] `tdn-cli/docs/cli-progress.md` updated
 
@@ -813,11 +790,12 @@ if (options.area) {
 
 ## Notes
 
-- Keep the index simple for now - optimize later if needed
-- Case-insensitive matching for wikilink resolution (matches existing fuzzy search behavior)
-- The index is rebuilt for each CLI invocation (no persistence)
-- This sets up Task 5 (context command) for success
-- Consider how relationship infrastructure supports Task 6 (write operations) - e.g., validating references
+- **VaultIndex is internal** - not exposed to TypeScript; composite functions hide the implementation
+- **Lazy building** - simple operations don't build an index; only relationship queries do
+- **Optimization** - `get_projects_in_area()` skips reading task files entirely
+- **Case-insensitive matching** for wikilink resolution (matches existing fuzzy search behavior)
+- **No persistence** - index is rebuilt for each CLI invocation (stateless core principle)
+- **Graceful degradation** - broken wikilinks produce warnings, not failures
 
 ## Relevant Specifications
 
@@ -828,5 +806,5 @@ if (options.area) {
 
 ## Dependencies for Future Tasks
 
-- **Task 5 (Context Command):** Requires VaultIndex for `context area "Work"` and `context project "Q1"`
+- **Task 5 (Context Command):** Uses `get_area_context()` and `get_project_context()` for hierarchical views
 - **Task 6 (Write Operations):** May use relationship infrastructure for reference validation

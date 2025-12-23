@@ -104,6 +104,8 @@ taskdn doctor --json
 
 **Note on `taskdn-type` check:** Per S1 spec sections 4.4 and 5.4, if ANY file in a directory contains `taskdn-type: project` (or `area`), files without this field should be ignored. Doctor should warn about this inconsistency.
 
+**Implementation Note:** The reference checks can leverage the `warnings` field from Task 4's relationship query functions (`get_area_context`, `get_project_context`). These functions already detect and report broken wikilinks as part of their normal operation.
+
 **Human mode output:**
 ```
 ✓ Config found (~/.config/taskdn/config.json)
