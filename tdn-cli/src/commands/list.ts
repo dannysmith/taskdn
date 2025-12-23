@@ -1,3 +1,4 @@
+import { join } from 'path';
 import { Command } from '@commander-js/extra-typings';
 import { scanTasks, scanProjects, scanAreas } from '@bindings';
 import type { Task, Project, Area } from '@bindings';
@@ -205,7 +206,7 @@ export const listCommand = new Command('list')
       // Only scan archive directory
       const archiveConfig = {
         ...config,
-        tasksDir: `${config.tasksDir}/archive`,
+        tasksDir: join(config.tasksDir, 'archive'),
       };
       tasks = scanTasks(archiveConfig);
     } else {
@@ -252,7 +253,7 @@ export const listCommand = new Command('list')
       if (options.includeArchived) {
         const archiveConfig = {
           ...config,
-          tasksDir: `${config.tasksDir}/archive`,
+          tasksDir: join(config.tasksDir, 'archive'),
         };
         const archivedTasks = scanTasks(archiveConfig);
         tasks = [...tasks, ...archivedTasks];
@@ -263,10 +264,10 @@ export const listCommand = new Command('list')
     if (options.status) {
       const statuses = options.status.split(',').map((s) => s.trim().toLowerCase());
       tasks = tasks.filter((task) => {
-        const taskStatus = task.status.toLowerCase().replace('-', '');
+        const taskStatus = task.status.toLowerCase().replaceAll('-', '');
         return statuses.some((s) => {
           // Handle kebab-case and pascal-case matching
-          const normalized = s.replace('-', '');
+          const normalized = s.replaceAll('-', '');
           return taskStatus === normalized || task.status.toLowerCase() === s;
         });
       });

@@ -32,9 +32,9 @@ function taskToJson(task: Task, includeBody = true) {
 }
 
 /**
- * Convert a Project to a JSON-serializable object for list output (no body)
+ * Convert a Project to a JSON-serializable object
  */
-function projectToJsonForList(project: Project) {
+function projectToJson(project: Project, includeBody = true) {
   return {
     path: project.path,
     title: project.title,
@@ -45,19 +45,21 @@ function projectToJsonForList(project: Project) {
     ...(project.description && { description: project.description }),
     ...(project.blockedBy && project.blockedBy.length > 0 && { blockedBy: project.blockedBy }),
     ...(project.uniqueId && { uniqueId: project.uniqueId }),
+    ...(includeBody && project.body && { body: project.body }),
   };
 }
 
 /**
- * Convert an Area to a JSON-serializable object for list output (no body)
+ * Convert an Area to a JSON-serializable object
  */
-function areaToJsonForList(area: Area) {
+function areaToJson(area: Area, includeBody = true) {
   return {
     path: area.path,
     title: area.title,
     ...(area.status && { status: toKebabCase(area.status) }),
     ...(area.areaType && { areaType: area.areaType }),
     ...(area.description && { description: area.description }),
+    ...(includeBody && area.body && { body: area.body }),
   };
 }
 
@@ -94,19 +96,7 @@ export const jsonFormatter: Formatter = {
         const project = projectResult.project;
         const output = {
           summary: `Project: ${project.title}`,
-          project: {
-            path: project.path,
-            title: project.title,
-            ...(project.status && { status: toKebabCase(project.status) }),
-            ...(project.area && { area: project.area }),
-            ...(project.startDate && { startDate: project.startDate }),
-            ...(project.endDate && { endDate: project.endDate }),
-            ...(project.description && { description: project.description }),
-            ...(project.blockedBy &&
-              project.blockedBy.length > 0 && { blockedBy: project.blockedBy }),
-            ...(project.uniqueId && { uniqueId: project.uniqueId }),
-            ...(project.body && { body: project.body }),
-          },
+          project: projectToJson(project),
         };
         return JSON.stringify(output, null, 2);
       }
@@ -119,7 +109,7 @@ export const jsonFormatter: Formatter = {
             : `Found ${count} project${count === 1 ? '' : 's'}`;
         const output = {
           summary,
-          projects: listResult.projects.map((p) => projectToJsonForList(p)),
+          projects: listResult.projects.map((p) => projectToJson(p, false)),
         };
         return JSON.stringify(output, null, 2);
       }
@@ -128,14 +118,7 @@ export const jsonFormatter: Formatter = {
         const area = areaResult.area;
         const output = {
           summary: `Area: ${area.title}`,
-          area: {
-            path: area.path,
-            title: area.title,
-            ...(area.status && { status: toKebabCase(area.status) }),
-            ...(area.areaType && { areaType: area.areaType }),
-            ...(area.description && { description: area.description }),
-            ...(area.body && { body: area.body }),
-          },
+          area: areaToJson(area),
         };
         return JSON.stringify(output, null, 2);
       }
@@ -148,7 +131,7 @@ export const jsonFormatter: Formatter = {
             : `Found ${count} area${count === 1 ? '' : 's'}`;
         const output = {
           summary,
-          areas: listResult.areas.map((a) => areaToJsonForList(a)),
+          areas: listResult.areas.map((a) => areaToJson(a, false)),
         };
         return JSON.stringify(output, null, 2);
       }

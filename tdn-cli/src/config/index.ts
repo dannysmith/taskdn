@@ -45,7 +45,10 @@ function readConfigFile(path: string): ConfigFile | null {
   try {
     const content = readFileSync(path, 'utf-8');
     return JSON.parse(content) as ConfigFile;
-  } catch {
+  } catch (error) {
+    console.warn(
+      `Warning: Failed to parse config file ${path}: ${error instanceof Error ? error.message : error}`
+    );
     return null;
   }
 }
