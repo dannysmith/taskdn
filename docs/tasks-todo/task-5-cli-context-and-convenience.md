@@ -8,13 +8,179 @@
 
 Implement the `context` command for hierarchical entity views, and convenience commands (`today`, `inbox`, `next`) for common workflows.
 
-## Phases
+---
 
-### Phase 1: Context Area Command
+## Prerequisites from Task 4
+
+The following Rust functions are available via `@bindings`:
+
+| Function               | Purpose                                              | Returns                                  |
+| ---------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `getAreaContext()`     | Area + its projects + all tasks (direct + indirect)  | `AreaContextResult`                      |
+| `getProjectContext()`  | Project + parent area + its tasks                    | `ProjectContextResult`                   |
+| `getTasksInArea()`     | Tasks in an area (direct + via projects)             | `TasksInAreaResult`                      |
+| `getProjectsInArea()`  | Projects in an area (optimized: no task file reads)  | `Project[]`                              |
+| `extractWikilinkName()`| Extract target name from wikilink syntax             | `string \| null`                         |
+
+**To be added in Phase 3:**
+
+| Function               | Purpose                                              | Returns                                  |
+| ---------------------- | ---------------------------------------------------- | ---------------------------------------- |
+| `getTaskContext()`     | Task + parent project + parent area                  | `TaskContextResult`                      |
+
+**Result types (from Rust):**
+
+```typescript
+interface AreaContextResult {
+  area: Area | null;        // null if area not found
+  projects: Project[];      // Projects in this area
+  tasks: Task[];            // All tasks (direct + via projects)
+  warnings: string[];       // Broken reference warnings
+}
+
+interface ProjectContextResult {
+  project: Project | null;  // null if project not found
+  area: Area | null;        // Parent area if any
+  tasks: Task[];            // Tasks in this project
+  warnings: string[];
+}
+
+interface TasksInAreaResult {
+  tasks: Task[];
+  warnings: string[];
+}
+```
+
+---
+
+## Current State
+
+- **context.ts** - Stub exists with command structure and no-args behavior
+- **list.ts** - Contains date utilities to be extracted in Phase 5.0
+- **output/types.ts** - Result types exist for show/list; context types need adding
+
+---
+
+## Phase 0: Formatter Infrastructure
+
+Before implementing context commands, extend the formatter infrastructure.
+
+### 0.1 Add Context Result Types
+
+Add to `src/output/types.ts`:
+
+```typescript
+// Area context result (from context area command)
+export interface AreaContextResultOutput {
+  type: 'area-context';
+  area: Area;
+  projects: Project[];       // Projects in this area
+  projectTasks: Map<string, Task[]>;  // Tasks grouped by project path
+  directTasks: Task[];       // Tasks directly in area (no project)
+  warnings: string[];
+}
+
+// Project context result (from context project command)
+export interface ProjectContextResultOutput {
+  type: 'project-context';
+  project: Project;
+  area: Area | null;         // Parent area if any
+  tasks: Task[];             // Tasks in this project
+  warnings: string[];
+}
+
+// Task context result (from context task command)
+export interface TaskContextResultOutput {
+  type: 'task-context';
+  task: Task;
+  project: Project | null;   // Parent project if any
+  area: Area | null;         // Parent area (direct or via project)
+  warnings: string[];
+}
+
+// Vault overview result (from context --ai with no args)
+export interface VaultOverviewResult {
+  type: 'vault-overview';
+  areas: AreaSummary[];
+  summary: VaultSummary;
+  thisWeek: ThisWeekSummary;
+}
+
+interface AreaSummary {
+  area: Area;
+  projectCount: number;
+  activeTaskCount: number;
+}
+
+interface VaultSummary {
+  totalActiveTasks: number;
+  overdueCount: number;
+  inProgressCount: number;
+}
+
+interface ThisWeekSummary {
+  dueTasks: Task[];
+  scheduledTasks: Task[];
+}
+```
+
+Update `FormattableResult` union to include these types.
+
+### 0.2 Implement Formatters
+
+For each new result type, implement formatting in:
+
+- `src/output/ai.ts` - Structured markdown (per cli-requirements.md)
+- `src/output/human.ts` - Pretty colored output
+- `src/output/json.ts` - JSON with summary
+
+### Phase 0 Verification
+
+- [ ] New result types added to `types.ts`
+- [ ] `FormattableResult` union updated
+- [ ] Formatters compile without errors
+- [ ] Existing tests still pass
+
+---
+
+## Phase 1: Context Area Command
 
 `context area "Work"` returns the area plus its projects and tasks.
 
-**Output structure (AI mode):**
+### 1.1 Implementation
+
+**File:** `src/commands/context.ts`
+
+```typescript
+// Pseudocode structure
+if (entityType === 'area') {
+  const config = getVaultConfig();
+  const result = getAreaContext(config, target);
+
+  if (!result.area) {
+    // Handle area not found (NOT_FOUND error)
+  }
+
+  // Group tasks by project for display
+  const projectTasks = groupTasksByProject(result.tasks, result.projects);
+  const directTasks = result.tasks.filter(t => !t.project);
+
+  const output: AreaContextResultOutput = {
+    type: 'area-context',
+    area: result.area,
+    projects: result.projects,
+    projectTasks,
+    directTasks,
+    warnings: result.warnings,
+  };
+
+  console.log(formatOutput(output, globalOpts));
+}
+```
+
+### 1.2 Output Format (AI Mode)
+
+Per cli-requirements.md Section "Context Command":
 
 ```markdown
 ## Area: Work
@@ -56,52 +222,85 @@ Area description here...
 - **due:** 2025-01-16
 ```
 
-**Implementation:**
+**Field selection (per cli-requirements.md):**
 
-Uses `get_area_context()` from Task 4's relationship infrastructure:
+| Entity           | Fields Shown                                    |
+| ---------------- | ----------------------------------------------- |
+| Area (primary)   | Full frontmatter + body                         |
+| Project (related)| title (heading), path, status, task count       |
+| Task (related)   | title (heading), path, status, due (if set)     |
+
+### 1.3 Tests
+
+**E2E tests (`tests/e2e/context-area.test.ts`):**
 
 ```typescript
-const context = getAreaContext(config, areaName)
+describe('context area', () => {
+  test('returns area with projects and tasks', async () => {
+    // Uses fixture with relationships
+  });
 
-if (!context.area) {
-  // Handle area not found
-}
+  test('includes projects in area', async () => {});
 
-// context.area - the matched area
-// context.projects - all projects in this area
-// context.tasks - all tasks (direct + via projects)
-// context.warnings - any broken reference warnings
+  test('includes tasks via projects', async () => {});
+
+  test('includes tasks directly in area', async () => {});
+
+  test('deduplicates tasks in both project and direct area', async () => {
+    // Edge case: task has area AND its project is in same area
+  });
+
+  test('handles area not found', async () => {
+    // Should return NOT_FOUND error
+  });
+
+  test('works in all output modes', async () => {});
+});
 ```
 
-The Rust function handles:
+### Phase 1 Verification
 
-- Wikilink parsing (via `extract_wikilink_name`)
-- Finding projects with matching area reference
-- Finding tasks with direct area OR via matched projects
-- Deduplication (task with both direct and indirect reference)
+- [ ] `context area "Work"` returns area details
+- [ ] Includes child projects with task counts
+- [ ] Includes tasks organized by project
+- [ ] Includes direct tasks (tasks with area but no project)
+- [ ] Body included for primary entity only (area)
+- [ ] NOT_FOUND error for missing area
+- [ ] Works in human, AI, and JSON modes
+- [ ] E2E tests pass
 
-### Phase 2: Context Project Command
+---
+
+## Phase 2: Context Project Command
 
 `context project "Q1 Planning"` returns project + tasks + parent area.
 
-**Implementation:**
+### 2.1 Implementation
 
-Uses `get_project_context()` from Task 4's relationship infrastructure:
+Uses `getProjectContext()` from Task 4.
 
 ```typescript
-const context = getProjectContext(config, projectName)
+if (entityType === 'project') {
+  const config = getVaultConfig();
+  const result = getProjectContext(config, target);
 
-if (!context.project) {
-  // Handle project not found
+  if (!result.project) {
+    // Handle project not found
+  }
+
+  const output: ProjectContextResultOutput = {
+    type: 'project-context',
+    project: result.project,
+    area: result.area,
+    tasks: result.tasks,
+    warnings: result.warnings,
+  };
+
+  console.log(formatOutput(output, globalOpts));
 }
-
-// context.project - the matched project
-// context.area - parent area (if any)
-// context.tasks - all tasks in this project
-// context.warnings - any broken reference warnings
 ```
 
-**Output structure (AI mode):**
+### 2.2 Output Format (AI Mode)
 
 ```markdown
 ## Project: Q1 Planning
@@ -137,11 +336,80 @@ Project notes...
 - **status:** ready
 ```
 
-### Phase 3: Context Task Command
+### 2.3 Tests
+
+```typescript
+describe('context project', () => {
+  test('returns project with tasks and parent area', async () => {});
+  test('includes parent area details', async () => {});
+  test('includes all tasks in project', async () => {});
+  test('handles project with no area', async () => {});
+  test('handles project not found', async () => {});
+  test('works in all output modes', async () => {});
+});
+```
+
+### Phase 2 Verification
+
+- [ ] `context project "Q1"` returns project details
+- [ ] Includes parent area (if any)
+- [ ] Includes all tasks in project
+- [ ] Body included for primary entity only (project)
+- [ ] NOT_FOUND error for missing project
+- [ ] Works in all output modes
+- [ ] E2E tests pass
+
+---
+
+## Phase 3: Context Task Command
 
 `context task ~/tasks/foo.md` returns task + parent project + parent area.
 
-**Output structure (AI mode):**
+### 3.1 Implementation
+
+Add a new Rust function following the same pattern as `getAreaContext()` and `getProjectContext()`:
+
+**Rust (`crates/core/src/vault_index.rs`):**
+
+```rust
+#[napi(object)]
+pub struct TaskContextResult {
+    pub task: Option<Task>,       // None if task not found
+    pub project: Option<Project>, // Parent project if any
+    pub area: Option<Area>,       // Parent area (direct or via project)
+    pub warnings: Vec<String>,
+}
+
+#[napi]
+pub fn get_task_context(config: VaultConfig, task_path: String) -> TaskContextResult
+```
+
+**TypeScript usage:**
+
+```typescript
+if (entityType === 'task') {
+  const config = getVaultConfig();
+  const result = getTaskContext(config, target);
+
+  if (!result.task) {
+    // Handle task not found (NOT_FOUND error)
+  }
+
+  const output: TaskContextResultOutput = {
+    type: 'task-context',
+    task: result.task,
+    project: result.project,
+    area: result.area,
+    warnings: result.warnings,
+  };
+
+  console.log(formatOutput(output, globalOpts));
+}
+```
+
+This keeps all relationship resolution in Rust, consistent with the area and project context commands.
+
+### 3.2 Output Format (AI Mode)
 
 ```markdown
 ## Task: Fix login bug
@@ -170,11 +438,96 @@ Task details...
 - **status:** active
 ```
 
-### Phase 4: Vault Overview
+### 3.3 Tests
+
+```typescript
+describe('context task', () => {
+  test('returns task with parent project and area', async () => {});
+  test('includes parent project details', async () => {});
+  test('includes parent area (via project)', async () => {});
+  test('includes direct area when no project', async () => {});
+  test('handles task with no parents', async () => {});
+  test('handles task not found', async () => {});
+  test('accepts path input', async () => {});
+  test('works in all output modes', async () => {});
+});
+```
+
+### Phase 3 Verification
+
+- [ ] `context task ~/tasks/foo.md` returns task details
+- [ ] Includes parent project (if any)
+- [ ] Includes parent area (via project or direct)
+- [ ] Body included for primary entity (task)
+- [ ] NOT_FOUND error for missing task
+- [ ] Works in all output modes
+- [ ] E2E tests pass
+
+---
+
+## Phase 4: Vault Overview
 
 `context --ai` with no arguments returns vault overview.
 
-**Output structure:**
+### 4.1 Behavior by Mode
+
+| Mode  | No Args Behavior                                    |
+| ----- | --------------------------------------------------- |
+| AI    | Returns vault overview (areas, summary, this week)  |
+| Human | Error: "Please specify an entity or use --ai"       |
+| JSON  | Returns vault overview (same as AI mode)            |
+
+The stub in `context.ts` already handles the human mode error.
+
+### 4.2 Implementation
+
+```typescript
+if (!entityType && !target) {
+  if (mode === 'human') {
+    // Already implemented in stub - error message
+  }
+
+  // Build vault overview
+  const config = getVaultConfig();
+  const areas = scanAreas(config).filter(isActiveArea);
+  const projects = scanProjects(config).filter(isActiveProject);
+  const tasks = scanTasks(config).filter(isActiveTask);
+
+  // Calculate summaries
+  const areaSummaries = areas.map(area => ({
+    area,
+    projectCount: projects.filter(p => projectInArea(p, area)).length,
+    activeTaskCount: tasks.filter(t => taskInArea(t, area, projects)).length,
+  }));
+
+  const today = getToday();
+  const endOfWeek = getEndOfWeek(today);
+
+  const summary: VaultSummary = {
+    totalActiveTasks: tasks.length,
+    overdueCount: tasks.filter(t => t.due && t.due < today).length,
+    inProgressCount: tasks.filter(t => t.status === 'InProgress').length,
+  };
+
+  const thisWeek: ThisWeekSummary = {
+    dueTasks: tasks.filter(t => t.due && t.due >= today && t.due <= endOfWeek),
+    scheduledTasks: tasks.filter(t => t.scheduled && t.scheduled >= today && t.scheduled <= endOfWeek),
+  };
+
+  const output: VaultOverviewResult = {
+    type: 'vault-overview',
+    areas: areaSummaries,
+    summary,
+    thisWeek,
+  };
+
+  console.log(formatOutput(output, globalOpts));
+}
+```
+
+### 4.3 Output Format (AI Mode)
+
+Per cli-requirements.md:
 
 ```markdown
 ## Vault Overview
@@ -211,158 +564,379 @@ Task details...
 - Team standup prep - ~/tasks/standup-prep.md (scheduled: 2025-01-19)
 ```
 
-**Human mode (no args):** Error prompting to specify entity or use --ai.
+### 4.4 Tests
 
-### Phase 5: Today Command
-
-**Note from Task 4 Review:** Extract date utilities from `list.ts` to `src/lib/date.ts` when implementing this phase:
-
-- `getToday()`, `formatDate()`, `getTomorrow()`, `getEndOfWeek()`, `getStartOfWeek()`
-
-`taskdn today` - Tasks due today + scheduled for today.
-
-```bash
-taskdn today
-taskdn today --ai
-taskdn today --json
+```typescript
+describe('vault overview', () => {
+  test('returns overview in AI mode with no args', async () => {});
+  test('errors in human mode with no args', async () => {});
+  test('includes area summaries with counts', async () => {});
+  test('includes vault summary statistics', async () => {});
+  test('includes this week section', async () => {});
+  test('works in JSON mode', async () => {});
+});
 ```
 
-**Equivalent to:** `taskdn list --due today --scheduled today` (with OR logic between them)
+### Phase 4 Verification
 
-**Output includes:**
+- [ ] `context --ai` returns vault overview
+- [ ] `context` (human, no args) shows helpful error
+- [ ] Area summaries include project and task counts
+- [ ] Summary includes total tasks, overdue, in-progress
+- [ ] This Week section shows due and scheduled tasks
+- [ ] Works in AI and JSON modes
+- [ ] E2E tests pass
 
-- Overdue tasks (highlighted)
-- Due today
-- Scheduled for today
-- In-progress tasks (current work)
+---
 
-### Phase 6: Inbox Command
+## Phase 5: Context Enhancements
+
+### 5.0 Extract Date Utilities (Prep)
+
+Before implementing convenience commands, extract date utilities from `list.ts`:
+
+**Create `src/lib/date.ts`:**
+
+```typescript
+export function getToday(): string;
+export function formatDate(date: Date): string;
+export function getTomorrow(today: string): string;
+export function getEndOfWeek(today: string): string;
+export function getStartOfWeek(today: string): string;
+```
+
+Update `list.ts` to import from `@/lib/date.ts`.
+
+### 5.1 With-Bodies Flag
+
+Add `--with-bodies` flag to include body content for all entities, not just primary.
+
+```bash
+taskdn context area "Work" --with-bodies --ai
+```
+
+**Implementation:**
+
+- Add `withBodies` option to context command
+- Pass through to formatter
+- When true, include body for projects and tasks (not just area)
+
+### Phase 5 Verification
+
+- [ ] Date utilities extracted to `src/lib/date.ts`
+- [ ] `list.ts` updated to use shared utilities
+- [ ] `--with-bodies` flag works with all context subcommands
+- [ ] Bodies included for related entities when flag set
+
+---
+
+## Phase 6: Today Command
+
+`taskdn today` - Tasks due today + scheduled for today + overdue.
+
+### 6.1 Implementation
+
+**Create `src/commands/today.ts`:**
+
+```typescript
+export const todayCommand = new Command('today')
+  .description('Tasks due or scheduled for today')
+  .action((options, command) => {
+    const globalOpts = command.optsWithGlobals() as GlobalOptions;
+    const config = getVaultConfig();
+    const today = getToday();
+
+    let tasks = scanTasks(config).filter(isActiveTask);
+
+    // Include: due today, scheduled today, overdue, in-progress
+    tasks = tasks.filter(task =>
+      task.due === today ||
+      task.scheduled === today ||
+      (task.due && task.due < today) ||  // overdue
+      task.status === 'InProgress'
+    );
+
+    // Sort: overdue first, then due today, then scheduled, then in-progress
+    tasks = sortByTodayPriority(tasks, today);
+
+    const output: TaskListResult = {
+      type: 'task-list',
+      tasks,
+    };
+
+    console.log(formatOutput(output, globalOpts));
+  });
+```
+
+**Register in `src/commands/index.ts`.**
+
+### 6.2 Output Considerations
+
+Uses existing `TaskListResult` and formatters. Output is same as `list` command.
+
+In human mode, overdue tasks should be highlighted (red/warning color).
+
+### 6.3 Tests
+
+```typescript
+describe('today command', () => {
+  test('shows tasks due today', async () => {});
+  test('shows tasks scheduled for today', async () => {});
+  test('shows overdue tasks', async () => {});
+  test('shows in-progress tasks', async () => {});
+  test('sorts by priority (overdue first)', async () => {});
+  test('works in all output modes', async () => {});
+});
+```
+
+### Phase 6 Verification
+
+- [ ] `today` command shows due today
+- [ ] Shows scheduled for today
+- [ ] Shows overdue tasks
+- [ ] Shows in-progress tasks
+- [ ] Proper priority sorting
+- [ ] Works in all output modes
+- [ ] E2E tests pass
+
+---
+
+## Phase 7: Inbox Command
 
 `taskdn inbox` - Tasks with status: inbox.
 
-```bash
-taskdn inbox
-taskdn inbox --ai
+### 7.1 Implementation
+
+**Create `src/commands/inbox.ts`:**
+
+```typescript
+export const inboxCommand = new Command('inbox')
+  .description('Tasks in inbox')
+  .action((options, command) => {
+    const globalOpts = command.optsWithGlobals() as GlobalOptions;
+    const config = getVaultConfig();
+
+    const tasks = scanTasks(config).filter(task => task.status === 'Inbox');
+
+    const output: TaskListResult = {
+      type: 'task-list',
+      tasks,
+    };
+
+    console.log(formatOutput(output, globalOpts));
+  });
 ```
 
-**Equivalent to:** `taskdn list --status inbox`
+**Register in `src/commands/index.ts`.**
 
-### Phase 7: Next Command
+### 7.2 Tests
+
+```typescript
+describe('inbox command', () => {
+  test('shows only inbox status tasks', async () => {});
+  test('works in all output modes', async () => {});
+  test('empty result when no inbox tasks', async () => {});
+});
+```
+
+### Phase 7 Verification
+
+- [ ] `inbox` command shows inbox tasks only
+- [ ] Works in all output modes
+- [ ] E2E tests pass
+
+---
+
+## Phase 8: Next Command
 
 `taskdn next` - Smart prioritization of actionable tasks.
 
-**Priority order (from CLI spec):**
+### 8.1 Priority Algorithm
 
-1. Overdue tasks (highest)
+Per cli-requirements.md, priority order (highest to lowest):
+
+1. Overdue tasks
 2. Due today
 3. Due this week
 4. Currently in-progress
 5. Ready status
 6. Has a project (vs orphaned)
 
-**Output:** Top N tasks (default 10?) in priority order.
+### 8.2 Implementation
 
-**Implementation:**
-
-1. Get all active tasks
-2. Score each task based on priority factors
-3. Sort by score descending
-4. Return top N
-
-## With-Bodies Flag
-
-For context command, `--with-bodies` includes full body content for all related entities (not just primary).
-
-```bash
-taskdn context area "Work" --with-bodies --ai
-```
-
-## Test Cases
+**Create `src/commands/next.ts`:**
 
 ```typescript
-describe('taskdn context', () => {
-  describe('context area', () => {
-    test('includes area details')
-    test('includes child projects')
-    test('includes tasks in area')
-    test('respects --with-bodies flag')
-  })
+function calculatePriorityScore(task: Task, today: string, endOfWeek: string): number {
+  let score = 0;
 
-  describe('context project', () => {
-    test('includes project details')
-    test('includes parent area')
-    test('includes tasks in project')
-  })
+  // Overdue: highest priority (100 points)
+  if (task.due && task.due < today) {
+    score += 100;
+  }
+  // Due today (50 points)
+  else if (task.due === today) {
+    score += 50;
+  }
+  // Due this week (25 points)
+  else if (task.due && task.due <= endOfWeek) {
+    score += 25;
+  }
 
-  describe('context task', () => {
-    test('includes task details')
-    test('includes parent project')
-    test('includes parent area')
-  })
+  // In-progress (20 points)
+  if (task.status === 'InProgress') {
+    score += 20;
+  }
+  // Ready (10 points)
+  else if (task.status === 'Ready') {
+    score += 10;
+  }
 
-  describe('vault overview', () => {
-    test('returns overview in AI mode with no args')
-    test('errors in human mode with no args')
-    test('includes area summaries')
-    test('includes this week section')
-  })
-})
+  // Has project (5 points)
+  if (task.project) {
+    score += 5;
+  }
 
-describe('convenience commands', () => {
-  describe('today', () => {
-    test('shows due today')
-    test('shows scheduled today')
-    test('shows overdue')
-  })
+  return score;
+}
 
-  describe('inbox', () => {
-    test('shows only inbox status tasks')
-  })
+export const nextCommand = new Command('next')
+  .description('Prioritized list of actionable tasks')
+  .option('-l, --limit <n>', 'Maximum tasks to return', '10')
+  .action((options, command) => {
+    const globalOpts = command.optsWithGlobals() as GlobalOptions;
+    const config = getVaultConfig();
+    const today = getToday();
+    const endOfWeek = getEndOfWeek(today);
+    const limit = parseInt(options.limit, 10);
 
-  describe('next', () => {
-    test('returns prioritized list')
-    test('overdue tasks appear first')
-  })
-})
+    let tasks = scanTasks(config).filter(isActiveTask);
+
+    // Only include actionable tasks (ready, in-progress, or have due dates)
+    tasks = tasks.filter(task =>
+      task.status === 'Ready' ||
+      task.status === 'InProgress' ||
+      task.due
+    );
+
+    // Score and sort
+    const scored = tasks.map(task => ({
+      task,
+      score: calculatePriorityScore(task, today, endOfWeek),
+    }));
+
+    scored.sort((a, b) => b.score - a.score);
+
+    const topTasks = scored.slice(0, limit).map(s => s.task);
+
+    const output: TaskListResult = {
+      type: 'task-list',
+      tasks: topTasks,
+    };
+
+    console.log(formatOutput(output, globalOpts));
+  });
 ```
+
+### 8.3 Tests
+
+```typescript
+describe('next command', () => {
+  test('returns prioritized list', async () => {});
+  test('overdue tasks appear first', async () => {});
+  test('due today before due this week', async () => {});
+  test('in-progress before ready', async () => {});
+  test('respects --limit option', async () => {});
+  test('default limit is 10', async () => {});
+  test('works in all output modes', async () => {});
+});
+```
+
+### Phase 8 Verification
+
+- [ ] `next` returns prioritized task list
+- [ ] Overdue tasks appear first
+- [ ] Priority order matches specification
+- [ ] `--limit` option works
+- [ ] Default limit is 10
+- [ ] Works in all output modes
+- [ ] E2E tests pass
+
+---
 
 ## Fixture Requirements
 
-Need fixtures with relationships:
+Existing fixtures in `tests/fixtures/vault/` need enhancement for relationship testing:
+
+### Required Relationships
 
 ```
 tests/fixtures/vault/
 ├── tasks/
-│   ├── in-project-1.md     # projects: [[Test Project]]
-│   ├── in-project-2.md     # projects: [[Test Project]]
-│   └── orphan.md           # No project
+│   ├── in-project-1.md     # project: [[Test Project]]
+│   ├── in-project-2.md     # project: [[Test Project]]
+│   ├── in-area-direct.md   # area: [[Work]], no project
+│   ├── orphan.md           # No project, no area
+│   ├── overdue.md          # due: past date
+│   ├── due-today.md        # due: today
+│   ├── due-this-week.md    # due: within week
+│   └── inbox-task.md       # status: inbox
 ├── projects/
 │   ├── test-project.md     # area: [[Work]]
-│   └── no-area.md          # No area
+│   └── no-area-project.md  # No area
 └── areas/
     └── work.md
 ```
 
-## Verification
+### Mock Date Testing
+
+For date-dependent tests (today, overdue, this week), use `TASKDN_MOCK_DATE` env var (already supported in list.ts date utilities).
+
+---
+
+## Final Verification Checklist
+
+### Context Commands
 
 - [ ] `context area` shows area + projects + tasks
 - [ ] `context project` shows project + tasks + parent area
 - [ ] `context task` shows task + parent project + area
-- [ ] `context --ai` shows vault overview
+- [ ] `context --ai` (no args) shows vault overview
 - [ ] `context` (human, no args) shows helpful error
 - [ ] `--with-bodies` includes all bodies
-- [ ] `today` shows due/scheduled today + overdue
-- [ ] `inbox` shows inbox tasks
-- [ ] `next` returns prioritized list
-- [ ] All commands work in all output modes
-- [ ] cli-progress.md updated
+
+### Convenience Commands
+
+- [ ] `today` shows due/scheduled today + overdue + in-progress
+- [ ] `inbox` shows inbox tasks only
+- [ ] `next` returns prioritized list with correct ordering
+
+### Cross-Cutting
+
+- [ ] All commands work in human, AI, and JSON modes
+- [ ] Date utilities extracted to `src/lib/date.ts`
+- [ ] Error handling follows existing patterns (NOT_FOUND, etc.)
+- [ ] `cli-progress.md` updated
+- [ ] All E2E tests pass
+- [ ] `bun run check` passes
+
+---
 
 ## Notes
 
-- Context command is the key command for AI agents - needs to be efficient
-- **Relationship resolution is handled by Task 4's Rust functions:**
-  - `get_area_context()` - returns area + projects + tasks in one call
-  - `get_project_context()` - returns project + area + tasks in one call
-  - No need for caching - each function builds what it needs internally
-- **Wikilink parsing** is handled by `extract_wikilink_name()` from Task 4
-- The "This Week" section in vault overview needs date range calculation (use date utilities from list.ts)
+- **Context command is key for AI agents** - Must be efficient (single call)
+- **Relationship resolution handled by Rust** - `getAreaContext()`, `getProjectContext()` from Task 4
+- **Wikilink parsing** - `extractWikilinkName()` from Task 4
+- **Date utilities** - Extract to shared module before Phase 6
+- **Output modes** - All commands support human/AI/JSON via existing formatter infrastructure
+
+## Relevant Specifications
+
+- **cli-requirements.md** - Context Command, Convenience Commands, AI Mode Output
+- **S2-interface-design.md** - Output formats, error handling patterns
+- **S1-core.md** - Entity relationships, field definitions
+
+## Dependencies for Future Tasks
+
+- **Task 6 (Write Operations):** May reuse date utilities and error patterns
+- **Task 7 (Doctor Command):** May reuse relationship infrastructure for reference validation
