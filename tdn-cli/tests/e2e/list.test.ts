@@ -647,3 +647,177 @@ describe('date filter combinations', () => {
     expect(output.tasks).toEqual([]);
   });
 });
+
+// ============================================================================
+// Phase 7: Sorting and Limits
+// ============================================================================
+
+describe('taskdn list --sort flag', () => {
+  test('sorts by due date ascending by default', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--sort', 'due', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    const withDue = output.tasks.filter((t: { due?: string }) => t.due);
+    expect(withDue.length).toBeGreaterThan(0);
+    for (let i = 1; i < withDue.length; i++) {
+      expect(withDue[i].due >= withDue[i - 1].due).toBe(true);
+    }
+  });
+
+  test('sorts by created date ascending', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--sort', 'created', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    const withCreated = output.tasks.filter((t: { createdAt?: string }) => t.createdAt);
+    expect(withCreated.length).toBeGreaterThan(0);
+    for (let i = 1; i < withCreated.length; i++) {
+      expect(withCreated[i].createdAt >= withCreated[i - 1].createdAt).toBe(true);
+    }
+  });
+
+  test('sorts by title alphabetically', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--sort', 'title', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(1);
+    for (let i = 1; i < output.tasks.length; i++) {
+      expect(
+        output.tasks[i].title.toLowerCase() >= output.tasks[i - 1].title.toLowerCase()
+      ).toBe(true);
+    }
+  });
+
+  test('items without sort field appear last', async () => {
+    const { stdout } = await runCli(['list', '--sort', 'due', '--json']);
+    const output = JSON.parse(stdout);
+    const lastWithDue = output.tasks.reduce(
+      (lastIdx: number, t: { due?: string }, idx: number) => (t.due ? idx : lastIdx),
+      -1
+    );
+    const firstWithoutDue = output.tasks.findIndex((t: { due?: string }) => !t.due);
+    if (lastWithDue !== -1 && firstWithoutDue !== -1) {
+      expect(lastWithDue).toBeLessThan(firstWithoutDue);
+    }
+  });
+
+  test('works in AI mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--sort', 'title', '--ai']);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('## Tasks');
+  });
+
+  test('works in human mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--sort', 'title']);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Tasks');
+  });
+});
+
+describe('taskdn list --desc flag', () => {
+  test('reverses sort order for title', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--sort', 'title', '--desc', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeGreaterThan(1);
+    for (let i = 1; i < output.tasks.length; i++) {
+      expect(
+        output.tasks[i].title.toLowerCase() <= output.tasks[i - 1].title.toLowerCase()
+      ).toBe(true);
+    }
+  });
+
+  test('reverses sort order for due date', async () => {
+    const { stdout } = await runCli(['list', '--sort', 'due', '--desc', '--json']);
+    const output = JSON.parse(stdout);
+    const withDue = output.tasks.filter((t: { due?: string }) => t.due);
+    expect(withDue.length).toBeGreaterThan(0);
+    for (let i = 1; i < withDue.length; i++) {
+      expect(withDue[i].due <= withDue[i - 1].due).toBe(true);
+    }
+  });
+
+  test('items without sort field still appear last when descending', async () => {
+    const { stdout } = await runCli(['list', '--sort', 'due', '--desc', '--json']);
+    const output = JSON.parse(stdout);
+    const lastWithDue = output.tasks.reduce(
+      (lastIdx: number, t: { due?: string }, idx: number) => (t.due ? idx : lastIdx),
+      -1
+    );
+    const firstWithoutDue = output.tasks.findIndex((t: { due?: string }) => !t.due);
+    if (lastWithDue !== -1 && firstWithoutDue !== -1) {
+      expect(lastWithDue).toBeLessThan(firstWithoutDue);
+    }
+  });
+});
+
+describe('taskdn list --limit flag', () => {
+  test('limits number of results', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--limit', '2', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeLessThanOrEqual(2);
+  });
+
+  test('limit is applied after sorting', async () => {
+    // Get all tasks sorted by title
+    const { stdout: allStdout } = await runCli(['list', '--sort', 'title', '--json']);
+    const allOutput = JSON.parse(allStdout);
+
+    // Get limited tasks sorted by title
+    const { stdout: limitedStdout } = await runCli([
+      'list',
+      '--sort',
+      'title',
+      '--limit',
+      '2',
+      '--json',
+    ]);
+    const limitedOutput = JSON.parse(limitedStdout);
+
+    expect(limitedOutput.tasks.length).toBeLessThanOrEqual(2);
+    // The limited results should be the first 2 from the full sorted list
+    if (allOutput.tasks.length >= 2) {
+      expect(limitedOutput.tasks[0].title).toBe(allOutput.tasks[0].title);
+      expect(limitedOutput.tasks[1].title).toBe(allOutput.tasks[1].title);
+    }
+  });
+
+  test('returns all if limit exceeds count', async () => {
+    const { stdout: allStdout } = await runCli(['list', '--json']);
+    const allOutput = JSON.parse(allStdout);
+
+    const { stdout: limitedStdout } = await runCli(['list', '--limit', '1000', '--json']);
+    const limitedOutput = JSON.parse(limitedStdout);
+
+    expect(limitedOutput.tasks.length).toBe(allOutput.tasks.length);
+  });
+
+  test('works with other filters', async () => {
+    const { stdout, exitCode } = await runCli([
+      'list',
+      '--status',
+      'ready',
+      '--sort',
+      'title',
+      '--limit',
+      '2',
+      '--json',
+    ]);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks.length).toBeLessThanOrEqual(2);
+    expect(output.tasks.every((t: { status: string }) => t.status === 'ready')).toBe(true);
+  });
+
+  test('works in AI mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--limit', '2', '--ai']);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('## Tasks');
+  });
+
+  test('works in human mode', async () => {
+    const { stdout, exitCode } = await runCli(['list', '--limit', '2']);
+    expect(exitCode).toBe(0);
+    expect(stdout).toContain('Tasks');
+  });
+});

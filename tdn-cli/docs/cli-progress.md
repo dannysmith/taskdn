@@ -24,9 +24,9 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `list --due today/tomorrow/this-week` - Due date filter
 - [x] `list --overdue` - Overdue tasks
 - [x] `list --scheduled today` - Scheduled filter
-- [ ] `list --sort <field>` - Sort results
-- [ ] `list --desc` - Descending sort
-- [ ] `list --limit <n>` - Limit results
+- [x] `list --sort <field>` - Sort results
+- [x] `list --desc` - Descending sort
+- [x] `list --limit <n>` - Limit results
 - [ ] `list --include-done` - Include completed
 - [ ] `list --include-dropped` - Include dropped
 - [ ] `list --include-closed` - Include done + dropped

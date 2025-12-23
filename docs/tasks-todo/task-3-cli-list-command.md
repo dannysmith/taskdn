@@ -737,7 +737,7 @@ Already available:
 - [x] `--status` filtering works (single and multiple)
 - [x] `--project` and `--area` filtering works
 - [x] `--due`, `--overdue`, `--scheduled` work
-- [ ] `--sort` and `--limit` work
+- [x] `--sort` and `--limit` work
 - [ ] All inclusion flags work
 - [ ] `--query` text search works
 - [ ] Fuzzy entity lookup functions exported from Rust
@@ -823,3 +823,18 @@ Already available:
   - `--overdue` with empty results and active task filtering
   - `--scheduled today` in all output modes
   - Combined filters (date + status, date + project)
+
+### Phase 7: Sorting and Limits - COMPLETE
+
+- Implemented `--sort` with fields: `due`, `created`, `updated`, `title`
+- Field mapping: `created` → `createdAt`, `updated` → `updatedAt`
+- Implemented `--desc` flag for descending order
+- Implemented `--limit <n>` to limit results (applied after sorting)
+- Null handling: items without the sort field appear last regardless of direction
+- Case-insensitive comparison for title sorting
+- 15 new E2E tests covering:
+  - Sorting by due, created, title in ascending order
+  - `--desc` reversing sort order
+  - Items without sort field appearing last
+  - Limit applied after sorting
+  - Combined with other filters

@@ -278,6 +278,54 @@ export const listCommand = new Command('list')
       }
     }
 
+    // Apply sorting if --sort is provided
+    if (options.sort) {
+      const sortField = options.sort.toLowerCase();
+      const descending = options.desc === true;
+
+      // Map CLI sort values to task field names
+      const fieldMap: Record<string, keyof Task> = {
+        due: 'due',
+        created: 'createdAt',
+        updated: 'updatedAt',
+        title: 'title',
+      };
+
+      const taskField = fieldMap[sortField];
+      if (taskField) {
+        tasks = tasks.sort((a, b) => {
+          const aVal = a[taskField];
+          const bVal = b[taskField];
+
+          // Items without the sort field go last, regardless of direction
+          if (aVal === undefined && bVal === undefined) return 0;
+          if (aVal === undefined) return 1;
+          if (bVal === undefined) return -1;
+
+          // Compare values (works for strings including dates)
+          let comparison = 0;
+          if (typeof aVal === 'string' && typeof bVal === 'string') {
+            // Case-insensitive comparison for title
+            if (taskField === 'title') {
+              comparison = aVal.toLowerCase().localeCompare(bVal.toLowerCase());
+            } else {
+              comparison = aVal.localeCompare(bVal);
+            }
+          }
+
+          return descending ? -comparison : comparison;
+        });
+      }
+    }
+
+    // Apply limit if --limit is provided
+    if (options.limit) {
+      const limit = parseInt(options.limit, 10);
+      if (!isNaN(limit) && limit > 0) {
+        tasks = tasks.slice(0, limit);
+      }
+    }
+
     const result: TaskListResult = {
       type: 'task-list',
       tasks,
