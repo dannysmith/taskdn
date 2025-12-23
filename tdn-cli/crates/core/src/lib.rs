@@ -6,6 +6,7 @@ mod project;
 mod task;
 mod test_utils;
 mod vault;
+mod wikilink;
 
 pub use area::*;
 pub use project::*;

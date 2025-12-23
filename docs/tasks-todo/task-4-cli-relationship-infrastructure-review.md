@@ -416,6 +416,181 @@ mod tests {
 }
 ```
 
+---
+
+### Relationship Rules (Reference)
+
+Before designing the implementation, let's document the exact relationship semantics:
+
+**Cardinality:**
+
+| Relationship | Cardinality | Description |
+|--------------|-------------|-------------|
+| Task → Project | 0..1 | A task can belong to at most one project |
+| Project → Tasks | 0..* | A project can have many tasks |
+| Project → Area | 0..1 | A project can belong to at most one area |
+| Area → Projects | 0..* | An area can have many projects |
+| Task → Area (direct) | 0..1 | A task can have a directly assigned area |
+| Area → Tasks (direct) | 0..* | An area can have many directly assigned tasks |
+| Task → Area (via project) | 0..1 | Derived from task's project's area |
+| Area → Tasks (via projects) | 0..* | All tasks belonging to projects in this area |
+
+**Canonical Area for a Task:**
+- If task has `area: [[X]]` → use X (direct assignment takes precedence)
+- Else if task has `project: [[P]]` and P has `area: [[Y]]` → use Y (inherited from project)
+- Else → no area
+
+**Edge Case:** If a task has `area: [[X]]` but its project has `area: [[Y]]` where X ≠ Y:
+- The task's canonical area is X (direct takes precedence)
+- However, when asking "what tasks are in area Y?", this task should still be included (via its project)
+- This situation indicates user error but should be handled gracefully
+
+---
+
+### Phase 3.2 Design Analysis
+
+Before implementing, we evaluated the proposed VaultIndex approach critically.
+
+#### Current Proposal: Full Upfront Index
+
+```rust
+pub struct VaultIndex {
+    pub tasks: Vec<Task>,
+    pub projects: Vec<Project>,
+    pub areas: Vec<Area>,
+    project_by_name: HashMap<String, usize>,
+    area_by_name: HashMap<String, usize>,
+    tasks_by_project: HashMap<usize, Vec<usize>>,
+    tasks_by_area: HashMap<usize, Vec<usize>>,
+    projects_by_area: HashMap<usize, Vec<usize>>,
+}
+```
+
+Build once per CLI invocation, use for all relationship queries.
+
+#### Performance Analysis
+
+**Index Building Cost:**
+- Scan tasks → O(n) file reads for n tasks
+- Scan projects → O(m) file reads for m projects
+- Scan areas → O(a) file reads for a areas
+- Build maps → O(n + m) for wikilink resolution
+
+For vault with 1000 tasks, 50 projects, 10 areas: ~1060 file reads.
+
+**Impact by Operation:**
+
+| Operation | Without Index | With Upfront Index |
+|-----------|---------------|-------------------|
+| `list` | ~1000 reads | ~1060 reads |
+| `list --status ready` | ~1000 reads | ~1060 reads |
+| `list --area Work` | ~1000 reads (wrong result!) | ~1060 reads (correct) |
+| `show task "Foo"` | 1 read | ~1060 reads |
+| `context area "Work"` | N/A | ~1060 reads |
+
+**Key observation:** The upfront index approach penalizes simple operations (like `show`) that don't need relationships.
+
+#### Alternative Approaches Considered
+
+**1. Lazy/On-Demand Index**
+- Only build index when relationship queries are needed
+- `list` without filters → no index
+- `list --area Work` → build index
+- Pro: Only pay cost when needed
+- Con: Slightly more complex code paths
+
+**2. Query-Specific Functions**
+- Expose targeted functions: `get_tasks_in_area(config, name) -> Vec<Task>`
+- Implementation internally builds only what it needs
+- Pro: Cleaner TypeScript API, implementation can optimize
+- Con: May rebuild similar data across calls (but CLI is short-lived)
+
+**3. Partial/Incremental Building**
+- For `list --area Work`: find area → find its projects → find those tasks
+- Don't load ALL entities
+- Pro: Minimal reads
+- Con: More complex, multiple passes, still needs all tasks for task filtering
+
+**4. Cached Persistent Index**
+- Store index in file, rebuild when files change
+- Pro: Fast subsequent runs
+- Con: Cache invalidation complexity, violates "stateless core" principle
+
+#### Which Operations Actually Need Relationships?
+
+**Need relationships:**
+- `list --area X` (tasks via projects)
+- `context area "X"` (area → projects → tasks)
+- `context project "X"` (project → tasks)
+
+**Don't need relationships:**
+- `list` (just list tasks)
+- `list --status ready` (filter by status)
+- `show task "X"` (just one task)
+- `add task "X"` (create file)
+- `edit task "X"` (modify one file)
+
+Most operations don't need relationships.
+
+#### Risks and Considerations
+
+1. **Wikilink resolution is fuzzy:** Case-insensitive matching could cause false positives if two areas have similar names
+2. **Broken references:** Tasks may reference non-existent projects/areas - should warn, not fail
+3. **Memory for large vaults:** ~500 bytes/task → 5MB for 10K tasks (acceptable)
+4. **Partial parse failures:** Some files may fail to parse - index should still work with valid files
+
+#### Recommendation
+
+**Hybrid Approach: Relationship-Aware Query Functions**
+
+Instead of exposing a VaultIndex struct to TypeScript, expose purpose-built query functions:
+
+```rust
+// Simple operations - already exist
+pub fn scan_tasks(config: VaultConfig) -> Vec<Task>
+pub fn scan_projects(config: VaultConfig) -> Vec<Project>
+
+// Relationship-aware queries - new
+pub fn get_tasks_in_area(config: VaultConfig, area_name: String) -> TasksInAreaResult {
+    // Builds minimal index needed: areas → projects by area → tasks by project
+    // Returns tasks + any warnings about broken references
+}
+
+pub fn get_tasks_in_project(config: VaultConfig, project_name: String) -> Vec<Task> {
+    // Scans tasks, filters by project reference
+}
+
+pub fn get_area_context(config: VaultConfig, area_name: String) -> AreaContextResult {
+    // Returns area, its projects, all tasks (via projects + direct)
+    // Used by context command
+}
+```
+
+**Benefits:**
+1. Simple operations stay fast (no unnecessary index building)
+2. Relationship queries pay only their own cost
+3. Cleaner API - TypeScript doesn't need to understand index internals
+4. Implementation can be optimized without API changes
+5. Follows "stateless core" principle
+
+**Trade-off:**
+- More functions to implement and maintain
+- Can't share index across multiple relationship queries in one command (but this is rare)
+
+#### Questions for Discussion
+
+1. **API preference:** Expose VaultIndex struct OR query functions? Query functions feel cleaner.
+
+2. **Where should the `--area` filtering happen?** Currently TypeScript filters. Options:
+   - Keep in TypeScript, call new Rust function when `--area` is used
+   - Move all filtering to Rust
+
+3. **Should `context` command use same infrastructure as `list --area`?** They have overlapping needs but different output requirements.
+
+4. **How to handle broken wikilinks?** Current proposal: include in results with warnings field. Alternative: log warning and exclude from results.
+
+---
+
 #### 3.2 Vault Index Design
 
 Design an in-memory index for efficient relationship queries. The index is built once per CLI invocation (no persistence).
@@ -627,7 +802,7 @@ if (options.area) {
 
 ### Phase 3
 
-- [ ] `extract_wikilink_name()` implemented with tests
+- [x] `extract_wikilink_name()` implemented with tests
 - [ ] `VaultIndex` struct implemented
 - [ ] `build_vault_index()` exported via NAPI
 - [ ] `--area` filter uses relationship traversal
