@@ -151,7 +151,7 @@ This approach:
 # Overview
 
 **Stats:** 3 areas · 8 active projects · 34 active tasks · ⚠️ 2 overdue · 📅 3 due today · ▶️ 5 in-progress
-_Active tasks exclude: done, dropped, icebox. Active projects exclude: done. Active areas exclude: archived._
+_Excludes: done/dropped/icebox tasks, done projects, archived areas_
 
 ---
 
@@ -214,7 +214,7 @@ Tasks: 2 total (1▶️ 1🟢)
 
 ### Newly Actionable Today (2)
 
-_Tasks with defer-until: 2025-01-15_
+_defer-until = today_
 
 - **Follow up with client** — Client Onboarding → Work
 - **Check test results** — Health (direct)
@@ -241,11 +241,11 @@ _Tasks with defer-until: 2025-01-15_
 
 ### Recently Modified (3)
 
-_Tasks updated in last 24 hours, not shown above, excludes completed/dropped_
+_Last 24h, not shown above_
 
-- **Update project timeline** — Q1 Planning → Work — modified 6 hours ago
-- **Research SSO providers** — Q1 Planning → Work — modified 14 hours ago
-- **Draft client proposal** — Client Onboarding → Work — modified 20 hours ago
+- **Update project timeline** — Q1 Planning → Work — 6h ago
+- **Research SSO providers** — Q1 Planning → Work — 14h ago
+- **Draft client proposal** — Client Onboarding → Work — 20h ago
 
 ---
 
@@ -253,8 +253,7 @@ _Tasks updated in last 24 hours, not shown above, excludes completed/dropped_
 
 ### Fix authentication bug
 
-**Project:** Q1 Planning → Work
-**Due:** 2025-01-18
+Q1 Planning → Work · due 2025-01-18
 
 The SSO authentication flow is failing for enterprise users. Investigation shows the OAuth callback handler isn't properly refreshing expired tokens. Need to:
 
@@ -264,7 +263,7 @@ The SSO authentication flow is failing for enterprise users. Investigation shows
 
 ### Document API v2 endpoints
 
-**Project:** Q1 Planning → Work
+Q1 Planning → Work
 
 Document the new v2 REST endpoints before client release. Focus areas:
 
@@ -274,14 +273,13 @@ Document the new v2 REST endpoints before client release. Focus areas:
 
 ### Review team capacity
 
-**Area:** Work (direct)
-**Due:** 2025-01-16
+Work (direct) · due 2025-01-16
 
 Assess current team bandwidth for Q1 commitments. Need to identify if we can take on the new client project or need to defer.
 
 ### Get contractor quotes
 
-**Project:** Home Renovation → Personal
+Home Renovation → Personal
 
 Reach out to at least 3 contractors for bathroom remodel quotes. Questions to ask:
 
@@ -291,15 +289,15 @@ Reach out to at least 3 contractors for bathroom remodel quotes. Questions to as
 
 ### Schedule dentist appointment
 
-**Area:** Personal (direct)
+Personal (direct)
 
 Overdue for 6-month checkup. Need to call Dr. Smith's office.
 
 ---
 
-## Context Excerpts from Active Areas and Projects
+## Excerpts
 
-_Areas: excludes archived. Projects: excludes paused, done._
+_Active areas and projects (excludes archived areas, paused/done projects)_
 
 ### Work (Area)
 
