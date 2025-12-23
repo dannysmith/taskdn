@@ -1,10 +1,16 @@
 import { bold, blue, dim, cyan, yellow, green } from 'ansis';
-import type { Task, Project } from '@bindings';
-import type { Formatter, FormattableResult, TaskResult, ProjectResult } from './types.ts';
+import type { Task, Project, Area } from '@bindings';
+import type {
+  Formatter,
+  FormattableResult,
+  TaskResult,
+  ProjectResult,
+  AreaResult,
+} from './types.ts';
 import { toKebabCase } from './types.ts';
 
 /**
- * Format a status with appropriate color (works for both tasks and projects)
+ * Format a status with appropriate color (works for tasks, projects, and areas)
  */
 function formatStatus(status: string): string {
   const statusColors: Record<string, (s: string) => string> = {
@@ -19,6 +25,9 @@ function formatStatus(status: string): string {
     // Project-specific statuses
     Planning: (s) => cyan(s),
     Paused: (s) => yellow(s),
+    // Area-specific statuses
+    Active: (s) => green(s),
+    Archived: (s) => dim(s),
   };
   const colorFn = statusColors[status] ?? ((s: string) => s);
   return colorFn(toKebabCase(status));
@@ -84,6 +93,34 @@ function formatProject(project: Project): string {
 }
 
 /**
+ * Format a single area for human output
+ */
+function formatArea(area: Area): string {
+  const lines: string[] = [];
+
+  // Title with status (status is optional for areas)
+  if (area.status) {
+    lines.push(bold(area.title) + '  ' + formatStatus(area.status));
+  } else {
+    lines.push(bold(area.title));
+  }
+  lines.push(dim(area.path));
+  lines.push('');
+
+  // Metadata
+  if (area.areaType) lines.push(`${dim('Type:')} ${area.areaType}`);
+  if (area.description) lines.push(`${dim('Description:')} ${area.description}`);
+
+  // Body
+  if (area.body) {
+    lines.push('');
+    lines.push(area.body);
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * Human-readable formatter with colors and styling
  */
 export const humanFormatter: Formatter = {
@@ -99,8 +136,10 @@ export const humanFormatter: Formatter = {
         const projectResult = result as ProjectResult;
         return formatProject(projectResult.project);
       }
-      case 'area':
-        return bold(green('Area')) + dim(' (stub output)');
+      case 'area': {
+        const areaResult = result as AreaResult;
+        return formatArea(areaResult.area);
+      }
       case 'context':
         return bold(blue('Context')) + dim(' (stub output)');
       default:

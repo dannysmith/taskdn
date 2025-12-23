@@ -1,5 +1,11 @@
-import type { Task, Project } from '@bindings';
-import type { Formatter, FormattableResult, TaskResult, ProjectResult } from './types.ts';
+import type { Task, Project, Area } from '@bindings';
+import type {
+  Formatter,
+  FormattableResult,
+  TaskResult,
+  ProjectResult,
+  AreaResult,
+} from './types.ts';
 import { toKebabCase } from './types.ts';
 
 /**
@@ -67,6 +73,34 @@ function formatProject(project: Project): string {
 }
 
 /**
+ * Format a single area for AI mode (structured Markdown)
+ */
+function formatArea(area: Area): string {
+  const lines: string[] = [];
+
+  lines.push(`## ${area.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${area.path}`);
+
+  // Status is optional for areas
+  if (area.status) {
+    lines.push(`- **status:** ${toKebabCase(area.status)}`);
+  }
+
+  if (area.areaType) lines.push(`- **type:** ${area.areaType}`);
+  if (area.description) lines.push(`- **description:** ${area.description}`);
+
+  if (area.body) {
+    lines.push('');
+    lines.push('### Body');
+    lines.push('');
+    lines.push(area.body);
+  }
+
+  return lines.join('\n');
+}
+
+/**
  * AI-mode formatter - structured Markdown optimized for LLM consumption
  */
 export const aiFormatter: Formatter = {
@@ -82,8 +116,10 @@ export const aiFormatter: Formatter = {
         const projectResult = result as ProjectResult;
         return formatProject(projectResult.project);
       }
-      case 'area':
-        return '## Area\n\n- **path:** (stub)';
+      case 'area': {
+        const areaResult = result as AreaResult;
+        return formatArea(areaResult.area);
+      }
       case 'context':
         return '## Context\n\n(stub output)';
       default:

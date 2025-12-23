@@ -12,7 +12,7 @@ Checklist tracking implementation of all CLI commands and features.
 
 - [x] `show <path>` - Show task by path
 - [x] `show <path>` - Show project by path (auto-detected)
-- [ ] `show area <name>` - Show area
+- [x] `show <path>` - Show area by path (auto-detected)
 - [ ] `show` fuzzy matching (human mode)
 - [ ] `list` - List active tasks
 - [ ] `list projects` - List projects
@@ -143,7 +143,7 @@ Checklist tracking implementation of all CLI commands and features.
 
 - [x] Task parsing (`parseTaskFile`)
 - [x] Project parsing (`parseProjectFile`)
-- [ ] Area parsing (`parseAreaFile`)
+- [x] Area parsing (`parseAreaFile`)
 - [ ] Vault scanning
 - [ ] Wikilink parsing utility
 - [ ] Vault index (relationships)

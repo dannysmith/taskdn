@@ -1,25 +1,29 @@
 import { resolve } from 'path';
 import { Command } from '@commander-js/extra-typings';
 import { red } from 'ansis';
-import { parseTaskFile, parseProjectFile } from '@bindings';
+import { parseTaskFile, parseProjectFile, parseAreaFile } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type {
   GlobalOptions,
   TaskResult,
   ProjectResult,
+  AreaResult,
   FormattableResult,
 } from '@/output/index.ts';
 
 /**
  * Detect entity type from file path.
  *
- * TODO: This is a temporary hack that checks for '/projects/' in the path.
+ * TODO: This is a temporary hack that checks for '/projects/' or '/areas/' in the path.
  * Once config is implemented, this should check if the path falls under the
  * user's configured projects_dir, tasks_dir, or areas_dir.
  */
-function detectEntityType(path: string): 'task' | 'project' {
+function detectEntityType(path: string): 'task' | 'project' | 'area' {
   if (path.includes('/projects/')) {
     return 'project';
+  }
+  if (path.includes('/areas/')) {
+    return 'area';
   }
   return 'task';
 }
@@ -51,6 +55,12 @@ export const showCommand = new Command('show')
           type: 'project',
           project,
         } as ProjectResult;
+      } else if (entityType === 'area') {
+        const area = parseAreaFile(absolutePath);
+        result = {
+          type: 'area',
+          area,
+        } as AreaResult;
       } else {
         const task = parseTaskFile(absolutePath);
         result = {

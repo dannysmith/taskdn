@@ -220,9 +220,9 @@ describe('fuzzy matching', () => {
 ## Verification
 
 - [x] `parseProjectFile()` exported from Rust bindings
-- [ ] `parseAreaFile()` exported from Rust bindings
+- [x] `parseAreaFile()` exported from Rust bindings
 - [x] `show <project-path>` works for all output modes
-- [ ] `show <area-path>` works for all output modes
+- [x] `show <area-path>` works for all output modes
 - [ ] Error codes appear in AI/JSON output
 - [ ] Fuzzy matching works in human mode
 - [x] All E2E tests pass
@@ -230,5 +230,5 @@ describe('fuzzy matching', () => {
 
 ## Notes
 
-- Entity type detection currently uses path heuristic (`/projects/` in path). Will be replaced with config-based detection once config is implemented.
+- Entity type detection currently uses path heuristic (`/projects/` or `/areas/` in path). Will be replaced with config-based detection once config is implemented.
 - Fuzzy matching should be case-insensitive substring (per CLI spec)

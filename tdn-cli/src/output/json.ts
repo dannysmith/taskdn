@@ -1,4 +1,10 @@
-import type { Formatter, FormattableResult, TaskResult, ProjectResult } from './types.ts';
+import type {
+  Formatter,
+  FormattableResult,
+  TaskResult,
+  ProjectResult,
+  AreaResult,
+} from './types.ts';
 import { toKebabCase } from './types.ts';
 
 /**
@@ -46,6 +52,22 @@ export const jsonFormatter: Formatter = {
               project.blockedBy.length > 0 && { blockedBy: project.blockedBy }),
             ...(project.uniqueId && { uniqueId: project.uniqueId }),
             ...(project.body && { body: project.body }),
+          },
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'area': {
+        const areaResult = result as AreaResult;
+        const area = areaResult.area;
+        const output = {
+          summary: `Area: ${area.title}`,
+          area: {
+            path: area.path,
+            title: area.title,
+            ...(area.status && { status: toKebabCase(area.status) }),
+            ...(area.areaType && { areaType: area.areaType }),
+            ...(area.description && { description: area.description }),
+            ...(area.body && { body: area.body }),
           },
         };
         return JSON.stringify(output, null, 2);
