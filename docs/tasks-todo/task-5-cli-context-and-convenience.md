@@ -222,7 +222,7 @@ E2E tests added in `tests/e2e/context-area.test.ts` (22 tests).
 
 ---
 
-## Phase 2: Context Project Command
+## Phase 2: Context Project Command ✅ COMPLETE
 
 `context project "Q1 Planning"` returns project + tasks + parent area.
 
@@ -300,15 +300,19 @@ describe('context project', () => {
 });
 ```
 
+### 2.3 Tests ✅
+
+E2E tests added in `tests/e2e/context-project.test.ts` (20 tests).
+
 ### Phase 2 Verification
 
-- [ ] `context project "Q1"` returns project details
-- [ ] Includes parent area (if any)
-- [ ] Includes all tasks in project
-- [ ] Body included for primary entity only (project)
-- [ ] NOT_FOUND error for missing project
-- [ ] Works in all output modes
-- [ ] E2E tests pass
+- [x] `context project "Q1"` returns project details
+- [x] Includes parent area (if any)
+- [x] Includes all tasks in project
+- [x] Body included for primary entity only (project)
+- [x] NOT_FOUND error for missing project
+- [x] Works in all output modes
+- [x] E2E tests pass
 
 ---
 
@@ -853,7 +857,7 @@ For date-dependent tests (today, overdue, this week), use `TASKDN_MOCK_DATE` env
 ### Context Commands
 
 - [x] `context area` shows area + projects + tasks
-- [ ] `context project` shows project + tasks + parent area
+- [x] `context project` shows project + tasks + parent area
 - [ ] `context task` shows task + parent project + area
 - [ ] `context --ai` (no args) shows vault overview
 - [x] `context` (human, no args) shows helpful error

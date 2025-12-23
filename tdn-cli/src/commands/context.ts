@@ -1,8 +1,12 @@
 import { Command } from '@commander-js/extra-typings';
-import { getAreaContext } from '@bindings';
+import { getAreaContext, getProjectContext } from '@bindings';
 import type { Task } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, AreaContextResultOutput } from '@/output/index.ts';
+import type {
+  GlobalOptions,
+  AreaContextResultOutput,
+  ProjectContextResultOutput,
+} from '@/output/index.ts';
 import { getVaultConfig } from '@/config/index.ts';
 import { createError } from '@/errors/types.ts';
 import { formatError } from '@/errors/format.ts';
@@ -149,7 +153,42 @@ export const contextCommand = new Command('context')
       return;
     }
 
-    // Stub implementation for other entity types (project, task)
+    // Handle project context
+    if (entityType === 'project') {
+      if (!target) {
+        console.error('Error: Please specify a project name.');
+        console.error('\nExample: taskdn context project "Q1 Planning"');
+        process.exit(2);
+      }
+
+      const config = getVaultConfig();
+      const result = getProjectContext(config, target);
+
+      if (!result.project) {
+        // Project not found
+        const error = createError.notFound('project', target);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      const output: ProjectContextResultOutput = {
+        type: 'project-context',
+        project: result.project,
+        area: result.area ?? null,
+        tasks: result.tasks,
+        warnings: result.warnings,
+      };
+
+      console.log(formatOutput(output, globalOpts));
+      return;
+    }
+
+    // Stub implementation for task entity type
     const result = {
       type: 'context',
       entityType,
