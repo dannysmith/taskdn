@@ -11,8 +11,11 @@ import type {
 } from '@/output/index.ts';
 
 /**
- * Detect entity type from file path
- * Returns 'project' if path contains /projects/, otherwise 'task'
+ * Detect entity type from file path.
+ *
+ * TODO: This is a temporary hack that checks for '/projects/' in the path.
+ * Once config is implemented, this should check if the path falls under the
+ * user's configured projects_dir, tasks_dir, or areas_dir.
  */
 function detectEntityType(path: string): 'task' | 'project' {
   if (path.includes('/projects/')) {

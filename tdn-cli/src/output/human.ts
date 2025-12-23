@@ -1,13 +1,14 @@
-import { bold, green, blue, dim, cyan, yellow } from 'ansis';
+import { bold, blue, dim, cyan, yellow, green } from 'ansis';
 import type { Task, Project } from '@bindings';
 import type { Formatter, FormattableResult, TaskResult, ProjectResult } from './types.ts';
 import { toKebabCase } from './types.ts';
 
 /**
- * Format a task status with appropriate color
+ * Format a status with appropriate color (works for both tasks and projects)
  */
 function formatStatus(status: string): string {
   const statusColors: Record<string, (s: string) => string> = {
+    // Task statuses
     Inbox: (s) => dim(s),
     Icebox: (s) => dim(s),
     Ready: (s) => green(s),
@@ -15,6 +16,9 @@ function formatStatus(status: string): string {
     Blocked: (s) => yellow(s),
     Dropped: (s) => dim(s),
     Done: (s) => dim(s),
+    // Project-specific statuses
+    Planning: (s) => cyan(s),
+    Paused: (s) => yellow(s),
   };
   const colorFn = statusColors[status] ?? ((s: string) => s);
   return colorFn(toKebabCase(status));

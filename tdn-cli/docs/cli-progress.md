@@ -10,8 +10,8 @@ Checklist tracking implementation of all CLI commands and features.
 
 ### Read Commands
 
-- [ ] `show <path>` - Show task by path
-- [ ] `show project <name>` - Show project
+- [x] `show <path>` - Show task by path
+- [x] `show <path>` - Show project by path (auto-detected)
 - [ ] `show area <name>` - Show area
 - [ ] `show` fuzzy matching (human mode)
 - [ ] `list` - List active tasks
@@ -142,7 +142,7 @@ Checklist tracking implementation of all CLI commands and features.
 ### Rust Core
 
 - [x] Task parsing (`parseTaskFile`)
-- [ ] Project parsing (`parseProjectFile`)
+- [x] Project parsing (`parseProjectFile`)
 - [ ] Area parsing (`parseAreaFile`)
 - [ ] Vault scanning
 - [ ] Wikilink parsing utility

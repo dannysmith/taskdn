@@ -248,6 +248,138 @@ describe('taskdn show', () => {
     });
   });
 
+  // ========================================
+  // AREA TESTS
+  // ========================================
+
+  describe('with minimal area', () => {
+    const areaPath = fixturePath('vault/areas/minimal.md');
+
+    test('outputs area title', async () => {
+      const { stdout, exitCode } = await runCli(['show', areaPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Minimal Area');
+    });
+  });
+
+  describe('with full metadata area', () => {
+    const areaPath = fixturePath('vault/areas/full-metadata.md');
+
+    test('outputs all area metadata fields', async () => {
+      const { stdout, exitCode } = await runCli(['show', areaPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Full Metadata Area');
+      expect(stdout).toContain('active');
+      expect(stdout).toContain('work'); // type
+    });
+  });
+
+  describe('with area containing body', () => {
+    const areaPath = fixturePath('vault/areas/with-body.md');
+
+    test('outputs body content', async () => {
+      const { stdout, exitCode } = await runCli(['show', areaPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Area With Body');
+      expect(stdout).toContain('personal projects');
+      expect(stdout).toContain('Health and wellness');
+    });
+  });
+
+  describe('area with --ai flag', () => {
+    const areaPath = fixturePath('vault/areas/minimal.md');
+
+    test('outputs structured markdown', async () => {
+      const { stdout, exitCode } = await runCli(['show', areaPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Minimal Area');
+      expect(stdout).toContain('- **path:**');
+    });
+
+    test('includes all metadata for full area', async () => {
+      const fullAreaPath = fixturePath('vault/areas/full-metadata.md');
+      const { stdout } = await runCli(['show', fullAreaPath, '--ai']);
+      expect(stdout).toContain('- **status:** active');
+      expect(stdout).toContain('- **type:** work');
+      expect(stdout).toContain('- **description:**');
+    });
+  });
+
+  describe('area without status', () => {
+    const areaPath = fixturePath('vault/areas/minimal.md');
+
+    test('handles missing status gracefully', async () => {
+      const { stdout, exitCode } = await runCli(['show', areaPath]);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Minimal Area');
+    });
+
+    test('JSON output omits undefined status', async () => {
+      const { stdout } = await runCli(['show', areaPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.area.title).toBe('Minimal Area');
+      expect(output.area.status).toBeUndefined();
+    });
+  });
+
+  describe('area with --json flag', () => {
+    const areaPath = fixturePath('vault/areas/minimal.md');
+
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['show', areaPath, '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('includes summary field', async () => {
+      const { stdout } = await runCli(['show', areaPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toBe('Area: Minimal Area');
+    });
+
+    test('includes area object with correct fields', async () => {
+      const { stdout } = await runCli(['show', areaPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.area.title).toBe('Minimal Area');
+      expect(output.area.path).toContain('minimal.md');
+    });
+
+    test('includes all metadata for full area', async () => {
+      const fullAreaPath = fixturePath('vault/areas/full-metadata.md');
+      const { stdout } = await runCli(['show', fullAreaPath, '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.area.status).toBe('active');
+      expect(output.area.areaType).toBe('work');
+      expect(output.area.description).toBe('An area with all optional fields populated');
+    });
+  });
+
+  describe('area status parsing', () => {
+    test('parses active status', async () => {
+      const { stdout } = await runCli([
+        'show',
+        fixturePath('vault/areas/full-metadata.md'),
+        '--json',
+      ]);
+      const output = JSON.parse(stdout);
+      expect(output.area.status).toBe('active');
+    });
+
+    test('parses archived status', async () => {
+      const { stdout } = await runCli([
+        'show',
+        fixturePath('vault/areas/status-archived.md'),
+        '--json',
+      ]);
+      const output = JSON.parse(stdout);
+      expect(output.area.status).toBe('archived');
+    });
+  });
+
+  // ========================================
+  // TASK STATUS TESTS
+  // ========================================
+
   describe('status parsing', () => {
     test('parses inbox status', async () => {
       const { stdout } = await runCli([

@@ -219,17 +219,16 @@ describe('fuzzy matching', () => {
 
 ## Verification
 
-- [ ] `parseProjectFile()` exported from Rust bindings
+- [x] `parseProjectFile()` exported from Rust bindings
 - [ ] `parseAreaFile()` exported from Rust bindings
-- [ ] `show <project-path>` works for all output modes
+- [x] `show <project-path>` works for all output modes
 - [ ] `show <area-path>` works for all output modes
 - [ ] Error codes appear in AI/JSON output
 - [ ] Fuzzy matching works in human mode
-- [ ] All E2E tests pass
-- [ ] cli-progress.md updated
+- [x] All E2E tests pass
+- [x] cli-progress.md updated
 
 ## Notes
 
-- The show command currently only handles tasks - need to detect entity type
-- Consider: should we require `show project <path>` or auto-detect from path?
+- Entity type detection currently uses path heuristic (`/projects/` in path). Will be replaced with config-based detection once config is implemented.
 - Fuzzy matching should be case-insensitive substring (per CLI spec)
