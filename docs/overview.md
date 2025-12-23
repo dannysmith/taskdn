@@ -12,7 +12,7 @@ Many people use two distinct systems to manage their notes and tasks. Notes, pro
 Tools like Notion have some downsides tho:
 
 1. We have to use Notion's official apps, which don't have a good UI for every context.
-2. Our data is in a proprietry format (and we don't own it).
+2. Our data is in a proprietary format (and we don't own it).
 3. We can't easily interact with our data using CLI tools, code or local file-based LLMs.
 
 File-based apps like Obsidian solve these issues. With the new bases feature, we can fairly easily replicate most Notion setups in Obsidian, and by storing our documents (including areas, projects etc) as markdown files on disk we can interact with them via both the Obsidian app and anything else which can operate on a filesystem containing Markdown files with YAML frontmatter, including AI coding tools.
@@ -29,19 +29,19 @@ This _definitely_ means at least two products: a beautiful desktop app for human
 
 - Our products are **interfaces** for working with files on disk: all user data must be stored as markdown files with YAML frontmatter.
 - Zero dependency on third-party tools & conventions: We don't care if a user chooses to **also** use Obsidian or Git or Claude Code to work with their data, so we don't depend on their features (eg. Obsidian Bases or CC slash commands).
-- We play well with third-party tools & conventions: Anything which can read & maniuplate markdown with YAML frontmatter can also do so with our data. Witha few specific exceptions, we don't care where users keep their files, what other frontmatter they include or how they're named.
+- We play well with third-party tools & conventions: Anything which can read & manipulate markdown with YAML frontmatter can also do so with our data. With a few specific exceptions, we don't care where users keep their files, what other frontmatter they include or how they're named.
 - Wherever appropriate, we make our tools AI-friendly.
 
 And wherever possible...
 
-- The mental model required to use our products is logical and shared accross them.
+- The mental model required to use our products is logical and shared across them.
 - We take care to support common Obsidian conventions, and try to maintain compatibility with other file-based task systems like [TaskNotes](https://tasknotes.dev/).
 - We prefer open, well-understood standards for things like querying and data transfer.
 
 ### Explicit Non-Goals
 
 - Anything beyond task & project management.
-- Tteam collaboration features – this is for **individuals**.
+- Team collaboration features – this is for **individuals**.
 - Syncing, cloud storage, online stuff.
 
 ## The Fundamentals
@@ -68,7 +68,7 @@ This applies to the CLI too – human users should see well-formatted output and
 
 The specification contains far more detail on these three main types, but a basic overview of their structure can be seen below.
 
-#### Area
+#### Areas
 
 These represent a life area.
 
@@ -84,7 +84,7 @@ description: Ongoing client relationship with Acme Corporation.
 Key contacts, agreements, and background information...
 ```
 
-### Projects
+#### Projects
 
 Projects can optionally belong to areas.
 
@@ -102,7 +102,7 @@ description: Quarterly planning and budget review for Q1 2025.
 This project covers all Q1 planning activities...
 ```
 
-### Tasks
+#### Tasks
 
 Tasks can be loose, belong to an area directly, or belong to a project.
 
