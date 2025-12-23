@@ -740,8 +740,8 @@ Already available:
 - [x] `--sort` and `--limit` work
 - [x] All inclusion flags work
 - [x] `--query` text search works
-- [ ] Fuzzy entity lookup functions exported from Rust
-- [ ] TypeScript lookup wrapper categorizes results correctly
+- [x] Fuzzy entity lookup functions exported from Rust
+- [x] TypeScript lookup wrapper categorizes results correctly
 - [x] All output modes produce correct format (human, AI, JSON)
 - [x] Empty results handled gracefully (exit 0, explicit message)
 - [x] `tdn-cli/docs/cli-progress.md` updated
@@ -875,3 +875,19 @@ Already available:
   - Empty results when no matches
   - All output modes
   - Combined with status filter (AND logic)
+
+### Phase 10: Fuzzy Entity Lookup Utility - COMPLETE
+
+- Added Rust functions for fuzzy entity lookup:
+  - `findTasksByTitle(config, query)` - Find tasks by title substring
+  - `findProjectsByTitle(config, query)` - Find projects by title substring
+  - `findAreasByTitle(config, query)` - Find areas by title substring
+- All functions use case-insensitive substring matching
+- 6 new Rust unit tests covering exact match, partial match, case-insensitivity, and no matches
+- Created TypeScript wrapper `src/lib/entity-lookup.ts` with:
+  - `LookupResult<T>` interface with types: 'exact', 'single', 'multiple', 'none'
+  - `lookupTask(query, config?)` - Task lookup with path detection
+  - `lookupProject(query, config?)` - Project lookup with path detection
+  - `lookupArea(query, config?)` - Area lookup with path detection
+- Path detection supports: absolute, relative, tilde, and .md suffix
+- 22 new TypeScript unit tests covering all lookup scenarios

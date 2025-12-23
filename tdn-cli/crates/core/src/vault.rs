@@ -38,6 +38,39 @@ pub fn scan_areas(config: VaultConfig) -> Vec<Area> {
     scan_directory(&config.areas_dir, parse_area_file)
 }
 
+/// Find tasks matching a query (case-insensitive substring on title).
+/// Returns all matches - disambiguation is handled at the command layer.
+#[napi]
+pub fn find_tasks_by_title(config: VaultConfig, query: String) -> Vec<Task> {
+    let query_lower = query.to_lowercase();
+    scan_tasks(config)
+        .into_iter()
+        .filter(|task| task.title.to_lowercase().contains(&query_lower))
+        .collect()
+}
+
+/// Find projects matching a query (case-insensitive substring on title).
+/// Returns all matches - disambiguation is handled at the command layer.
+#[napi]
+pub fn find_projects_by_title(config: VaultConfig, query: String) -> Vec<Project> {
+    let query_lower = query.to_lowercase();
+    scan_projects(config)
+        .into_iter()
+        .filter(|project| project.title.to_lowercase().contains(&query_lower))
+        .collect()
+}
+
+/// Find areas matching a query (case-insensitive substring on title).
+/// Returns all matches - disambiguation is handled at the command layer.
+#[napi]
+pub fn find_areas_by_title(config: VaultConfig, query: String) -> Vec<Area> {
+    let query_lower = query.to_lowercase();
+    scan_areas(config)
+        .into_iter()
+        .filter(|area| area.title.to_lowercase().contains(&query_lower))
+        .collect()
+}
+
 /// Generic directory scanner that applies a parse function to each .md file.
 /// Returns successfully parsed entities, skipping failures.
 fn scan_directory<T, F>(dir_path: &str, parse_fn: F) -> Vec<T>
@@ -256,5 +289,149 @@ mod tests {
 
         let areas = scan_areas(config);
         assert_eq!(areas.len(), 2);
+    }
+
+    // =========================================================================
+    // Fuzzy Entity Lookup Tests
+    // =========================================================================
+
+    #[test]
+    fn find_tasks_by_title_exact_match() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Fix Login Bug\nstatus: ready\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task2.md",
+            "---\ntitle: Update Documentation\nstatus: ready\n---\n",
+        );
+
+        let matches = find_tasks_by_title(config, "Fix Login Bug".to_string());
+        assert_eq!(matches.len(), 1);
+        assert_eq!(matches[0].title, "Fix Login Bug");
+    }
+
+    #[test]
+    fn find_tasks_by_title_partial_match() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Fix Login Bug\nstatus: ready\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task2.md",
+            "---\ntitle: Login Page Redesign\nstatus: ready\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task3.md",
+            "---\ntitle: Update Documentation\nstatus: ready\n---\n",
+        );
+
+        let matches = find_tasks_by_title(config, "Login".to_string());
+        assert_eq!(matches.len(), 2);
+
+        let titles: Vec<&str> = matches.iter().map(|t| t.title.as_str()).collect();
+        assert!(titles.contains(&"Fix Login Bug"));
+        assert!(titles.contains(&"Login Page Redesign"));
+    }
+
+    #[test]
+    fn find_tasks_by_title_case_insensitive() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Fix Login Bug\nstatus: ready\n---\n",
+        );
+
+        // Test different cases
+        let config1 = create_vault_config(&temp_dir);
+        let matches_lower = find_tasks_by_title(config1, "login".to_string());
+        assert_eq!(matches_lower.len(), 1);
+
+        let config2 = create_vault_config(&temp_dir);
+        let matches_upper = find_tasks_by_title(config2, "LOGIN".to_string());
+        assert_eq!(matches_upper.len(), 1);
+
+        let config3 = create_vault_config(&temp_dir);
+        let matches_mixed = find_tasks_by_title(config3, "LoGiN".to_string());
+        assert_eq!(matches_mixed.len(), 1);
+    }
+
+    #[test]
+    fn find_tasks_by_title_no_matches() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task1.md",
+            "---\ntitle: Fix Login Bug\nstatus: ready\n---\n",
+        );
+
+        let matches = find_tasks_by_title(config, "nonexistent".to_string());
+        assert!(matches.is_empty());
+    }
+
+    #[test]
+    fn find_projects_by_title_partial_match() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.projects_dir),
+            "project1.md",
+            "---\ntitle: Q1 Planning\nstatus: planning\n---\n",
+        );
+        write_file(
+            Path::new(&config.projects_dir),
+            "project2.md",
+            "---\ntitle: Q2 Planning\nstatus: planning\n---\n",
+        );
+        write_file(
+            Path::new(&config.projects_dir),
+            "project3.md",
+            "---\ntitle: Client Onboarding\n---\n",
+        );
+
+        let matches = find_projects_by_title(config, "Planning".to_string());
+        assert_eq!(matches.len(), 2);
+    }
+
+    #[test]
+    fn find_areas_by_title_partial_match() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.areas_dir),
+            "area1.md",
+            "---\ntitle: Work\nstatus: active\n---\n",
+        );
+        write_file(
+            Path::new(&config.areas_dir),
+            "area2.md",
+            "---\ntitle: Personal\nstatus: active\n---\n",
+        );
+        write_file(
+            Path::new(&config.areas_dir),
+            "area3.md",
+            "---\ntitle: Work Projects\n---\n",
+        );
+
+        let matches = find_areas_by_title(config, "Work".to_string());
+        assert_eq!(matches.len(), 2);
     }
 }

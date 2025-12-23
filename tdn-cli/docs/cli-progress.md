@@ -145,6 +145,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Project parsing (`parseProjectFile`)
 - [x] Area parsing (`parseAreaFile`)
 - [x] Vault scanning (`scanTasks`, `scanProjects`, `scanAreas`)
+- [x] Fuzzy entity lookup (`findTasksByTitle`, `findProjectsByTitle`, `findAreasByTitle`)
 - [ ] Wikilink parsing utility
 - [ ] Vault index (relationships)
 - [ ] File writing with round-trip fidelity
