@@ -7,6 +7,10 @@ import type {
   ProjectListResult,
   AreaResult,
   AreaListResult,
+  AreaContextResultOutput,
+  ProjectContextResultOutput,
+  TaskContextResultOutput,
+  VaultOverviewResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
 import type { Task, Project, Area } from '@bindings';
@@ -132,6 +136,74 @@ export const jsonFormatter: Formatter = {
         const output = {
           summary,
           areas: listResult.areas.map((a) => areaToJson(a, false)),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'area-context': {
+        const contextResult = result as AreaContextResultOutput;
+        const projectCount = contextResult.projects.length;
+        const taskCount =
+          contextResult.directTasks.length +
+          Array.from(contextResult.projectTasks.values()).reduce(
+            (sum, tasks) => sum + tasks.length,
+            0
+          );
+        const output = {
+          summary: `${contextResult.area.title} area with ${projectCount} project${projectCount === 1 ? '' : 's'} and ${taskCount} task${taskCount === 1 ? '' : 's'}`,
+          area: areaToJson(contextResult.area, true),
+          projects: contextResult.projects.map((p) => {
+            const tasks = contextResult.projectTasks.get(p.path) ?? [];
+            return {
+              ...projectToJson(p, false),
+              tasks: tasks.map((t) => taskToJson(t, false)),
+            };
+          }),
+          directTasks: contextResult.directTasks.map((t) => taskToJson(t, false)),
+          ...(contextResult.warnings.length > 0 && { warnings: contextResult.warnings }),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'project-context': {
+        const contextResult = result as ProjectContextResultOutput;
+        const taskCount = contextResult.tasks.length;
+        const output = {
+          summary: `${contextResult.project.title} project with ${taskCount} task${taskCount === 1 ? '' : 's'}`,
+          project: projectToJson(contextResult.project, true),
+          ...(contextResult.area && { area: areaToJson(contextResult.area, false) }),
+          tasks: contextResult.tasks.map((t) => taskToJson(t, false)),
+          ...(contextResult.warnings.length > 0 && { warnings: contextResult.warnings }),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-context': {
+        const contextResult = result as TaskContextResultOutput;
+        const output = {
+          summary: `Task: ${contextResult.task.title}`,
+          task: taskToJson(contextResult.task, true),
+          ...(contextResult.project && { project: projectToJson(contextResult.project, false) }),
+          ...(contextResult.area && { area: areaToJson(contextResult.area, false) }),
+          ...(contextResult.warnings.length > 0 && { warnings: contextResult.warnings }),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'vault-overview': {
+        const overviewResult = result as VaultOverviewResult;
+        const output = {
+          summary: `Vault overview: ${overviewResult.summary.totalActiveTasks} active tasks, ${overviewResult.summary.overdueCount} overdue`,
+          areas: overviewResult.areas.map((as) => ({
+            ...areaToJson(as.area, false),
+            projectCount: as.projectCount,
+            activeTaskCount: as.activeTaskCount,
+          })),
+          summary_stats: {
+            totalActiveTasks: overviewResult.summary.totalActiveTasks,
+            overdueCount: overviewResult.summary.overdueCount,
+            inProgressCount: overviewResult.summary.inProgressCount,
+          },
+          thisWeek: {
+            due: overviewResult.thisWeek.dueTasks.map((t) => taskToJson(t, false)),
+            scheduled: overviewResult.thisWeek.scheduledTasks.map((t) => taskToJson(t, false)),
+          },
         };
         return JSON.stringify(output, null, 2);
       }

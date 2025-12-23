@@ -1,4 +1,4 @@
-import { bold, blue, dim, cyan, yellow, green } from 'ansis';
+import { bold, blue, dim, cyan, yellow, green, red } from 'ansis';
 import type { Task, Project, Area } from '@bindings';
 import type {
   Formatter,
@@ -9,6 +9,10 @@ import type {
   ProjectListResult,
   AreaResult,
   AreaListResult,
+  AreaContextResultOutput,
+  ProjectContextResultOutput,
+  TaskContextResultOutput,
+  VaultOverviewResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
 
@@ -302,6 +306,298 @@ function formatAreaList(areas: Area[]): string {
   return lines.join('\n').trimEnd();
 }
 
+// ============================================================================
+// Context Formatters
+// ============================================================================
+
+/**
+ * Format a task for context output (compact, for lists)
+ */
+function formatContextTask(task: Task, indent: string = '  '): string {
+  const lines: string[] = [];
+
+  let titleLine = `${indent}${bold(task.title)}  ${formatStatus(task.status)}`;
+  if (task.due) {
+    titleLine += `  ${dim('due:')} ${task.due}`;
+  }
+  lines.push(titleLine);
+  lines.push(`${indent}  ${dim(task.path)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format a project for context output (compact)
+ */
+function formatContextProject(project: Project, taskCount: number, indent: string = '  '): string {
+  const lines: string[] = [];
+
+  let titleLine = `${indent}${bold(project.title)}`;
+  if (project.status) {
+    titleLine += `  ${formatStatus(project.status)}`;
+  }
+  titleLine += `  ${dim(`(${taskCount} tasks)`)}`;
+  lines.push(titleLine);
+  lines.push(`${indent}  ${dim(project.path)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format an area for context output (compact)
+ */
+function formatContextAreaCompact(area: Area, indent: string = '  '): string {
+  const lines: string[] = [];
+
+  let titleLine = `${indent}${bold(area.title)}`;
+  if (area.status) {
+    titleLine += `  ${formatStatus(area.status)}`;
+  }
+  lines.push(titleLine);
+  lines.push(`${indent}  ${dim(area.path)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format area context result for human output
+ */
+function formatAreaContext(result: AreaContextResultOutput): string {
+  const lines: string[] = [];
+  const area = result.area;
+
+  // Primary entity: Area
+  if (area.status) {
+    lines.push(bold(area.title) + '  ' + formatStatus(area.status));
+  } else {
+    lines.push(bold(area.title));
+  }
+  lines.push(dim(area.path));
+  lines.push('');
+
+  if (area.areaType) lines.push(`${dim('Type:')} ${area.areaType}`);
+  if (area.description) lines.push(`${dim('Description:')} ${area.description}`);
+
+  if (area.body) {
+    lines.push('');
+    lines.push(area.body);
+  }
+
+  // Projects section
+  lines.push('');
+  lines.push(bold(blue(`Projects (${result.projects.length})`)));
+  lines.push('');
+
+  if (result.projects.length === 0) {
+    lines.push(dim('  No projects in this area.'));
+  } else {
+    for (const project of result.projects) {
+      const projectTasks = result.projectTasks.get(project.path) ?? [];
+      lines.push(formatContextProject(project, projectTasks.length));
+      lines.push('');
+
+      // Tasks under this project (indented further)
+      for (const task of projectTasks) {
+        lines.push(formatContextTask(task, '    '));
+      }
+      if (projectTasks.length > 0) lines.push('');
+    }
+  }
+
+  // Direct tasks
+  if (result.directTasks.length > 0) {
+    lines.push(bold(blue(`Direct Tasks (${result.directTasks.length})`)));
+    lines.push('');
+
+    for (const task of result.directTasks) {
+      lines.push(formatContextTask(task));
+    }
+    lines.push('');
+  }
+
+  // Warnings
+  if (result.warnings.length > 0) {
+    lines.push(yellow('Warnings:'));
+    for (const warning of result.warnings) {
+      lines.push(`  ${yellow('•')} ${warning}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format project context result for human output
+ */
+function formatProjectContext(result: ProjectContextResultOutput): string {
+  const lines: string[] = [];
+  const project = result.project;
+
+  // Primary entity: Project
+  if (project.status) {
+    lines.push(bold(project.title) + '  ' + formatStatus(project.status));
+  } else {
+    lines.push(bold(project.title));
+  }
+  lines.push(dim(project.path));
+  lines.push('');
+
+  if (project.startDate) lines.push(`${dim('Start Date:')} ${project.startDate}`);
+  if (project.endDate) lines.push(`${dim('End Date:')} ${project.endDate}`);
+  if (project.area) lines.push(`${dim('Area:')} ${cyan(project.area)}`);
+  if (project.description) lines.push(`${dim('Description:')} ${project.description}`);
+
+  if (project.body) {
+    lines.push('');
+    lines.push(project.body);
+  }
+
+  // Parent area
+  if (result.area) {
+    lines.push('');
+    lines.push(bold(blue('Parent Area')));
+    lines.push('');
+    lines.push(formatContextAreaCompact(result.area));
+  }
+
+  // Tasks section
+  lines.push('');
+  lines.push(bold(blue(`Tasks (${result.tasks.length})`)));
+  lines.push('');
+
+  if (result.tasks.length === 0) {
+    lines.push(dim('  No tasks in this project.'));
+  } else {
+    for (const task of result.tasks) {
+      lines.push(formatContextTask(task));
+    }
+    lines.push('');
+  }
+
+  // Warnings
+  if (result.warnings.length > 0) {
+    lines.push(yellow('Warnings:'));
+    for (const warning of result.warnings) {
+      lines.push(`  ${yellow('•')} ${warning}`);
+    }
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format task context result for human output
+ */
+function formatTaskContext(result: TaskContextResultOutput): string {
+  const lines: string[] = [];
+  const task = result.task;
+
+  // Primary entity: Task
+  lines.push(bold(task.title) + '  ' + formatStatus(task.status));
+  lines.push(dim(task.path));
+  lines.push('');
+
+  if (task.due) lines.push(`${dim('Due:')} ${task.due}`);
+  if (task.scheduled) lines.push(`${dim('Scheduled:')} ${task.scheduled}`);
+  if (task.deferUntil) lines.push(`${dim('Defer Until:')} ${task.deferUntil}`);
+  if (task.project) lines.push(`${dim('Project:')} ${cyan(task.project)}`);
+  if (task.area) lines.push(`${dim('Area:')} ${cyan(task.area)}`);
+
+  if (task.body) {
+    lines.push('');
+    lines.push(task.body);
+  }
+
+  // Parent project
+  if (result.project) {
+    lines.push('');
+    lines.push(bold(blue('Parent Project')));
+    lines.push('');
+
+    const project = result.project;
+    let titleLine = `  ${bold(project.title)}`;
+    if (project.status) {
+      titleLine += `  ${formatStatus(project.status)}`;
+    }
+    lines.push(titleLine);
+    lines.push(`    ${dim(project.path)}`);
+  }
+
+  // Parent area
+  if (result.area) {
+    lines.push('');
+    lines.push(bold(blue('Parent Area')));
+    lines.push('');
+    lines.push(formatContextAreaCompact(result.area));
+  }
+
+  // Warnings
+  if (result.warnings.length > 0) {
+    lines.push('');
+    lines.push(yellow('Warnings:'));
+    for (const warning of result.warnings) {
+      lines.push(`  ${yellow('•')} ${warning}`);
+    }
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format vault overview result for human output
+ */
+function formatVaultOverview(result: VaultOverviewResult): string {
+  const lines: string[] = [];
+
+  lines.push(bold(blue('Vault Overview')));
+  lines.push('');
+
+  // Areas section
+  lines.push(bold(`Areas (${result.areas.length})`));
+  lines.push('');
+
+  if (result.areas.length === 0) {
+    lines.push(dim('  No areas defined.'));
+  } else {
+    for (const areaSummary of result.areas) {
+      lines.push(`  ${bold(areaSummary.area.title)}`);
+      lines.push(`    ${dim('Projects:')} ${areaSummary.projectCount} active`);
+      lines.push(`    ${dim('Tasks:')} ${areaSummary.activeTaskCount} active`);
+    }
+  }
+  lines.push('');
+
+  // Summary section
+  lines.push(bold('Summary'));
+  lines.push('');
+  lines.push(`  ${dim('Total Active Tasks:')} ${result.summary.totalActiveTasks}`);
+  if (result.summary.overdueCount > 0) {
+    lines.push(`  ${dim('Overdue:')} ${red(String(result.summary.overdueCount))}`);
+  } else {
+    lines.push(`  ${dim('Overdue:')} ${result.summary.overdueCount}`);
+  }
+  lines.push(`  ${dim('In Progress:')} ${result.summary.inProgressCount}`);
+  lines.push('');
+
+  // This Week section
+  lines.push(bold('This Week'));
+  lines.push('');
+
+  lines.push(`  ${dim('Due:')} ${result.thisWeek.dueTasks.length} tasks`);
+  for (const task of result.thisWeek.dueTasks) {
+    lines.push(`    • ${task.title} ${dim(`(${task.due})`)}`);
+  }
+
+  lines.push(`  ${dim('Scheduled:')} ${result.thisWeek.scheduledTasks.length} tasks`);
+  for (const task of result.thisWeek.scheduledTasks) {
+    lines.push(`    • ${task.title} ${dim(`(${task.scheduled})`)}`);
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
 /**
  * Human-readable formatter with colors and styling
  */
@@ -332,8 +628,22 @@ export const humanFormatter: Formatter = {
         const listResult = result as AreaListResult;
         return formatAreaList(listResult.areas);
       }
-      case 'context':
-        return bold(blue('Context')) + dim(' (stub output)');
+      case 'area-context': {
+        const contextResult = result as AreaContextResultOutput;
+        return formatAreaContext(contextResult);
+      }
+      case 'project-context': {
+        const contextResult = result as ProjectContextResultOutput;
+        return formatProjectContext(contextResult);
+      }
+      case 'task-context': {
+        const contextResult = result as TaskContextResultOutput;
+        return formatTaskContext(contextResult);
+      }
+      case 'vault-overview': {
+        const overviewResult = result as VaultOverviewResult;
+        return formatVaultOverview(overviewResult);
+      }
       default:
         return dim(`[${result.type}] stub output`);
     }
