@@ -12,6 +12,8 @@ import {
   createTaskFile,
   createProjectFile,
   createAreaFile,
+  scanProjects,
+  scanAreas,
   type TaskCreateFields,
   type ProjectCreateFields,
   type AreaCreateFields,
@@ -135,6 +137,8 @@ function createArea(title: string, options: AddOptions): AreaCreatedResult {
  * Interactive mode for creating a task.
  */
 async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
+  const config = getVaultConfig();
+
   p.intro('Create a new task');
 
   const title = await p.text({
@@ -154,9 +158,11 @@ async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
   const status = await p.select({
     message: 'Status:',
     options: [
-      { value: 'inbox', label: 'inbox (default)' },
-      { value: 'ready', label: 'ready' },
-      { value: 'icebox', label: 'icebox' },
+      { value: 'inbox', label: 'inbox - newly captured, not yet processed (default)' },
+      { value: 'ready', label: 'ready - processed and ready to work on' },
+      { value: 'in-progress', label: 'in-progress - currently being worked on' },
+      { value: 'blocked', label: 'blocked - waiting on external dependency' },
+      { value: 'icebox', label: 'icebox - deferred indefinitely' },
     ],
     initialValue: 'inbox',
   });
@@ -168,7 +174,7 @@ async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
 
   const due = await p.text({
     message: 'Due date (optional):',
-    placeholder: 'tomorrow, friday, +3d, 2025-01-15',
+    placeholder: 'Hard deadline: tomorrow, friday, +3d, 2025-01-15',
   });
 
   if (p.isCancel(due)) {
@@ -176,9 +182,37 @@ async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
     return null;
   }
 
-  const project = await p.text({
+  const scheduled = await p.text({
+    message: 'Scheduled date (optional):',
+    placeholder: 'When to work on it: tomorrow, monday, +1w',
+  });
+
+  if (p.isCancel(scheduled)) {
+    p.cancel('Operation cancelled');
+    return null;
+  }
+
+  const deferUntil = await p.text({
+    message: 'Defer until (optional):',
+    placeholder: 'Hide until this date: +3d, next week, 2025-02-01',
+  });
+
+  if (p.isCancel(deferUntil)) {
+    p.cancel('Operation cancelled');
+    return null;
+  }
+
+  // Build project options from existing projects
+  const existingProjects = scanProjects(config);
+  const projectOptions: Array<{ value: string | undefined; label: string }> = [
+    { value: undefined, label: '(none)' },
+    ...existingProjects.map((proj) => ({ value: proj.title, label: proj.title })),
+  ];
+
+  const project = await p.select({
     message: 'Project (optional):',
-    placeholder: 'Project name',
+    options: projectOptions,
+    initialValue: undefined,
   });
 
   if (p.isCancel(project)) {
@@ -186,19 +220,38 @@ async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
     return null;
   }
 
+  // Build area options from existing areas
+  const existingAreas = scanAreas(config);
+  const areaOptions: Array<{ value: string | undefined; label: string }> = [
+    { value: undefined, label: '(none)' },
+    ...existingAreas.map((area) => ({ value: area.title, label: area.title })),
+  ];
+
+  const area = await p.select({
+    message: 'Area (optional):',
+    options: areaOptions,
+    initialValue: undefined,
+  });
+
+  if (p.isCancel(area)) {
+    p.cancel('Operation cancelled');
+    return null;
+  }
+
   p.outro('Creating task...');
 
   // Create the task
-  const config = getVaultConfig();
   const parsedDue = due ? parseNaturalDate(due) : undefined;
+  const parsedScheduled = scheduled ? parseNaturalDate(scheduled) : undefined;
+  const parsedDeferUntil = deferUntil ? parseNaturalDate(deferUntil) : undefined;
 
   const fields: TaskCreateFields = {
     status: status as string,
     project: project || undefined,
-    area: undefined,
+    area: area || undefined,
     due: parsedDue ?? undefined,
-    scheduled: undefined,
-    deferUntil: undefined,
+    scheduled: parsedScheduled ?? undefined,
+    deferUntil: parsedDeferUntil ?? undefined,
   };
 
   const task = createTaskFile(config.tasksDir, title, fields);
@@ -213,6 +266,8 @@ async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
  * Interactive mode for creating a project.
  */
 async function interactiveAddProject(): Promise<ProjectCreatedResult | null> {
+  const config = getVaultConfig();
+
   p.intro('Create a new project');
 
   const title = await p.text({
@@ -233,9 +288,11 @@ async function interactiveAddProject(): Promise<ProjectCreatedResult | null> {
     message: 'Status:',
     options: [
       { value: undefined, label: '(no status)' },
-      { value: 'planning', label: 'planning' },
-      { value: 'ready', label: 'ready' },
-      { value: 'in-progress', label: 'in-progress' },
+      { value: 'planning', label: 'planning - still being scoped' },
+      { value: 'ready', label: 'ready - planned and ready to begin' },
+      { value: 'in-progress', label: 'in-progress - active work happening' },
+      { value: 'blocked', label: 'blocked - waiting on another project' },
+      { value: 'paused', label: 'paused - temporarily on hold' },
     ],
     initialValue: undefined,
   });
@@ -245,9 +302,17 @@ async function interactiveAddProject(): Promise<ProjectCreatedResult | null> {
     return null;
   }
 
-  const area = await p.text({
+  // Build area options from existing areas
+  const existingAreas = scanAreas(config);
+  const areaOptions: Array<{ value: string | undefined; label: string }> = [
+    { value: undefined, label: '(none)' },
+    ...existingAreas.map((area) => ({ value: area.title, label: area.title })),
+  ];
+
+  const area = await p.select({
     message: 'Area (optional):',
-    placeholder: 'Area name',
+    options: areaOptions,
+    initialValue: undefined,
   });
 
   if (p.isCancel(area)) {
@@ -255,17 +320,38 @@ async function interactiveAddProject(): Promise<ProjectCreatedResult | null> {
     return null;
   }
 
+  const startDate = await p.text({
+    message: 'Start date (optional):',
+    placeholder: 'When work begins: today, monday, 2025-02-01',
+  });
+
+  if (p.isCancel(startDate)) {
+    p.cancel('Operation cancelled');
+    return null;
+  }
+
+  const endDate = await p.text({
+    message: 'End date (optional):',
+    placeholder: 'Target completion: +2w, 2025-03-31',
+  });
+
+  if (p.isCancel(endDate)) {
+    p.cancel('Operation cancelled');
+    return null;
+  }
+
   p.outro('Creating project...');
 
-  // Create the project
-  const config = getVaultConfig();
+  // Parse dates
+  const parsedStartDate = startDate ? parseNaturalDate(startDate) : undefined;
+  const parsedEndDate = endDate ? parseNaturalDate(endDate) : undefined;
 
   const fields: ProjectCreateFields = {
     status: (status as string) || undefined,
     area: area || undefined,
     description: undefined,
-    startDate: undefined,
-    endDate: undefined,
+    startDate: parsedStartDate ?? undefined,
+    endDate: parsedEndDate ?? undefined,
   };
 
   const project = createProjectFile(config.projectsDir, title, fields);
@@ -280,6 +366,8 @@ async function interactiveAddProject(): Promise<ProjectCreatedResult | null> {
  * Interactive mode for creating an area.
  */
 async function interactiveAddArea(): Promise<AreaCreatedResult | null> {
+  const config = getVaultConfig();
+
   p.intro('Create a new area');
 
   const title = await p.text({
@@ -306,13 +394,24 @@ async function interactiveAddArea(): Promise<AreaCreatedResult | null> {
     return null;
   }
 
+  const status = await p.select({
+    message: 'Status:',
+    options: [
+      { value: 'active', label: 'active - visible in area lists (default)' },
+      { value: 'archived', label: 'archived - hidden from normal views' },
+    ],
+    initialValue: 'active',
+  });
+
+  if (p.isCancel(status)) {
+    p.cancel('Operation cancelled');
+    return null;
+  }
+
   p.outro('Creating area...');
 
-  // Create the area
-  const config = getVaultConfig();
-
   const fields: AreaCreateFields = {
-    status: 'active',
+    status: status as string,
     areaType: areaType || undefined,
     description: undefined,
   };
