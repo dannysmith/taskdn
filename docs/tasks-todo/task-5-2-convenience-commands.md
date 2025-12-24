@@ -1,22 +1,10 @@
 # Task: Convenience Commands
 
-## Phase 1: Context Enhancements
+**Depends on:** Task 5-1 (Context Rework) - which creates shared date utilities in `src/output/helpers/date-utils.ts`
 
-Before implementing convenience commands, extract date utilities from `list.ts`:
+---
 
-**Create `src/lib/date.ts`:**
-
-```typescript
-export function getToday(): string
-export function formatDate(date: Date): string
-export function getTomorrow(today: string): string
-export function getEndOfWeek(today: string): string
-export function getStartOfWeek(today: string): string
-```
-
-Update `list.ts` to import from `@/lib/date.ts`.
-
-## Phase 2: Today Command
+## Phase 1: Today Command
 
 `taskdn today` - Tasks due today + scheduled for today + overdue + defer-until is today.
 
@@ -47,7 +35,7 @@ describe('today command', () => {
 
 ---
 
-## Phase 3: Inbox Command
+## Phase 2: Inbox Command
 
 `taskdn inbox` - List of tasks with status: inbox. Should behave exactly as for any other list tasks command.
 
