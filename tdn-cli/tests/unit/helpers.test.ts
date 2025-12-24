@@ -18,6 +18,7 @@ import {
   addDays,
   formatRelativeDate,
   getWeekday,
+  parseNaturalDate,
 } from '@/output/helpers/date-utils';
 
 // Stats tests
@@ -308,6 +309,91 @@ describe('date-utils', () => {
       expect(getWeekday('2025-01-15')).toBe('Wednesday');
       expect(getWeekday('2025-01-13')).toBe('Monday');
       expect(getWeekday('2025-01-19')).toBe('Sunday');
+    });
+  });
+
+  describe('parseNaturalDate', () => {
+    beforeEach(() => {
+      // 2025-01-15 is a Wednesday
+      process.env.TASKDN_MOCK_DATE = '2025-01-15';
+    });
+
+    test('returns ISO format dates unchanged', () => {
+      expect(parseNaturalDate('2025-01-20')).toBe('2025-01-20');
+      expect(parseNaturalDate('2024-12-31')).toBe('2024-12-31');
+    });
+
+    test('parses "today"', () => {
+      expect(parseNaturalDate('today')).toBe('2025-01-15');
+      expect(parseNaturalDate('Today')).toBe('2025-01-15');
+      expect(parseNaturalDate('TODAY')).toBe('2025-01-15');
+    });
+
+    test('parses "tomorrow"', () => {
+      expect(parseNaturalDate('tomorrow')).toBe('2025-01-16');
+      expect(parseNaturalDate('Tomorrow')).toBe('2025-01-16');
+    });
+
+    test('parses weekday names (next occurrence)', () => {
+      // 2025-01-15 is Wednesday
+      // Thursday = 2025-01-16
+      expect(parseNaturalDate('thursday')).toBe('2025-01-16');
+      expect(parseNaturalDate('Thursday')).toBe('2025-01-16');
+      expect(parseNaturalDate('thu')).toBe('2025-01-16');
+
+      // Friday = 2025-01-17
+      expect(parseNaturalDate('friday')).toBe('2025-01-17');
+      expect(parseNaturalDate('fri')).toBe('2025-01-17');
+
+      // Saturday = 2025-01-18
+      expect(parseNaturalDate('saturday')).toBe('2025-01-18');
+      expect(parseNaturalDate('sat')).toBe('2025-01-18');
+
+      // Sunday = 2025-01-19
+      expect(parseNaturalDate('sunday')).toBe('2025-01-19');
+      expect(parseNaturalDate('sun')).toBe('2025-01-19');
+
+      // Monday = 2025-01-20 (next week)
+      expect(parseNaturalDate('monday')).toBe('2025-01-20');
+      expect(parseNaturalDate('mon')).toBe('2025-01-20');
+
+      // Tuesday = 2025-01-21
+      expect(parseNaturalDate('tuesday')).toBe('2025-01-21');
+      expect(parseNaturalDate('tue')).toBe('2025-01-21');
+
+      // Wednesday = 2025-01-22 (next week, not today)
+      expect(parseNaturalDate('wednesday')).toBe('2025-01-22');
+      expect(parseNaturalDate('wed')).toBe('2025-01-22');
+    });
+
+    test('parses relative days (+Nd)', () => {
+      expect(parseNaturalDate('+1d')).toBe('2025-01-16');
+      expect(parseNaturalDate('+3d')).toBe('2025-01-18');
+      expect(parseNaturalDate('+7d')).toBe('2025-01-22');
+      expect(parseNaturalDate('+10d')).toBe('2025-01-25');
+    });
+
+    test('parses relative weeks (+Nw)', () => {
+      expect(parseNaturalDate('+1w')).toBe('2025-01-22');
+      expect(parseNaturalDate('+2w')).toBe('2025-01-29');
+    });
+
+    test('parses "next week" as Monday of next week', () => {
+      // From Wednesday 2025-01-15, next Monday is 2025-01-20
+      expect(parseNaturalDate('next week')).toBe('2025-01-20');
+      expect(parseNaturalDate('nextweek')).toBe('2025-01-20');
+    });
+
+    test('handles whitespace', () => {
+      expect(parseNaturalDate('  tomorrow  ')).toBe('2025-01-16');
+      expect(parseNaturalDate('  +3d  ')).toBe('2025-01-18');
+    });
+
+    test('returns null for unrecognized input', () => {
+      expect(parseNaturalDate('invalid')).toBeNull();
+      expect(parseNaturalDate('next month')).toBeNull();
+      expect(parseNaturalDate('2025/01/15')).toBeNull();
+      expect(parseNaturalDate('')).toBeNull();
     });
   });
 });

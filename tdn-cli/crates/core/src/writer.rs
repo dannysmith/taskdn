@@ -1021,4 +1021,69 @@ due: 2025-01-15
         let task3 = create_task_file(tasks_dir, "Same Title".to_string(), fields).unwrap();
         assert!(task3.path.ends_with("same-title-2.md"));
     }
+
+    #[test]
+    fn test_preserves_date_format() {
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("task.md");
+
+        // Create file with date-only format (not datetime)
+        let content = r#"---
+title: Test Task
+status: ready
+due: 2025-01-15
+scheduled: 2025-02-01
+---
+"#;
+        fs::write(&file_path, content).unwrap();
+
+        // Update status (should not affect date fields)
+        let updates = vec![FieldUpdate {
+            field: "status".to_string(),
+            value: Some("in-progress".to_string()),
+        }];
+        update_file_fields(file_path.to_string_lossy().to_string(), updates).unwrap();
+
+        // Read back and verify date format is preserved (date-only, not datetime)
+        let updated_content = fs::read_to_string(&file_path).unwrap();
+        assert!(
+            updated_content.contains("due: 2025-01-15") || updated_content.contains("due: '2025-01-15'"),
+            "Due date should be preserved as date-only format"
+        );
+        assert!(
+            updated_content.contains("scheduled: 2025-02-01") || updated_content.contains("scheduled: '2025-02-01'"),
+            "Scheduled date should be preserved as date-only format"
+        );
+        // Should NOT contain datetime format
+        assert!(
+            !updated_content.contains("2025-01-15T"),
+            "Due date should not be converted to datetime"
+        );
+        assert!(
+            !updated_content.contains("2025-02-01T"),
+            "Scheduled date should not be converted to datetime"
+        );
+    }
+
+    #[test]
+    fn test_atomic_write_creates_file() {
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("new-file.md");
+
+        atomic_write(&file_path, "test content").unwrap();
+
+        assert!(file_path.exists());
+        assert_eq!(fs::read_to_string(&file_path).unwrap(), "test content");
+    }
+
+    #[test]
+    fn test_atomic_write_creates_parent_dirs() {
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("nested/subdir/file.md");
+
+        atomic_write(&file_path, "nested content").unwrap();
+
+        assert!(file_path.exists());
+        assert_eq!(fs::read_to_string(&file_path).unwrap(), "nested content");
+    }
 }

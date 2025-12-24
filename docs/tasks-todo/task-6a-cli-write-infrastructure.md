@@ -246,19 +246,19 @@ describe('add area', () => {
 
 ## Verification
 
-- [ ] `update_file_fields()` preserves unknown fields
-- [ ] `update_file_fields()` preserves date formats
-- [ ] `update_file_fields()` preserves body content
-- [ ] `create_task_file()` generates valid frontmatter
-- [ ] Slugify handles special characters and spaces
-- [ ] Duplicate filenames get numeric suffix
-- [ ] `add` command works with all options
-- [ ] `add project` creates valid project files
-- [ ] `add area` creates valid area files
-- [ ] Interactive mode works (human, no args)
-- [ ] All output modes (human, AI, JSON) work
-- [ ] Natural language dates converted correctly
-- [ ] cli-progress.md updated
+- [x] `update_file_fields()` preserves unknown fields
+- [x] `update_file_fields()` preserves date formats
+- [x] `update_file_fields()` preserves body content
+- [x] `create_task_file()` generates valid frontmatter
+- [x] Slugify handles special characters and spaces
+- [x] Duplicate filenames get numeric suffix
+- [x] `add` command works with all options
+- [x] `add project` creates valid project files
+- [x] `add area` creates valid area files
+- [x] Interactive mode works (human, no args)
+- [x] All output modes (human, AI, JSON) work
+- [x] Natural language dates converted correctly
+- [x] cli-progress.md updated
 
 ## Notes
 
