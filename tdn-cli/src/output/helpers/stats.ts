@@ -1,5 +1,6 @@
 import type { Task } from '@bindings';
 import { TASK_STATUS_EMOJI } from './status-emoji.ts';
+import { toKebabCase } from './string-utils.ts';
 
 /**
  * Stats utilities for context commands.
@@ -29,7 +30,7 @@ export function countTasksByStatus(tasks: Task[]): TaskStatusCounts {
   };
 
   for (const task of tasks) {
-    const status = normalizeStatus(task.status);
+    const status = toKebabCase(task.status);
     switch (status) {
       case 'in-progress':
         counts.inProgress++;
@@ -83,14 +84,4 @@ export function formatTaskCountShorthand(counts: TaskStatusCounts): string {
  */
 export function getTotalActiveCount(counts: TaskStatusCounts): number {
   return counts.inProgress + counts.ready + counts.inbox + counts.blocked;
-}
-
-/**
- * Normalize status to kebab-case
- */
-function normalizeStatus(status: string): string {
-  return status
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
 }

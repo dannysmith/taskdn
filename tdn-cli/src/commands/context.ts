@@ -42,6 +42,8 @@ function isPathLike(identifier: string): boolean {
     identifier.startsWith('./') ||
     identifier.startsWith('../') ||
     identifier.includes('/') ||
+    identifier.includes('\\') || // Windows backslash
+    /^[a-zA-Z]:\\/.test(identifier) || // Windows drive letter (C:\)
     identifier.endsWith('.md')
   );
 }

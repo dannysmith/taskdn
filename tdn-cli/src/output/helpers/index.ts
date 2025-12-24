@@ -70,7 +70,6 @@ export {
   formatParentChain,
   formatParentChainForTimeline,
   formatBlockquoteExcerpt,
-  toKebabCase,
   formatSeparator,
   joinSections,
   formatSectionHeader,
@@ -98,3 +97,6 @@ export {
   isActiveProject,
   isActiveArea,
 } from './task-predicates.ts';
+
+// String utilities
+export { toKebabCase } from './string-utils.ts';

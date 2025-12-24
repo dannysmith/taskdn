@@ -50,7 +50,8 @@ export function truncateBody(
 }
 
 /**
- * Truncate text by word count while preserving whole words
+ * Truncate text by word count while preserving whole words.
+ * Adds ellipsis when truncating mid-sentence.
  */
 function truncateByWords(text: string, maxWords: number): string {
   const words = text.split(/\s+/);
@@ -73,7 +74,8 @@ function truncateByWords(text: string, maxWords: number): string {
     return truncated.slice(0, lastSentenceEnd + 1);
   }
 
-  return truncated;
+  // Truncating mid-sentence, add ellipsis
+  return truncated + '...';
 }
 
 /**

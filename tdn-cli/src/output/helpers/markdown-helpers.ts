@@ -1,5 +1,9 @@
-import type { Area, Project, Task } from '@bindings';
+import type { Area, Project } from '@bindings';
 import { truncateBody } from './body-utils.ts';
+import { toKebabCase } from './string-utils.ts';
+
+// Re-export for convenience
+export { toKebabCase };
 
 /**
  * Markdown helpers for context commands.
@@ -37,15 +41,10 @@ export function formatMetadataTable(fields: [string, string | undefined][]): str
  * Format parent chain for a task.
  * Returns: "Project → Area" or "Area (direct)" or "(no project or area)"
  *
- * @param task - The task
  * @param project - Parent project if any
  * @param area - Parent area if any
  */
-export function formatParentChain(
-  task: Task,
-  project?: Project | null,
-  area?: Area | null
-): string {
+export function formatParentChain(project?: Project | null, area?: Area | null): string {
   if (project && area) {
     return `${project.title} → ${area.title}`;
   }
@@ -123,16 +122,6 @@ export function formatBlockquoteExcerpt(
     .split('\n')
     .map((line) => `> ${line}`)
     .join('\n');
-}
-
-/**
- * Convert PascalCase status to kebab-case for display
- */
-export function toKebabCase(str: string): string {
-  return str
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
 }
 
 /**

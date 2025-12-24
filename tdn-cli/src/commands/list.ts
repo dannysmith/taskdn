@@ -163,19 +163,20 @@ export const listCommand = new Command('list')
     if (!options.onlyArchived) {
       tasks = tasks.filter((task) => {
         // Build set of statuses to exclude (can be overridden by include flags)
+        // Use lowercase for consistent comparison since task.status may vary in case
         const excludedStatuses = new Set<string>();
 
         if (!options.includeDone && !options.includeClosed) {
-          excludedStatuses.add('Done');
+          excludedStatuses.add('done');
         }
         if (!options.includeDropped && !options.includeClosed) {
-          excludedStatuses.add('Dropped');
+          excludedStatuses.add('dropped');
         }
         if (!options.includeIcebox) {
-          excludedStatuses.add('Icebox');
+          excludedStatuses.add('icebox');
         }
 
-        if (excludedStatuses.has(task.status)) {
+        if (excludedStatuses.has(task.status.toLowerCase())) {
           return false;
         }
 

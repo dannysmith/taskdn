@@ -1244,7 +1244,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
     lines.push('');
     for (const task of timeline.overdue) {
       const { project, area } = getTaskParentChain(task, result);
-      const parentChain = formatParentChain(task, project, area);
+      const parentChain = formatParentChain(project, area);
       lines.push(`- **${task.title}** — due ${task.due} — ${parentChain}`);
     }
     lines.push('');
@@ -1256,7 +1256,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
     lines.push('');
     for (const task of timeline.dueToday) {
       const { project, area } = getTaskParentChain(task, result);
-      const parentChain = formatParentChain(task, project, area);
+      const parentChain = formatParentChain(project, area);
       lines.push(`- **${task.title}** — ${parentChain}`);
     }
     lines.push('');
@@ -1268,7 +1268,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
     lines.push('');
     for (const task of timeline.scheduledToday) {
       const { project, area } = getTaskParentChain(task, result);
-      const parentChain = formatParentChain(task, project, area);
+      const parentChain = formatParentChain(project, area);
       lines.push(`- **${task.title}** — ${parentChain}`);
     }
     lines.push('');
@@ -1282,7 +1282,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
     lines.push('');
     for (const task of timeline.newlyActionable) {
       const { project, area } = getTaskParentChain(task, result);
-      const parentChain = formatParentChain(task, project, area);
+      const parentChain = formatParentChain(project, area);
       lines.push(`- **${task.title}** — ${parentChain}`);
     }
     lines.push('');
@@ -1294,7 +1294,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
     lines.push('');
     for (const task of timeline.blocked) {
       const { project, area } = getTaskParentChain(task, result);
-      const parentChain = formatParentChain(task, project, area);
+      const parentChain = formatParentChain(project, area);
       lines.push(`- **${task.title}** — ${parentChain}`);
     }
     lines.push('');
@@ -1315,7 +1315,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
       lines.push('');
       for (const task of tasks) {
         const { project, area } = getTaskParentChain(task, result);
-        const parentChain = formatParentChain(task, project, area);
+        const parentChain = formatParentChain(project, area);
         lines.push(`- ${task.title} — ${parentChain}`);
       }
       lines.push('');
@@ -1330,7 +1330,7 @@ function formatTimelineSection(result: VaultOverviewResult): string {
     lines.push('');
     for (const task of timeline.recentlyModified) {
       const { project, area } = getTaskParentChain(task, result);
-      const parentChain = formatParentChain(task, project, area);
+      const parentChain = formatParentChain(project, area);
       const hours = task.updatedAt ? hoursAgo(task.updatedAt) : 0;
       lines.push(`- **${task.title}** — ${parentChain} — ${hours}h ago`);
     }
@@ -1356,7 +1356,7 @@ function formatInProgressTasksSection(result: VaultOverviewResult): string {
 
   for (const task of inProgressTasks) {
     const { project, area } = getTaskParentChain(task, result);
-    const parentChain = formatParentChain(task, project, area);
+    const parentChain = formatParentChain(project, area);
 
     lines.push(`### ${task.title}`);
     lines.push('');

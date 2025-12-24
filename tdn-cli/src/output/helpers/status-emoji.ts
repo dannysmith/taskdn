@@ -1,3 +1,5 @@
+import { toKebabCase } from './string-utils.ts';
+
 /**
  * Status emoji maps for AI context output.
  * Per ai-context.md Section 3.1
@@ -41,7 +43,7 @@ export const NEWLY_ACTIONABLE_ICON = '🔓';
  */
 export function getProjectStatusEmoji(status: string | undefined): string {
   if (!status) return '';
-  const normalized = normalizeStatus(status);
+  const normalized = toKebabCase(status);
   return PROJECT_STATUS_EMOJI[normalized] ?? '';
 }
 
@@ -51,17 +53,6 @@ export function getProjectStatusEmoji(status: string | undefined): string {
  */
 export function getTaskStatusEmoji(status: string | undefined): string {
   if (!status) return '';
-  const normalized = normalizeStatus(status);
+  const normalized = toKebabCase(status);
   return TASK_STATUS_EMOJI[normalized] ?? '';
-}
-
-/**
- * Normalize status to kebab-case for emoji lookup
- */
-function normalizeStatus(status: string): string {
-  // Convert PascalCase to kebab-case
-  return status
-    .replace(/([A-Z])/g, '-$1')
-    .toLowerCase()
-    .replace(/^-/, '');
 }
