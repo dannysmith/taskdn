@@ -213,6 +213,34 @@ export interface VaultOverviewResult {
   stats: VaultStats;
 }
 
+// ============================================================================
+// Create Result Types
+// ============================================================================
+
+/**
+ * Result of creating a new task
+ */
+export interface TaskCreatedResult {
+  type: 'task-created';
+  task: Task;
+}
+
+/**
+ * Result of creating a new project
+ */
+export interface ProjectCreatedResult {
+  type: 'project-created';
+  project: Project;
+}
+
+/**
+ * Result of creating a new area
+ */
+export interface AreaCreatedResult {
+  type: 'area-created';
+  area: Area;
+}
+
 export type FormattableResult =
   | TaskResult
   | TaskListResult
@@ -224,6 +252,9 @@ export type FormattableResult =
   | ProjectContextResultOutput
   | TaskContextResultOutput
   | VaultOverviewResult
+  | TaskCreatedResult
+  | ProjectCreatedResult
+  | AreaCreatedResult
   | StubResult;
 
 /**

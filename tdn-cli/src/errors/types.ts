@@ -179,10 +179,14 @@ export const createError = {
     };
   },
 
-  invalidDate(providedDate: string, expectedFormats: string[]): InvalidDateError {
+  invalidDate(
+    fieldName: string,
+    providedDate: string,
+    expectedFormats: string[]
+  ): InvalidDateError {
     return {
       code: 'INVALID_DATE',
-      message: `Invalid date format: "${providedDate}"`,
+      message: `Invalid date format for ${fieldName}: "${providedDate}"`,
       providedDate,
       expectedFormats,
     };

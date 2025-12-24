@@ -11,6 +11,9 @@ import type {
   ProjectContextResultOutput,
   TaskContextResultOutput,
   VaultOverviewResult,
+  TaskCreatedResult,
+  ProjectCreatedResult,
+  AreaCreatedResult,
 } from './types.ts';
 import type { Task, Project, Area } from '@bindings';
 import { toKebabCase } from './helpers/index.ts';
@@ -223,6 +226,36 @@ export const jsonFormatter: Formatter = {
             scheduledToday: overviewResult.timeline.scheduledToday.map((t) => taskToJson(t, false)),
             blocked: overviewResult.timeline.blocked.map((t) => taskToJson(t, false)),
           },
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-created': {
+        const createdResult = result as TaskCreatedResult;
+        const task = createdResult.task;
+        const output = {
+          summary: `Created task: ${task.title}`,
+          created: true,
+          task: taskToJson(task),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'project-created': {
+        const createdResult = result as ProjectCreatedResult;
+        const project = createdResult.project;
+        const output = {
+          summary: `Created project: ${project.title}`,
+          created: true,
+          project: projectToJson(project),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'area-created': {
+        const createdResult = result as AreaCreatedResult;
+        const area = createdResult.area;
+        const output = {
+          summary: `Created area: ${area.title}`,
+          created: true,
+          area: areaToJson(area),
         };
         return JSON.stringify(output, null, 2);
       }

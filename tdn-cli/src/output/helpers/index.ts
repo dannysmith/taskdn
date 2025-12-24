@@ -26,6 +26,7 @@ export {
   getShortWeekday,
   formatDayWithDate,
   hoursAgo,
+  parseNaturalDate,
 } from './date-utils.ts';
 
 // Status emoji maps

@@ -231,3 +231,100 @@ export function hoursAgo(isoTimestamp: string): number {
   const diff = now.getTime() - then.getTime();
   return Math.floor(diff / (1000 * 60 * 60));
 }
+
+// ============================================================================
+// Natural Language Date Parsing
+// ============================================================================
+
+/**
+ * Weekday names and their indices (Sunday = 0, Monday = 1, ..., Saturday = 6)
+ */
+const WEEKDAYS: Record<string, number> = {
+  sunday: 0,
+  sun: 0,
+  monday: 1,
+  mon: 1,
+  tuesday: 2,
+  tue: 2,
+  wednesday: 3,
+  wed: 3,
+  thursday: 4,
+  thu: 4,
+  friday: 5,
+  fri: 5,
+  saturday: 6,
+  sat: 6,
+};
+
+/**
+ * Parse natural language date input to ISO 8601 date (YYYY-MM-DD).
+ *
+ * Supports:
+ * - "today", "tomorrow"
+ * - Weekday names: "monday", "friday", "wed" (next occurrence)
+ * - Relative: "+1d", "+3d", "+1w", "+2w"
+ * - "next week" (Monday of next week)
+ * - ISO format pass-through: "2025-01-15"
+ *
+ * Returns null if the input cannot be parsed.
+ */
+export function parseNaturalDate(input: string): string | null {
+  const trimmed = input.trim().toLowerCase();
+  const today = getToday();
+  const todayDate = parseDate(today);
+
+  // ISO format pass-through
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  // "today"
+  if (trimmed === 'today') {
+    return today;
+  }
+
+  // "tomorrow"
+  if (trimmed === 'tomorrow') {
+    return getTomorrow(today);
+  }
+
+  // "next week" (Monday of next week)
+  if (trimmed === 'next week' || trimmed === 'nextweek') {
+    // Find next Monday
+    const dayOfWeek = todayDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysUntilNextMonday = dayOfWeek === 0 ? 1 : 8 - dayOfWeek;
+    return addDays(today, daysUntilNextMonday);
+  }
+
+  // Weekday names (next occurrence of that day)
+  const targetDay = WEEKDAYS[trimmed];
+  if (targetDay !== undefined) {
+    const currentDay = todayDate.getDay();
+
+    // Calculate days until target day
+    let daysUntil = targetDay - currentDay;
+    if (daysUntil <= 0) {
+      // If today or past, go to next week
+      daysUntil += 7;
+    }
+
+    return addDays(today, daysUntil);
+  }
+
+  // Relative days: +1d, +3d, +10d
+  const daysMatch = trimmed.match(/^\+(\d+)d$/);
+  if (daysMatch && daysMatch[1]) {
+    const days = parseInt(daysMatch[1], 10);
+    return addDays(today, days);
+  }
+
+  // Relative weeks: +1w, +2w
+  const weeksMatch = trimmed.match(/^\+(\d+)w$/);
+  if (weeksMatch && weeksMatch[1]) {
+    const weeks = parseInt(weeksMatch[1], 10);
+    return addDays(today, weeks * 7);
+  }
+
+  // Could not parse
+  return null;
+}

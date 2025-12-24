@@ -17,6 +17,9 @@ import type {
   ProjectContextResultOutput,
   TaskContextResultOutput,
   VaultOverviewResult,
+  TaskCreatedResult,
+  ProjectCreatedResult,
+  AreaCreatedResult,
 } from './types.ts';
 import { toKebabCase } from './helpers/index.ts';
 
@@ -825,6 +828,78 @@ function formatVaultOverview(result: VaultOverviewResult): string {
   return lines.join('\n').trimEnd();
 }
 
+// ============================================================================
+// Create Result Formatters
+// ============================================================================
+
+/**
+ * Format task created result for human output
+ */
+function formatTaskCreated(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Task created`);
+  lines.push('');
+
+  // Title and status
+  const checkbox = formatTaskCheckbox(task.status);
+  lines.push(`  ${checkbox} ${bold(task.title)}`);
+  lines.push(`  ${dim(task.path)}`);
+
+  // Key metadata
+  if (task.due) lines.push(`  ${dim('Due:')} ${formatShortDate(task.due)}`);
+  if (task.scheduled) lines.push(`  ${dim('Scheduled:')} ${formatShortDate(task.scheduled)}`);
+  if (task.project) lines.push(`  ${dim('Project:')} ${cyan(task.project)}`);
+  if (task.area) lines.push(`  ${dim('Area:')} ${cyan(task.area)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format project created result for human output
+ */
+function formatProjectCreated(project: Project): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Project created`);
+  lines.push('');
+
+  // Title and status
+  lines.push(`  ${bold(project.title)}`);
+  if (project.status) lines.push(`  ${formatStatus(project.status)}`);
+  lines.push(`  ${dim(project.path)}`);
+
+  // Key metadata
+  if (project.area) lines.push(`  ${dim('Area:')} ${cyan(project.area)}`);
+  if (project.startDate) lines.push(`  ${dim('Start:')} ${formatShortDate(project.startDate)}`);
+  if (project.endDate) lines.push(`  ${dim('End:')} ${formatShortDate(project.endDate)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format area created result for human output
+ */
+function formatAreaCreated(area: Area): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Area created`);
+  lines.push('');
+
+  // Title and status
+  lines.push(`  ${bold(area.title)}`);
+  if (area.status) lines.push(`  ${formatStatus(area.status)}`);
+  lines.push(`  ${dim(area.path)}`);
+
+  // Key metadata
+  if (area.areaType) lines.push(`  ${dim('Type:')} ${area.areaType}`);
+
+  return lines.join('\n');
+}
+
 /**
  * Human-readable formatter with colors and styling
  */
@@ -870,6 +945,18 @@ export const humanFormatter: Formatter = {
       case 'vault-overview': {
         const overviewResult = result as VaultOverviewResult;
         return formatVaultOverview(overviewResult);
+      }
+      case 'task-created': {
+        const createdResult = result as TaskCreatedResult;
+        return formatTaskCreated(createdResult.task);
+      }
+      case 'project-created': {
+        const createdResult = result as ProjectCreatedResult;
+        return formatProjectCreated(createdResult.project);
+      }
+      case 'area-created': {
+        const createdResult = result as AreaCreatedResult;
+        return formatAreaCreated(createdResult.area);
       }
       default:
         return dim(`[${result.type}] stub output`);

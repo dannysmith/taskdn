@@ -1,0 +1,446 @@
+import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
+import { runCli } from '../helpers/cli';
+import { mkdtempSync, rmSync, existsSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+
+// Mock date for deterministic testing of natural language dates
+const MOCK_TODAY = '2025-06-15';
+
+// Create a temporary vault for testing write operations
+let tempDir: string;
+let tasksDir: string;
+let projectsDir: string;
+let areasDir: string;
+
+beforeEach(() => {
+  tempDir = mkdtempSync(join(tmpdir(), 'taskdn-test-'));
+  tasksDir = join(tempDir, 'tasks');
+  projectsDir = join(tempDir, 'projects');
+  areasDir = join(tempDir, 'areas');
+});
+
+afterEach(() => {
+  if (tempDir && existsSync(tempDir)) {
+    rmSync(tempDir, { recursive: true, force: true });
+  }
+});
+
+describe('taskdn add', () => {
+  describe('task creation', () => {
+    test('creates task with minimal args', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'Test Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.created).toBe(true);
+      expect(output.task.title).toBe('Test Task');
+      expect(output.task.status).toBe('inbox');
+      expect(output.task.path).toContain('test-task.md');
+    });
+
+    test('generates slug filename from title', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'Hello World Task!', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.task.path).toContain('hello-world-task.md');
+    });
+
+    test('handles duplicate filenames with suffix', async () => {
+      // Create first task
+      await runCli(['add', 'Duplicate Title', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      // Create second task with same title
+      const { stdout, exitCode } = await runCli(['add', 'Duplicate Title', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.task.path).toContain('duplicate-title-1.md');
+    });
+
+    test('sets created-at and updated-at', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'Timestamped Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.task.createdAt).toBeDefined();
+      expect(output.task.updatedAt).toBeDefined();
+    });
+
+    test('defaults to inbox status', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'Default Status Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.task.status).toBe('inbox');
+    });
+
+    test('creates task with all options', async () => {
+      const { stdout, exitCode } = await runCli(
+        [
+          'add',
+          'Full Task',
+          '--status',
+          'ready',
+          '--project',
+          'Q1 Planning',
+          '--area',
+          'Work',
+          '--due',
+          '2025-01-20',
+          '--scheduled',
+          '2025-01-15',
+          '--json',
+        ],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.task.title).toBe('Full Task');
+      expect(output.task.status).toBe('ready');
+      expect(output.task.project).toBe('[[Q1 Planning]]');
+      expect(output.task.area).toBe('[[Work]]');
+      expect(output.task.due).toBe('2025-01-20');
+      expect(output.task.scheduled).toBe('2025-01-15');
+    });
+
+    test('converts natural language dates to ISO 8601', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'Due Tomorrow', '--due', 'tomorrow', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+            TASKDN_MOCK_DATE: MOCK_TODAY,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      // Tomorrow from 2025-06-15 is 2025-06-16
+      expect(output.task.due).toBe('2025-06-16');
+    });
+
+    test('converts weekday names to ISO 8601', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'Due Friday', '--due', 'friday', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+            TASKDN_MOCK_DATE: MOCK_TODAY, // 2025-06-15 is a Sunday
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      // Next Friday from 2025-06-15 (Sunday) is 2025-06-20
+      expect(output.task.due).toBe('2025-06-20');
+    });
+
+    test('converts relative days to ISO 8601', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'Due In 3 Days', '--due', '+3d', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+            TASKDN_MOCK_DATE: MOCK_TODAY,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      // +3d from 2025-06-15 is 2025-06-18
+      expect(output.task.due).toBe('2025-06-18');
+    });
+
+    test('errors in AI mode with no title', async () => {
+      const { stderr, exitCode } = await runCli(['add', '--ai'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(2);
+      expect(stderr).toContain('Title is required');
+    });
+
+    test('writes valid frontmatter to file', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'Check File Content', '--project', 'Test Project', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      const filePath = output.task.path;
+      const content = readFileSync(filePath, 'utf-8');
+
+      expect(content).toContain('title: Check File Content');
+      expect(content).toContain('status: inbox');
+      expect(content).toContain("'[[Test Project]]'");
+      expect(content).toContain('created-at:');
+      expect(content).toContain('updated-at:');
+    });
+  });
+
+  describe('project creation', () => {
+    test('creates project file', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'project', 'Q1 Planning', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.created).toBe(true);
+      expect(output.project.title).toBe('Q1 Planning');
+      expect(output.project.path).toContain('q1-planning.md');
+    });
+
+    test('sets area reference correctly', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'project', 'Test Project', '--area', 'Work', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.project.area).toBe('[[Work]]');
+    });
+
+    test('handles optional status', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'project', 'Planning Project', '--status', 'planning', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.project.status).toBe('planning');
+    });
+
+    test('errors with no project title', async () => {
+      const { stderr, exitCode } = await runCli(['add', 'project', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(2);
+      expect(stderr).toContain('title');
+    });
+  });
+
+  describe('area creation', () => {
+    test('creates area file', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'area', 'Work', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.created).toBe(true);
+      expect(output.area.title).toBe('Work');
+      expect(output.area.path).toContain('work.md');
+    });
+
+    test('sets type field if provided', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['add', 'area', 'Acme Corp', '--type', 'client', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: tasksDir,
+            TASKDN_PROJECTS_DIR: projectsDir,
+            TASKDN_AREAS_DIR: areasDir,
+          },
+        }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.area.areaType).toBe('client');
+    });
+
+    test('defaults status to active', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'area', 'Default Area', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.area.status).toBe('active');
+    });
+
+    test('errors with no area title', async () => {
+      const { stderr, exitCode } = await runCli(['add', 'area', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(2);
+      expect(stderr).toContain('title');
+    });
+  });
+
+  describe('output modes', () => {
+    test('human mode shows confirmation', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'Human Output Task'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Task created');
+      expect(stdout).toContain('Human Output Task');
+    });
+
+    test('AI mode shows structured markdown', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'AI Output Task', '--ai'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Task Created');
+      expect(stdout).toContain('### AI Output Task');
+      expect(stdout).toContain('- **path:**');
+      expect(stdout).toContain('- **status:**');
+    });
+
+    test('JSON mode shows machine-readable output', async () => {
+      const { stdout, exitCode } = await runCli(['add', 'JSON Output Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toContain('Created task');
+      expect(output.created).toBe(true);
+      expect(output.task).toBeDefined();
+    });
+  });
+});

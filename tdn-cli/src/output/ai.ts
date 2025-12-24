@@ -12,6 +12,9 @@ import type {
   ProjectContextResultOutput,
   TaskContextResultOutput,
   VaultOverviewResult,
+  TaskCreatedResult,
+  ProjectCreatedResult,
+  AreaCreatedResult,
 } from './types.ts';
 import {
   AREA_ICON,
@@ -1496,6 +1499,67 @@ function formatVaultOverview(result: VaultOverviewResult): string {
   return sections.join('\n').trimEnd();
 }
 
+// ============================================================================
+// Create Result Formatters
+// ============================================================================
+
+/**
+ * Format task created result for AI mode
+ */
+function formatTaskCreated(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push('## Task Created');
+  lines.push('');
+  lines.push(`### ${task.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${task.path}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
+  if (task.createdAt) lines.push(`- **created-at:** ${task.createdAt}`);
+  if (task.due) lines.push(`- **due:** ${task.due}`);
+  if (task.scheduled) lines.push(`- **scheduled:** ${task.scheduled}`);
+  if (task.project) lines.push(`- **project:** ${task.project}`);
+  if (task.area) lines.push(`- **area:** ${task.area}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format project created result for AI mode
+ */
+function formatProjectCreated(project: Project): string {
+  const lines: string[] = [];
+
+  lines.push('## Project Created');
+  lines.push('');
+  lines.push(`### ${project.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${project.path}`);
+  if (project.status) lines.push(`- **status:** ${toKebabCase(project.status)}`);
+  if (project.area) lines.push(`- **area:** ${project.area}`);
+  if (project.startDate) lines.push(`- **start-date:** ${project.startDate}`);
+  if (project.endDate) lines.push(`- **end-date:** ${project.endDate}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format area created result for AI mode
+ */
+function formatAreaCreated(area: Area): string {
+  const lines: string[] = [];
+
+  lines.push('## Area Created');
+  lines.push('');
+  lines.push(`### ${area.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${area.path}`);
+  if (area.status) lines.push(`- **status:** ${toKebabCase(area.status)}`);
+  if (area.areaType) lines.push(`- **type:** ${area.areaType}`);
+
+  return lines.join('\n');
+}
+
 /**
  * AI-mode formatter - structured Markdown optimized for LLM consumption
  */
@@ -1541,6 +1605,18 @@ export const aiFormatter: Formatter = {
       case 'vault-overview': {
         const overviewResult = result as VaultOverviewResult;
         return formatVaultOverview(overviewResult);
+      }
+      case 'task-created': {
+        const createdResult = result as TaskCreatedResult;
+        return formatTaskCreated(createdResult.task);
+      }
+      case 'project-created': {
+        const createdResult = result as ProjectCreatedResult;
+        return formatProjectCreated(createdResult.project);
+      }
+      case 'area-created': {
+        const createdResult = result as AreaCreatedResult;
+        return formatAreaCreated(createdResult.area);
       }
       default:
         return `## ${result.type}\n\n(stub output)`;
