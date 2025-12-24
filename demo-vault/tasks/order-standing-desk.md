@@ -1,24 +1,12 @@
 ---
-title: Order standing desk converter
-status: ready
-created-at: 2025-01-08
-updated-at: 2025-01-12
+title: Order standing desk
+status: blocked
+created-at: 2025-01-15
+updated-at: 2025-01-20
 projects:
   - "[[Home Office Setup]]"
-area: "[[Home]]"
-due: 2025-01-20
 ---
 
-Research done. Going with the Uplift E7 based on reviews.
+Decided on the Uplift V2 Commercial. Waiting for their January sale to end - heard they usually have a better Presidents Day sale in February.
 
-## Decision
-
-- Model: Uplift E7 Electric Standing Desk Converter
-- Size: 32" wide
-- Color: Black
-
-Current price: $279 (on sale from $329)
-
-## Notes
-
-Sale ends January 20th. Order before then.
+**Blocked on:** Waiting for February sale.
