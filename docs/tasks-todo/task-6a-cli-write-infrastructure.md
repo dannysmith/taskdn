@@ -209,37 +209,39 @@ taskdn add area "Acme Corp" --type client
 
 ## Test Cases
 
+VERY IMPORTANT: The last claude code session we completed Phases 1-3 But did not complete writing tests for all this functionality. We must review the tests we have created And then finish this task. Uh, the work on this task is all contained in c4a7fc7c9f91198de794fa3c9ebb30838ebf81fb.
+
 ```typescript
 describe('write infrastructure', () => {
-  test('preserves unknown frontmatter fields on update');
-  test('preserves date-only format (not converted to datetime)');
-  test('preserves body content exactly');
-  test('handles concurrent writes safely (atomic)');
-});
+  test('preserves unknown frontmatter fields on update')
+  test('preserves date-only format (not converted to datetime)')
+  test('preserves body content exactly')
+  test('handles concurrent writes safely (atomic)')
+})
 
 describe('add command', () => {
-  test('creates task with minimal args');
-  test('creates task with all options');
-  test('generates slug filename from title');
-  test('handles duplicate filenames with suffix');
-  test('sets created-at and updated-at');
-  test('defaults to inbox status');
-  test('converts natural language dates to ISO 8601');
-  test('errors in AI mode with no title');
-  test('interactive prompts work in human mode');
-});
+  test('creates task with minimal args')
+  test('creates task with all options')
+  test('generates slug filename from title')
+  test('handles duplicate filenames with suffix')
+  test('sets created-at and updated-at')
+  test('defaults to inbox status')
+  test('converts natural language dates to ISO 8601')
+  test('errors in AI mode with no title')
+  test('interactive prompts work in human mode')
+})
 
 describe('add project', () => {
-  test('creates project file');
-  test('sets area reference correctly');
-  test('handles optional status');
-});
+  test('creates project file')
+  test('sets area reference correctly')
+  test('handles optional status')
+})
 
 describe('add area', () => {
-  test('creates area file');
-  test('sets type field if provided');
-  test('defaults status to active');
-});
+  test('creates area file')
+  test('sets type field if provided')
+  test('defaults status to active')
+})
 ```
 
 ## Verification
