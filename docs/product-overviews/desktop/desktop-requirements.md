@@ -37,6 +37,9 @@ See [CLI Technical Overview](../cli/cli-tech.md#sdk-extraction-for-desktop-app) 
 
 ### URL Scheme
 
+- Register `taskdn://` protocol for deep linking
+- Support opening specific tasks, projects, or views via URL
+
 ### Notifications & Reminders
 
 - Native OS notifications for due tasks
@@ -59,4 +62,4 @@ Inspired by Things:
 
 ## Task Ordering & Reordering
 
-Planning views (today, project planning) need manual task reordering. This is a UI concern, not a task property—the same task might be #1 in "today" but #5 in its project view.
+Planning views (Today, project planning, etc.) require manual task reordering. Order is a **UI concern**, not a task property—the same task might be #1 in the "Today" view but #5 in its project view.
