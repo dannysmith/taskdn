@@ -1,0 +1,52 @@
+filters:
+  and:
+    - file.inFolder("tasks")
+    - '!file.name.contains("Template")'
+properties:
+  file.name:
+    displayName: Task
+  note.status:
+    displayName: Status
+  note.due:
+    displayName: Due
+  note.projects:
+    displayName: Project
+  note.area:
+    displayName: Area
+views:
+  - type: table
+    name: All Tasks
+    order:
+      - file.name
+      - status
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+      - property: file.name
+        direction: ASC
+  - type: table
+    name: Ready
+    filters:
+      and:
+        - note.status.contains("ready")
+    order:
+      - file.name
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+  - type: table
+    name: In Progress
+    filters:
+      and:
+        - note.status.contains("in-progress")
+    order:
+      - file.name
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC

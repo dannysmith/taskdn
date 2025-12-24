@@ -1,0 +1,39 @@
+filters:
+  and:
+    - file.inFolder("projects")
+    - '!file.name.contains("Template")'
+properties:
+  file.name:
+    displayName: Project
+  note.status:
+    displayName: Status
+  note.area:
+    displayName: Area
+  note.start-date:
+    displayName: Started
+  note.end-date:
+    displayName: End Date
+views:
+  - type: table
+    name: All Projects
+    order:
+      - file.name
+      - status
+      - area
+      - start-date
+    sort:
+      - property: note.start-date
+        direction: DESC
+  - type: table
+    name: Active
+    filters:
+      and:
+        - note.status.contains("in-progress")
+    order:
+      - file.name
+      - area
+    sort:
+      - property: note.area
+        direction: ASC
+      - property: file.name
+        direction: ASC
