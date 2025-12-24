@@ -21,6 +21,7 @@ import {
   TASK_STATUS_EMOJI,
   getProjectStatusEmoji,
   getTaskStatusEmoji,
+  getToday,
   formatDayWithDate,
   hoursAgo,
   truncateBody,
@@ -261,23 +262,6 @@ function formatAreaList(areas: Area[]): string {
 // ============================================================================
 // Context Formatters
 // ============================================================================
-
-/**
- * Format an area for context output (related entity - compact, no body)
- * Uses ### heading
- */
-function formatContextArea(area: Area): string {
-  const lines: string[] = [];
-
-  lines.push(`### ${area.title}`);
-  lines.push('');
-  lines.push(`- **path:** ${area.path}`);
-  if (area.status) {
-    lines.push(`- **status:** ${toKebabCase(area.status)}`);
-  }
-
-  return lines.join('\n');
-}
 
 /**
  * Format area context result for AI mode
@@ -888,71 +872,214 @@ function formatProjectContext(result: ProjectContextResultOutput): string {
 }
 
 /**
- * Format task context result for AI mode
- * Task (primary) + Parent Project + Parent Area
+ * Determine the alert banner for a task.
+ * Per ai-context.md Section 7, show most urgent first:
+ * 1. Overdue → ⚠️ OVERDUE — due {date}
+ * 2. Due today → 📅 DUE TODAY
+ * 3. Scheduled today → 📆 SCHEDULED TODAY
+ * 4. Newly actionable → 🔓 NEWLY ACTIONABLE — deferred until today
+ */
+function getTaskAlertBanner(task: Task): string | null {
+  const today = getToday();
+
+  // Check overdue (due < today)
+  if (task.due && task.due < today) {
+    return `⚠️ OVERDUE — due ${task.due}`;
+  }
+
+  // Check due today
+  if (task.due && task.due === today) {
+    return '📅 DUE TODAY';
+  }
+
+  // Check scheduled today
+  if (task.scheduled && task.scheduled === today) {
+    return '📆 SCHEDULED TODAY';
+  }
+
+  // Check newly actionable (defer-until = today)
+  if (task.deferUntil && task.deferUntil === today) {
+    return '🔓 NEWLY ACTIONABLE — deferred until today';
+  }
+
+  return null;
+}
+
+/**
+ * Format task context result for AI mode.
+ * Per ai-context.md Section 7:
+ * - Alert banner (if applicable)
+ * - Task details (metadata table + full body)
+ * - Parent Project (summary table + excerpt)
+ * - Parent Area (summary table + excerpt, with relationship clarity)
+ * - Reference table
  */
 function formatTaskContext(result: TaskContextResultOutput): string {
-  const lines: string[] = [];
+  const sections: string[] = [];
   const task = result.task;
 
-  // Primary entity: Task with full details
-  lines.push(`## Task: ${task.title}`);
-  lines.push('');
-  lines.push(`- **path:** ${task.path}`);
-  lines.push(`- **status:** ${toKebabCase(task.status)}`);
-  if (task.due) lines.push(`- **due:** ${task.due}`);
-  if (task.scheduled) lines.push(`- **scheduled:** ${task.scheduled}`);
-  if (task.deferUntil) lines.push(`- **defer-until:** ${task.deferUntil}`);
-  if (task.project) lines.push(`- **project:** ${task.project}`);
-  if (task.area) lines.push(`- **area:** ${task.area}`);
-  if (task.createdAt) lines.push(`- **created-at:** ${task.createdAt}`);
-  if (task.updatedAt) lines.push(`- **updated-at:** ${task.updatedAt}`);
-  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
+  // Header: # Task: {name}
+  sections.push(`# Task: ${task.title}`);
+  sections.push('');
 
+  // Alert banner (if applicable)
+  const alertBanner = getTaskAlertBanner(task);
+  if (alertBanner) {
+    sections.push(alertBanner);
+    sections.push('');
+  }
+
+  // Task Details section
+  sections.push('---');
+  sections.push('');
+  sections.push('## Task Details');
+  sections.push('');
+
+  // Metadata table
+  const metadataRows: [string, string | undefined][] = [];
+  metadataRows.push(['status', toKebabCase(task.status)]);
+  if (task.createdAt) metadataRows.push(['created-at', task.createdAt]);
+  if (task.updatedAt) metadataRows.push(['updated-at', task.updatedAt]);
+  if (task.due) metadataRows.push(['due', task.due]);
+  if (task.scheduled) metadataRows.push(['scheduled', task.scheduled]);
+  if (task.deferUntil) metadataRows.push(['defer-until', task.deferUntil]);
+  // Show project as wikilink reference if present
+  if (task.project) metadataRows.push(['project', task.project]);
+  // Show area as wikilink reference if present (only if direct, not via project)
+  if (task.area && !task.project) metadataRows.push(['area', task.area]);
+  metadataRows.push(['path', task.path]);
+
+  sections.push('| Field | Value |');
+  sections.push('| ----- | ----- |');
+  for (const [key, value] of metadataRows) {
+    if (value !== undefined) {
+      sections.push(`| ${key} | ${value} |`);
+    }
+  }
+
+  // Body (full, no truncation for primary entity)
   if (task.body) {
-    lines.push('');
-    lines.push('### Body');
-    lines.push('');
-    lines.push(task.body);
+    sections.push('');
+    sections.push('### Body');
+    sections.push('');
+    sections.push(task.body);
   }
 
-  // Parent project section
+  // Parent Project section
+  sections.push('');
+  sections.push('---');
+  sections.push('');
+
   if (result.project) {
-    lines.push('');
-    lines.push('## Parent Project');
-    lines.push('');
-
     const project = result.project;
-    const projectLines: string[] = [];
-    projectLines.push(`### ${project.title}`);
-    projectLines.push('');
-    projectLines.push(`- **path:** ${project.path}`);
-    if (project.status) {
-      projectLines.push(`- **status:** ${toKebabCase(project.status)}`);
+    sections.push(`## Parent Project: ${project.title}`);
+    sections.push('');
+
+    // Project metadata table
+    const projectRows: [string, string | undefined][] = [];
+    if (project.status) projectRows.push(['status', toKebabCase(project.status)]);
+    if (project.area) projectRows.push(['area', project.area]);
+    if (project.startDate) projectRows.push(['start-date', project.startDate]);
+    if (project.endDate) projectRows.push(['end-date', project.endDate]);
+    projectRows.push(['path', project.path]);
+
+    sections.push('| Field | Value |');
+    sections.push('| ----- | ----- |');
+    for (const [key, value] of projectRows) {
+      if (value !== undefined) {
+        sections.push(`| ${key} | ${value} |`);
+      }
     }
 
-    lines.push(projectLines.join('\n'));
+    // Project excerpt (blockquote format)
+    const projectExcerpt = truncateBody(project.body);
+    if (projectExcerpt) {
+      sections.push('');
+      const blockquote = projectExcerpt
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      sections.push(blockquote);
+    }
+  } else {
+    sections.push('## Parent Project');
+    sections.push('');
+    sections.push('_None_');
   }
 
-  // Parent area section
+  // Parent Area section
+  sections.push('');
+  sections.push('---');
+  sections.push('');
+
   if (result.area) {
-    lines.push('');
-    lines.push('## Parent Area');
-    lines.push('');
-    lines.push(formatContextArea(result.area));
-  }
+    const area = result.area;
+    sections.push(`## Parent Area: ${area.title}`);
+    sections.push('');
 
-  // Warnings if any
-  if (result.warnings.length > 0) {
-    lines.push('');
-    lines.push('## Warnings');
-    lines.push('');
-    for (const warning of result.warnings) {
-      lines.push(`- ${warning}`);
+    // Relationship clarity notation
+    if (result.project) {
+      // Area is via project
+      sections.push(`_Via project ${result.project.title}_`);
+    } else {
+      // Direct relationship (task has area but no project)
+      sections.push('_Direct relationship_');
     }
+    sections.push('');
+
+    // Area metadata table
+    const areaRows: [string, string | undefined][] = [];
+    if (area.status) areaRows.push(['status', toKebabCase(area.status)]);
+    if (area.areaType) areaRows.push(['type', area.areaType]);
+    areaRows.push(['path', area.path]);
+
+    sections.push('| Field | Value |');
+    sections.push('| ----- | ----- |');
+    for (const [key, value] of areaRows) {
+      if (value !== undefined) {
+        sections.push(`| ${key} | ${value} |`);
+      }
+    }
+
+    // Area excerpt (blockquote format)
+    const areaExcerpt = truncateBody(area.body);
+    if (areaExcerpt) {
+      sections.push('');
+      const blockquote = areaExcerpt
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      sections.push(blockquote);
+    }
+  } else if (result.project && !result.area) {
+    // Task has project but project has no area
+    sections.push('## Parent Area');
+    sections.push('');
+    sections.push('_None (project has no area)_');
+  } else {
+    // Task has no project and no area
+    sections.push('## Parent Area');
+    sections.push('');
+    sections.push('_None_');
   }
 
-  return lines.join('\n').trimEnd();
+  // Reference section
+  const references = collectReferences({
+    areas: result.area ? [result.area] : [],
+    projects: result.project ? [result.project] : [],
+    tasks: [task],
+  });
+
+  if (references.length > 0) {
+    sections.push('');
+    sections.push('---');
+    sections.push('');
+    sections.push('## Reference');
+    sections.push('');
+    sections.push(buildReferenceTable(references));
+  }
+
+  return sections.join('\n').trimEnd();
 }
 
 // ============================================================================

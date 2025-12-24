@@ -368,7 +368,7 @@ interface ProjectContextResultOutput {
 
 ---
 
-## Phase 4: Rework `context task --ai`
+## Phase 4: Rework `context task --ai` ✅ COMPLETE
 
 Rework the task context output per ai-context.md Section 7.
 
@@ -408,11 +408,11 @@ Minimal changes needed - current type is mostly sufficient, just need to compute
 
 ### Checklist
 
-- [ ] Implement alert banner logic using date utilities
-- [ ] Implement `formatTaskContext()` per Section 7
-- [ ] Handle all parent relationship edge cases
-- [ ] Update/add E2E tests
-- [ ] Verify output matches ai-context.md Section 7 examples
+- [x] Implement alert banner logic using date utilities
+- [x] Implement `formatTaskContext()` per Section 7
+- [x] Handle all parent relationship edge cases
+- [x] Update/add E2E tests
+- [x] Verify output matches ai-context.md Section 7 examples
 
 ---
 

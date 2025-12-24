@@ -48,12 +48,19 @@ describe('context task', () => {
   describe('with --ai flag', () => {
     const taskPath = fixturePath('vault/tasks/full-metadata.md');
 
-    test('outputs structured markdown', async () => {
+    test('outputs structured markdown with # header', async () => {
       const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('## Task: Full Metadata Task');
-      expect(stdout).toContain('- **path:**');
-      expect(stdout).toContain('- **status:** in-progress');
+      expect(stdout).toContain('# Task: Full Metadata Task');
+      expect(stdout).toContain('## Task Details');
+      expect(stdout).toContain('| status | in-progress |');
+    });
+
+    test('shows metadata table format', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('| Field | Value |');
+      expect(stdout).toContain('| path |');
     });
 
     test('includes body for primary entity', async () => {
@@ -64,18 +71,30 @@ describe('context task', () => {
       expect(stdout).toContain('### Body');
     });
 
-    test('shows parent project section', async () => {
+    test('shows parent project section with title in header', async () => {
       const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('## Parent Project');
-      expect(stdout).toContain('### Test Project');
+      expect(stdout).toContain('## Parent Project: Test Project');
     });
 
-    test('shows parent area section', async () => {
+    test('shows parent area section with title in header', async () => {
       const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('## Parent Area');
-      expect(stdout).toContain('### Work');
+      expect(stdout).toContain('## Parent Area: Work');
+    });
+
+    test('shows relationship notation for area via project', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('_Via project Test Project_');
+    });
+
+    test('includes reference table', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Reference');
+      expect(stdout).toContain('| Entity | Type | Path |');
+      expect(stdout).toContain('| Full Metadata Task | task |');
     });
   });
 
@@ -210,8 +229,9 @@ describe('context task', () => {
     test('works with --ai flag', async () => {
       const { stdout, exitCode } = await runCli(['context', 'task', 'Minimal Task', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('## Task: Minimal Task');
-      expect(stdout).toContain('- **path:**');
+      expect(stdout).toContain('# Task: Minimal Task');
+      expect(stdout).toContain('## Task Details');
+      expect(stdout).toContain('| path |');
     });
 
     test('works with --json flag', async () => {
@@ -285,6 +305,68 @@ describe('context task', () => {
     test('treats input with / as path', async () => {
       const { exitCode } = await runCli(['context', 'task', 'subdir/task.md']);
       expect(exitCode).toBe(1); // Not found because subdir doesn't exist
+    });
+  });
+
+  describe('alert banners', () => {
+    test('shows overdue banner for task with past due date', async () => {
+      const taskPath = fixturePath('vault/tasks/due-past.md');
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('⚠️ OVERDUE — due 2020-01-01');
+    });
+
+    test('no banner for task without time-sensitive dates', async () => {
+      const taskPath = fixturePath('vault/tasks/minimal.md');
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      // Should not contain any alert icons
+      expect(stdout).not.toContain('⚠️ OVERDUE');
+      expect(stdout).not.toContain('📅 DUE TODAY');
+      expect(stdout).not.toContain('📆 SCHEDULED TODAY');
+      expect(stdout).not.toContain('🔓 NEWLY ACTIONABLE');
+    });
+  });
+
+  describe('direct area relationship', () => {
+    test('shows direct relationship notation when task has area but no project', async () => {
+      const taskPath = fixturePath('vault/tasks/in-work-direct.md');
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Parent Project');
+      expect(stdout).toContain('_None_');
+      expect(stdout).toContain('## Parent Area: Work');
+      expect(stdout).toContain('_Direct relationship_');
+    });
+  });
+
+  describe('task with no parents', () => {
+    test('shows None for both project and area', async () => {
+      const taskPath = fixturePath('vault/tasks/minimal.md');
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Parent Project');
+      expect(stdout).toContain('## Parent Area');
+      // Both should show _None_
+      expect(stdout.match(/_None_/g)?.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  describe('project and area excerpts', () => {
+    test('includes project body excerpt in blockquote format', async () => {
+      const taskPath = fixturePath('vault/tasks/full-metadata.md');
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      // Test Project has body "A test project in the Work area."
+      expect(stdout).toContain('> A test project in the Work area.');
+    });
+
+    test('includes area body excerpt in blockquote format', async () => {
+      const taskPath = fixturePath('vault/tasks/full-metadata.md');
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai']);
+      expect(exitCode).toBe(0);
+      // Work area has body "Work-related tasks and projects."
+      expect(stdout).toContain('> Work-related tasks and projects.');
     });
   });
 });
