@@ -18,7 +18,7 @@ import type {
   TaskContextResultOutput,
   VaultOverviewResult,
 } from './types.ts';
-import { toKebabCase } from './types.ts';
+import { toKebabCase } from './helpers/index.ts';
 
 // Configure marked-terminal with our color palette
 marked.use(

@@ -12,8 +12,8 @@ import type {
   TaskContextResultOutput,
   VaultOverviewResult,
 } from './types.ts';
-import { toKebabCase } from './types.ts';
 import type { Task, Project, Area } from '@bindings';
+import { toKebabCase } from './helpers/index.ts';
 
 /**
  * Convert a Task to a JSON-serializable object

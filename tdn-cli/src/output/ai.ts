@@ -13,7 +13,6 @@ import type {
   TaskContextResultOutput,
   VaultOverviewResult,
 } from './types.ts';
-import { toKebabCase } from './types.ts';
 import {
   AREA_ICON,
   OVERDUE_ICON,
@@ -33,6 +32,9 @@ import {
   countTasksByStatus,
   formatTaskCountShorthand,
   formatParentChain,
+  isInProgress,
+  formatBlockquoteExcerpt,
+  toKebabCase,
   type TreeNode,
 } from './helpers/index.ts';
 
@@ -561,15 +563,10 @@ function formatAreaContext(result: AreaContextResultOutput): string {
     sections.push('');
 
     for (const project of projectsWithExcerpts) {
-      const excerpt = truncateBody(project.body);
-      if (excerpt) {
+      const blockquote = formatBlockquoteExcerpt(project.body);
+      if (blockquote) {
         sections.push(`### ${project.title}`);
         sections.push('');
-        // Format as blockquote
-        const blockquote = excerpt
-          .split('\n')
-          .map((line) => `> ${line}`)
-          .join('\n');
         sections.push(blockquote);
         sections.push('');
       }
@@ -680,13 +677,9 @@ function formatProjectContext(result: ProjectContextResultOutput): string {
     }
 
     // Area excerpt (blockquote format)
-    const areaExcerpt = truncateBody(area.body);
-    if (areaExcerpt) {
+    const blockquote = formatBlockquoteExcerpt(area.body);
+    if (blockquote) {
       sections.push('');
-      const blockquote = areaExcerpt
-        .split('\n')
-        .map((line) => `> ${line}`)
-        .join('\n');
       sections.push(blockquote);
     }
   } else {
@@ -992,13 +985,9 @@ function formatTaskContext(result: TaskContextResultOutput): string {
     }
 
     // Project excerpt (blockquote format)
-    const projectExcerpt = truncateBody(project.body);
-    if (projectExcerpt) {
+    const blockquote = formatBlockquoteExcerpt(project.body);
+    if (blockquote) {
       sections.push('');
-      const blockquote = projectExcerpt
-        .split('\n')
-        .map((line) => `> ${line}`)
-        .join('\n');
       sections.push(blockquote);
     }
   } else {
@@ -1042,14 +1031,10 @@ function formatTaskContext(result: TaskContextResultOutput): string {
     }
 
     // Area excerpt (blockquote format)
-    const areaExcerpt = truncateBody(area.body);
-    if (areaExcerpt) {
+    const areaBlockquote = formatBlockquoteExcerpt(area.body);
+    if (areaBlockquote) {
       sections.push('');
-      const blockquote = areaExcerpt
-        .split('\n')
-        .map((line) => `> ${line}`)
-        .join('\n');
-      sections.push(blockquote);
+      sections.push(areaBlockquote);
     }
   } else if (result.project && !result.area) {
     // Task has project but project has no area
@@ -1085,14 +1070,6 @@ function formatTaskContext(result: TaskContextResultOutput): string {
 // ============================================================================
 // Vault Overview Formatter (ai-context.md Section 4)
 // ============================================================================
-
-/**
- * Helper: Check if task is in-progress
- */
-function isInProgress(task: Task): boolean {
-  const status = task.status.toLowerCase();
-  return status === 'inprogress' || status === 'in-progress';
-}
 
 /**
  * Helper: Get parent chain for a task
@@ -1415,15 +1392,10 @@ function formatExcerptsSection(result: VaultOverviewResult): string {
 
   // Area excerpts
   for (const area of result.areas) {
-    const excerpt = truncateBody(area.body);
-    if (excerpt) {
+    const blockquote = formatBlockquoteExcerpt(area.body);
+    if (blockquote) {
       lines.push(`### ${area.title} (Area)`);
       lines.push('');
-      // Format as blockquote
-      const blockquote = excerpt
-        .split('\n')
-        .map((line) => `> ${line}`)
-        .join('\n');
       lines.push(blockquote);
       lines.push('');
     }
@@ -1434,14 +1406,10 @@ function formatExcerptsSection(result: VaultOverviewResult): string {
     const status = project.status?.toLowerCase();
     if (status === 'paused') continue;
 
-    const excerpt = truncateBody(project.body);
-    if (excerpt) {
+    const blockquote = formatBlockquoteExcerpt(project.body);
+    if (blockquote) {
       lines.push(`### ${project.title} (Project)`);
       lines.push('');
-      const blockquote = excerpt
-        .split('\n')
-        .map((line) => `> ${line}`)
-        .join('\n');
       lines.push(blockquote);
       lines.push('');
     }

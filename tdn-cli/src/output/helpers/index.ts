@@ -89,3 +89,12 @@ export {
   calculateAreaTaskCount,
   type TreeNode,
 } from './tree-format.ts';
+
+// Entity status predicates
+export {
+  isInProgress,
+  isBlocked,
+  isActiveTask,
+  isActiveProject,
+  isActiveArea,
+} from './task-predicates.ts';

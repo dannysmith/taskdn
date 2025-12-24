@@ -36,8 +36,8 @@ describe('getOutputMode', () => {
     expect(getOutputMode({})).toBe('human');
   });
 
-  test('prefers json over ai when both are set', () => {
-    expect(getOutputMode({ json: true, ai: true })).toBe('json');
+  test('returns ai-json when both ai and json are set', () => {
+    expect(getOutputMode({ json: true, ai: true })).toBe('ai-json');
   });
 });
 

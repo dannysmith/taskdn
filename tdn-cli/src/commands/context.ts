@@ -26,6 +26,9 @@ import {
   isScheduledToday,
   isNewlyActionable,
   isScheduledThisWeek,
+  isActiveTask,
+  isBlocked,
+  isInProgress,
 } from '@/output/helpers/index.ts';
 
 /**
@@ -115,30 +118,6 @@ function getDirectAreaTasks(tasks: Task[], projectTasks: Map<string, Task[]>): T
 
   // Return tasks that have an area but are not in the projectTasks
   return tasks.filter((task) => task.area && !tasksInProjects.has(task.path));
-}
-
-/**
- * Check if a task is active (not done, dropped, or icebox)
- * Per ai-context.md Section 2.2
- */
-function isActiveTask(task: Task): boolean {
-  const status = task.status.toLowerCase();
-  return status !== 'done' && status !== 'dropped' && status !== 'icebox';
-}
-
-/**
- * Check if a task is blocked
- */
-function isBlocked(task: Task): boolean {
-  return task.status.toLowerCase() === 'blocked';
-}
-
-/**
- * Check if a task is in-progress
- */
-function isInProgress(task: Task): boolean {
-  const status = task.status.toLowerCase();
-  return status === 'inprogress' || status === 'in-progress';
 }
 
 /**

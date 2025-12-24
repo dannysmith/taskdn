@@ -9,29 +9,12 @@ import {
   isNewlyActionable,
   isScheduledThisWeek,
   wasModifiedRecently,
+  isActiveTask,
+  isActiveProject,
+  isActiveArea,
+  isBlocked,
+  isInProgress,
 } from './helpers/index.ts';
-
-/**
- * Definition of "active" entities per ai-context.md Section 2.2
- */
-
-function isActiveTask(task: Task): boolean {
-  const status = task.status.toLowerCase();
-  // Exclude done, dropped, icebox
-  return status !== 'done' && status !== 'dropped' && status !== 'icebox';
-}
-
-function isActiveProject(project: Project): boolean {
-  if (!project.status) return true;
-  // Exclude done
-  return project.status.toLowerCase() !== 'done';
-}
-
-function isActiveArea(area: Area): boolean {
-  if (!area.status) return true;
-  // Only active if status is 'Active' or unset (exclude 'Archived')
-  return area.status.toLowerCase() === 'active';
-}
 
 /**
  * Normalize a wikilink reference to a comparable string
@@ -41,20 +24,6 @@ function isActiveArea(area: Area): boolean {
 function normalizeWikilink(ref: string | undefined): string | undefined {
   if (!ref) return undefined;
   return ref.replace(/^\[\[|\]\]$/g, '').toLowerCase();
-}
-
-/**
- * Check if a task is blocked
- */
-function isBlocked(task: Task): boolean {
-  return task.status.toLowerCase() === 'blocked';
-}
-
-/**
- * Check if a task is in-progress
- */
-function isInProgress(task: Task): boolean {
-  return task.status.toLowerCase() === 'inprogress' || task.status.toLowerCase() === 'in-progress';
 }
 
 /**
