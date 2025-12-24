@@ -10,69 +10,7 @@ import type {
   AreaListResult,
 } from '@/output/index.ts';
 import { getVaultConfig } from '@/config/index.ts';
-
-/**
- * Get today's date in YYYY-MM-DD format.
- * Supports TASKDN_MOCK_DATE env var for testing.
- */
-function getToday(): string {
-  // Support mocking for tests
-  const mockDate = process.env.TASKDN_MOCK_DATE;
-  if (mockDate && /^\d{4}-\d{2}-\d{2}$/.test(mockDate)) {
-    return mockDate;
-  }
-
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * Format a Date object as YYYY-MM-DD string
- */
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-/**
- * Get tomorrow's date in YYYY-MM-DD format
- */
-function getTomorrow(today: string): string {
-  const date = new Date(today + 'T00:00:00');
-  date.setDate(date.getDate() + 1);
-  return formatDate(date);
-}
-
-/**
- * Get the end of week (Sunday) for the given date in YYYY-MM-DD format.
- * Week starts on Monday (day 1) and ends on Sunday (day 0).
- */
-function getEndOfWeek(today: string): string {
-  const date = new Date(today + 'T00:00:00');
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  // Calculate days until Sunday
-  const daysUntilSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
-  date.setDate(date.getDate() + daysUntilSunday);
-  return formatDate(date);
-}
-
-/**
- * Get the start of week (Monday) for the given date in YYYY-MM-DD format.
- * Week starts on Monday (day 1) and ends on Sunday (day 0).
- */
-function getStartOfWeek(today: string): string {
-  const date = new Date(today + 'T00:00:00');
-  const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  // Calculate days since Monday (Sunday = 6 days ago, Monday = 0)
-  const daysSinceMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-  date.setDate(date.getDate() - daysSinceMonday);
-  return formatDate(date);
-}
+import { getToday, getTomorrow, getEndOfWeek, getStartOfWeek } from '@/output/helpers/index.ts';
 
 /**
  * Check if a project is "active" per CLI spec:
