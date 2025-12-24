@@ -25,6 +25,7 @@ import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
 import { aiFormatter } from './ai.ts';
 import { jsonFormatter } from './json.ts';
+import { aiJsonFormatter } from './ai-json.ts';
 
 export type {
   OutputMode,
@@ -61,6 +62,8 @@ export function getFormatter(mode: OutputMode): Formatter {
       return aiFormatter;
     case 'json':
       return jsonFormatter;
+    case 'ai-json':
+      return aiJsonFormatter;
   }
 }
 

@@ -448,10 +448,10 @@ Note: `--ai --json` for context commands has a specific envelope format defined 
 - [x] `list tasks --json` — Reviewed, no changes needed
 - [x] `list projects --json` — Reviewed, no changes needed
 - [x] `list areas --json` — Reviewed, no changes needed
-- [ ] `context task --ai --json` — Implement Section 8 envelope
-- [ ] `context project --ai --json` — Implement Section 8 envelope
-- [ ] `context area --ai --json` — Implement Section 8 envelope
-- [ ] `context --ai --json` — Implement Section 8 envelope
+- [x] `context task --ai --json` — Implement Section 8 envelope
+- [x] `context project --ai --json` — Implement Section 8 envelope
+- [x] `context area --ai --json` — Implement Section 8 envelope
+- [x] `context --ai --json` — Implement Section 8 envelope
 
 ### Implementation Plan: `--ai --json` Envelope for Context Commands
 

@@ -3,7 +3,7 @@ import type { Task, Project, Area } from '@bindings';
 /**
  * Output mode enum
  */
-export type OutputMode = 'human' | 'ai' | 'json';
+export type OutputMode = 'human' | 'ai' | 'json' | 'ai-json';
 
 /**
  * Global options available to all commands
@@ -17,6 +17,8 @@ export interface GlobalOptions {
  * Determines the output mode from global flags
  */
 export function getOutputMode(options: GlobalOptions): OutputMode {
+  // ai-json mode: both flags present, wraps AI markdown in JSON envelope
+  if (options.json && options.ai) return 'ai-json';
   if (options.json) return 'json';
   if (options.ai) return 'ai';
   return 'human';

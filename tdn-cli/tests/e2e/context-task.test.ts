@@ -143,6 +143,79 @@ describe('context task', () => {
     });
   });
 
+  describe('with --ai --json flags (Section 8 envelope)', () => {
+    const taskPath = fixturePath('vault/tasks/full-metadata.md');
+
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'task', taskPath, '--ai', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('has contextType field set to task', async () => {
+      const { stdout } = await runCli(['context', 'task', taskPath, '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.contextType).toBe('task');
+    });
+
+    test('has entity field with task title', async () => {
+      const { stdout } = await runCli(['context', 'task', taskPath, '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.entity).toBe('Full Metadata Task');
+    });
+
+    test('has summary field describing task context', async () => {
+      const { stdout } = await runCli(['context', 'task', taskPath, '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toContain("Context for task 'Full Metadata Task'");
+      expect(output.summary).toContain("in project 'Test Project'");
+    });
+
+    test('has content field with AI-formatted markdown', async () => {
+      const { stdout } = await runCli(['context', 'task', taskPath, '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.content).toContain('# Task: Full Metadata Task');
+      expect(output.content).toContain('## Task Details');
+      expect(output.content).toContain('## Parent Project: Test Project');
+      expect(output.content).toContain('## Parent Area: Work');
+    });
+
+    test('has references array with task, project, and area', async () => {
+      const { stdout } = await runCli(['context', 'task', taskPath, '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.references)).toBe(true);
+
+      const taskRef = output.references.find(
+        (r: { type: string; name: string }) => r.type === 'task'
+      );
+      expect(taskRef).toBeDefined();
+      expect(taskRef.name).toBe('Full Metadata Task');
+      expect(taskRef.path).toContain('full-metadata.md');
+
+      const projectRef = output.references.find(
+        (r: { type: string; name: string }) => r.type === 'project'
+      );
+      expect(projectRef).toBeDefined();
+      expect(projectRef.name).toBe('Test Project');
+
+      const areaRef = output.references.find(
+        (r: { type: string; name: string }) => r.type === 'area'
+      );
+      expect(areaRef).toBeDefined();
+      expect(areaRef.name).toBe('Work');
+    });
+
+    test('task without project has correct summary and references', async () => {
+      const minimalPath = fixturePath('vault/tasks/minimal.md');
+      const { stdout } = await runCli(['context', 'task', minimalPath, '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toContain("Context for task 'Minimal Task'");
+      expect(output.summary).not.toContain('in project');
+      // Should only have task reference (no project or area)
+      expect(output.references.every((r: { type: string }) => r.type === 'task')).toBe(true);
+    });
+  });
+
   describe('task not found', () => {
     test('exits with code 1', async () => {
       const { exitCode } = await runCli(['context', 'task', '/nonexistent/task.md']);

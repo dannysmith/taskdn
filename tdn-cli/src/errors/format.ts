@@ -297,6 +297,8 @@ export function formatError(error: CliError, mode: OutputMode): string {
     case 'ai':
       return formatAi(error);
     case 'json':
+    case 'ai-json':
+      // Both json and ai-json use JSON format for errors
       return formatJson(error);
     default: {
       const _exhaustive: never = mode;
