@@ -67,16 +67,16 @@ Context output surfaces information for awareness — it does NOT dictate priori
 
 ### 2.6 Specific Rules
 
-| Rule                        | Value                                                         |
-| --------------------------- | ------------------------------------------------------------- |
-| Scheduled horizon           | 7 days (fixed)                                                |
-| Recently modified window    | 24 hours                                                      |
-| Recently modified threshold | If >20 tasks modified, omit section (implies batch operation) |
-| Excerpt truncation          | First 20 lines OR first 200 words                             |
-| Reference table scope       | Only entities mentioned in output                             |
+| Rule                        | Value                                                            |
+| --------------------------- | ---------------------------------------------------------------- |
+| Scheduled horizon           | 7 days (fixed)                                                   |
+| Recently modified window    | 24 hours                                                         |
+| Recently modified threshold | If >20 tasks modified, omit section (implies batch operation)    |
+| Excerpt truncation          | First 20 lines OR first 200 words                                |
+| Reference table scope       | Only entities mentioned in output                                |
 | Empty timeline subsections  | Overview: omit empty; Area/Project: show with count and `_None_` |
-| Recently modified section   | Overview only (not in area/project/task context)              |
-| Blocked count in stats      | Project stats include blocked count; area stats do not        |
+| Recently modified section   | Overview only (not in area/project/task context)                 |
+| Blocked count in stats      | Project stats include blocked count; area stats do not           |
 
 ---
 
@@ -479,7 +479,7 @@ Provides deep context on a specific area: full details, all projects (regardless
 ## Area Details
 
 | Field       | Value             |
-|-------------|-------------------|
+| ----------- | ----------------- |
 | status      | active            |
 | type        | professional      |
 | description | Primary work area |
@@ -678,7 +678,7 @@ _From in-progress, ready, planning, and blocked projects_
 ## Reference
 
 | Entity                      | Type    | Path                                 |
-|-----------------------------|---------|--------------------------------------|
+| --------------------------- | ------- | ------------------------------------ |
 | Work                        | area    | areas/work.md                        |
 | Q1 Planning                 | project | projects/q1-planning.md              |
 | Client Migration            | project | projects/client-migration.md         |
@@ -702,14 +702,14 @@ _From in-progress, ready, planning, and blocked projects_
 
 ### Area-Specific Rules
 
-| Rule | Value |
-|------|-------|
-| Projects shown | ALL (including paused, done) |
-| Done projects | Show title + completion date only |
-| Ready tasks cap | 10 (with "showing X of Y" if more) |
+| Rule             | Value                                                        |
+| ---------------- | ------------------------------------------------------------ |
+| Projects shown   | ALL (including paused, done)                                 |
+| Done projects    | Show title + completion date only                            |
+| Ready tasks cap  | 10 (with "showing X of Y" if more)                           |
 | Project excerpts | In-progress, ready, planning, blocked only (not paused/done) |
-| Timeline scope | Tasks in this area only (direct + via projects) |
-| Area body | Full, no truncation |
+| Timeline scope   | Tasks in this area only (direct + via projects)              |
+| Area body        | Full, no truncation                                          |
 
 ---
 
@@ -746,7 +746,7 @@ Provides deep context on a specific project: full details, parent area context, 
 ## Project Details
 
 | Field       | Value                          |
-|-------------|--------------------------------|
+| ----------- | ------------------------------ |
 | status      | in-progress                    |
 | area        | [[Work]]                       |
 | start-date  | 2025-01-01                     |
@@ -767,6 +767,7 @@ Provides deep context on a specific project: full details, parent area context, 
 ## Scope
 
 This project covers:
+
 1. SSO authentication implementation
 2. API v2 documentation
 3. Enterprise client preparation
@@ -784,11 +785,11 @@ Weekly sync Tuesdays at 2pm with product team.
 
 ## Parent Area: Work
 
-| Field  | Value           |
-|--------|-----------------|
-| status | active          |
-| type   | professional    |
-| path   | areas/work.md   |
+| Field  | Value         |
+| ------ | ------------- |
+| status | active        |
+| type   | professional  |
+| path   | areas/work.md |
 
 > This area covers all professional work including client projects, internal tools, and team management.
 >
@@ -876,7 +877,7 @@ Document the new v2 REST endpoints before client release. Focus areas:
 ## Reference
 
 | Entity                      | Type    | Path                                 |
-|-----------------------------|---------|--------------------------------------|
+| --------------------------- | ------- | ------------------------------------ |
 | Q1 Planning                 | project | projects/q1-planning.md              |
 | Work                        | area    | areas/work.md                        |
 | Fix authentication bug      | task    | tasks/fix-auth-bug.md                |
@@ -894,15 +895,15 @@ Document the new v2 REST endpoints before client release. Focus areas:
 
 ### Project-Specific Rules
 
-| Rule | Value |
-|------|-------|
-| Tasks shown | All active (excludes done/dropped/icebox) |
-| In-progress tasks | Full detail with body excerpt |
-| Blocked tasks | Title + block reason if available |
-| Ready/Inbox tasks | Title + due date if set |
-| Parent area | Summary table + excerpt (not full body) |
-| Project body | Full, no truncation |
-| Timeline scope | Tasks in this project only |
+| Rule              | Value                                     |
+| ----------------- | ----------------------------------------- |
+| Tasks shown       | All active (excludes done/dropped/icebox) |
+| In-progress tasks | Full detail with body excerpt             |
+| Blocked tasks     | Title + block reason if available         |
+| Ready/Inbox tasks | Title + due date if set                   |
+| Parent area       | Summary table + excerpt (not full body)   |
+| Project body      | Full, no truncation                       |
+| Timeline scope    | Tasks in this project only                |
 
 ---
 
@@ -930,11 +931,11 @@ Provides full context on a specific task: complete details, parent project/area 
 
 Show alert banner at top when any of these apply:
 
-| Condition | Banner |
-|-----------|--------|
-| `due` < today | `⚠️ OVERDUE — due {date}` |
-| `due` = today | `📅 DUE TODAY` |
-| `scheduled` = today | `📆 SCHEDULED TODAY` |
+| Condition             | Banner                                       |
+| --------------------- | -------------------------------------------- |
+| `due` < today         | `⚠️ OVERDUE — due {date}`                    |
+| `due` = today         | `📅 DUE TODAY`                               |
+| `scheduled` = today   | `📆 SCHEDULED TODAY`                         |
 | `defer-until` = today | `🔓 NEWLY ACTIONABLE — deferred until today` |
 
 If multiple apply, show most urgent first (overdue > due today > scheduled > actionable).
@@ -950,15 +951,15 @@ If multiple apply, show most urgent first (overdue > due today > scheduled > act
 
 ## Task Details
 
-| Field       | Value                    |
-|-------------|--------------------------|
-| status      | in-progress              |
-| created-at  | 2025-01-05               |
-| updated-at  | 2025-01-14               |
-| due         | 2025-01-10               |
-| scheduled   | 2025-01-09               |
-| project     | [[Q1 Planning]]          |
-| path        | tasks/fix-auth-bug.md    |
+| Field      | Value                 |
+| ---------- | --------------------- |
+| status     | in-progress           |
+| created-at | 2025-01-05            |
+| updated-at | 2025-01-14            |
+| due        | 2025-01-10            |
+| scheduled  | 2025-01-09            |
+| project    | [[Q1 Planning]]       |
+| path       | tasks/fix-auth-bug.md |
 
 ### Body
 
@@ -984,13 +985,13 @@ When users authenticate via SSO, their session expires after 1 hour even though 
 
 ## Parent Project: Q1 Planning
 
-| Field       | Value                   |
-|-------------|-------------------------|
-| status      | in-progress             |
-| area        | [[Work]]                |
-| start-date  | 2025-01-01              |
-| end-date    | 2025-03-31              |
-| path        | projects/q1-planning.md |
+| Field      | Value                   |
+| ---------- | ----------------------- |
+| status     | in-progress             |
+| area       | [[Work]]                |
+| start-date | 2025-01-01              |
+| end-date   | 2025-03-31              |
+| path       | projects/q1-planning.md |
 
 > **Goal:** Complete authentication overhaul and prepare for enterprise client launch.
 >
@@ -1006,11 +1007,11 @@ When users authenticate via SSO, their session expires after 1 hour even though 
 
 _Via project Q1 Planning_
 
-| Field  | Value           |
-|--------|-----------------|
-| status | active          |
-| type   | professional    |
-| path   | areas/work.md   |
+| Field  | Value         |
+| ------ | ------------- |
+| status | active        |
+| type   | professional  |
+| path   | areas/work.md |
 
 > This area covers all professional work including client projects, internal tools, and team management.
 >
@@ -1023,11 +1024,11 @@ _Via project Q1 Planning_
 
 ## Reference
 
-| Entity           | Type    | Path                    |
-|------------------|---------|-------------------------|
-| Fix auth bug     | task    | tasks/fix-auth-bug.md   |
-| Q1 Planning      | project | projects/q1-planning.md |
-| Work             | area    | areas/work.md           |
+| Entity       | Type    | Path                    |
+| ------------ | ------- | ----------------------- |
+| Fix auth bug | task    | tasks/fix-auth-bug.md   |
+| Q1 Planning  | project | projects/q1-planning.md |
+| Work         | area    | areas/work.md           |
 ```
 
 ### Example: Task with Direct Area (No Project)
@@ -1041,14 +1042,14 @@ _Via project Q1 Planning_
 
 ## Task Details
 
-| Field       | Value                         |
-|-------------|-------------------------------|
-| status      | in-progress                   |
-| created-at  | 2025-01-10                    |
-| updated-at  | 2025-01-15                    |
-| due         | 2025-01-15                    |
-| area        | [[Work]]                      |
-| path        | tasks/review-team-capacity.md |
+| Field      | Value                         |
+| ---------- | ----------------------------- |
+| status     | in-progress                   |
+| created-at | 2025-01-10                    |
+| updated-at | 2025-01-15                    |
+| due        | 2025-01-15                    |
+| area       | [[Work]]                      |
+| path       | tasks/review-team-capacity.md |
 
 ### Body
 
@@ -1073,11 +1074,11 @@ _None_
 
 _Direct relationship (task belongs to area, not via project)_
 
-| Field  | Value           |
-|--------|-----------------|
-| status | active          |
-| type   | professional    |
-| path   | areas/work.md   |
+| Field  | Value         |
+| ------ | ------------- |
+| status | active        |
+| type   | professional  |
+| path   | areas/work.md |
 
 > This area covers all professional work including client projects, internal tools, and team management.
 >
@@ -1090,28 +1091,29 @@ _Direct relationship (task belongs to area, not via project)_
 
 ## Reference
 
-| Entity              | Type | Path                          |
-|---------------------|------|-------------------------------|
-| Review team capacity| task | tasks/review-team-capacity.md |
-| Work                | area | areas/work.md                 |
+| Entity               | Type | Path                          |
+| -------------------- | ---- | ----------------------------- |
+| Review team capacity | task | tasks/review-team-capacity.md |
+| Work                 | area | areas/work.md                 |
 ```
 
 ### Task-Specific Rules
 
-| Rule | Value |
-|------|-------|
-| Alert banner | Show if overdue/due today/scheduled today/newly actionable |
-| Task body | Full, no truncation |
-| Parent project | Summary table + excerpt (if exists) |
-| Parent area | Summary table + excerpt, note if direct or via project |
-| Other tasks | Not shown |
-| Timeline | Not shown |
+| Rule           | Value                                                      |
+| -------------- | ---------------------------------------------------------- |
+| Alert banner   | Show if overdue/due today/scheduled today/newly actionable |
+| Task body      | Full, no truncation                                        |
+| Parent project | Summary table + excerpt (if exists)                        |
+| Parent area    | Summary table + excerpt, note if direct or via project     |
+| Other tasks    | Not shown                                                  |
+| Timeline       | Not shown                                                  |
 
 ### Parent Relationship Edge Cases
 
 Always be explicit about parent relationships. Show sections even when empty:
 
 **Task with no project or area:**
+
 ```markdown
 ## Parent Project
 
@@ -1123,11 +1125,12 @@ _None_
 ```
 
 **Task with project that has no area:**
+
 ```markdown
 ## Parent Project: Side Project Alpha
 
 | Field  | Value                          |
-|--------|--------------------------------|
+| ------ | ------------------------------ |
 | status | planning                       |
 | path   | projects/side-project-alpha.md |
 
@@ -1139,6 +1142,7 @@ _None (project has no area)_
 ```
 
 **Task with direct area (no project):**
+
 ```markdown
 ## Parent Project
 
@@ -1155,7 +1159,112 @@ _Direct relationship_
 
 ## 8. Context Commands with `--json` Flag
 
-_TODO: Define JSON representation for context output._
+When `--ai` and `--json` are both passed, output is wrapped in a JSON envelope. The AI-optimized markdown is preserved in the `content` field, with structured metadata extracted for programmatic access.
+
+### 8.1 JSON Envelope Structure
+
+```typescript
+interface ContextJsonOutput {
+  contextType: 'overview' | 'area' | 'project' | 'task';
+  entity: string | null; // null for overview, entity name otherwise
+  generatedAt: string; // ISO 8601 timestamp
+  content: string; // The AI-optimized markdown (same as --ai alone)
+  references: Reference[]; // Structured reference table
+}
+
+interface Reference {
+  name: string; // Entity display name
+  type: 'area' | 'project' | 'task';
+  path: string; // Relative path from vault root
+}
+```
+
+| Field         | Description                                                     |
+| ------------- | --------------------------------------------------------------- |
+| `contextType` | Which context command was invoked                               |
+| `entity`      | The target entity name for scoped commands; `null` for overview |
+| `content`     | The complete AI-optimized markdown, identical to `--ai` output  |
+| `references`  | Array form of the Reference table from the markdown             |
+
+### 8.2 Examples
+
+#### `context --ai --json`
+
+```json
+{
+  "contextType": "overview",
+  "entity": null,
+  "content": "# Overview\n\n**Stats:** 3 areas · 8 active projects...\n\n---\n\n## Structure\n\n...",
+  "references": [
+    { "name": "Work", "type": "area", "path": "areas/work.md" },
+    { "name": "Personal", "type": "area", "path": "areas/personal.md" },
+    { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
+    { "name": "Fix authentication bug", "type": "task", "path": "tasks/fix-auth-bug.md" }
+  ]
+}
+```
+
+#### `context area Work --ai --json`
+
+```json
+{
+  "contextType": "area",
+  "entity": "Work",
+  "content": "# Area: Work\n\n**Stats:** 6 projects · 23 active tasks...\n\n---\n\n## Area Details\n\n...",
+  "references": [
+    { "name": "Work", "type": "area", "path": "areas/work.md" },
+    { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
+    { "name": "Fix authentication bug", "type": "task", "path": "tasks/fix-auth-bug.md" }
+  ]
+}
+```
+
+#### `context project "Q1 Planning" --ai --json`
+
+```json
+{
+  "contextType": "project",
+  "entity": "Q1 Planning",
+  "content": "# Project: Q1 Planning\n\n**Stats:** 8 active tasks...\n\n---\n\n## Project Details\n\n...",
+  "references": [
+    { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
+    { "name": "Work", "type": "area", "path": "areas/work.md" },
+    { "name": "Fix authentication bug", "type": "task", "path": "tasks/fix-auth-bug.md" }
+  ]
+}
+```
+
+#### `context task "Fix authentication bug" --ai --json`
+
+```json
+{
+  "contextType": "task",
+  "entity": "Fix authentication bug",
+  "content": "# Task: Fix authentication bug\n\n⚠️ OVERDUE — due 2025-01-10\n\n---\n\n## Task Details\n\n...",
+  "references": [
+    { "name": "Fix authentication bug", "type": "task", "path": "tasks/fix-auth-bug.md" },
+    { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
+    { "name": "Work", "type": "area", "path": "areas/work.md" }
+  ]
+}
+```
+
+### 8.3 Design Rationale
+
+| Decision               | Rationale                                                         |
+| ---------------------- | ----------------------------------------------------------------- |
+| Markdown in `content`  | Reuses existing AI formatting logic; no duplication               |
+| `references` extracted | Most useful data for scripts; already computed for markdown table |
+| Minimal envelope       | Avoids complex structured representation of stats/timeline/etc.   |
+| `entity` field         | Enables scripts to know what was queried without parsing content  |
+
+### 8.4 Implementation Notes
+
+1. **Generate markdown first** — Build the AI-optimized markdown as normal
+2. **Extract references** — The reference data is already collected; serialize before rendering to markdown table
+3. **Wrap and output** — Construct JSON envelope and output instead of raw markdown
+
+The `references` array contains exactly the same entities as the Reference table in the markdown. The order should match (primary entity first, then parents, then other referenced entities).
 
 ---
 
