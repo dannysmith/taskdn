@@ -74,6 +74,9 @@ Context output surfaces information for awareness — it does NOT dictate priori
 | Recently modified threshold | If >20 tasks modified, omit section (implies batch operation) |
 | Excerpt truncation          | First 20 lines OR first 200 words                             |
 | Reference table scope       | Only entities mentioned in output                             |
+| Empty timeline subsections  | Overview: omit empty; Area/Project: show with count and `_None_` |
+| Recently modified section   | Overview only (not in area/project/task context)              |
+| Blocked count in stats      | Project stats include blocked count; area stats do not        |
 
 ---
 
@@ -90,6 +93,7 @@ Context output surfaces information for awareness — it does NOT dictate priori
 | `🟡`  | planning    |
 | `🚫`  | blocked     |
 | `⏸️`  | paused      |
+| `✅`  | done        |
 
 **For tasks (in count shorthand):**
 
@@ -507,20 +511,20 @@ Weekly sync every Monday at 10am. Quarterly reviews at end of each quarter.
 
 ### In-Progress (2)
 
-🔵 Q1 Planning — 8 tasks (2▶️ 4🟢 1📥 1🚫)
+🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 4🟢 1📥 1🚫)
 ├── ▶️ Fix authentication bug
 └── ▶️ Document API v2 endpoints
 
-🔵 Client Migration — 3 tasks (1▶️ 2🟢)
+🔵 Client Migration [in-progress] — 3 tasks (1▶️ 2🟢)
 └── ▶️ Set up staging environment
 
 ### Ready (1)
 
-🟢 Client Onboarding — 4 tasks (4🟢)
+🟢 Client Onboarding [ready] — 4 tasks (4🟢)
 
 ### Planning (1)
 
-🟡 Q2 Roadmap — 2 tasks (2📥)
+🟡 Q2 Roadmap [planning] — 2 tasks (2📥)
 
 ### Blocked (0)
 
@@ -528,11 +532,11 @@ _None_
 
 ### Paused (1)
 
-⏸️ Legacy Migration — 3 tasks (1🟢 2📥)
+⏸️ Legacy Migration [paused] — 3 tasks (1🟢 2📥)
 
 ### Done (1)
 
-✅ Q4 Wrap-up — completed 2024-12-15
+✅ Q4 Wrap-up [done] — completed 2024-12-15
 
 ---
 
@@ -1056,6 +1060,12 @@ Assess current team bandwidth for Q1 commitments. Need to identify if we can tak
 - [ ] Check PTO schedule for Q1
 - [ ] Assess new client project scope
 - [ ] Draft recommendation
+
+---
+
+## Parent Project
+
+_None_
 
 ---
 
