@@ -904,7 +904,242 @@ Document the new v2 REST endpoints before client release. Focus areas:
 
 ## 7. The `context task <task> --ai` Command
 
-_TODO: Define output format for task-specific context._
+Provides full context on a specific task: complete details, parent project/area with excerpts, and clear indication of the task's place in the hierarchy.
+
+**Key differences from project/area context:**
+
+- Task is primary entity — full body, all frontmatter, no truncation
+- No timeline section, no other tasks, no related entities
+- Parent project and area shown with excerpts
+- Relationship clarity: is area connection direct or via project?
+- Alert banner at top for time-sensitive states
+
+### Structure
+
+1. **Alert banner** (if applicable) — Highlight overdue/due today/scheduled today/newly actionable
+2. **Task details** — Full frontmatter + full body
+3. **Parent Project** — Summary + excerpt (if task has a project)
+4. **Parent Area** — Summary + excerpt, noting if direct or via project
+5. **Reference** — Paths for task and parents
+
+### Alert Banner Rules
+
+Show alert banner at top when any of these apply:
+
+| Condition | Banner |
+|-----------|--------|
+| `due` < today | `⚠️ OVERDUE — due {date}` |
+| `due` = today | `📅 DUE TODAY` |
+| `scheduled` = today | `📆 SCHEDULED TODAY` |
+| `defer-until` = today | `🔓 NEWLY ACTIONABLE — deferred until today` |
+
+If multiple apply, show most urgent first (overdue > due today > scheduled > actionable).
+
+### Example Output
+
+```markdown
+# Task: Fix authentication bug
+
+⚠️ OVERDUE — due 2025-01-10
+
+---
+
+## Task Details
+
+| Field       | Value                    |
+|-------------|--------------------------|
+| status      | in-progress              |
+| created-at  | 2025-01-05               |
+| updated-at  | 2025-01-14               |
+| due         | 2025-01-10               |
+| scheduled   | 2025-01-09               |
+| project     | [[Q1 Planning]]          |
+| path        | tasks/fix-auth-bug.md    |
+
+### Body
+
+The SSO authentication flow is failing for enterprise users. Investigation shows the OAuth callback handler isn't properly refreshing expired tokens.
+
+## Problem
+
+When users authenticate via SSO, their session expires after 1 hour even though the refresh token is valid. The callback handler at `/auth/callback` doesn't check token expiry before storing.
+
+## Solution
+
+1. Add token refresh logic to callback handler
+2. Update session management to detect expiry
+3. Add integration tests for SSO flow
+
+## Notes
+
+- Discussed with Sarah on Jan 8
+- Related to ticket AUTH-1234
+- May need to coordinate with identity provider team
+
+---
+
+## Parent Project: Q1 Planning
+
+| Field       | Value                   |
+|-------------|-------------------------|
+| status      | in-progress             |
+| area        | [[Work]]                |
+| start-date  | 2025-01-01              |
+| end-date    | 2025-03-31              |
+| path        | projects/q1-planning.md |
+
+> **Goal:** Complete authentication overhaul and prepare for enterprise client launch.
+>
+> ## Key Milestones
+>
+> - Auth system complete: Jan 31
+> - API docs published: Feb 7
+> - Client UAT begin: Feb 14
+
+---
+
+## Parent Area: Work
+
+_Via project Q1 Planning_
+
+| Field  | Value           |
+|--------|-----------------|
+| status | active          |
+| type   | professional    |
+| path   | areas/work.md   |
+
+> This area covers all professional work including client projects, internal tools, and team management.
+>
+> ## Current Priorities
+>
+> - Q1: Ship authentication system overhaul
+> - Q1: Onboard 2 new enterprise clients
+
+---
+
+## Reference
+
+| Entity           | Type    | Path                    |
+|------------------|---------|-------------------------|
+| Fix auth bug     | task    | tasks/fix-auth-bug.md   |
+| Q1 Planning      | project | projects/q1-planning.md |
+| Work             | area    | areas/work.md           |
+```
+
+### Example: Task with Direct Area (No Project)
+
+```markdown
+# Task: Review team capacity
+
+📅 DUE TODAY
+
+---
+
+## Task Details
+
+| Field       | Value                         |
+|-------------|-------------------------------|
+| status      | in-progress                   |
+| created-at  | 2025-01-10                    |
+| updated-at  | 2025-01-15                    |
+| due         | 2025-01-15                    |
+| area        | [[Work]]                      |
+| path        | tasks/review-team-capacity.md |
+
+### Body
+
+Assess current team bandwidth for Q1 commitments. Need to identify if we can take on the new client project or need to defer.
+
+## Checklist
+
+- [ ] Review current sprint commitments
+- [ ] Check PTO schedule for Q1
+- [ ] Assess new client project scope
+- [ ] Draft recommendation
+
+---
+
+## Parent Area: Work
+
+_Direct relationship (task belongs to area, not via project)_
+
+| Field  | Value           |
+|--------|-----------------|
+| status | active          |
+| type   | professional    |
+| path   | areas/work.md   |
+
+> This area covers all professional work including client projects, internal tools, and team management.
+>
+> ## Current Priorities
+>
+> - Q1: Ship authentication system overhaul
+> - Q1: Onboard 2 new enterprise clients
+
+---
+
+## Reference
+
+| Entity              | Type | Path                          |
+|---------------------|------|-------------------------------|
+| Review team capacity| task | tasks/review-team-capacity.md |
+| Work                | area | areas/work.md                 |
+```
+
+### Task-Specific Rules
+
+| Rule | Value |
+|------|-------|
+| Alert banner | Show if overdue/due today/scheduled today/newly actionable |
+| Task body | Full, no truncation |
+| Parent project | Summary table + excerpt (if exists) |
+| Parent area | Summary table + excerpt, note if direct or via project |
+| Other tasks | Not shown |
+| Timeline | Not shown |
+
+### Parent Relationship Edge Cases
+
+Always be explicit about parent relationships. Show sections even when empty:
+
+**Task with no project or area:**
+```markdown
+## Parent Project
+
+_None_
+
+## Parent Area
+
+_None_
+```
+
+**Task with project that has no area:**
+```markdown
+## Parent Project: Side Project Alpha
+
+| Field  | Value                          |
+|--------|--------------------------------|
+| status | planning                       |
+| path   | projects/side-project-alpha.md |
+
+> Early exploration of...
+
+## Parent Area
+
+_None (project has no area)_
+```
+
+**Task with direct area (no project):**
+```markdown
+## Parent Project
+
+_None_
+
+## Parent Area: Work
+
+_Direct relationship_
+
+...
+```
 
 ---
 
