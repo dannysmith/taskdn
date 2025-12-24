@@ -2,18 +2,29 @@ import { resolve, isAbsolute, join } from 'path';
 import { homedir } from 'os';
 import { Command } from '@commander-js/extra-typings';
 import { getAreaContext, getProjectContext, getTaskContext } from '@bindings';
-import type { Task } from '@bindings';
+import type { Task, Project } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type {
   GlobalOptions,
   AreaContextResultOutput,
   ProjectContextResultOutput,
   TaskContextResultOutput,
+  ProjectsByStatus,
+  AreaStats,
+  TimelineData,
 } from '@/output/index.ts';
 import { buildVaultOverview } from '@/output/vault-overview.ts';
 import { getVaultConfig } from '@/config/index.ts';
 import { createError } from '@/errors/types.ts';
 import { formatError } from '@/errors/format.ts';
+import {
+  getToday,
+  isOverdue,
+  isDueToday,
+  isScheduledToday,
+  isNewlyActionable,
+  isScheduledThisWeek,
+} from '@/output/helpers/index.ts';
 
 /**
  * Check if an identifier looks like a file path vs a title.
@@ -105,6 +116,167 @@ function getDirectAreaTasks(tasks: Task[], projectTasks: Map<string, Task[]>): T
 }
 
 /**
+ * Check if a task is active (not done, dropped, or icebox)
+ * Per ai-context.md Section 2.2
+ */
+function isActiveTask(task: Task): boolean {
+  const status = task.status.toLowerCase();
+  return status !== 'done' && status !== 'dropped' && status !== 'icebox';
+}
+
+/**
+ * Check if a task is blocked
+ */
+function isBlocked(task: Task): boolean {
+  return task.status.toLowerCase() === 'blocked';
+}
+
+/**
+ * Check if a task is in-progress
+ */
+function isInProgress(task: Task): boolean {
+  const status = task.status.toLowerCase();
+  return status === 'inprogress' || status === 'in-progress';
+}
+
+/**
+ * Group projects by their status
+ * Per ai-context.md Section 5
+ */
+function groupProjectsByStatus(projects: Project[]): ProjectsByStatus {
+  const result: ProjectsByStatus = {
+    inProgress: [],
+    ready: [],
+    planning: [],
+    blocked: [],
+    paused: [],
+    done: [],
+  };
+
+  for (const project of projects) {
+    const status = project.status?.toLowerCase() ?? '';
+
+    switch (status) {
+      case 'in-progress':
+      case 'inprogress':
+        result.inProgress.push(project);
+        break;
+      case 'ready':
+        result.ready.push(project);
+        break;
+      case 'planning':
+        result.planning.push(project);
+        break;
+      case 'blocked':
+        result.blocked.push(project);
+        break;
+      case 'paused':
+        result.paused.push(project);
+        break;
+      case 'done':
+        result.done.push(project);
+        break;
+      default:
+        // Projects without status default to planning
+        result.planning.push(project);
+        break;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Build timeline categorization for a set of tasks
+ * Scoped version of the vault-overview timeline builder
+ */
+function buildAreaTimeline(tasks: Task[], today: string): TimelineData {
+  const overdue: Task[] = [];
+  const dueToday: Task[] = [];
+  const scheduledToday: Task[] = [];
+  const newlyActionable: Task[] = [];
+  const blocked: Task[] = [];
+  const scheduledThisWeek = new Map<string, Task[]>();
+
+  // Set for tracking tasks that appear in timeline sections
+  const inTimeline = new Set<string>();
+
+  for (const task of tasks) {
+    // Check overdue
+    if (isOverdue(task, today)) {
+      overdue.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check due today
+    if (isDueToday(task, today)) {
+      dueToday.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check scheduled today
+    if (isScheduledToday(task, today)) {
+      scheduledToday.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check newly actionable
+    if (isNewlyActionable(task, today)) {
+      newlyActionable.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check blocked
+    if (isBlocked(task)) {
+      blocked.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check scheduled this week (but not today)
+    if (isScheduledThisWeek(task, today)) {
+      const date = task.scheduled!;
+      const arr = scheduledThisWeek.get(date) ?? [];
+      arr.push(task);
+      scheduledThisWeek.set(date, arr);
+      inTimeline.add(task.path);
+    }
+  }
+
+  // Note: recentlyModified is only shown in vault overview, not in area/project context
+  // Per ai-context.md Section 2.6
+  return {
+    overdue,
+    dueToday,
+    scheduledToday,
+    newlyActionable,
+    blocked,
+    scheduledThisWeek,
+    recentlyModified: [],
+  };
+}
+
+/**
+ * Calculate area statistics
+ */
+function calculateAreaStats(projects: Project[], tasks: Task[], timeline: TimelineData): AreaStats {
+  // Count active projects (exclude done)
+  const activeProjects = projects.filter((p) => p.status?.toLowerCase() !== 'done');
+
+  return {
+    projectCount: activeProjects.length,
+    activeTaskCount: tasks.length,
+    overdueCount: timeline.overdue.length,
+    dueTodayCount: timeline.dueToday.length,
+    inProgressCount: tasks.filter(isInProgress).length,
+  };
+}
+
+/**
  * Context command - get expanded context for an entity
  *
  * Usage:
@@ -164,17 +336,34 @@ export const contextCommand = new Command('context')
         process.exit(1);
       }
 
+      const today = getToday();
+
+      // Filter to active tasks (per ai-context.md Section 2.2)
+      const activeTasks = result.tasks.filter(isActiveTask);
+
+      // Group projects by status (ALL projects including done per Section 5)
+      const projectsByStatus = groupProjectsByStatus(result.projects);
+
       // Group tasks by project
       const projectPaths = result.projects.map((p) => p.path);
-      const projectTasks = groupTasksByProject(result.tasks, projectPaths);
-      const directTasks = getDirectAreaTasks(result.tasks, projectTasks);
+      const projectTasks = groupTasksByProject(activeTasks, projectPaths);
+      const directTasks = getDirectAreaTasks(activeTasks, projectTasks);
+
+      // Build timeline scoped to this area's tasks
+      const timeline = buildAreaTimeline(activeTasks, today);
+
+      // Calculate area stats
+      const stats = calculateAreaStats(result.projects, activeTasks, timeline);
 
       const output: AreaContextResultOutput = {
         type: 'area-context',
         area: result.area,
+        projectsByStatus,
         projects: result.projects,
         projectTasks,
         directTasks,
+        timeline,
+        stats,
         warnings: result.warnings,
       };
 

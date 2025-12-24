@@ -248,7 +248,7 @@ This requires:
 
 ---
 
-## Phase 2: Rework `context area --ai`
+## Phase 2: Rework `context area --ai` ✅ COMPLETE
 
 Rework the area context output per ai-context.md Section 5.
 

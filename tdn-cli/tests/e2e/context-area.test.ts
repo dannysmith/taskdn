@@ -30,13 +30,27 @@ describe('context area', () => {
     });
   });
 
-  describe('with --ai flag', () => {
-    test('outputs structured markdown', async () => {
+  describe('with --ai flag (Section 5 format)', () => {
+    test('outputs structured markdown with area header', async () => {
       const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('## Area: Work');
-      expect(stdout).toContain('- **path:**');
-      expect(stdout).toContain('- **status:** active');
+      expect(stdout).toContain('# Area: Work');
+    });
+
+    test('includes stats header', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('**Stats:**');
+      expect(stdout).toMatch(/\d+ project/);
+      expect(stdout).toMatch(/\d+ active task/);
+    });
+
+    test('includes area details section with metadata table', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Area Details');
+      expect(stdout).toContain('| Field | Value |');
+      expect(stdout).toContain('| path |');
     });
 
     test('includes body for primary entity', async () => {
@@ -46,30 +60,40 @@ describe('context area', () => {
       expect(stdout).toContain('Work-related tasks and projects');
     });
 
-    test('shows projects section with count', async () => {
+    test('shows projects section grouped by status', async () => {
       const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
       expect(exitCode).toBe(0);
       expect(stdout).toMatch(/## Projects in Work \(\d+\)/);
+      // Should have status groups
+      expect(stdout).toContain('### In-Progress');
+      expect(stdout).toContain('### Ready');
+      expect(stdout).toContain('### Planning');
     });
 
-    test('shows project with task count', async () => {
+    test('shows projects with task counts and shorthand', async () => {
       const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('### Project: Test Project');
-      expect(stdout).toMatch(/- \*\*tasks:\*\* \d+/);
+      // Projects show format: emoji title [status] — N tasks (shorthand)
+      expect(stdout).toMatch(/task/);
     });
 
-    test('shows tasks under projects', async () => {
+    test('includes timeline section', async () => {
       const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('#### Task:');
-      expect(stdout).toContain('- **status:**');
+      expect(stdout).toContain('## Timeline');
+      expect(stdout).toContain('_Scoped to tasks in Work area_');
+      expect(stdout).toContain('### Overdue');
+      expect(stdout).toContain('### Due Today');
+      expect(stdout).toContain('### Blocked');
     });
 
-    test('shows direct tasks section', async () => {
+    test('includes reference table', async () => {
       const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toMatch(/## Tasks Directly in Area: Work \(\d+\)/);
+      expect(stdout).toContain('## Reference');
+      expect(stdout).toContain('| Entity |');
+      expect(stdout).toContain('| Type |');
+      expect(stdout).toContain('| Path |');
     });
   });
 

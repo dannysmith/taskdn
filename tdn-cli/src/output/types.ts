@@ -65,27 +65,89 @@ export interface StubResult {
 // ============================================================================
 
 /**
+ * Projects grouped by status for area context
+ * Per ai-context.md Section 5
+ */
+export interface ProjectsByStatus {
+  inProgress: Project[];
+  ready: Project[];
+  planning: Project[];
+  blocked: Project[];
+  paused: Project[];
+  done: Project[];
+}
+
+/**
+ * Area-specific statistics
+ */
+export interface AreaStats {
+  projectCount: number;
+  activeTaskCount: number;
+  overdueCount: number;
+  dueTodayCount: number;
+  inProgressCount: number;
+}
+
+/**
  * Area context result (from context area command)
  * Primary entity is the area, with related projects and tasks
+ * Per ai-context.md Section 5
  */
 export interface AreaContextResultOutput {
   type: 'area-context';
   area: Area;
-  projects: Project[]; // Projects in this area
+  // Projects grouped by status (ALL projects including done)
+  projectsByStatus: ProjectsByStatus;
+  // All projects in this area (for convenience)
+  projects: Project[];
   projectTasks: Map<string, Task[]>; // Tasks grouped by project path
   directTasks: Task[]; // Tasks directly in area (no project)
+  // Timeline scoped to this area
+  timeline: TimelineData;
+  // Stats for this area
+  stats: AreaStats;
   warnings: string[];
+}
+
+/**
+ * Tasks grouped by status for project context
+ * Per ai-context.md Section 6
+ */
+export interface TasksByStatus {
+  inProgress: Task[];
+  blocked: Task[];
+  ready: Task[];
+  inbox: Task[];
+}
+
+/**
+ * Project-specific statistics
+ */
+export interface ProjectStats {
+  activeTaskCount: number;
+  overdueCount: number;
+  dueTodayCount: number;
+  inProgressCount: number;
+  blockedCount: number;
 }
 
 /**
  * Project context result (from context project command)
  * Primary entity is the project, with parent area and tasks
+ * Per ai-context.md Section 6
  */
 export interface ProjectContextResultOutput {
   type: 'project-context';
   project: Project;
   area: Area | null; // Parent area if any
-  tasks: Task[]; // Tasks in this project
+  // Tasks grouped by status
+  tasksByStatus: TasksByStatus;
+  // All active tasks (for convenience)
+  tasks: Task[];
+  // Timeline scoped to this project
+  timeline: TimelineData;
+  // Stats for this project
+  stats: ProjectStats;
   warnings: string[];
 }
 

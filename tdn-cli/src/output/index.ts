@@ -16,6 +16,8 @@ import type {
   VaultOverviewResult,
   TimelineData,
   VaultStats,
+  ProjectsByStatus,
+  AreaStats,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
@@ -39,6 +41,8 @@ export type {
   VaultOverviewResult,
   TimelineData,
   VaultStats,
+  ProjectsByStatus,
+  AreaStats,
 };
 export { getOutputMode };
 
