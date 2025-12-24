@@ -711,7 +711,194 @@ _From in-progress, ready, planning, and blocked projects_
 
 ## 6. The `context project <project> --ai` Command
 
-_TODO: Define output format for project-specific context._
+Provides deep context on a specific project: full details, parent area context, and all active tasks organized by status.
+
+**Key differences from area context:**
+
+- Project is primary entity — full body, all frontmatter, no truncation
+- Parent area shown with excerpt (not full body)
+- ALL active tasks shown, grouped by status
+- In-progress tasks get full detail; others get titles only
+- No "ready tasks cap" — projects are bounded, show all
+
+### Structure
+
+1. **Stats header** — Quick summary of this project
+2. **Project details** — Full frontmatter + full body
+3. **Parent Area** — Summary + excerpt (if project has an area)
+4. **Timeline** — Time-sensitive tasks in this project
+5. **Tasks by Status** — All active tasks, grouped
+6. **Reference** — Paths for all mentioned entities
+
+### Example Output
+
+```markdown
+# Project: Q1 Planning
+
+**Stats:** 8 active tasks · ⚠️ 1 overdue · 📅 2 due today · ▶️ 2 in-progress · 🚫 1 blocked
+
+---
+
+## Project Details
+
+| Field       | Value                          |
+|-------------|--------------------------------|
+| status      | in-progress                    |
+| area        | [[Work]]                       |
+| start-date  | 2025-01-01                     |
+| end-date    | 2025-03-31                     |
+| description | Q1 planning and authentication |
+| path        | projects/q1-planning.md        |
+
+### Body
+
+**Goal:** Complete authentication overhaul and prepare for enterprise client launch.
+
+## Key Milestones
+
+- Auth system complete: Jan 31
+- API docs published: Feb 7
+- Client UAT begin: Feb 14
+
+## Scope
+
+This project covers:
+1. SSO authentication implementation
+2. API v2 documentation
+3. Enterprise client preparation
+
+## Risks
+
+- Team capacity constrained, may need to defer non-critical items
+- Dependency on external SSO provider API stability
+
+## Meeting Notes
+
+Weekly sync Tuesdays at 2pm with product team.
+
+---
+
+## Parent Area: Work
+
+| Field  | Value           |
+|--------|-----------------|
+| status | active          |
+| type   | professional    |
+| path   | areas/work.md   |
+
+> This area covers all professional work including client projects, internal tools, and team management.
+>
+> ## Current Priorities
+>
+> - Q1: Ship authentication system overhaul
+> - Q1: Onboard 2 new enterprise clients
+
+---
+
+## Timeline
+
+_Scoped to tasks in Q1 Planning_
+
+### Overdue (1)
+
+- **Fix critical security issue** — due Jan 10
+
+### Due Today (2)
+
+- **Review PR #847**
+- **Finalize Q1 goals**
+
+### Scheduled Today (0)
+
+_None_
+
+### Newly Actionable Today (1)
+
+_defer-until = today_
+
+- **Follow up with client**
+
+### Blocked (1)
+
+- **Waiting for client feedback**
+
+### Scheduled This Week
+
+**Friday (Jan 17)**
+
+- Code review session
+
+---
+
+## Tasks by Status
+
+### In-Progress (2)
+
+#### Fix authentication bug
+
+due 2025-01-18
+
+The SSO authentication flow is failing for enterprise users. Investigation shows the OAuth callback handler isn't properly refreshing expired tokens. Need to:
+
+1. Add token refresh logic to callback handler
+2. Update session management to detect expiry
+3. Add integration tests for SSO flow
+
+#### Document API v2 endpoints
+
+Document the new v2 REST endpoints before client release. Focus areas:
+
+- Authentication and authorization flows
+- Rate limiting and quotas
+- Breaking changes from v1
+
+### Blocked (1)
+
+- **Waiting for client feedback** — blocked on client response to API proposal
+
+### Ready (4)
+
+- **Review PR #847** — due today
+- **Finalize Q1 goals** — due today
+- **Update deployment docs**
+- **Set up monitoring alerts**
+
+### Inbox (1)
+
+- **Research caching strategies**
+
+---
+
+## Reference
+
+| Entity                      | Type    | Path                                 |
+|-----------------------------|---------|--------------------------------------|
+| Q1 Planning                 | project | projects/q1-planning.md              |
+| Work                        | area    | areas/work.md                        |
+| Fix authentication bug      | task    | tasks/fix-auth-bug.md                |
+| Document API v2 endpoints   | task    | tasks/document-api-v2.md             |
+| Waiting for client feedback | task    | tasks/waiting-for-client-feedback.md |
+| Review PR #847              | task    | tasks/review-pr-847.md               |
+| Finalize Q1 goals           | task    | tasks/finalize-q1-goals.md           |
+| Update deployment docs      | task    | tasks/update-deployment-docs.md      |
+| Set up monitoring alerts    | task    | tasks/setup-monitoring.md            |
+| Research caching strategies | task    | tasks/research-caching.md            |
+| Fix critical security issue | task    | tasks/fix-security-issue.md          |
+| Follow up with client       | task    | tasks/follow-up-client.md            |
+| Code review session         | task    | tasks/code-review-session.md         |
+```
+
+### Project-Specific Rules
+
+| Rule | Value |
+|------|-------|
+| Tasks shown | All active (excludes done/dropped/icebox) |
+| In-progress tasks | Full detail with body excerpt |
+| Blocked tasks | Title + block reason if available |
+| Ready/Inbox tasks | Title + due date if set |
+| Parent area | Summary table + excerpt (not full body) |
+| Project body | Full, no truncation |
+| Timeline scope | Tasks in this project only |
 
 ---
 
