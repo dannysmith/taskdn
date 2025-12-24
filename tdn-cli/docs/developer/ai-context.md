@@ -220,7 +220,7 @@ Tasks: 18 total (4 direct, 14 via projects)
 ├── 🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 4🟢 1📥 1🚫)
 │ ├── ▶️ Fix authentication bug
 │ └── ▶️ Document API v2 endpoints
-├── 🟢 Client Onboarding [ready] — 4 tasks (0▶️ 4🟢)
+├── 🟢 Client Onboarding [ready] — 4 tasks (4🟢)
 ├── 🟡 Q2 Roadmap [planning] — 2 tasks (2📥)
 ├── ⏸️ Legacy Migration [paused] — 3 tasks (1🟢 2📥)
 └── 📋 Direct: 4 tasks (1▶️ 2🟢 1📥)
@@ -238,7 +238,7 @@ Tasks: 12 total (3 direct, 9 via projects)
 ### 📁 Health
 
 Tasks: 4 total (4 direct)
-└── 📋 Direct: 4 tasks (0▶️ 3🟢 1📥)
+└── 📋 Direct: 4 tasks (3🟢 1📥)
 
 ### Projects with no Area
 
@@ -1166,16 +1166,16 @@ When `--ai` and `--json` are both passed, output is wrapped in a JSON envelope. 
 ```typescript
 interface ContextJsonOutput {
   contextType: 'overview' | 'area' | 'project' | 'task';
-  entity: string | null; // null for overview, entity name otherwise
-  generatedAt: string; // ISO 8601 timestamp
-  content: string; // The AI-optimized markdown (same as --ai alone)
-  references: Reference[]; // Structured reference table
+  entity: string | null;
+  summary: string;
+  content: string;
+  references: Reference[];
 }
 
 interface Reference {
-  name: string; // Entity display name
+  name: string;
   type: 'area' | 'project' | 'task';
-  path: string; // Relative path from vault root
+  path: string;
 }
 ```
 
@@ -1183,6 +1183,7 @@ interface Reference {
 | ------------- | --------------------------------------------------------------- |
 | `contextType` | Which context command was invoked                               |
 | `entity`      | The target entity name for scoped commands; `null` for overview |
+| `summary`     | Plain English description of what was returned                  |
 | `content`     | The complete AI-optimized markdown, identical to `--ai` output  |
 | `references`  | Array form of the Reference table from the markdown             |
 
@@ -1194,7 +1195,8 @@ interface Reference {
 {
   "contextType": "overview",
   "entity": null,
-  "content": "# Overview\n\n**Stats:** 3 areas · 8 active projects...\n\n---\n\n## Structure\n\n...",
+  "summary": "Overview of all active work: 3 areas, 8 projects, 34 tasks",
+  "content": "# Overview\n\n**Stats:** 3 areas · 8 active projects...",
   "references": [
     { "name": "Work", "type": "area", "path": "areas/work.md" },
     { "name": "Personal", "type": "area", "path": "areas/personal.md" },
@@ -1210,7 +1212,8 @@ interface Reference {
 {
   "contextType": "area",
   "entity": "Work",
-  "content": "# Area: Work\n\n**Stats:** 6 projects · 23 active tasks...\n\n---\n\n## Area Details\n\n...",
+  "summary": "Context for area 'Work': 6 projects, 23 active tasks",
+  "content": "# Area: Work\n\n**Stats:** 6 projects · 23 active tasks...",
   "references": [
     { "name": "Work", "type": "area", "path": "areas/work.md" },
     { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
@@ -1225,7 +1228,8 @@ interface Reference {
 {
   "contextType": "project",
   "entity": "Q1 Planning",
-  "content": "# Project: Q1 Planning\n\n**Stats:** 8 active tasks...\n\n---\n\n## Project Details\n\n...",
+  "summary": "Context for project 'Q1 Planning': 8 active tasks",
+  "content": "# Project: Q1 Planning\n\n**Stats:** 8 active tasks...",
   "references": [
     { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
     { "name": "Work", "type": "area", "path": "areas/work.md" },
@@ -1240,7 +1244,8 @@ interface Reference {
 {
   "contextType": "task",
   "entity": "Fix authentication bug",
-  "content": "# Task: Fix authentication bug\n\n⚠️ OVERDUE — due 2025-01-10\n\n---\n\n## Task Details\n\n...",
+  "summary": "Context for task 'Fix authentication bug' in project 'Q1 Planning'",
+  "content": "# Task: Fix authentication bug\n\n⚠️ OVERDUE — due 2025-01-10...",
   "references": [
     { "name": "Fix authentication bug", "type": "task", "path": "tasks/fix-auth-bug.md" },
     { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },

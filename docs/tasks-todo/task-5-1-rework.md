@@ -26,6 +26,11 @@ The stub in `context.ts` already handles the human mode error.
 
 Review and rework the output builders for other --ai outputs to ensure they are returning sensible data structures.
 
+- Show commands should return a sensible markdown rendering of the thing itself, including front matter. The body should always be shown.
+- List commands should return a simple list or table with the relevant metadata or grouping and File parts as well as entity names.
+
+### Checklist
+
 - [ ] show task
 - [ ] show project
 - [ ] show area
@@ -35,7 +40,7 @@ Review and rework the output builders for other --ai outputs to ensure they are 
 
 ## Phase 6: Rework `--json` as needed
 
-Review and rework the builders for --json outputs to ensure they are returning sensible data structures:
+Review and (if nececarry) rework the builders for `--json` outputs to ensure they are returning sensible data structures. The data structure can generally be fairly simple.
 
 - [ ] show task
 - [ ] show project
@@ -47,7 +52,6 @@ Review and rework the builders for --json outputs to ensure they are returning s
 - [ ] context project
 - [ ] context area
 - [ ] context
-- [ ] Any other commands which return JSON
 
 ## Reviews and Documentation
 
