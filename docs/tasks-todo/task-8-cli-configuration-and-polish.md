@@ -19,14 +19,15 @@ taskdn init
 ```
 
 **Behavior:**
+
 1. Check if config already exists (offer to overwrite)
 2. Prompt for tasks directory path
 3. Prompt for projects directory path
 4. Prompt for areas directory path
-5. Create `.taskdn.json` in current directory
-6. Optionally create the directories if they don't exist
+5. Create `.taskdn.json` in home directory
 
 **Config file format:**
+
 ```json
 {
   "tasksDir": "/path/to/tasks",
@@ -36,6 +37,7 @@ taskdn init
 ```
 
 **Non-interactive mode:**
+
 ```bash
 taskdn init --tasks-dir ./tasks --projects-dir ./projects --areas-dir ./areas
 ```
@@ -50,6 +52,7 @@ taskdn config --set tasksDir=./tasks    # Set a value
 ```
 
 **Show output (human mode):**
+
 ```
 Configuration
 
@@ -61,6 +64,7 @@ Configuration
 ```
 
 **Show output (AI mode):**
+
 ```markdown
 ## Configuration
 
@@ -71,6 +75,7 @@ Configuration
 ```
 
 **Config precedence (highest to lowest):**
+
 1. CLI flags (`--tasks-dir`)
 2. Environment variables (`TASKDN_TASKS_DIR`)
 3. Local config (`./.taskdn.json`)
@@ -89,24 +94,25 @@ taskdn doctor --json
 
 **What it checks:**
 
-| Level | Checks |
-|-------|--------|
-| System | Config file exists and is valid |
-| System | Tasks/projects/areas directories exist and are accessible |
-| File | YAML frontmatter is parseable |
-| File | Required fields present (title, status for tasks) |
-| File | Status values are valid |
-| File | Date fields are valid format |
-| File | Tasks have at most one project |
-| File | `taskdn-type` consistency (if any file in a directory uses it, all should) |
-| References | Project references point to existing projects |
-| References | Area references point to existing areas |
+| Level      | Checks                                                                     |
+| ---------- | -------------------------------------------------------------------------- |
+| System     | Config file exists and is valid                                            |
+| System     | Tasks/projects/areas directories exist and are accessible                  |
+| File       | YAML frontmatter is parseable                                              |
+| File       | Required fields present (title, status for tasks)                          |
+| File       | Status values are valid                                                    |
+| File       | Date fields are valid format                                               |
+| File       | Tasks have at most one project                                             |
+| File       | `taskdn-type` consistency (if any file in a directory uses it, all should) |
+| References | Project references point to existing projects                              |
+| References | Area references point to existing areas                                    |
 
 **Note on `taskdn-type` check:** Per S1 spec sections 4.4 and 5.4, if ANY file in a directory contains `taskdn-type: project` (or `area`), files without this field should be ignored. Doctor should warn about this inconsistency.
 
 **Implementation Note:** The reference checks can leverage the `warnings` field from Task 4's relationship query functions (`get_area_context`, `get_project_context`). These functions already detect and report broken wikilinks as part of their normal operation.
 
 **Human mode output:**
+
 ```
 ✓ Config found (~/.config/taskdn/config.json)
 ✓ Tasks directory (47 files)
@@ -144,6 +150,7 @@ Implement interactive features for human mode.
 
 **Fuzzy match disambiguation (human mode):**
 When a fuzzy search returns multiple matches:
+
 ```
 ? Multiple tasks match "login":
 
@@ -160,6 +167,7 @@ When a fuzzy search returns multiple matches:
 ```
 
 **Commands that use disambiguation:**
+
 - `show <name>` - show a task/project/area by name
 - `complete <name>` - mark task complete
 - `drop <name>` - mark task dropped
@@ -169,14 +177,15 @@ When a fuzzy search returns multiple matches:
 
 **AI/JSON mode behavior:**
 When multiple matches found, return `AMBIGUOUS` error:
+
 ```json
 {
   "error": true,
   "code": "AMBIGUOUS",
   "message": "Multiple tasks match 'login'",
   "matches": [
-    {"title": "Fix login bug", "path": "~/tasks/fix-login-bug.md"},
-    {"title": "Login page redesign", "path": "~/tasks/login-redesign.md"}
+    { "title": "Fix login bug", "path": "~/tasks/fix-login-bug.md" },
+    { "title": "Login page redesign", "path": "~/tasks/login-redesign.md" }
   ],
   "suggestion": "Use a more specific name or provide the full path"
 }
@@ -184,12 +193,14 @@ When multiple matches found, return `AMBIGUOUS` error:
 
 **Confirmation prompts:**
 For destructive operations (if we add any):
+
 ```
 ? Are you sure you want to archive 5 tasks? (y/N)
 ```
 
 **Interactive add:**
 When `taskdn add` is called with no arguments:
+
 ```
 ? Task title: Review quarterly report
 ? Status: (inbox) ready
@@ -201,28 +212,29 @@ Creating task...
 ```
 
 **Test cases for fuzzy disambiguation:**
+
 ```typescript
 describe('fuzzy matching prompts', () => {
-  test('shows prompt when multiple matches (human mode)');
-  test('returns AMBIGUOUS error with matches (AI mode)');
-  test('returns AMBIGUOUS error with matches (JSON mode)');
-  test('proceeds without prompt for single match');
-  test('returns NOT_FOUND when no matches');
-});
+  test('shows prompt when multiple matches (human mode)')
+  test('returns AMBIGUOUS error with matches (AI mode)')
+  test('returns AMBIGUOUS error with matches (JSON mode)')
+  test('proceeds without prompt for single match')
+  test('returns NOT_FOUND when no matches')
+})
 ```
 
 ### Phase 5: Short Flags
 
 Add single-letter shortcuts for common flags.
 
-| Short | Long | Usage |
-|-------|------|-------|
-| `-s` | `--status` | `-s ready` |
-| `-p` | `--project` | `-p "Q1"` |
-| `-a` | `--area` | `-a "Work"` |
-| `-d` | `--due` | `-d today` |
-| `-q` | `--query` | `-q "login"` |
-| `-l` | `--limit` | `-l 20` |
+| Short | Long        | Usage        |
+| ----- | ----------- | ------------ |
+| `-s`  | `--status`  | `-s ready`   |
+| `-p`  | `--project` | `-p "Q1"`    |
+| `-a`  | `--area`    | `-a "Work"`  |
+| `-d`  | `--due`     | `-d today`   |
+| `-q`  | `--query`   | `-q "login"` |
+| `-l`  | `--limit`   | `-l 20`      |
 
 **Implementation:** Add to Commander.js option definitions.
 
@@ -231,100 +243,56 @@ Add single-letter shortcuts for common flags.
 Support for piping data in and out.
 
 **Pipe in:**
+
 ```bash
 echo '{"title": "New task"}' | taskdn add --stdin
 echo 'title: New task' | taskdn add --stdin
 ```
 
 **Pipe out:**
+
 ```bash
 taskdn list --json | jq '.tasks[] | select(.status == "ready")'
 ```
 
 The `--json` output is already pipeable. Add `--stdin` for input.
 
-### Phase 7: Shell Completions
-
-Generate shell completion scripts.
-
-```bash
-taskdn completions bash > ~/.bash_completion.d/taskdn
-taskdn completions zsh > ~/.zfunc/_taskdn
-taskdn completions fish > ~/.config/fish/completions/taskdn.fish
-```
-
-**What to complete:**
-- Command names
-- Flag names
-- Status values for `--status`
-- Entity types for `list` (tasks, projects, areas)
-- File paths for commands that take paths
-
-### Phase 8: Error Refinement
-
-Polish error messages across all commands.
-
-**Helpful suggestions:**
-```
-Error: No configuration found.
-
-Run `taskdn init` to set up your vault, or create a .taskdn.json file.
-```
-
-**Did you mean:**
-```
-Error: Invalid status "inprogress"
-
-Did you mean "in-progress"? Valid values: inbox, icebox, ready, in-progress, blocked, dropped, done
-```
-
-**Actionable context:**
-```
-Error: File not found: ~/tasks/login-bug.md
-
-Similar tasks found:
-  - ~/tasks/fix-login-bug.md
-  - ~/tasks/login-page-redesign.md
-
-Use `taskdn list -q "login"` to search for tasks.
-```
-
 ## Test Cases
 
 ```typescript
 describe('init command', () => {
-  test('creates config file');
-  test('prompts for directories');
-  test('works non-interactively with flags');
-  test('warns if config exists');
-});
+  test('creates config file')
+  test('prompts for directories')
+  test('works non-interactively with flags')
+  test('warns if config exists')
+})
 
 describe('config command', () => {
-  test('shows current config');
-  test('sets config values');
-  test('shows config sources');
-});
+  test('shows current config')
+  test('sets config values')
+  test('shows config sources')
+})
 
 describe('doctor command', () => {
-  test('passes on healthy vault');
-  test('reports parse errors');
-  test('reports invalid status');
-  test('reports broken references');
-  test('exits 1 when issues found');
-  test('exits 0 when clean');
-});
+  test('passes on healthy vault')
+  test('reports parse errors')
+  test('reports invalid status')
+  test('reports broken references')
+  test('exits 1 when issues found')
+  test('exits 0 when clean')
+})
 
 describe('short flags', () => {
-  test('-s works like --status');
-  test('-p works like --project');
-  test('-d works like --due');
-});
+  test('-s works like --status')
+  test('-p works like --project')
+  test('-d works like --due')
+})
 
 describe('piping', () => {
-  test('--stdin accepts JSON');
-  test('--stdin accepts YAML');
-  test('--json output is valid JSON');
-});
+  test('--stdin accepts JSON')
+  test('--stdin accepts YAML')
+  test('--json output is valid JSON')
+})
 ```
 
 ## Verification
@@ -338,7 +306,6 @@ describe('piping', () => {
 - [ ] Short flags work for all common options
 - [ ] `--stdin` accepts piped input
 - [ ] Shell completions generate correctly
-- [ ] Error messages are helpful with suggestions
 - [ ] All commands work in all output modes
 - [ ] cli-progress.md fully checked off
 
@@ -348,4 +315,3 @@ describe('piping', () => {
 - Commander.js supports completion generation
 - Doctor command should be efficient for large vaults
 - Consider: should doctor have a `--fix` option? (Probably not for v1)
-- Error refinement is iterative - improve as we use the CLI
