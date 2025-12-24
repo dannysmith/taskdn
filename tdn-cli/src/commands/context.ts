@@ -12,6 +12,8 @@ import type {
   ProjectsByStatus,
   AreaStats,
   TimelineData,
+  TasksByStatus,
+  ProjectStats,
 } from '@/output/index.ts';
 import { buildVaultOverview } from '@/output/vault-overview.ts';
 import { getVaultConfig } from '@/config/index.ts';
@@ -276,6 +278,67 @@ function calculateAreaStats(projects: Project[], tasks: Task[], timeline: Timeli
   };
 }
 
+// ============================================================================
+// Project Context Helpers
+// ============================================================================
+
+/**
+ * Group tasks by their status
+ * Per ai-context.md Section 6
+ */
+function groupTasksByStatus(tasks: Task[]): TasksByStatus {
+  const result: TasksByStatus = {
+    inProgress: [],
+    blocked: [],
+    ready: [],
+    inbox: [],
+  };
+
+  for (const task of tasks) {
+    const status = task.status.toLowerCase();
+
+    switch (status) {
+      case 'in-progress':
+      case 'inprogress':
+        result.inProgress.push(task);
+        break;
+      case 'blocked':
+        result.blocked.push(task);
+        break;
+      case 'ready':
+        result.ready.push(task);
+        break;
+      case 'inbox':
+        result.inbox.push(task);
+        break;
+      // done, dropped, icebox are filtered out upstream
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Build timeline for project tasks (reuses area timeline logic)
+ */
+function buildProjectTimeline(tasks: Task[], today: string): TimelineData {
+  // Same logic as area timeline
+  return buildAreaTimeline(tasks, today);
+}
+
+/**
+ * Calculate project statistics
+ */
+function calculateProjectStats(tasks: Task[], timeline: TimelineData): ProjectStats {
+  return {
+    activeTaskCount: tasks.length,
+    overdueCount: timeline.overdue.length,
+    dueTodayCount: timeline.dueToday.length,
+    inProgressCount: tasks.filter(isInProgress).length,
+    blockedCount: tasks.filter(isBlocked).length,
+  };
+}
+
 /**
  * Context command - get expanded context for an entity
  *
@@ -394,11 +457,28 @@ export const contextCommand = new Command('context')
         process.exit(1);
       }
 
+      const today = getToday();
+
+      // Filter to active tasks (per ai-context.md Section 2.2)
+      const activeTasks = result.tasks.filter(isActiveTask);
+
+      // Group tasks by status
+      const tasksByStatus = groupTasksByStatus(activeTasks);
+
+      // Build timeline scoped to this project's tasks
+      const timeline = buildProjectTimeline(activeTasks, today);
+
+      // Calculate project stats
+      const stats = calculateProjectStats(activeTasks, timeline);
+
       const output: ProjectContextResultOutput = {
         type: 'project-context',
         project: result.project,
         area: result.area ?? null,
-        tasks: result.tasks,
+        tasksByStatus,
+        tasks: activeTasks,
+        timeline,
+        stats,
         warnings: result.warnings,
       };
 

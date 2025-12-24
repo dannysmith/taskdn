@@ -612,75 +612,279 @@ function formatAreaContext(result: AreaContextResultOutput): string {
 
 /**
  * Format project context result for AI mode
- * Project (primary) + Parent Area + Tasks
+ * Per ai-context.md Section 6
  */
 function formatProjectContext(result: ProjectContextResultOutput): string {
-  const lines: string[] = [];
+  const sections: string[] = [];
   const project = result.project;
 
-  // Primary entity: Project with full details
-  lines.push(`## Project: ${project.title}`);
-  lines.push('');
-  lines.push(`- **path:** ${project.path}`);
-  if (project.status) {
-    lines.push(`- **status:** ${toKebabCase(project.status)}`);
+  // Header: # Project: {name}
+  sections.push(`# Project: ${project.title}`);
+  sections.push('');
+
+  // Stats header (includes blocked count per Section 2.6)
+  const statsParts: string[] = [];
+  statsParts.push(
+    `${result.stats.activeTaskCount} active task${result.stats.activeTaskCount !== 1 ? 's' : ''}`
+  );
+  if (result.stats.overdueCount > 0) {
+    statsParts.push(`${OVERDUE_ICON} ${result.stats.overdueCount} overdue`);
   }
-  if (project.area) lines.push(`- **area:** ${project.area}`);
-  if (project.startDate) lines.push(`- **start-date:** ${project.startDate}`);
-  if (project.endDate) lines.push(`- **end-date:** ${project.endDate}`);
-  if (project.description) lines.push(`- **description:** ${project.description}`);
-  if (project.blockedBy && project.blockedBy.length > 0) {
-    lines.push(`- **blocked-by:** ${project.blockedBy.join(', ')}`);
+  if (result.stats.dueTodayCount > 0) {
+    statsParts.push(`${DUE_TODAY_ICON} ${result.stats.dueTodayCount} due today`);
+  }
+  if (result.stats.inProgressCount > 0) {
+    statsParts.push(
+      `${TASK_STATUS_EMOJI['in-progress']} ${result.stats.inProgressCount} in-progress`
+    );
+  }
+  if (result.stats.blockedCount > 0) {
+    statsParts.push(`🚫 ${result.stats.blockedCount} blocked`);
+  }
+  sections.push(`**Stats:** ${statsParts.join(' · ')}`);
+
+  // Project Details section
+  sections.push('');
+  sections.push('---');
+  sections.push('');
+  sections.push('## Project Details');
+  sections.push('');
+
+  // Metadata table
+  const metadataRows: [string, string][] = [];
+  if (project.status) metadataRows.push(['status', toKebabCase(project.status)]);
+  if (project.area) metadataRows.push(['area', project.area]);
+  if (project.startDate) metadataRows.push(['start-date', project.startDate]);
+  if (project.endDate) metadataRows.push(['end-date', project.endDate]);
+  if (project.description) metadataRows.push(['description', project.description]);
+  metadataRows.push(['path', project.path]);
+
+  sections.push('| Field | Value |');
+  sections.push('| ----- | ----- |');
+  for (const [key, value] of metadataRows) {
+    sections.push(`| ${key} | ${value} |`);
   }
 
+  // Body (full, no truncation for primary entity)
   if (project.body) {
-    lines.push('');
-    lines.push('### Body');
-    lines.push('');
-    lines.push(project.body);
+    sections.push('');
+    sections.push('### Body');
+    sections.push('');
+    sections.push(project.body);
   }
 
-  // Parent area section
+  // Parent Area section
+  sections.push('');
+  sections.push('---');
+  sections.push('');
+
   if (result.area) {
-    lines.push('');
-    lines.push('## Parent Area');
-    lines.push('');
-    lines.push(formatContextArea(result.area));
-  }
+    const area = result.area;
+    sections.push(`## Parent Area: ${area.title}`);
+    sections.push('');
 
-  // Tasks section
-  lines.push('');
-  lines.push(`## Tasks in ${project.title} (${result.tasks.length})`);
-  lines.push('');
+    // Area metadata table
+    const areaRows: [string, string][] = [];
+    if (area.status) areaRows.push(['status', toKebabCase(area.status)]);
+    if (area.areaType) areaRows.push(['type', area.areaType]);
+    areaRows.push(['path', area.path]);
 
-  if (result.tasks.length === 0) {
-    lines.push('No tasks in this project.');
+    sections.push('| Field | Value |');
+    sections.push('| ----- | ----- |');
+    for (const [key, value] of areaRows) {
+      sections.push(`| ${key} | ${value} |`);
+    }
+
+    // Area excerpt (blockquote format)
+    const areaExcerpt = truncateBody(area.body);
+    if (areaExcerpt) {
+      sections.push('');
+      const blockquote = areaExcerpt
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      sections.push(blockquote);
+    }
   } else {
-    for (const task of result.tasks) {
-      // Use ### for tasks in project context (not nested under projects)
-      const taskLines: string[] = [];
-      taskLines.push(`### ${task.title}`);
-      taskLines.push('');
-      taskLines.push(`- **path:** ${task.path}`);
-      taskLines.push(`- **status:** ${toKebabCase(task.status)}`);
-      if (task.due) taskLines.push(`- **due:** ${task.due}`);
+    sections.push('## Parent Area');
+    sections.push('');
+    sections.push('_None_');
+  }
 
-      lines.push(taskLines.join('\n'));
-      lines.push('');
+  // Timeline section (scoped to this project)
+  sections.push('');
+  sections.push('---');
+  sections.push('');
+  sections.push('## Timeline');
+  sections.push('');
+  sections.push(`_Scoped to tasks in ${project.title}_`);
+  sections.push('');
+
+  const { timeline } = result;
+
+  // Overdue
+  sections.push(`### Overdue (${timeline.overdue.length})`);
+  sections.push('');
+  if (timeline.overdue.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of timeline.overdue) {
+      sections.push(`- **${task.title}** — due ${task.due}`);
+    }
+  }
+  sections.push('');
+
+  // Due Today
+  sections.push(`### Due Today (${timeline.dueToday.length})`);
+  sections.push('');
+  if (timeline.dueToday.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of timeline.dueToday) {
+      sections.push(`- **${task.title}**`);
+    }
+  }
+  sections.push('');
+
+  // Scheduled Today
+  sections.push(`### Scheduled Today (${timeline.scheduledToday.length})`);
+  sections.push('');
+  if (timeline.scheduledToday.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of timeline.scheduledToday) {
+      sections.push(`- **${task.title}**`);
+    }
+  }
+  sections.push('');
+
+  // Newly Actionable Today
+  sections.push(`### Newly Actionable Today (${timeline.newlyActionable.length})`);
+  sections.push('');
+  if (timeline.newlyActionable.length === 0) {
+    sections.push('_None_');
+  } else {
+    sections.push('_defer-until = today_');
+    sections.push('');
+    for (const task of timeline.newlyActionable) {
+      sections.push(`- **${task.title}**`);
+    }
+  }
+  sections.push('');
+
+  // Blocked
+  sections.push(`### Blocked (${timeline.blocked.length})`);
+  sections.push('');
+  if (timeline.blocked.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of timeline.blocked) {
+      sections.push(`- **${task.title}**`);
+    }
+  }
+  sections.push('');
+
+  // Scheduled This Week
+  if (timeline.scheduledThisWeek.size > 0) {
+    sections.push('### Scheduled This Week');
+    sections.push('');
+
+    const sortedDates = [...timeline.scheduledThisWeek.keys()].sort();
+    for (const date of sortedDates) {
+      const tasks = timeline.scheduledThisWeek.get(date) ?? [];
+      const dayLabel = formatDayWithDate(date);
+      sections.push(`**${dayLabel}**`);
+      sections.push('');
+      for (const task of tasks) {
+        sections.push(`- ${task.title}`);
+      }
+      sections.push('');
     }
   }
 
-  // Warnings if any
-  if (result.warnings.length > 0) {
-    lines.push('## Warnings');
-    lines.push('');
-    for (const warning of result.warnings) {
-      lines.push(`- ${warning}`);
+  // Tasks by Status section
+  sections.push('---');
+  sections.push('');
+  sections.push('## Tasks by Status');
+  sections.push('');
+
+  const { tasksByStatus } = result;
+
+  // In-Progress (full detail with body excerpt)
+  sections.push(`### In-Progress (${tasksByStatus.inProgress.length})`);
+  sections.push('');
+  if (tasksByStatus.inProgress.length === 0) {
+    sections.push('_None_');
+    sections.push('');
+  } else {
+    for (const task of tasksByStatus.inProgress) {
+      sections.push(`#### ${task.title}`);
+      sections.push('');
+      if (task.due) {
+        sections.push(`due ${task.due}`);
+        sections.push('');
+      }
+      const excerpt = truncateBody(task.body);
+      if (excerpt) {
+        sections.push(excerpt);
+        sections.push('');
+      }
     }
-    lines.push('');
   }
 
-  return lines.join('\n').trimEnd();
+  // Blocked (title only - block reason would need to be extracted from body)
+  sections.push(`### Blocked (${tasksByStatus.blocked.length})`);
+  sections.push('');
+  if (tasksByStatus.blocked.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of tasksByStatus.blocked) {
+      sections.push(`- **${task.title}**`);
+    }
+  }
+  sections.push('');
+
+  // Ready (title + due date if set)
+  sections.push(`### Ready (${tasksByStatus.ready.length})`);
+  sections.push('');
+  if (tasksByStatus.ready.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of tasksByStatus.ready) {
+      const dueInfo = task.due ? ` — due ${task.due}` : '';
+      sections.push(`- **${task.title}**${dueInfo}`);
+    }
+  }
+  sections.push('');
+
+  // Inbox (title only)
+  sections.push(`### Inbox (${tasksByStatus.inbox.length})`);
+  sections.push('');
+  if (tasksByStatus.inbox.length === 0) {
+    sections.push('_None_');
+  } else {
+    for (const task of tasksByStatus.inbox) {
+      sections.push(`- **${task.title}**`);
+    }
+  }
+  sections.push('');
+
+  // Reference section
+  const references = collectReferences({
+    areas: result.area ? [result.area] : [],
+    projects: [project],
+    tasks: result.tasks,
+  });
+
+  if (references.length > 0) {
+    sections.push('---');
+    sections.push('');
+    sections.push('## Reference');
+    sections.push('');
+    sections.push(buildReferenceTable(references));
+  }
+
+  return sections.join('\n').trimEnd();
 }
 
 /**

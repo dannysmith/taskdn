@@ -18,6 +18,8 @@ import type {
   VaultStats,
   ProjectsByStatus,
   AreaStats,
+  TasksByStatus,
+  ProjectStats,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
@@ -43,6 +45,8 @@ export type {
   VaultStats,
   ProjectsByStatus,
   AreaStats,
+  TasksByStatus,
+  ProjectStats,
 };
 export { getOutputMode };
 

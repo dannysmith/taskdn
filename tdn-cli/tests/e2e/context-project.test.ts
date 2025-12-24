@@ -31,13 +31,26 @@ describe('context project', () => {
     });
   });
 
-  describe('with --ai flag', () => {
-    test('outputs structured markdown', async () => {
+  describe('with --ai flag (Section 6 format)', () => {
+    test('outputs structured markdown with project header', async () => {
       const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('## Project: Test Project');
-      expect(stdout).toContain('- **path:**');
-      expect(stdout).toContain('- **status:** in-progress');
+      expect(stdout).toContain('# Project: Test Project');
+    });
+
+    test('includes stats header', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('**Stats:**');
+      expect(stdout).toMatch(/\d+ active task/);
+    });
+
+    test('includes project details section with metadata table', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Project Details');
+      expect(stdout).toContain('| Field | Value |');
+      expect(stdout).toContain('| status | in-progress |');
     });
 
     test('includes body for primary entity', async () => {
@@ -47,25 +60,45 @@ describe('context project', () => {
       expect(stdout).toContain('A test project in the Work area');
     });
 
-    test('shows parent area section', async () => {
+    test('shows parent area section with excerpt', async () => {
       const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Parent Area: Work');
+      expect(stdout).toContain('| Field | Value |');
+    });
+
+    test('includes timeline section', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Timeline');
+      expect(stdout).toContain('_Scoped to tasks in Test Project_');
+      expect(stdout).toContain('### Overdue');
+      expect(stdout).toContain('### Due Today');
+    });
+
+    test('shows tasks by status section', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks by Status');
+      expect(stdout).toContain('### In-Progress');
+      expect(stdout).toContain('### Blocked');
+      expect(stdout).toContain('### Ready');
+      expect(stdout).toContain('### Inbox');
+    });
+
+    test('includes reference table', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Reference');
+      expect(stdout).toContain('| Entity |');
+      expect(stdout).toContain('| Type |');
+    });
+
+    test('shows parent area as None when project has no area', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'project', 'Minimal Project', '--ai']);
       expect(exitCode).toBe(0);
       expect(stdout).toContain('## Parent Area');
-      expect(stdout).toContain('### Work');
-    });
-
-    test('shows tasks section with count', async () => {
-      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
-      expect(exitCode).toBe(0);
-      expect(stdout).toMatch(/## Tasks in Test Project \(\d+\)/);
-    });
-
-    test('shows task details', async () => {
-      const { stdout, exitCode } = await runCli(['context', 'project', 'Test Project', '--ai']);
-      expect(exitCode).toBe(0);
-      expect(stdout).toContain('### Full Metadata Task');
-      expect(stdout).toContain('- **status:**');
-      expect(stdout).toContain('- **due:**');
+      expect(stdout).toContain('_None_');
     });
   });
 
