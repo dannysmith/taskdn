@@ -434,7 +434,7 @@ Review and rework the output builders for other --ai outputs to ensure they are 
 
 ---
 
-## Phase 6: Review and Rework `--json` as needed
+## Phase 6: Review and Rework `--json` as needed ✅ COMPLETE
 
 Review and (if necessary) rework the builders for `--json` outputs to ensure they are returning sensible data structures. The data structure should be simple and consistent.
 
@@ -458,34 +458,38 @@ Note: `--ai --json` for context commands has a specific envelope format defined 
 **Problem:** Currently when both `--ai` and `--json` flags are passed to context commands, `--json` takes precedence and `--ai` is ignored. Per ai-context.md Section 8, the output should be a JSON envelope containing the AI-optimized markdown.
 
 **Target format:**
+
 ```typescript
 interface ContextJsonOutput {
-  contextType: 'overview' | 'area' | 'project' | 'task';
-  entity: string | null;  // Target entity name, null for overview
-  summary: string;
-  content: string;        // The AI-formatted markdown
-  references: Reference[];
+  contextType: 'overview' | 'area' | 'project' | 'task'
+  entity: string | null // Target entity name, null for overview
+  summary: string
+  content: string // The AI-formatted markdown
+  references: Reference[]
 }
 
 interface Reference {
-  name: string;
-  type: 'area' | 'project' | 'task';
-  path: string;  // Vault-relative path
+  name: string
+  type: 'area' | 'project' | 'task'
+  path: string // Vault-relative path
 }
 ```
 
 **Implementation steps:**
 
 1. **Update `OutputMode` type** (`src/output/types.ts`)
+
    - Add `'ai-json'` to the `OutputMode` union type
    - Update `getOutputMode()` to detect `options.json && options.ai` and return `'ai-json'`
 
 2. **Create reference extraction helper** (`src/output/helpers/reference-table.ts`)
+
    - The `collectReferences()` function already exists for building the markdown table
    - Add/export a function to return the references as an array of `Reference` objects (not as markdown)
    - Ensure paths are vault-relative (not absolute)
 
 3. **Create AI-JSON formatter** (`src/output/ai-json.ts` or add to `json.ts`)
+
    - Handle context result types: `vault-overview`, `area-context`, `project-context`, `task-context`
    - For each:
      1. Generate the AI markdown using existing `aiFormatter`
@@ -494,6 +498,7 @@ interface Reference {
    - Non-context types (show/list) should fall back to regular JSON output
 
 4. **Update `getFormatter()`** (`src/output/index.ts`)
+
    - Add case for `'ai-json'` mode returning the new formatter
 
 5. **Write tests** (`tests/e2e/context.test.ts`)
@@ -505,6 +510,7 @@ interface Reference {
    - Verify `references` array matches Reference table entries
 
 **Files to modify:**
+
 - `src/output/types.ts` — Add `'ai-json'` mode
 - `src/output/index.ts` — Add formatter case
 - `src/output/helpers/reference-table.ts` — Export reference array builder
@@ -513,16 +519,16 @@ interface Reference {
 
 ---
 
-## Phase 7: Final Review
+## Phase 7: Final Review ✅ COMPLETE
 
 Review all work on context commands and all the code. Any obvious refactoring we should do now before moving on?
 
 ### Checklist
 
-- [ ] General review of all rust & typescript code related to context commands and the --ai flag.
-- [ ] Review `src/output/ai.ts` — Should it be split into multiple files?
-- [ ] Review `src/output/helpers/` — Are utilities well-organized?
-- [ ] Review `src/commands/context.ts` — Is data gathering clean?
-- [ ] Check for duplicate code across formatters
-- [ ] Run full test suite
-- [ ] Update `docs/cli-progress.md`
+- [x] General review of all rust & typescript code related to context commands and the --ai flag.
+- [x] Review `src/output/ai.ts` — Should it be split into multiple files?
+- [x] Review `src/output/helpers/` — Are utilities well-organized?
+- [x] Review `src/commands/context.ts` — Is data gathering clean?
+- [x] Check for duplicate code across formatters
+- [x] Run full test suite
+- [x] Update `docs/cli-progress.md`

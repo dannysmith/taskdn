@@ -42,14 +42,12 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `context area <name>` - Area with projects and tasks
 - [x] `context project <name>` - Project with tasks and parent
 - [x] `context task <path>` - Task with parents
-- [ ] `context --ai` (no args) - Vault overview
-- [ ] `context --with-bodies` - Include all bodies
+- [x] `context --ai` (no args) - Vault overview
 
 ### Convenience Commands
 
 - [ ] `today` - Due/scheduled today + overdue
 - [ ] `inbox` - Inbox tasks
-- [ ] `next` - Smart prioritization
 
 ### Write Commands
 
