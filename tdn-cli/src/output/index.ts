@@ -14,9 +14,8 @@ import type {
   ProjectContextResultOutput,
   TaskContextResultOutput,
   VaultOverviewResult,
-  AreaSummary,
-  VaultSummary,
-  ThisWeekSummary,
+  TimelineData,
+  VaultStats,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
 import { humanFormatter } from './human.ts';
@@ -38,9 +37,8 @@ export type {
   ProjectContextResultOutput,
   TaskContextResultOutput,
   VaultOverviewResult,
-  AreaSummary,
-  VaultSummary,
-  ThisWeekSummary,
+  TimelineData,
+  VaultStats,
 };
 export { getOutputMode };
 

@@ -735,16 +735,24 @@ function formatVaultOverview(result: VaultOverviewResult): string {
   lines.push('');
 
   // Areas section
-  lines.push(bold(`Areas (${result.areas.length})`));
+  lines.push(bold(`Areas (${result.stats.areaCount})`));
   lines.push('');
 
   if (result.areas.length === 0) {
     lines.push(dim('  No areas defined.'));
   } else {
-    for (const areaSummary of result.areas) {
-      lines.push(`  ${bold(areaSummary.area.title)}`);
-      lines.push(`    ${dim('Projects:')} ${areaSummary.projectCount} active`);
-      lines.push(`    ${dim('Tasks:')} ${areaSummary.activeTaskCount} active`);
+    for (const area of result.areas) {
+      const projects = result.areaProjects.get(area.path) ?? [];
+      const directTasks = result.directAreaTasks.get(area.path) ?? [];
+      let taskCount = directTasks.length;
+      for (const project of projects) {
+        const projectTasks = result.projectTasks.get(project.path) ?? [];
+        taskCount += projectTasks.length;
+      }
+
+      lines.push(`  ${bold(area.title)}`);
+      lines.push(`    ${dim('Projects:')} ${projects.length} active`);
+      lines.push(`    ${dim('Tasks:')} ${taskCount} active`);
     }
   }
 
@@ -756,36 +764,62 @@ function formatVaultOverview(result: VaultOverviewResult): string {
   // Summary section
   lines.push(bold('Summary'));
   lines.push('');
-  lines.push(`  ${dim('Total Active Tasks:')} ${result.summary.totalActiveTasks}`);
-  if (result.summary.overdueCount > 0) {
-    lines.push(`  ${dim('Overdue:')} ${red(String(result.summary.overdueCount))}`);
+  lines.push(`  ${dim('Total Active Tasks:')} ${result.stats.taskCount}`);
+  if (result.stats.overdueCount > 0) {
+    lines.push(`  ${dim('Overdue:')} ${red(String(result.stats.overdueCount))}`);
   } else {
-    lines.push(`  ${dim('Overdue:')} ${result.summary.overdueCount}`);
+    lines.push(`  ${dim('Overdue:')} ${result.stats.overdueCount}`);
   }
-  lines.push(`  ${dim('In Progress:')} ${result.summary.inProgressCount}`);
+  lines.push(`  ${dim('In Progress:')} ${result.stats.inProgressCount}`);
 
   // Separator
   lines.push('');
   lines.push(formatSeparator());
   lines.push('');
 
-  // This Week section
-  lines.push(bold('This Week'));
+  // Timeline section
+  lines.push(bold('Timeline'));
   lines.push('');
 
-  lines.push(`  ${dim('Due:')} ${result.thisWeek.dueTasks.length} tasks`);
-  for (const task of result.thisWeek.dueTasks) {
-    const checkbox = formatTaskCheckbox(task.status);
-    const dueDate = task.due ? formatShortDate(task.due) : '';
-    lines.push(`    ${checkbox} ${task.title}  ${dim(dueDate)}`);
+  // Overdue
+  if (result.timeline.overdue.length > 0) {
+    lines.push(`  ${dim('Overdue:')} ${result.timeline.overdue.length} tasks`);
+    for (const task of result.timeline.overdue) {
+      const checkbox = formatTaskCheckbox(task.status);
+      const dueDate = task.due ? formatShortDate(task.due) : '';
+      lines.push(`    ${checkbox} ${task.title}  ${dim(dueDate)}`);
+    }
+    lines.push('');
   }
 
-  lines.push('');
-  lines.push(`  ${dim('Scheduled:')} ${result.thisWeek.scheduledTasks.length} tasks`);
-  for (const task of result.thisWeek.scheduledTasks) {
-    const checkbox = formatTaskCheckbox(task.status);
-    const scheduledDate = task.scheduled ? formatShortDate(task.scheduled) : '';
-    lines.push(`    ${checkbox} ${task.title}  ${dim(scheduledDate)}`);
+  // Due today
+  if (result.timeline.dueToday.length > 0) {
+    lines.push(`  ${dim('Due Today:')} ${result.timeline.dueToday.length} tasks`);
+    for (const task of result.timeline.dueToday) {
+      const checkbox = formatTaskCheckbox(task.status);
+      lines.push(`    ${checkbox} ${task.title}`);
+    }
+    lines.push('');
+  }
+
+  // Scheduled today
+  if (result.timeline.scheduledToday.length > 0) {
+    lines.push(`  ${dim('Scheduled Today:')} ${result.timeline.scheduledToday.length} tasks`);
+    for (const task of result.timeline.scheduledToday) {
+      const checkbox = formatTaskCheckbox(task.status);
+      lines.push(`    ${checkbox} ${task.title}`);
+    }
+    lines.push('');
+  }
+
+  // Blocked
+  if (result.timeline.blocked.length > 0) {
+    lines.push(`  ${dim('Blocked:')} ${result.timeline.blocked.length} tasks`);
+    for (const task of result.timeline.blocked) {
+      const checkbox = formatTaskCheckbox(task.status);
+      lines.push(`    ${checkbox} ${task.title}`);
+    }
+    lines.push('');
   }
 
   return lines.join('\n').trimEnd();

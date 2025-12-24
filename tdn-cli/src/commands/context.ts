@@ -10,6 +10,7 @@ import type {
   ProjectContextResultOutput,
   TaskContextResultOutput,
 } from '@/output/index.ts';
+import { buildVaultOverview } from '@/output/vault-overview.ts';
 import { getVaultConfig } from '@/config/index.ts';
 import { createError } from '@/errors/types.ts';
 import { formatError } from '@/errors/format.ts';
@@ -133,20 +134,9 @@ export const contextCommand = new Command('context')
         process.exit(2);
       }
 
-      // AI mode: return vault overview (stub for now)
-      const result = {
-        type: 'vault-overview',
-        areas: [],
-        summary: {
-          totalActiveTasks: 0,
-          overdueCount: 0,
-          inProgressCount: 0,
-        },
-        thisWeek: {
-          dueTasks: [],
-          scheduledTasks: [],
-        },
-      };
+      // AI mode: return vault overview
+      const config = getVaultConfig();
+      const result = buildVaultOverview(config);
       console.log(formatOutput(result, globalOpts));
       return;
     }

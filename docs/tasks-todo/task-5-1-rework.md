@@ -4,17 +4,18 @@ We have implemented context commands for area, project and task. Before implemen
 
 The outcome of that work is now in `../../tdn-cli/docs/developer/ai-context.md`. This overrides the output specified in `cli-requirements.md`.
 
-**Efficiency note:** Phases 2-4 (area/project/task context) only change the *formatter* output - data gathering continues to use the existing Rust functions (`getAreaContext()`, `getProjectContext()`, `getTaskContext()`) which use VaultIndex internally for efficient querying. Only Phase 1 (vault overview) requires new data gathering, but since the overview needs ALL entities anyway, calling the scan functions is equivalent I/O to what VaultIndex does internally.
+**Efficiency note:** Phases 2-4 (area/project/task context) only change the _formatter_ output - data gathering continues to use the existing Rust functions (`getAreaContext()`, `getProjectContext()`, `getTaskContext()`) which use VaultIndex internally for efficient querying. Only Phase 1 (vault overview) requires new data gathering, but since the overview needs ALL entities anyway, calling the scan functions is equivalent I/O to what VaultIndex does internally.
 
 ---
 
-## Phase 0: Foundation & Shared Helpers
+## Phase 0: Foundation & Shared Helpers ✅ COMPLETE
 
 Before implementing the context commands, we need shared TypeScript utilities that all context formatters will use. These should live in a new directory: `src/output/helpers/`.
 
 ### 0.1 Date Utilities (`date-utils.ts`)
 
 **Note:** `list.ts` already has basic date functions (`getToday()`, `formatDate()`, `getTomorrow()`, etc.) that support `TASKDN_MOCK_DATE` env var for testing. Our new utilities should:
+
 - Reuse `getToday()` from list.ts (or move it here and import from here)
 - Follow the same `TASKDN_MOCK_DATE` pattern for testability
 
@@ -41,26 +42,26 @@ Constants and helpers for status indicators per ai-context.md Section 3.1:
 // Project status → emoji
 const PROJECT_STATUS_EMOJI = {
   'in-progress': '🔵',
-  'ready': '🟢',
-  'planning': '🟡',
-  'blocked': '🚫',
-  'paused': '⏸️',
-  'done': '✅',
-};
+  ready: '🟢',
+  planning: '🟡',
+  blocked: '🚫',
+  paused: '⏸️',
+  done: '✅',
+}
 
 // Task status → emoji (for count shorthand)
 const TASK_STATUS_EMOJI = {
   'in-progress': '▶️',
-  'ready': '🟢',
-  'inbox': '📥',
-  'blocked': '🚫',
-};
+  ready: '🟢',
+  inbox: '📥',
+  blocked: '🚫',
+}
 
 // Other indicators
-const AREA_ICON = '📁';
-const DIRECT_TASKS_ICON = '📋';
-const OVERDUE_ICON = '⚠️';
-const DUE_TODAY_ICON = '📅';
+const AREA_ICON = '📁'
+const DIRECT_TASKS_ICON = '📋'
+const OVERDUE_ICON = '⚠️'
+const DUE_TODAY_ICON = '📅'
 ```
 
 ### 0.3 Stats & Counting (`stats.ts`)
@@ -78,20 +79,24 @@ Per ai-context.md Section 2.4:
 
 ### 0.5 Reference Table Builder (`reference-table.ts`)
 
-Per ai-context.md Section 3.5, every context output ends with a Reference table listing all mentioned entities with their paths. This is a *formatting* helper (not related to VaultIndex which handles data querying).
+Per ai-context.md Section 3.5, every context output ends with a Reference table listing all mentioned entities with their paths. This is a _formatting_ helper (not related to VaultIndex which handles data querying).
 
 ```typescript
 interface ReferenceEntry {
-  name: string;
-  type: 'area' | 'project' | 'task';
-  path: string;
+  name: string
+  type: 'area' | 'project' | 'task'
+  path: string
 }
 
 // Render entries as markdown table
-function buildReferenceTable(entries: ReferenceEntry[]): string;
+function buildReferenceTable(entries: ReferenceEntry[]): string
 
 // Collect unique entities from the data we've already fetched
-function collectReferences(entities: { areas?: Area[], projects?: Project[], tasks?: Task[] }): ReferenceEntry[];
+function collectReferences(entities: {
+  areas?: Area[]
+  projects?: Project[]
+  tasks?: Task[]
+}): ReferenceEntry[]
 ```
 
 ### 0.6 Markdown Helpers (`markdown-helpers.ts`)
@@ -132,6 +137,7 @@ The current implementation stubs out the vault overview. We need to:
 **Existing Rust functions to use:** We already have `scanAreas()`, `scanProjects()`, `scanTasks()` exported via NAPI. These return all entities. We also have `getAreaContext()`, `getProjectContext()` etc. from VaultIndex, but for the overview we need everything, so we'll use the scan functions and build the structure in TypeScript.
 
 Data flow:
+
 ```
 scanAreas() + scanProjects() + scanTasks()  (existing Rust functions)
     ↓
@@ -163,36 +169,36 @@ Update `src/output/types.ts` with richer result types:
 
 ```typescript
 interface VaultOverviewResult {
-  type: 'vault-overview';
+  type: 'vault-overview'
   // Raw data
-  areas: Area[];
-  projects: Project[];
-  tasks: Task[];
+  areas: Area[]
+  projects: Project[]
+  tasks: Task[]
   // Computed relationships
-  areaProjects: Map<string, Project[]>;  // area path → projects
-  projectTasks: Map<string, Task[]>;     // project path → tasks
-  directAreaTasks: Map<string, Task[]>;  // area path → direct tasks
-  orphanProjects: Project[];             // projects with no area
-  orphanTasks: Task[];                   // tasks with no project or area
+  areaProjects: Map<string, Project[]> // area path → projects
+  projectTasks: Map<string, Task[]> // project path → tasks
+  directAreaTasks: Map<string, Task[]> // area path → direct tasks
+  orphanProjects: Project[] // projects with no area
+  orphanTasks: Task[] // tasks with no project or area
   // Timeline categorization
   timeline: {
-    overdue: Task[];
-    dueToday: Task[];
-    scheduledToday: Task[];
-    newlyActionable: Task[];
-    blocked: Task[];
-    scheduledThisWeek: Map<string, Task[]>;  // date → tasks
-    recentlyModified: Task[];  // last 24h, excluding above
-  };
+    overdue: Task[]
+    dueToday: Task[]
+    scheduledToday: Task[]
+    newlyActionable: Task[]
+    blocked: Task[]
+    scheduledThisWeek: Map<string, Task[]> // date → tasks
+    recentlyModified: Task[] // last 24h, excluding above
+  }
   // Stats
   stats: {
-    areaCount: number;
-    projectCount: number;
-    taskCount: number;
-    overdueCount: number;
-    dueTodayCount: number;
-    inProgressCount: number;
-  };
+    areaCount: number
+    projectCount: number
+    taskCount: number
+    overdueCount: number
+    dueTodayCount: number
+    inProgressCount: number
+  }
 }
 ```
 
@@ -224,6 +230,7 @@ Tasks: 18 total (4 direct, 14 via projects)
 ```
 
 This requires:
+
 - Tree connector logic (├──, └──, │)
 - Proper indentation tracking
 - Project one-liner format: `{emoji} {title} [{status}] — {count} tasks ({shorthand})`
@@ -248,6 +255,7 @@ Rework the area context output per ai-context.md Section 5.
 ### 2.1 Key Changes from Current
 
 Current implementation is missing:
+
 - Stats header with emoji indicators
 - Projects grouped by status (In-Progress, Ready, Planning, Blocked, Paused, Done)
 - Tree structure with task counts and in-progress tasks inline
@@ -309,6 +317,7 @@ Rework the project context output per ai-context.md Section 6.
 ### 3.1 Key Changes from Current
 
 Current implementation is missing:
+
 - Stats header with blocked count
 - Metadata table format for project details
 - Parent area summary table + excerpt
@@ -366,6 +375,7 @@ Rework the task context output per ai-context.md Section 7.
 ### 4.1 Key Changes from Current
 
 Current implementation is missing:
+
 - Alert banner (overdue/due today/scheduled today/newly actionable)
 - Metadata table format for task details
 - Parent project summary table + excerpt
@@ -386,6 +396,7 @@ Current implementation is missing:
 ### 4.3 Alert Banner Logic
 
 Per ai-context.md Section 7 (show most urgent first if multiple apply):
+
 1. `due < today` → `⚠️ OVERDUE — due {date}`
 2. `due == today` → `📅 DUE TODAY`
 3. `scheduled == today` → `📆 SCHEDULED TODAY`

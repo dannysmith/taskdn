@@ -169,7 +169,10 @@ describe('context area', () => {
     test('AI mode returns vault overview', async () => {
       const { stdout, exitCode } = await runCli(['context', '--ai']);
       expect(exitCode).toBe(0);
-      expect(stdout).toContain('Vault Overview');
+      // Per ai-context.md Section 4, the overview starts with "# Overview"
+      expect(stdout).toContain('# Overview');
+      expect(stdout).toContain('**Stats:**');
+      expect(stdout).toContain('## Structure');
     });
   });
 });

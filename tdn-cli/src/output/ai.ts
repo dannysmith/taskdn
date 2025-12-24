@@ -14,6 +14,24 @@ import type {
   VaultOverviewResult,
 } from './types.ts';
 import { toKebabCase } from './types.ts';
+import {
+  AREA_ICON,
+  OVERDUE_ICON,
+  DUE_TODAY_ICON,
+  TASK_STATUS_EMOJI,
+  formatDayWithDate,
+  hoursAgo,
+  truncateBody,
+  collectReferences,
+  buildReferenceTable,
+  renderTree,
+  buildAreaTree,
+  calculateAreaTaskCount,
+  countTasksByStatus,
+  formatTaskCountShorthand,
+  formatParentChain,
+  type TreeNode,
+} from './helpers/index.ts';
 
 /**
  * Format a single task for AI mode (structured Markdown)
@@ -505,66 +523,444 @@ function formatTaskContext(result: TaskContextResultOutput): string {
   return lines.join('\n').trimEnd();
 }
 
+// ============================================================================
+// Vault Overview Formatter (ai-context.md Section 4)
+// ============================================================================
+
 /**
- * Format vault overview result for AI mode
+ * Helper: Check if task is in-progress
  */
-function formatVaultOverview(result: VaultOverviewResult): string {
+function isInProgress(task: Task): boolean {
+  const status = task.status.toLowerCase();
+  return status === 'inprogress' || status === 'in-progress';
+}
+
+/**
+ * Helper: Get parent chain for a task
+ */
+function getTaskParentChain(
+  task: Task,
+  result: VaultOverviewResult
+): { project: Project | null; area: Area | null } {
+  let project: Project | null = null;
+  let area: Area | null = null;
+
+  // Find project
+  if (task.project) {
+    const projectRef = task.project.replace(/^\[\[|\]\]$/g, '').toLowerCase();
+    project = result.projects.find((p) => p.title.toLowerCase() === projectRef) ?? null;
+  }
+
+  // Find area (via project or direct)
+  if (project && project.area) {
+    const areaRef = project.area.replace(/^\[\[|\]\]$/g, '').toLowerCase();
+    area = result.areas.find((a) => a.title.toLowerCase() === areaRef) ?? null;
+  } else if (task.area) {
+    const areaRef = task.area.replace(/^\[\[|\]\]$/g, '').toLowerCase();
+    area = result.areas.find((a) => a.title.toLowerCase() === areaRef) ?? null;
+  }
+
+  return { project, area };
+}
+
+/**
+ * Format the stats header line
+ */
+function formatStatsHeader(result: VaultOverviewResult): string {
+  const parts: string[] = [];
+  parts.push(`${result.stats.areaCount} area${result.stats.areaCount !== 1 ? 's' : ''}`);
+  parts.push(
+    `${result.stats.projectCount} active project${result.stats.projectCount !== 1 ? 's' : ''}`
+  );
+  parts.push(`${result.stats.taskCount} active task${result.stats.taskCount !== 1 ? 's' : ''}`);
+
+  if (result.stats.overdueCount > 0) {
+    parts.push(`${OVERDUE_ICON} ${result.stats.overdueCount} overdue`);
+  }
+  if (result.stats.dueTodayCount > 0) {
+    parts.push(`${DUE_TODAY_ICON} ${result.stats.dueTodayCount} due today`);
+  }
+  if (result.stats.inProgressCount > 0) {
+    parts.push(`${TASK_STATUS_EMOJI['in-progress']} ${result.stats.inProgressCount} in-progress`);
+  }
+
+  return `**Stats:** ${parts.join(' · ')}`;
+}
+
+/**
+ * Format structure section - tree view of areas → projects → in-progress tasks
+ */
+function formatStructureSection(result: VaultOverviewResult): string {
   const lines: string[] = [];
-
-  lines.push('## Vault Overview');
+  lines.push('## Structure');
   lines.push('');
 
-  // Areas section
-  lines.push(`### Areas (${result.areas.length})`);
+  // Areas with their projects
+  for (const area of result.areas) {
+    const areaProjects = result.areaProjects.get(area.path) ?? [];
+    const directTasks = result.directAreaTasks.get(area.path) ?? [];
+
+    // Build per-project task maps
+    const projectTasksForArea = new Map<string, Task[]>();
+    for (const project of areaProjects) {
+      projectTasksForArea.set(project.path, result.projectTasks.get(project.path) ?? []);
+    }
+
+    // Calculate area task count
+    const taskCount = calculateAreaTaskCount(projectTasksForArea, directTasks);
+
+    // Area header
+    lines.push(`### ${AREA_ICON} ${area.title}`);
+    lines.push('');
+
+    if (taskCount.total > 0) {
+      if (taskCount.direct > 0 && taskCount.viaProjects > 0) {
+        lines.push(
+          `Tasks: ${taskCount.total} total (${taskCount.direct} direct, ${taskCount.viaProjects} via projects)`
+        );
+      } else if (taskCount.direct > 0) {
+        lines.push(`Tasks: ${taskCount.total} total (${taskCount.direct} direct)`);
+      } else {
+        lines.push(`Tasks: ${taskCount.total} total`);
+      }
+    } else {
+      lines.push('Tasks: 0');
+    }
+
+    // Build and render tree
+    const tree = buildAreaTree(areaProjects, projectTasksForArea, directTasks);
+    const treeLines = renderTree(tree);
+    if (treeLines.length > 0) {
+      lines.push(...treeLines);
+    }
+
+    lines.push('');
+  }
+
+  // Orphan projects (projects with no area)
+  if (result.orphanProjects.length > 0) {
+    lines.push('### Projects with no Area');
+    lines.push('');
+
+    const orphanTree: TreeNode = { content: '', children: [] };
+    for (const project of result.orphanProjects) {
+      const tasks = result.projectTasks.get(project.path) ?? [];
+      const counts = countTasksByStatus(tasks);
+      const shorthand = formatTaskCountShorthand(counts);
+      const status = project.status ? `[${toKebabCase(project.status)}]` : '';
+
+      const content =
+        `${status ? `${status} ` : ''}${project.title} — ${tasks.length} task${tasks.length !== 1 ? 's' : ''} ${shorthand}`.trim();
+      orphanTree.children.push({ content, children: [] });
+    }
+
+    const treeLines = renderTree(orphanTree);
+    lines.push(...treeLines);
+    lines.push('');
+  }
+
+  // Orphan tasks (tasks with no project or area)
+  if (result.orphanTasks.length > 0) {
+    lines.push('### Tasks with no Project or Area');
+    lines.push('');
+
+    const counts = countTasksByStatus(result.orphanTasks);
+    const shorthand = formatTaskCountShorthand(counts);
+    lines.push(`Tasks: ${result.orphanTasks.length} total ${shorthand}`);
+
+    // Show in-progress tasks
+    const inProgressOrphans = result.orphanTasks.filter(isInProgress);
+    for (const task of inProgressOrphans) {
+      lines.push(`├── ${TASK_STATUS_EMOJI['in-progress']} ${task.title}`);
+    }
+
+    // Show ready tasks
+    const readyOrphans = result.orphanTasks.filter((t) => t.status.toLowerCase() === 'ready');
+    for (const task of readyOrphans) {
+      lines.push(`└── ${TASK_STATUS_EMOJI['ready']} ${task.title}`);
+    }
+
+    lines.push('');
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format timeline section
+ */
+function formatTimelineSection(result: VaultOverviewResult): string {
+  const lines: string[] = [];
+  lines.push('## Timeline');
   lines.push('');
 
-  if (result.areas.length === 0) {
-    lines.push('No areas defined.');
-  } else {
-    for (const areaSummary of result.areas) {
-      lines.push(`#### ${areaSummary.area.title}`);
+  const { timeline } = result;
+
+  // Overdue
+  if (timeline.overdue.length > 0) {
+    lines.push(`### Overdue (${timeline.overdue.length})`);
+    lines.push('');
+    for (const task of timeline.overdue) {
+      const { project, area } = getTaskParentChain(task, result);
+      const parentChain = formatParentChain(task, project, area);
+      lines.push(`- **${task.title}** — due ${task.due} — ${parentChain}`);
+    }
+    lines.push('');
+  }
+
+  // Due Today
+  if (timeline.dueToday.length > 0) {
+    lines.push(`### Due Today (${timeline.dueToday.length})`);
+    lines.push('');
+    for (const task of timeline.dueToday) {
+      const { project, area } = getTaskParentChain(task, result);
+      const parentChain = formatParentChain(task, project, area);
+      lines.push(`- **${task.title}** — ${parentChain}`);
+    }
+    lines.push('');
+  }
+
+  // Scheduled Today
+  if (timeline.scheduledToday.length > 0) {
+    lines.push(`### Scheduled Today (${timeline.scheduledToday.length})`);
+    lines.push('');
+    for (const task of timeline.scheduledToday) {
+      const { project, area } = getTaskParentChain(task, result);
+      const parentChain = formatParentChain(task, project, area);
+      lines.push(`- **${task.title}** — ${parentChain}`);
+    }
+    lines.push('');
+  }
+
+  // Newly Actionable Today
+  if (timeline.newlyActionable.length > 0) {
+    lines.push(`### Newly Actionable Today (${timeline.newlyActionable.length})`);
+    lines.push('');
+    lines.push('_defer-until = today_');
+    lines.push('');
+    for (const task of timeline.newlyActionable) {
+      const { project, area } = getTaskParentChain(task, result);
+      const parentChain = formatParentChain(task, project, area);
+      lines.push(`- **${task.title}** — ${parentChain}`);
+    }
+    lines.push('');
+  }
+
+  // Blocked
+  if (timeline.blocked.length > 0) {
+    lines.push(`### Blocked (${timeline.blocked.length})`);
+    lines.push('');
+    for (const task of timeline.blocked) {
+      const { project, area } = getTaskParentChain(task, result);
+      const parentChain = formatParentChain(task, project, area);
+      lines.push(`- **${task.title}** — ${parentChain}`);
+    }
+    lines.push('');
+  }
+
+  // Scheduled This Week (grouped by date)
+  if (timeline.scheduledThisWeek.size > 0) {
+    lines.push('### Scheduled This Week');
+    lines.push('');
+
+    // Sort dates
+    const sortedDates = [...timeline.scheduledThisWeek.keys()].sort();
+
+    for (const date of sortedDates) {
+      const tasks = timeline.scheduledThisWeek.get(date) ?? [];
+      const dayLabel = formatDayWithDate(date);
+      lines.push(`**${dayLabel}**`);
       lines.push('');
-      lines.push(`- **path:** ${areaSummary.area.path}`);
-      lines.push(`- **projects:** ${areaSummary.projectCount} active`);
-      lines.push(`- **tasks:** ${areaSummary.activeTaskCount} active`);
+      for (const task of tasks) {
+        const { project, area } = getTaskParentChain(task, result);
+        const parentChain = formatParentChain(task, project, area);
+        lines.push(`- ${task.title} — ${parentChain}`);
+      }
       lines.push('');
     }
   }
 
-  // Summary section
-  lines.push('### Summary');
-  lines.push('');
-  lines.push(`- **total-active-tasks:** ${result.summary.totalActiveTasks}`);
-  lines.push(`- **overdue:** ${result.summary.overdueCount}`);
-  lines.push(`- **in-progress:** ${result.summary.inProgressCount}`);
-  lines.push('');
-
-  // This Week section
-  lines.push('### This Week');
-  lines.push('');
-
-  lines.push(`#### Due (${result.thisWeek.dueTasks.length})`);
-  lines.push('');
-  if (result.thisWeek.dueTasks.length === 0) {
-    lines.push('No tasks due this week.');
-  } else {
-    for (const task of result.thisWeek.dueTasks) {
-      lines.push(`- ${task.title} — ${task.path} (due: ${task.due})`);
+  // Recently Modified (last 24h, excluding above)
+  if (timeline.recentlyModified.length > 0) {
+    lines.push(`### Recently Modified (${timeline.recentlyModified.length})`);
+    lines.push('');
+    lines.push('_Last 24h, not shown above_');
+    lines.push('');
+    for (const task of timeline.recentlyModified) {
+      const { project, area } = getTaskParentChain(task, result);
+      const parentChain = formatParentChain(task, project, area);
+      const hours = task.updatedAt ? hoursAgo(task.updatedAt) : 0;
+      lines.push(`- **${task.title}** — ${parentChain} — ${hours}h ago`);
     }
+    lines.push('');
   }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format in-progress tasks section with full details
+ */
+function formatInProgressTasksSection(result: VaultOverviewResult): string {
+  const inProgressTasks = result.tasks.filter(isInProgress);
+
+  if (inProgressTasks.length === 0) {
+    return '';
+  }
+
+  const lines: string[] = [];
+  lines.push(`## In-Progress Tasks (${inProgressTasks.length})`);
   lines.push('');
 
-  lines.push(`#### Scheduled (${result.thisWeek.scheduledTasks.length})`);
-  lines.push('');
-  if (result.thisWeek.scheduledTasks.length === 0) {
-    lines.push('No tasks scheduled this week.');
-  } else {
-    for (const task of result.thisWeek.scheduledTasks) {
-      lines.push(`- ${task.title} — ${task.path} (scheduled: ${task.scheduled})`);
+  for (const task of inProgressTasks) {
+    const { project, area } = getTaskParentChain(task, result);
+    const parentChain = formatParentChain(task, project, area);
+
+    lines.push(`### ${task.title}`);
+    lines.push('');
+
+    // Parent chain + due date
+    const metaParts: string[] = [parentChain];
+    if (task.due) {
+      metaParts.push(`due ${task.due}`);
+    }
+    lines.push(metaParts.join(' · '));
+    lines.push('');
+
+    // Body excerpt
+    const excerpt = truncateBody(task.body);
+    if (excerpt) {
+      lines.push(excerpt);
+      lines.push('');
     }
   }
 
   return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format excerpts section for active areas and non-paused projects
+ */
+function formatExcerptsSection(result: VaultOverviewResult): string {
+  const lines: string[] = [];
+  lines.push('## Excerpts');
+  lines.push('');
+  lines.push('_Active areas and projects (excludes archived areas, paused/done projects)_');
+  lines.push('');
+
+  // Area excerpts
+  for (const area of result.areas) {
+    const excerpt = truncateBody(area.body);
+    if (excerpt) {
+      lines.push(`### ${area.title} (Area)`);
+      lines.push('');
+      // Format as blockquote
+      const blockquote = excerpt
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      lines.push(blockquote);
+      lines.push('');
+    }
+  }
+
+  // Project excerpts (exclude paused)
+  for (const project of result.projects) {
+    const status = project.status?.toLowerCase();
+    if (status === 'paused') continue;
+
+    const excerpt = truncateBody(project.body);
+    if (excerpt) {
+      lines.push(`### ${project.title} (Project)`);
+      lines.push('');
+      const blockquote = excerpt
+        .split('\n')
+        .map((line) => `> ${line}`)
+        .join('\n');
+      lines.push(blockquote);
+      lines.push('');
+    }
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format reference section
+ */
+function formatReferenceSection(result: VaultOverviewResult): string {
+  const references = collectReferences({
+    areas: result.areas,
+    projects: result.projects,
+    tasks: result.tasks,
+  });
+
+  if (references.length === 0) {
+    return '';
+  }
+
+  const lines: string[] = [];
+  lines.push('## Reference');
+  lines.push('');
+  lines.push(buildReferenceTable(references));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format vault overview result for AI mode
+ * Per ai-context.md Section 4
+ */
+function formatVaultOverview(result: VaultOverviewResult): string {
+  const sections: string[] = [];
+
+  // Header
+  sections.push('# Overview');
+  sections.push('');
+  sections.push(formatStatsHeader(result));
+  sections.push('_Excludes: done/dropped/icebox tasks, done projects, archived areas_');
+
+  // Structure
+  sections.push('');
+  sections.push('---');
+  sections.push('');
+  sections.push(formatStructureSection(result));
+
+  // Timeline (only non-empty sections)
+  const timelineSection = formatTimelineSection(result);
+  if (timelineSection.split('\n').length > 3) {
+    // More than just header
+    sections.push('---');
+    sections.push('');
+    sections.push(timelineSection);
+  }
+
+  // In-Progress Tasks
+  const inProgressSection = formatInProgressTasksSection(result);
+  if (inProgressSection) {
+    sections.push('---');
+    sections.push('');
+    sections.push(inProgressSection);
+  }
+
+  // Excerpts
+  const excerptsSection = formatExcerptsSection(result);
+  if (excerptsSection.split('\n').length > 4) {
+    // More than just header
+    sections.push('---');
+    sections.push('');
+    sections.push(excerptsSection);
+  }
+
+  // Reference
+  const referenceSection = formatReferenceSection(result);
+  if (referenceSection) {
+    sections.push('---');
+    sections.push('');
+    sections.push(referenceSection);
+  }
+
+  return sections.join('\n').trimEnd();
 }
 
 /**

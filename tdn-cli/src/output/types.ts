@@ -102,39 +102,51 @@ export interface TaskContextResultOutput {
 }
 
 /**
- * Summary of an area for vault overview
+ * Timeline categorization for tasks
+ * Per ai-context.md Section 4
  */
-export interface AreaSummary {
-  area: Area;
-  projectCount: number;
-  activeTaskCount: number;
+export interface TimelineData {
+  overdue: Task[];
+  dueToday: Task[];
+  scheduledToday: Task[];
+  newlyActionable: Task[]; // defer-until = today
+  blocked: Task[];
+  scheduledThisWeek: Map<string, Task[]>; // date string -> tasks
+  recentlyModified: Task[]; // last 24h, excluding above categories
 }
 
 /**
- * Overall vault statistics
+ * Vault overview statistics
  */
-export interface VaultSummary {
-  totalActiveTasks: number;
+export interface VaultStats {
+  areaCount: number;
+  projectCount: number;
+  taskCount: number;
   overdueCount: number;
+  dueTodayCount: number;
   inProgressCount: number;
 }
 
 /**
- * Tasks due/scheduled this week
- */
-export interface ThisWeekSummary {
-  dueTasks: Task[];
-  scheduledTasks: Task[];
-}
-
-/**
  * Vault overview result (from context --ai with no args)
+ * Per ai-context.md Section 4
  */
 export interface VaultOverviewResult {
   type: 'vault-overview';
-  areas: AreaSummary[];
-  summary: VaultSummary;
-  thisWeek: ThisWeekSummary;
+  // Raw data
+  areas: Area[];
+  projects: Project[];
+  tasks: Task[];
+  // Computed relationships
+  areaProjects: Map<string, Project[]>; // area path -> projects
+  projectTasks: Map<string, Task[]>; // project path -> tasks
+  directAreaTasks: Map<string, Task[]>; // area path -> direct tasks
+  orphanProjects: Project[]; // projects with no area
+  orphanTasks: Task[]; // tasks with no project or area
+  // Timeline categorization
+  timeline: TimelineData;
+  // Stats
+  stats: VaultStats;
 }
 
 export type FormattableResult =

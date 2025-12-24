@@ -78,3 +78,14 @@ export {
   formatNone,
   formatCount,
 } from './markdown-helpers.ts';
+
+// Tree formatting
+export {
+  formatProjectOneLiner,
+  formatInProgressTaskLine,
+  formatDirectTasksSummary,
+  renderTree,
+  buildAreaTree,
+  calculateAreaTaskCount,
+  type TreeNode,
+} from './tree-format.ts';

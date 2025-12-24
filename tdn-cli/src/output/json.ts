@@ -188,21 +188,40 @@ export const jsonFormatter: Formatter = {
       }
       case 'vault-overview': {
         const overviewResult = result as VaultOverviewResult;
+
+        // Build area summaries with computed project/task counts
+        const areaSummaries = overviewResult.areas.map((area) => {
+          const projects = overviewResult.areaProjects.get(area.path) ?? [];
+          const directTasks = overviewResult.directAreaTasks.get(area.path) ?? [];
+          let taskCount = directTasks.length;
+          for (const project of projects) {
+            const projectTasks = overviewResult.projectTasks.get(project.path) ?? [];
+            taskCount += projectTasks.length;
+          }
+
+          return {
+            ...areaToJson(area, false),
+            projectCount: projects.length,
+            activeTaskCount: taskCount,
+          };
+        });
+
         const output = {
-          summary: `Vault overview: ${overviewResult.summary.totalActiveTasks} active tasks, ${overviewResult.summary.overdueCount} overdue`,
-          areas: overviewResult.areas.map((as) => ({
-            ...areaToJson(as.area, false),
-            projectCount: as.projectCount,
-            activeTaskCount: as.activeTaskCount,
-          })),
-          summary_stats: {
-            totalActiveTasks: overviewResult.summary.totalActiveTasks,
-            overdueCount: overviewResult.summary.overdueCount,
-            inProgressCount: overviewResult.summary.inProgressCount,
+          summary: `Vault overview: ${overviewResult.stats.taskCount} active tasks, ${overviewResult.stats.overdueCount} overdue`,
+          areas: areaSummaries,
+          stats: {
+            areaCount: overviewResult.stats.areaCount,
+            projectCount: overviewResult.stats.projectCount,
+            taskCount: overviewResult.stats.taskCount,
+            overdueCount: overviewResult.stats.overdueCount,
+            dueTodayCount: overviewResult.stats.dueTodayCount,
+            inProgressCount: overviewResult.stats.inProgressCount,
           },
-          thisWeek: {
-            due: overviewResult.thisWeek.dueTasks.map((t) => taskToJson(t, false)),
-            scheduled: overviewResult.thisWeek.scheduledTasks.map((t) => taskToJson(t, false)),
+          timeline: {
+            overdue: overviewResult.timeline.overdue.map((t) => taskToJson(t, false)),
+            dueToday: overviewResult.timeline.dueToday.map((t) => taskToJson(t, false)),
+            scheduledToday: overviewResult.timeline.scheduledToday.map((t) => taskToJson(t, false)),
+            blocked: overviewResult.timeline.blocked.map((t) => taskToJson(t, false)),
           },
         };
         return JSON.stringify(output, null, 2);
