@@ -19,6 +19,8 @@ import {
   OVERDUE_ICON,
   DUE_TODAY_ICON,
   TASK_STATUS_EMOJI,
+  getProjectStatusEmoji,
+  getTaskStatusEmoji,
   formatDayWithDate,
   hoursAgo,
   truncateBody,
@@ -647,11 +649,19 @@ function formatStructureSection(result: VaultOverviewResult): string {
       const tasks = result.projectTasks.get(project.path) ?? [];
       const counts = countTasksByStatus(tasks);
       const shorthand = formatTaskCountShorthand(counts);
-      const status = project.status ? `[${toKebabCase(project.status)}]` : '';
 
-      const content =
-        `${status ? `${status} ` : ''}${project.title} — ${tasks.length} task${tasks.length !== 1 ? 's' : ''} ${shorthand}`.trim();
-      orphanTree.children.push({ content, children: [] });
+      // Format: {emoji} {title} [{status}] — {count} tasks ({shorthand})
+      const emoji = getProjectStatusEmoji(project.status);
+      const statusBracket = project.status ? `[${toKebabCase(project.status)}]` : '';
+      const parts: string[] = [];
+      if (emoji) parts.push(emoji);
+      parts.push(project.title);
+      if (statusBracket) parts.push(statusBracket);
+      parts.push('—');
+      parts.push(`${tasks.length} task${tasks.length !== 1 ? 's' : ''}`);
+      if (shorthand) parts.push(shorthand);
+
+      orphanTree.children.push({ content: parts.join(' '), children: [] });
     }
 
     const treeLines = renderTree(orphanTree);
@@ -668,18 +678,16 @@ function formatStructureSection(result: VaultOverviewResult): string {
     const shorthand = formatTaskCountShorthand(counts);
     lines.push(`Tasks: ${result.orphanTasks.length} total ${shorthand}`);
 
-    // Show in-progress tasks
-    const inProgressOrphans = result.orphanTasks.filter(isInProgress);
-    for (const task of inProgressOrphans) {
-      lines.push(`├── ${TASK_STATUS_EMOJI['in-progress']} ${task.title}`);
+    // Build tree with all orphan tasks using proper tree connectors
+    const orphanTaskTree: TreeNode = { content: '', children: [] };
+    for (const task of result.orphanTasks) {
+      const emoji = getTaskStatusEmoji(task.status);
+      const content = emoji ? `${emoji} ${task.title}` : task.title;
+      orphanTaskTree.children.push({ content, children: [] });
     }
 
-    // Show ready tasks
-    const readyOrphans = result.orphanTasks.filter((t) => t.status.toLowerCase() === 'ready');
-    for (const task of readyOrphans) {
-      lines.push(`└── ${TASK_STATUS_EMOJI['ready']} ${task.title}`);
-    }
-
+    const treeLines = renderTree(orphanTaskTree);
+    lines.push(...treeLines);
     lines.push('');
   }
 
