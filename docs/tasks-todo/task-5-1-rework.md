@@ -121,7 +121,7 @@ Building blocks for consistent formatting:
 
 ---
 
-## Phase 1: Vault Overview (`context --ai`)
+## Phase 1: Vault Overview (`context --ai`) ✅ COMPLETE
 
 Implement the full vault overview per ai-context.md Section 4.
 
@@ -416,7 +416,7 @@ Minimal changes needed - current type is mostly sufficient, just need to compute
 
 ---
 
-## Phase 5: Review and Rework other `--ai` commands output as needed
+## Phase 5: Review and Rework other `--ai` commands output as needed ✅ COMPLETE
 
 Review and rework the output builders for other --ai outputs to ensure they are returning sensible data structures.
 
@@ -434,7 +434,7 @@ Review and rework the output builders for other --ai outputs to ensure they are 
 
 ---
 
-## Phase 6: Rework `--json` as needed
+## Phase 6: Review and Rework `--json` as needed
 
 Review and (if necessary) rework the builders for `--json` outputs to ensure they are returning sensible data structures. The data structure should be simple and consistent.
 
@@ -442,16 +442,74 @@ Note: `--ai --json` for context commands has a specific envelope format defined 
 
 ### Checklist
 
-- [ ] `show task --json`
-- [ ] `show project --json`
-- [ ] `show area --json`
-- [ ] `list tasks --json`
-- [ ] `list projects --json`
-- [ ] `list areas --json`
+- [x] `show task --json` — Reviewed, no changes needed
+- [x] `show project --json` — Reviewed, no changes needed
+- [x] `show area --json` — Reviewed, no changes needed
+- [x] `list tasks --json` — Reviewed, no changes needed
+- [x] `list projects --json` — Reviewed, no changes needed
+- [x] `list areas --json` — Reviewed, no changes needed
 - [ ] `context task --ai --json` — Implement Section 8 envelope
 - [ ] `context project --ai --json` — Implement Section 8 envelope
 - [ ] `context area --ai --json` — Implement Section 8 envelope
 - [ ] `context --ai --json` — Implement Section 8 envelope
+
+### Implementation Plan: `--ai --json` Envelope for Context Commands
+
+**Problem:** Currently when both `--ai` and `--json` flags are passed to context commands, `--json` takes precedence and `--ai` is ignored. Per ai-context.md Section 8, the output should be a JSON envelope containing the AI-optimized markdown.
+
+**Target format:**
+```typescript
+interface ContextJsonOutput {
+  contextType: 'overview' | 'area' | 'project' | 'task';
+  entity: string | null;  // Target entity name, null for overview
+  summary: string;
+  content: string;        // The AI-formatted markdown
+  references: Reference[];
+}
+
+interface Reference {
+  name: string;
+  type: 'area' | 'project' | 'task';
+  path: string;  // Vault-relative path
+}
+```
+
+**Implementation steps:**
+
+1. **Update `OutputMode` type** (`src/output/types.ts`)
+   - Add `'ai-json'` to the `OutputMode` union type
+   - Update `getOutputMode()` to detect `options.json && options.ai` and return `'ai-json'`
+
+2. **Create reference extraction helper** (`src/output/helpers/reference-table.ts`)
+   - The `collectReferences()` function already exists for building the markdown table
+   - Add/export a function to return the references as an array of `Reference` objects (not as markdown)
+   - Ensure paths are vault-relative (not absolute)
+
+3. **Create AI-JSON formatter** (`src/output/ai-json.ts` or add to `json.ts`)
+   - Handle context result types: `vault-overview`, `area-context`, `project-context`, `task-context`
+   - For each:
+     1. Generate the AI markdown using existing `aiFormatter`
+     2. Extract references array
+     3. Build the envelope with `contextType`, `entity`, `summary`, `content`, `references`
+   - Non-context types (show/list) should fall back to regular JSON output
+
+4. **Update `getFormatter()`** (`src/output/index.ts`)
+   - Add case for `'ai-json'` mode returning the new formatter
+
+5. **Write tests** (`tests/e2e/context.test.ts`)
+   - Test `context --ai --json` returns envelope with `contextType: 'overview'`
+   - Test `context area Work --ai --json` returns envelope with `contextType: 'area'`, `entity: 'Work'`
+   - Test `context project X --ai --json` returns envelope with `contextType: 'project'`
+   - Test `context task X --ai --json` returns envelope with `contextType: 'task'`
+   - Verify `content` field contains the AI markdown
+   - Verify `references` array matches Reference table entries
+
+**Files to modify:**
+- `src/output/types.ts` — Add `'ai-json'` mode
+- `src/output/index.ts` — Add formatter case
+- `src/output/helpers/reference-table.ts` — Export reference array builder
+- `src/output/ai-json.ts` (new) or `src/output/json.ts` — Implement envelope formatter
+- `tests/e2e/context.test.ts` — Add tests
 
 ---
 
@@ -461,6 +519,7 @@ Review all work on context commands and all the code. Any obvious refactoring we
 
 ### Checklist
 
+- [ ] General review of all rust & typescript code related to context commands and the --ai flag.
 - [ ] Review `src/output/ai.ts` — Should it be split into multiple files?
 - [ ] Review `src/output/helpers/` — Are utilities well-organized?
 - [ ] Review `src/commands/context.ts` — Is data gathering clean?
