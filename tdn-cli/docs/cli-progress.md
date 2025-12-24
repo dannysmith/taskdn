@@ -63,15 +63,15 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `add project <name> --area <a> --status <s>` - With options
 - [x] `add area <name>` - Add area
 - [x] `add area <name> --type <t>` - With type
-- [ ] `complete <path>` - Mark done
-- [ ] `drop <path>` - Mark dropped
-- [ ] `status <path> <status>` - Change status
-- [ ] `update <path> --set <field>=<value>` - Update field
-- [ ] `update <path> --unset <field>` - Clear field
-- [ ] `archive <path>` - Move to archive
-- [ ] `edit <path>` - Open in $EDITOR
-- [ ] Batch operations (multiple paths)
-- [ ] `--dry-run` - Preview changes
+- [x] `complete <path>` - Mark done
+- [x] `drop <path>` - Mark dropped
+- [x] `status <path> <status>` - Change status
+- [x] `update <path> --set <field>=<value>` - Update field
+- [x] `update <path> --unset <field>` - Clear field
+- [x] `archive <path>` - Move to archive
+- [x] `edit <path>` - Open in $EDITOR
+- [x] Batch operations (multiple paths)
+- [x] `--dry-run` - Preview changes
 
 ### System Commands
 
@@ -98,13 +98,14 @@ Checklist tracking implementation of all CLI commands and features.
 
 ## Error Codes
 
-- [x] `NOT_FOUND` - File/entity doesn't exist (show command)
+- [x] `NOT_FOUND` - File/entity doesn't exist
 - [ ] `AMBIGUOUS` - Multiple matches
-- [ ] `INVALID_STATUS` - Bad status value
+- [x] `INVALID_STATUS` - Bad status value
 - [x] `INVALID_DATE` - Unparseable date
 - [ ] `INVALID_PATH` - Path outside directories
-- [x] `PARSE_ERROR` - YAML malformed (show command)
+- [x] `PARSE_ERROR` - YAML malformed
 - [x] `MISSING_FIELD` - Required field absent
+- [x] `NOT_SUPPORTED` - Operation not supported in current mode
 - [ ] `REFERENCE_ERROR` - Reference doesn't exist
 - [ ] `PERMISSION_ERROR` - Can't read/write
 - [ ] `CONFIG_ERROR` - Config missing/invalid

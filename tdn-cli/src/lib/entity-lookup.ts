@@ -14,9 +14,30 @@ import {
   parseAreaFile,
 } from '@bindings';
 import type { Task, Project, Area, VaultConfig } from '@bindings';
+import type { EntityType } from '@/errors/types.ts';
+export type { EntityType };
 import { getVaultConfig } from '@/config/index.ts';
 import * as fs from 'fs';
 import * as path from 'path';
+
+/**
+ * Detect entity type from file path.
+ *
+ * This checks if the path contains '/projects/' or '/areas/' subdirectories.
+ * Falls back to 'task' if neither is found.
+ *
+ * TODO: Once config is fully implemented, this should check if the path falls
+ * under the user's configured projects_dir, tasks_dir, or areas_dir.
+ */
+export function detectEntityType(filePath: string): EntityType {
+  if (filePath.includes('/projects/')) {
+    return 'project';
+  }
+  if (filePath.includes('/areas/')) {
+    return 'area';
+  }
+  return 'task';
+}
 
 /**
  * Result of an entity lookup operation.

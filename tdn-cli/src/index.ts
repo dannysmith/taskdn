@@ -7,6 +7,13 @@ import {
   contextCommand,
   todayCommand,
   inboxCommand,
+  completeCommand,
+  dropCommand,
+  statusCommand,
+  updateCommand,
+  archiveCommand,
+  editCommand,
+  appendBodyCommand,
 } from '@/commands/index.ts';
 
 const program = new Command()
@@ -24,6 +31,13 @@ program.addCommand(addCommand);
 program.addCommand(contextCommand);
 program.addCommand(todayCommand);
 program.addCommand(inboxCommand);
+program.addCommand(completeCommand);
+program.addCommand(dropCommand);
+program.addCommand(statusCommand);
+program.addCommand(updateCommand);
+program.addCommand(archiveCommand);
+program.addCommand(editCommand);
+program.addCommand(appendBodyCommand);
 
 // Parse and execute
 program.parse();

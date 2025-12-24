@@ -14,6 +14,16 @@ import type {
   TaskCreatedResult,
   ProjectCreatedResult,
   AreaCreatedResult,
+  TaskCompletedResult,
+  TaskDroppedResult,
+  TaskStatusChangedResult,
+  TaskUpdatedResult,
+  ProjectUpdatedResult,
+  AreaUpdatedResult,
+  ArchivedResult,
+  BatchResult,
+  DryRunResult,
+  BodyAppendedResult,
 } from './types.ts';
 import type { Task, Project, Area } from '@bindings';
 import { toKebabCase } from './helpers/index.ts';
@@ -256,6 +266,126 @@ export const jsonFormatter: Formatter = {
           summary: `Created area: ${area.title}`,
           created: true,
           area: areaToJson(area),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-completed': {
+        const completedResult = result as TaskCompletedResult;
+        const task = completedResult.task;
+        const output = {
+          summary: `Completed task: ${task.title}`,
+          completed: true,
+          task: taskToJson(task),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-dropped': {
+        const droppedResult = result as TaskDroppedResult;
+        const task = droppedResult.task;
+        const output = {
+          summary: `Dropped task: ${task.title}`,
+          dropped: true,
+          task: taskToJson(task),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-status-changed': {
+        const statusResult = result as TaskStatusChangedResult;
+        const task = statusResult.task;
+        const output = {
+          summary: `Changed status: ${task.title}`,
+          updated: true,
+          task: taskToJson(task),
+          previousStatus: statusResult.previousStatus,
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'task-updated': {
+        const updatedResult = result as TaskUpdatedResult;
+        const task = updatedResult.task;
+        const output = {
+          summary: `Updated task: ${task.title}`,
+          updated: true,
+          task: taskToJson(task),
+          changes: updatedResult.changes,
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'project-updated': {
+        const updatedResult = result as ProjectUpdatedResult;
+        const project = updatedResult.project;
+        const output = {
+          summary: `Updated project: ${project.title}`,
+          updated: true,
+          project: projectToJson(project),
+          changes: updatedResult.changes,
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'area-updated': {
+        const updatedResult = result as AreaUpdatedResult;
+        const area = updatedResult.area;
+        const output = {
+          summary: `Updated area: ${area.title}`,
+          updated: true,
+          area: areaToJson(area),
+          changes: updatedResult.changes,
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'archived': {
+        const archivedResult = result as ArchivedResult;
+        const output = {
+          summary: `Archived: ${archivedResult.title}`,
+          archived: true,
+          title: archivedResult.title,
+          from: archivedResult.fromPath,
+          to: archivedResult.toPath,
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'batch-result': {
+        const batchResult = result as BatchResult;
+        const successCount = batchResult.successes.length;
+        const failCount = batchResult.failures.length;
+        const output = {
+          summary: `${batchResult.operation}: ${successCount} succeeded, ${failCount} failed`,
+          operation: batchResult.operation,
+          successes: batchResult.successes.map((s) => ({
+            path: s.path,
+            title: s.title,
+            ...(s.task && { task: taskToJson(s.task) }),
+            ...(s.toPath && { to: s.toPath }),
+          })),
+          failures: batchResult.failures,
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'dry-run': {
+        const dryRunResult = result as DryRunResult;
+        const output = {
+          summary: `Dry run: ${dryRunResult.operation} ${dryRunResult.title}`,
+          dryRun: true,
+          operation: dryRunResult.operation,
+          entityType: dryRunResult.entityType,
+          title: dryRunResult.title,
+          path: dryRunResult.path,
+          ...(dryRunResult.wouldCreate && { wouldCreate: true }),
+          ...(dryRunResult.changes && { changes: dryRunResult.changes }),
+          ...(dryRunResult.toPath && { to: dryRunResult.toPath }),
+          ...(dryRunResult.appendText && { appendText: dryRunResult.appendText }),
+        };
+        return JSON.stringify(output, null, 2);
+      }
+      case 'body-appended': {
+        const appendedResult = result as BodyAppendedResult;
+        const output = {
+          summary: `Body appended: ${appendedResult.title}`,
+          appended: true,
+          entityType: appendedResult.entityType,
+          title: appendedResult.title,
+          path: appendedResult.path,
+          appendedText: appendedResult.appendedText,
         };
         return JSON.stringify(output, null, 2);
       }

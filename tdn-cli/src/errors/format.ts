@@ -80,6 +80,18 @@ function formatHuman(error: CliError): string {
         lines.push(dim('Suggestion:') + ` ${error.suggestion}`);
       }
       break;
+
+    case 'NOT_SUPPORTED':
+      if (error.suggestion) {
+        lines.push('');
+        lines.push(dim('Suggestion:') + ` ${error.suggestion}`);
+      }
+      break;
+
+    case 'INVALID_ENTITY_TYPE':
+      lines.push('');
+      lines.push(dim('Allowed types:') + ` ${error.allowedTypes.join(', ')}`);
+      break;
   }
 
   return lines.join('\n');
@@ -151,6 +163,16 @@ function formatAi(error: CliError): string {
     case 'CONFIG_ERROR':
       lines.push(`- **details:** ${error.details}`);
       if (error.suggestion) lines.push(`- **suggestion:** ${error.suggestion}`);
+      break;
+
+    case 'NOT_SUPPORTED':
+      if (error.suggestion) lines.push(`- **suggestion:** ${error.suggestion}`);
+      break;
+
+    case 'INVALID_ENTITY_TYPE':
+      lines.push(`- **command:** ${error.command}`);
+      lines.push(`- **provided-type:** ${error.providedType}`);
+      lines.push(`- **allowed-types:** ${error.allowedTypes.join(', ')}`);
       break;
   }
 
@@ -281,6 +303,28 @@ function formatJson(error: CliError): string {
         2
       );
 
+    case 'NOT_SUPPORTED':
+      return JSON.stringify(
+        {
+          ...base,
+          ...(error.suggestion && { suggestion: error.suggestion }),
+        },
+        null,
+        2
+      );
+
+    case 'INVALID_ENTITY_TYPE':
+      return JSON.stringify(
+        {
+          ...base,
+          command: error.command,
+          providedType: error.providedType,
+          allowedTypes: error.allowedTypes,
+        },
+        null,
+        2
+      );
+
     default:
       // For any unhandled error types, just return the base info
       return JSON.stringify(base, null, 2);
@@ -321,6 +365,8 @@ export const exitCodes: Record<ErrorCode, number> = {
   REFERENCE_ERROR: 3,
   PERMISSION_ERROR: 4,
   CONFIG_ERROR: 5,
+  NOT_SUPPORTED: 1,
+  INVALID_ENTITY_TYPE: 2,
 };
 
 /**

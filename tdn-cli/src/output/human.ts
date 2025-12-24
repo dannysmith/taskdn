@@ -20,6 +20,17 @@ import type {
   TaskCreatedResult,
   ProjectCreatedResult,
   AreaCreatedResult,
+  TaskCompletedResult,
+  TaskDroppedResult,
+  TaskStatusChangedResult,
+  TaskUpdatedResult,
+  ProjectUpdatedResult,
+  AreaUpdatedResult,
+  ArchivedResult,
+  BatchResult,
+  DryRunResult,
+  BodyAppendedResult,
+  FieldChange,
 } from './types.ts';
 import { toKebabCase } from './helpers/index.ts';
 
@@ -900,6 +911,272 @@ function formatAreaCreated(area: Area): string {
   return lines.join('\n');
 }
 
+// ============================================================================
+// Modify Result Formatters
+// ============================================================================
+
+/**
+ * Format task completed result for human output
+ */
+function formatTaskCompletedHuman(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Task completed`);
+  lines.push('');
+
+  lines.push(`  ${dim('[✓]')} ${dim(strikethrough(task.title))}`);
+  lines.push(`  ${dim(task.path)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format task dropped result for human output
+ */
+function formatTaskDroppedHuman(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${yellow('✗')} Task dropped`);
+  lines.push('');
+
+  lines.push(`  ${dim('[✗]')} ${dim(strikethrough(task.title))}`);
+  lines.push(`  ${dim(task.path)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format task status changed result for human output
+ */
+function formatTaskStatusChangedHuman(task: Task, previousStatus: string): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Task status changed`);
+  lines.push('');
+
+  const checkbox = formatTaskCheckbox(task.status);
+  lines.push(`  ${checkbox} ${task.title}`);
+  lines.push(`  ${dim(task.path)}`);
+  lines.push('');
+  lines.push(`  ${dim('Status:')} ${previousStatus} → ${formatStatus(task.status)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format field changes for human output
+ */
+function formatFieldChangesHuman(changes: FieldChange[]): string {
+  const lines: string[] = [];
+  for (const change of changes) {
+    if (change.oldValue && change.newValue) {
+      lines.push(`  ${dim(change.field + ':')} ${change.oldValue} → ${change.newValue}`);
+    } else if (change.newValue) {
+      lines.push(`  ${dim(change.field + ':')} ${dim('(unset)')} → ${change.newValue}`);
+    } else if (change.oldValue) {
+      lines.push(`  ${dim(change.field + ':')} ${change.oldValue} → ${dim('(unset)')}`);
+    }
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Format task updated result for human output
+ */
+function formatTaskUpdatedHuman(task: Task, changes: FieldChange[]): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Task updated`);
+  lines.push('');
+
+  const checkbox = formatTaskCheckbox(task.status);
+  lines.push(`  ${checkbox} ${task.title}`);
+  lines.push(`  ${dim(task.path)}`);
+  lines.push('');
+  lines.push(formatFieldChangesHuman(changes));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format project updated result for human output
+ */
+function formatProjectUpdatedHuman(project: Project, changes: FieldChange[]): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Project updated`);
+  lines.push('');
+
+  lines.push(`  ${bold(project.title)}`);
+  lines.push(`  ${dim(project.path)}`);
+  lines.push('');
+  lines.push(formatFieldChangesHuman(changes));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format area updated result for human output
+ */
+function formatAreaUpdatedHuman(area: Area, changes: FieldChange[]): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Area updated`);
+  lines.push('');
+
+  lines.push(`  ${bold(area.title)}`);
+  lines.push(`  ${dim(area.path)}`);
+  lines.push('');
+  lines.push(formatFieldChangesHuman(changes));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format archived result for human output
+ */
+function formatArchivedHuman(title: string, fromPath: string, toPath: string): string {
+  const lines: string[] = [];
+
+  lines.push('');
+  lines.push(`${green('✓')} Archived`);
+  lines.push('');
+
+  lines.push(`  ${bold(title)}`);
+  lines.push(`  ${dim('From:')} ${fromPath}`);
+  lines.push(`  ${dim('To:')} ${toPath}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format batch result for human output
+ */
+function formatBatchResultHuman(result: BatchResult): string {
+  const lines: string[] = [];
+  const opName =
+    result.operation === 'completed'
+      ? 'Completed'
+      : result.operation === 'dropped'
+        ? 'Dropped'
+        : result.operation === 'status-changed'
+          ? 'Status changed'
+          : result.operation === 'updated'
+            ? 'Updated'
+            : 'Archived';
+
+  lines.push('');
+
+  if (result.successes.length > 0) {
+    lines.push(
+      `${green('✓')} ${opName} ${result.successes.length} item${result.successes.length !== 1 ? 's' : ''}`
+    );
+    lines.push('');
+
+    for (const success of result.successes) {
+      if (success.task) {
+        const checkbox = formatTaskCheckbox(success.task.status);
+        lines.push(`  ${checkbox} ${success.title}`);
+      } else {
+        lines.push(`  ${bold(success.title)}`);
+      }
+      lines.push(`  ${dim(success.path)}`);
+      if (success.toPath) {
+        lines.push(`  ${dim('→')} ${success.toPath}`);
+      }
+    }
+    lines.push('');
+  }
+
+  if (result.failures.length > 0) {
+    lines.push(`${red('✗')} Failed: ${result.failures.length}`);
+    lines.push('');
+
+    for (const failure of result.failures) {
+      lines.push(`  ${red(failure.code)}: ${failure.message}`);
+      lines.push(`  ${dim(failure.path)}`);
+    }
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format dry run result for human output
+ */
+function formatDryRunHuman(result: DryRunResult): string {
+  const lines: string[] = [];
+
+  const opName =
+    result.operation === 'create'
+      ? 'would create'
+      : result.operation === 'complete'
+        ? 'would complete'
+        : result.operation === 'drop'
+          ? 'would drop'
+          : result.operation === 'status'
+            ? 'would update status'
+            : result.operation === 'update'
+              ? 'would update'
+              : result.operation === 'append-body'
+                ? 'would append to body'
+                : 'would archive';
+
+  lines.push('');
+  lines.push(`${cyan('⊘')} Dry run: ${opName}`);
+  lines.push('');
+
+  lines.push(`  ${bold(result.title)}`);
+  if (result.wouldCreate) {
+    lines.push(`  ${dim(result.path)} ${dim('(would be created)')}`);
+  } else {
+    lines.push(`  ${dim(result.path)}`);
+  }
+
+  if (result.changes && result.changes.length > 0) {
+    lines.push('');
+    lines.push(formatFieldChangesHuman(result.changes));
+  }
+
+  if (result.toPath) {
+    lines.push(`  ${dim('→')} ${result.toPath}`);
+  }
+
+  if (result.appendText) {
+    lines.push('');
+    lines.push(`  ${dim('Text to append:')}`);
+    lines.push(`  ${result.appendText}`);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format body appended result for human output
+ */
+function formatBodyAppendedHuman(result: BodyAppendedResult): string {
+  const lines: string[] = [];
+  const entityLabel =
+    result.entityType === 'task' ? 'Task' : result.entityType === 'project' ? 'Project' : 'Area';
+
+  lines.push('');
+  lines.push(`${green('✓')} ${entityLabel} body updated`);
+  lines.push('');
+  lines.push(`  ${bold(result.title)}`);
+  lines.push(`  ${dim(result.path)}`);
+  lines.push('');
+  lines.push(`  ${dim('Appended:')}`);
+  lines.push(`  ${result.appendedText}`);
+
+  return lines.join('\n');
+}
+
 /**
  * Human-readable formatter with colors and styling
  */
@@ -957,6 +1234,50 @@ export const humanFormatter: Formatter = {
       case 'area-created': {
         const createdResult = result as AreaCreatedResult;
         return formatAreaCreated(createdResult.area);
+      }
+      case 'task-completed': {
+        const completedResult = result as TaskCompletedResult;
+        return formatTaskCompletedHuman(completedResult.task);
+      }
+      case 'task-dropped': {
+        const droppedResult = result as TaskDroppedResult;
+        return formatTaskDroppedHuman(droppedResult.task);
+      }
+      case 'task-status-changed': {
+        const statusResult = result as TaskStatusChangedResult;
+        return formatTaskStatusChangedHuman(statusResult.task, statusResult.previousStatus);
+      }
+      case 'task-updated': {
+        const updatedResult = result as TaskUpdatedResult;
+        return formatTaskUpdatedHuman(updatedResult.task, updatedResult.changes);
+      }
+      case 'project-updated': {
+        const updatedResult = result as ProjectUpdatedResult;
+        return formatProjectUpdatedHuman(updatedResult.project, updatedResult.changes);
+      }
+      case 'area-updated': {
+        const updatedResult = result as AreaUpdatedResult;
+        return formatAreaUpdatedHuman(updatedResult.area, updatedResult.changes);
+      }
+      case 'archived': {
+        const archivedResult = result as ArchivedResult;
+        return formatArchivedHuman(
+          archivedResult.title,
+          archivedResult.fromPath,
+          archivedResult.toPath
+        );
+      }
+      case 'batch-result': {
+        const batchResult = result as BatchResult;
+        return formatBatchResultHuman(batchResult);
+      }
+      case 'dry-run': {
+        const dryRunResult = result as DryRunResult;
+        return formatDryRunHuman(dryRunResult);
+      }
+      case 'body-appended': {
+        const appendedResult = result as BodyAppendedResult;
+        return formatBodyAppendedHuman(appendedResult);
       }
       default:
         return dim(`[${result.type}] stub output`);

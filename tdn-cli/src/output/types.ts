@@ -241,6 +241,126 @@ export interface AreaCreatedResult {
   area: Area;
 }
 
+// ============================================================================
+// Modify Result Types
+// ============================================================================
+
+/**
+ * A single field change (for showing what was updated)
+ */
+export interface FieldChange {
+  field: string;
+  oldValue?: string;
+  newValue?: string;
+}
+
+/**
+ * Result of completing a task
+ */
+export interface TaskCompletedResult {
+  type: 'task-completed';
+  task: Task;
+}
+
+/**
+ * Result of dropping a task
+ */
+export interface TaskDroppedResult {
+  type: 'task-dropped';
+  task: Task;
+}
+
+/**
+ * Result of updating a task's status
+ */
+export interface TaskStatusChangedResult {
+  type: 'task-status-changed';
+  task: Task;
+  previousStatus: string;
+}
+
+/**
+ * Result of updating task fields
+ */
+export interface TaskUpdatedResult {
+  type: 'task-updated';
+  task: Task;
+  changes: FieldChange[];
+}
+
+/**
+ * Result of updating a project
+ */
+export interface ProjectUpdatedResult {
+  type: 'project-updated';
+  project: Project;
+  changes: FieldChange[];
+}
+
+/**
+ * Result of updating an area
+ */
+export interface AreaUpdatedResult {
+  type: 'area-updated';
+  area: Area;
+  changes: FieldChange[];
+}
+
+/**
+ * Result of archiving a file
+ */
+export interface ArchivedResult {
+  type: 'archived';
+  title: string;
+  fromPath: string;
+  toPath: string;
+}
+
+/**
+ * Result of a batch operation (multiple files)
+ */
+export interface BatchResult {
+  type: 'batch-result';
+  operation: 'completed' | 'dropped' | 'status-changed' | 'updated' | 'archived';
+  successes: Array<{
+    path: string;
+    title: string;
+    task?: Task;
+    toPath?: string; // for archive
+  }>;
+  failures: Array<{
+    path: string;
+    code: string;
+    message: string;
+  }>;
+}
+
+/**
+ * Dry run preview result
+ */
+export interface DryRunResult {
+  type: 'dry-run';
+  operation: 'create' | 'complete' | 'drop' | 'status' | 'update' | 'archive' | 'append-body';
+  entityType: 'task' | 'project' | 'area';
+  title: string;
+  path: string;
+  wouldCreate?: boolean;
+  changes?: FieldChange[];
+  toPath?: string; // for archive
+  appendText?: string; // for append-body
+}
+
+/**
+ * Result of appending to a body
+ */
+export interface BodyAppendedResult {
+  type: 'body-appended';
+  entityType: 'task' | 'project' | 'area';
+  title: string;
+  path: string;
+  appendedText: string;
+}
+
 export type FormattableResult =
   | TaskResult
   | TaskListResult
@@ -255,6 +375,16 @@ export type FormattableResult =
   | TaskCreatedResult
   | ProjectCreatedResult
   | AreaCreatedResult
+  | TaskCompletedResult
+  | TaskDroppedResult
+  | TaskStatusChangedResult
+  | TaskUpdatedResult
+  | ProjectUpdatedResult
+  | AreaUpdatedResult
+  | ArchivedResult
+  | BatchResult
+  | DryRunResult
+  | BodyAppendedResult
   | StubResult;
 
 /**

@@ -12,6 +12,7 @@ export type {
   ReferenceError,
   PermissionError,
   ConfigError,
+  NotSupportedError,
 } from './types.ts';
 
 export { isCliError, createError } from './types.ts';

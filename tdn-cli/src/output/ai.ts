@@ -15,6 +15,17 @@ import type {
   TaskCreatedResult,
   ProjectCreatedResult,
   AreaCreatedResult,
+  TaskCompletedResult,
+  TaskDroppedResult,
+  TaskStatusChangedResult,
+  TaskUpdatedResult,
+  ProjectUpdatedResult,
+  AreaUpdatedResult,
+  ArchivedResult,
+  BatchResult,
+  DryRunResult,
+  BodyAppendedResult,
+  FieldChange,
 } from './types.ts';
 import {
   AREA_ICON,
@@ -1560,6 +1571,285 @@ function formatAreaCreated(area: Area): string {
   return lines.join('\n');
 }
 
+// ============================================================================
+// Modify Result Formatters
+// ============================================================================
+
+/**
+ * Format task completed result for AI mode
+ */
+function formatTaskCompleted(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push('## Task Completed');
+  lines.push('');
+  lines.push(`### ${task.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${task.path}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
+  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format task dropped result for AI mode
+ */
+function formatTaskDropped(task: Task): string {
+  const lines: string[] = [];
+
+  lines.push('## Task Dropped');
+  lines.push('');
+  lines.push(`### ${task.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${task.path}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
+  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format task status changed result for AI mode
+ */
+function formatTaskStatusChanged(task: Task, previousStatus: string): string {
+  const lines: string[] = [];
+
+  lines.push('## Task Status Changed');
+  lines.push('');
+  lines.push(`### ${task.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${task.path}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
+  if (task.updatedAt) lines.push(`- **updated-at:** ${task.updatedAt}`);
+  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
+  lines.push('');
+  lines.push('### Changes');
+  lines.push('');
+  lines.push(`- **status:** ${previousStatus} → ${toKebabCase(task.status)}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format field changes for AI mode
+ */
+function formatFieldChanges(changes: FieldChange[]): string {
+  const lines: string[] = [];
+  for (const change of changes) {
+    if (change.oldValue && change.newValue) {
+      lines.push(`- **${change.field}:** ${change.oldValue} → ${change.newValue}`);
+    } else if (change.newValue) {
+      lines.push(`- **${change.field}:** (unset) → ${change.newValue}`);
+    } else if (change.oldValue) {
+      lines.push(`- **${change.field}:** ${change.oldValue} → (unset)`);
+    }
+  }
+  return lines.join('\n');
+}
+
+/**
+ * Format task updated result for AI mode
+ */
+function formatTaskUpdated(task: Task, changes: FieldChange[]): string {
+  const lines: string[] = [];
+
+  lines.push('## Task Updated');
+  lines.push('');
+  lines.push(`### ${task.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${task.path}`);
+  lines.push(`- **status:** ${toKebabCase(task.status)}`);
+  if (task.updatedAt) lines.push(`- **updated-at:** ${task.updatedAt}`);
+  lines.push('');
+  lines.push('### Changes');
+  lines.push('');
+  lines.push(formatFieldChanges(changes));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format project updated result for AI mode
+ */
+function formatProjectUpdated(project: Project, changes: FieldChange[]): string {
+  const lines: string[] = [];
+
+  lines.push('## Project Updated');
+  lines.push('');
+  lines.push(`### ${project.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${project.path}`);
+  if (project.status) lines.push(`- **status:** ${toKebabCase(project.status)}`);
+  lines.push('');
+  lines.push('### Changes');
+  lines.push('');
+  lines.push(formatFieldChanges(changes));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format area updated result for AI mode
+ */
+function formatAreaUpdated(area: Area, changes: FieldChange[]): string {
+  const lines: string[] = [];
+
+  lines.push('## Area Updated');
+  lines.push('');
+  lines.push(`### ${area.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${area.path}`);
+  if (area.status) lines.push(`- **status:** ${toKebabCase(area.status)}`);
+  lines.push('');
+  lines.push('### Changes');
+  lines.push('');
+  lines.push(formatFieldChanges(changes));
+
+  return lines.join('\n');
+}
+
+/**
+ * Format archived result for AI mode
+ */
+function formatArchived(title: string, fromPath: string, toPath: string): string {
+  const lines: string[] = [];
+
+  lines.push('## Archived');
+  lines.push('');
+  lines.push(`### ${title}`);
+  lines.push('');
+  lines.push(`- **from:** ${fromPath}`);
+  lines.push(`- **to:** ${toPath}`);
+
+  return lines.join('\n');
+}
+
+/**
+ * Format batch result for AI mode
+ */
+function formatBatchResult(result: BatchResult): string {
+  const lines: string[] = [];
+  const opName =
+    result.operation === 'completed'
+      ? 'Completed'
+      : result.operation === 'dropped'
+        ? 'Dropped'
+        : result.operation === 'status-changed'
+          ? 'Status Changed'
+          : result.operation === 'updated'
+            ? 'Updated'
+            : 'Archived';
+
+  if (result.successes.length > 0) {
+    lines.push(`## ${opName} (${result.successes.length})`);
+    lines.push('');
+
+    for (const success of result.successes) {
+      lines.push(`### ${success.path}`);
+      lines.push('');
+      lines.push(`- **title:** ${success.title}`);
+      if (success.task) {
+        lines.push(`- **status:** ${toKebabCase(success.task.status)}`);
+        if (success.task.completedAt) {
+          lines.push(`- **completed-at:** ${success.task.completedAt}`);
+        }
+      }
+      if (success.toPath) {
+        lines.push(`- **to:** ${success.toPath}`);
+      }
+      lines.push('');
+    }
+  }
+
+  if (result.failures.length > 0) {
+    lines.push(`## Errors (${result.failures.length})`);
+    lines.push('');
+
+    for (const failure of result.failures) {
+      lines.push(`### ${failure.path}`);
+      lines.push('');
+      lines.push(`- **code:** ${failure.code}`);
+      lines.push(`- **message:** ${failure.message}`);
+      lines.push('');
+    }
+  }
+
+  return lines.join('\n').trimEnd();
+}
+
+/**
+ * Format dry run result for AI mode
+ */
+function formatDryRun(result: DryRunResult): string {
+  const lines: string[] = [];
+
+  const opName =
+    result.operation === 'create'
+      ? 'Would Be Created'
+      : result.operation === 'complete'
+        ? 'Would Be Completed'
+        : result.operation === 'drop'
+          ? 'Would Be Dropped'
+          : result.operation === 'status'
+            ? 'Would Be Updated'
+            : result.operation === 'update'
+              ? 'Would Be Updated'
+              : result.operation === 'append-body'
+                ? 'Would Be Appended'
+                : 'Would Be Archived';
+
+  const entityName =
+    result.entityType === 'task' ? 'Task' : result.entityType === 'project' ? 'Project' : 'Area';
+
+  lines.push(`## Dry Run: ${entityName} ${opName}`);
+  lines.push('');
+  lines.push(`### ${result.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${result.path}${result.wouldCreate ? ' (would be created)' : ''}`);
+
+  if (result.changes && result.changes.length > 0) {
+    lines.push('');
+    lines.push('### Changes');
+    lines.push('');
+    lines.push(formatFieldChanges(result.changes));
+  }
+
+  if (result.toPath) {
+    lines.push(`- **to:** ${result.toPath}`);
+  }
+
+  if (result.appendText) {
+    lines.push('');
+    lines.push('### Text to Append');
+    lines.push('');
+    lines.push(result.appendText);
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format body appended result for AI mode
+ */
+function formatBodyAppended(result: BodyAppendedResult): string {
+  const lines: string[] = [];
+  const entityName =
+    result.entityType === 'task' ? 'Task' : result.entityType === 'project' ? 'Project' : 'Area';
+
+  lines.push(`## ${entityName} Body Updated`);
+  lines.push('');
+  lines.push(`### ${result.title}`);
+  lines.push('');
+  lines.push(`- **path:** ${result.path}`);
+  lines.push('');
+  lines.push('### Appended Text');
+  lines.push('');
+  lines.push(result.appendedText);
+
+  return lines.join('\n');
+}
+
 /**
  * AI-mode formatter - structured Markdown optimized for LLM consumption
  */
@@ -1617,6 +1907,46 @@ export const aiFormatter: Formatter = {
       case 'area-created': {
         const createdResult = result as AreaCreatedResult;
         return formatAreaCreated(createdResult.area);
+      }
+      case 'task-completed': {
+        const completedResult = result as TaskCompletedResult;
+        return formatTaskCompleted(completedResult.task);
+      }
+      case 'task-dropped': {
+        const droppedResult = result as TaskDroppedResult;
+        return formatTaskDropped(droppedResult.task);
+      }
+      case 'task-status-changed': {
+        const statusResult = result as TaskStatusChangedResult;
+        return formatTaskStatusChanged(statusResult.task, statusResult.previousStatus);
+      }
+      case 'task-updated': {
+        const updatedResult = result as TaskUpdatedResult;
+        return formatTaskUpdated(updatedResult.task, updatedResult.changes);
+      }
+      case 'project-updated': {
+        const updatedResult = result as ProjectUpdatedResult;
+        return formatProjectUpdated(updatedResult.project, updatedResult.changes);
+      }
+      case 'area-updated': {
+        const updatedResult = result as AreaUpdatedResult;
+        return formatAreaUpdated(updatedResult.area, updatedResult.changes);
+      }
+      case 'archived': {
+        const archivedResult = result as ArchivedResult;
+        return formatArchived(archivedResult.title, archivedResult.fromPath, archivedResult.toPath);
+      }
+      case 'batch-result': {
+        const batchResult = result as BatchResult;
+        return formatBatchResult(batchResult);
+      }
+      case 'dry-run': {
+        const dryRunResult = result as DryRunResult;
+        return formatDryRun(dryRunResult);
+      }
+      case 'body-appended': {
+        const appendedResult = result as BodyAppendedResult;
+        return formatBodyAppended(appendedResult);
       }
       default:
         return `## ${result.type}\n\n(stub output)`;

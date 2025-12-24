@@ -12,7 +12,11 @@ export type ErrorCode =
   | 'MISSING_FIELD'
   | 'REFERENCE_ERROR'
   | 'PERMISSION_ERROR'
-  | 'CONFIG_ERROR';
+  | 'CONFIG_ERROR'
+  | 'NOT_SUPPORTED'
+  | 'INVALID_ENTITY_TYPE';
+
+export type EntityType = 'task' | 'project' | 'area';
 
 /**
  * Base interface for all CLI errors
@@ -115,6 +119,24 @@ export interface ConfigError extends CliErrorBase {
 }
 
 /**
+ * Not supported error - operation not available in current mode
+ */
+export interface NotSupportedError extends CliErrorBase {
+  code: 'NOT_SUPPORTED';
+  suggestion?: string;
+}
+
+/**
+ * Invalid entity type error - command doesn't support this entity type
+ */
+export interface InvalidEntityTypeError extends CliErrorBase {
+  code: 'INVALID_ENTITY_TYPE';
+  command: string;
+  providedType: EntityType;
+  allowedTypes: EntityType[];
+}
+
+/**
  * Union of all CLI error types
  */
 export type CliError =
@@ -127,7 +149,9 @@ export type CliError =
   | MissingFieldError
   | ReferenceError
   | PermissionError
-  | ConfigError;
+  | ConfigError
+  | NotSupportedError
+  | InvalidEntityTypeError;
 
 /**
  * Type guard to check if a value is a CliError
@@ -245,6 +269,29 @@ export const createError = {
       message: `Configuration error: ${details}`,
       details,
       suggestion,
+    };
+  },
+
+  notSupported(message: string, suggestion?: string): NotSupportedError {
+    return {
+      code: 'NOT_SUPPORTED',
+      message,
+      suggestion,
+    };
+  },
+
+  invalidEntityType(
+    command: string,
+    providedType: EntityType,
+    allowedTypes: EntityType[]
+  ): InvalidEntityTypeError {
+    const allowedStr = allowedTypes.join(', ');
+    return {
+      code: 'INVALID_ENTITY_TYPE',
+      message: `Command '${command}' only works with ${allowedStr}, not ${providedType}`,
+      command,
+      providedType,
+      allowedTypes,
     };
   },
 };

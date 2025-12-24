@@ -6,8 +6,8 @@
 //! Key design principle: Don't round-trip through typed structs. Instead,
 //! manipulate raw YAML to preserve structure the typed structs would discard.
 
-use crate::{parse_area_file, parse_project_file, parse_task_file, Area, Project, Task};
-use gray_matter::{engine::YAML, Matter};
+use crate::{Area, Project, Task, parse_area_file, parse_project_file, parse_task_file};
+use gray_matter::{Matter, engine::YAML};
 use napi::bindgen_prelude::*;
 use serde::Deserialize;
 use std::fs;
@@ -402,11 +402,7 @@ pub fn create_task_file(
         "created-at",
         serde_yaml::Value::String(now.clone()),
     );
-    set_yaml_field(
-        &mut mapping,
-        "updated-at",
-        serde_yaml::Value::String(now),
-    );
+    set_yaml_field(&mut mapping, "updated-at", serde_yaml::Value::String(now));
 
     // Optional fields
     if let Some(project) = &fields.project {
@@ -1010,11 +1006,13 @@ due: 2025-01-15
         };
 
         // Create first task
-        let task1 = create_task_file(tasks_dir.clone(), "Same Title".to_string(), fields.clone()).unwrap();
+        let task1 =
+            create_task_file(tasks_dir.clone(), "Same Title".to_string(), fields.clone()).unwrap();
         assert!(task1.path.ends_with("same-title.md"));
 
         // Create second task with same title
-        let task2 = create_task_file(tasks_dir.clone(), "Same Title".to_string(), fields.clone()).unwrap();
+        let task2 =
+            create_task_file(tasks_dir.clone(), "Same Title".to_string(), fields.clone()).unwrap();
         assert!(task2.path.ends_with("same-title-1.md"));
 
         // Create third
@@ -1047,11 +1045,13 @@ scheduled: 2025-02-01
         // Read back and verify date format is preserved (date-only, not datetime)
         let updated_content = fs::read_to_string(&file_path).unwrap();
         assert!(
-            updated_content.contains("due: 2025-01-15") || updated_content.contains("due: '2025-01-15'"),
+            updated_content.contains("due: 2025-01-15")
+                || updated_content.contains("due: '2025-01-15'"),
             "Due date should be preserved as date-only format"
         );
         assert!(
-            updated_content.contains("scheduled: 2025-02-01") || updated_content.contains("scheduled: '2025-02-01'"),
+            updated_content.contains("scheduled: 2025-02-01")
+                || updated_content.contains("scheduled: '2025-02-01'"),
             "Scheduled date should be preserved as date-only format"
         );
         // Should NOT contain datetime format
