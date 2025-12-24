@@ -248,17 +248,14 @@ Output follows a logical heading hierarchy that is readable by both humans and L
 - All frontmatter fields (nothing omitted)
 - Full body content
 
-**`context` command** — Hierarchy with focused detail:
+**`context` command** — AI-optimized output with progressive disclosure:
 
-| Entity queried | Primary entity          | Related entities                                                             |
-| -------------- | ----------------------- | ---------------------------------------------------------------------------- |
-| Area           | Full frontmatter + body | Projects: title, path, status, task count<br>Tasks: title, path, status, due |
-| Project        | Full frontmatter + body | Parent area: title, path<br>Tasks: title, path, status, due                  |
-| Task           | Full frontmatter + body | Parent project: title, path, status<br>Parent area: title, path              |
+The context commands (`context`, `context area`, `context project`, `context task`) use a specialized format optimized for AI agents. See `tdn-cli/docs/developer/ai-context.md` for the complete specification. Key points:
 
-- **Primary entity:** Full frontmatter + body
-- **Related entities:** Summary only (title, path, status; for tasks: also due)
-- **With `--with-bodies`:** All entities include full frontmatter + body
+- **Primary entity:** Full frontmatter + body (no truncation)
+- **Related entities:** Excerpts (truncated: first 20 lines OR 200 words)
+- **In-progress tasks:** Always include body excerpts
+- **Reference table:** File paths for all mentioned entities
 
 #### Array Fields
 
@@ -319,12 +316,11 @@ Field names are displayed differently depending on mode:
 
 #### Body Inclusion Rules
 
-| Command                 | Body behavior                        |
-| ----------------------- | ------------------------------------ |
-| `list`                  | Never includes bodies                |
-| `show`                  | Always includes full body            |
-| `context`               | Includes body of primary entity only |
-| `context --with-bodies` | Includes bodies for all entities     |
+| Command   | Body behavior                                                                |
+| --------- | ---------------------------------------------------------------------------- |
+| `list`    | Never includes bodies                                                        |
+| `show`    | Always includes full body                                                    |
+| `context` | See `tdn-cli/docs/developer/ai-context.md` for context-specific body rules   |
 
 ---
 
@@ -356,77 +352,93 @@ These shortcuts exist for high-frequency daily operations:
 ```bash
 taskdn today                   # Tasks due today + scheduled for today
 taskdn inbox                   # Tasks with status: inbox
-taskdn next                    # Smart prioritization (see below)
 ```
-
-**`taskdn next`** returns the most actionable tasks, prioritized by:
-
-- Overdue tasks (highest priority)
-- Due today
-- Due this week
-- Currently in-progress
-- Ready status
-- Has a project (vs orphaned)
-
-This is the "what should I work on?" command.
 
 ### Context Command
 
 The key command for AI agents. Returns an entity plus its related context in a single call.
 
 ```bash
+# Vault overview (AI agents)
+taskdn context --ai                   # Returns structured overview of all active work
+
 # Area context: area + its projects + all their tasks
-taskdn context area "Work"
-taskdn context area "Acme"           # Fuzzy matches "Acme Corp"
+taskdn context area "Work" --ai
+taskdn context area "Acme" --ai       # Fuzzy matches "Acme Corp"
 
 # Project context: project + its tasks + parent area
-taskdn context project "Q1 Planning"
+taskdn context project "Q1 Planning" --ai
 
 # Task context: task + parent project + parent area
-taskdn context task ~/tasks/foo.md
+taskdn context task ~/tasks/foo.md --ai
 
-# No args: vault overview
-taskdn context --ai                   # AI: returns vault overview (see below)
-taskdn context                        # Human: error (see below)
+# Human mode (no --ai flag, no arguments)
+taskdn context                        # Error: prompts to specify entity or use --ai
 ```
+
+**AI-optimized output:** The `--ai` flag produces token-efficient, structured Markdown optimized for LLM consumption. The format is documented in detail in `tdn-cli/docs/developer/ai-context.md`. Key features:
+
+- **Progressive disclosure:** Stats → Structure → Timeline → In-Progress Details → Excerpts → Reference
+- **Emoji status indicators:** 🔵 in-progress, 🟢 ready, ⏸️ paused, etc.
+- **Compact task counts:** `(2▶️ 4🟢 1📥)` instead of verbose labels
+- **Tree structures:** Hierarchical view of areas/projects/tasks
+- **Reference table:** File paths for all mentioned entities
 
 **Vault overview (`taskdn context --ai` with no arguments):**
 
-Returns a high-level overview of the vault's current state:
+Returns a high-level overview of all active work:
 
 ```markdown
-## Vault Overview
+# Overview
 
-### Areas (3)
+**Stats:** 3 areas · 8 active projects · 34 active tasks · ⚠️ 2 overdue · 📅 3 due today · ▶️ 5 in-progress
+_Excludes: done/dropped/icebox tasks, done projects, archived areas_
 
-#### Work
+---
 
-- **path:** ~/areas/work.md
-- **projects:** 2 active
-- **tasks:** 15 active
+## Structure
 
-#### Personal
+### 📁 Work
 
-- **path:** ~/areas/personal.md
-- **projects:** 1 active
-- **tasks:** 8 active
+Tasks: 18 total (4 direct, 14 via projects)
+├── 🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 4🟢 1📥 1🚫)
+│   ├── ▶️ Fix authentication bug
+│   └── ▶️ Document API v2 endpoints
+├── 🟢 Client Onboarding [ready] — 4 tasks (4🟢)
+└── 📋 Direct: 4 tasks (1▶️ 2🟢 1📥)
+    └── ▶️ Review team capacity
 
-### Summary
+...
 
-- **total-active-tasks:** 47
-- **overdue:** 2
-- **in-progress:** 3
+## Timeline
 
-### This Week
+### Overdue (2)
 
-#### Due (5)
+- **Fix critical security issue** — due Jan 10 — Q1 Planning → Work
+- **Submit expense report** — due Jan 12 — Work (direct)
 
-- Fix login bug — ~/tasks/fix-login.md (due: 2025-12-18)
-- Review report — ~/tasks/review-report.md (due: 2025-12-20)
+### Due Today (3)
 
-#### Scheduled (3)
+- **Review PR #847** — Q1 Planning → Work
+...
 
-- Team standup prep — ~/tasks/standup-prep.md (scheduled: 2025-12-19)
+## In-Progress Tasks (5)
+
+### Fix authentication bug
+
+Q1 Planning → Work · due 2025-01-18
+
+The SSO authentication flow is failing for enterprise users...
+
+...
+
+## Reference
+
+| Entity                 | Type    | Path                    |
+| ---------------------- | ------- | ----------------------- |
+| Work                   | area    | areas/work.md           |
+| Q1 Planning            | project | projects/q1-planning.md |
+| Fix authentication bug | task    | tasks/fix-auth-bug.md   |
 ```
 
 **Human mode (no `--ai` flag, no arguments):** Returns an error prompting the user to either specify an entity or use `--ai` for vault overview. Human-mode vault overview may be added in a future version.
@@ -440,49 +452,7 @@ Examples:
   taskdn context --ai
 ```
 
-**What context returns for a specific entity (example: `taskdn context area "Work" --ai`):**
-
-```markdown
-## Area: Work
-
-- **path:** ~/areas/work.md
-- **status:** active
-
-### Body
-
-Area description here...
-
-## Projects in Work (2)
-
-### Project: Q1 Planning
-
-- **path:** ~/projects/q1-planning.md
-- **status:** in-progress
-- **tasks:** 1
-
-#### Task: Fix login bug
-
-- **path:** ~/tasks/fix-login-bug.md
-- **status:** in-progress
-- **project:** Q1 Planning
-- **due:** 2025-01-15
-
-### Project: Client Onboarding
-
-- **path:** ~/projects/client-onboarding.md
-- **status:** ready
-- **tasks:** 0
-
-## Tasks Directly in Area: Work (1)
-
-#### Task: Fix Thing
-
-- **path:** ~/tasks/fix-thing.md
-- **status:** in-progress
-- **due:** 2025-01-16
-```
-
-**Body inclusion:** Task/project/area bodies are NOT included by default. Use `--with-bodies` to include them.
+**Scoped context commands:** Each scoped command (`context area`, `context project`, `context task`) has its own optimized output format. See `tdn-cli/docs/developer/ai-context.md` for complete specifications and examples.
 
 ### Show Command
 
@@ -531,7 +501,7 @@ taskdn list --sort title                 # Alphabetical
 taskdn list --sort due --desc            # Descending order
 ```
 
-**Default sort order:** `created` (newest first). Use `--sort` for custom ordering, or `taskdn next` for smart prioritization.
+**Default sort order:** `created` (newest first). Use `--sort` for custom ordering.
 
 **Null handling:** Tasks without a value for the sort field always appear last in the output, regardless of sort direction.
 
@@ -1257,7 +1227,7 @@ The `defer-until` field means "don't show me this until then." Requiring users t
 
 Typing `--due tomorrow` or `--due "next friday"` is more ergonomic than calculating ISO dates. Since we control the date parsing, we can accept natural language and always output ISO 8601.
 
-### Why convenience commands (today, inbox, next)?
+### Why convenience commands (today, inbox)?
 
 Daily workflows shouldn't require 30+ keystrokes. `taskdn today` vs `taskdn list --due today --scheduled today` is a massive ergonomic win. These commands encode common workflows that would otherwise require flag combinations.
 
