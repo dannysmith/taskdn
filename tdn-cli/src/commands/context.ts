@@ -72,33 +72,29 @@ function resolveTaskPath(identifier: string, tasksDir: string): string {
 /**
  * Group tasks by their project path
  */
-function groupTasksByProject(tasks: Task[], projectPaths: string[]): Map<string, Task[]> {
-  const projectPathSet = new Set(projectPaths);
+function groupTasksByProject(tasks: Task[], projects: Project[]): Map<string, Task[]> {
   const grouped = new Map<string, Task[]>();
 
   // Initialize empty arrays for each project
-  for (const path of projectPaths) {
-    grouped.set(path, []);
+  for (const project of projects) {
+    grouped.set(project.path, []);
   }
 
   for (const task of tasks) {
-    // Find which project this task belongs to by checking if the project name
-    // matches any of our project titles
     if (task.project) {
-      // Task has a project reference - find the matching project path
-      for (const projectPath of projectPathSet) {
-        // The task.project is a wikilink like "[[Test Project]]" or just the name
-        // We need to match it against the project title
-        const projectName = task.project.replace(/^\[\[|\]\]$/g, '');
-        // Check if this project path could match (simple heuristic: filename contains project name)
-        const pathLower = projectPath.toLowerCase();
-        const nameLower = projectName.toLowerCase().replace(/\s+/g, '-');
-        if (pathLower.includes(nameLower) || pathLower.includes(projectName.toLowerCase())) {
-          const arr = grouped.get(projectPath) ?? [];
-          arr.push(task);
-          grouped.set(projectPath, arr);
-          break;
-        }
+      // Task has a project reference - find the matching project by title
+      // The task.project is a wikilink like "[[Test Project]]" or just the name
+      const projectName = task.project.replace(/^\[\[|\]\]$/g, '');
+
+      // Find project with matching title (case-insensitive exact match)
+      const matchingProject = projects.find(
+        (p) => p.title.toLowerCase() === projectName.toLowerCase()
+      );
+
+      if (matchingProject) {
+        const arr = grouped.get(matchingProject.path) ?? [];
+        arr.push(task);
+        grouped.set(matchingProject.path, arr);
       }
     }
   }
@@ -389,8 +385,7 @@ export const contextCommand = new Command('context')
       const projectsByStatus = groupProjectsByStatus(result.projects);
 
       // Group tasks by project
-      const projectPaths = result.projects.map((p) => p.path);
-      const projectTasks = groupTasksByProject(activeTasks, projectPaths);
+      const projectTasks = groupTasksByProject(activeTasks, result.projects);
       const directTasks = getDirectAreaTasks(activeTasks, projectTasks);
 
       // Build timeline scoped to this area's tasks
