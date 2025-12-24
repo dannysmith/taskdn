@@ -11,23 +11,7 @@ import type {
 } from '@/output/index.ts';
 import { createError, type CliError } from '@/errors/types.ts';
 import { formatError } from '@/errors/format.ts';
-
-/**
- * Detect entity type from file path.
- *
- * TODO: This is a temporary hack that checks for '/projects/' or '/areas/' in the path.
- * Once config is implemented, this should check if the path falls under the
- * user's configured projects_dir, tasks_dir, or areas_dir.
- */
-function detectEntityType(path: string): 'task' | 'project' | 'area' {
-  if (path.includes('/projects/')) {
-    return 'project';
-  }
-  if (path.includes('/areas/')) {
-    return 'area';
-  }
-  return 'task';
-}
+import { detectEntityType } from '@/lib/entity-lookup.ts';
 
 /**
  * Show command - view a single entity with full content

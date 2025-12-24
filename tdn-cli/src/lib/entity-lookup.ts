@@ -13,7 +13,8 @@ import {
   parseProjectFile,
   parseAreaFile,
 } from '@bindings';
-import type { Task, Project, Area, VaultConfig } from '@bindings';
+import type { Task, Project, Area } from '@bindings';
+import type { VaultConfig } from '@bindings';
 import type { EntityType } from '@/errors/types.ts';
 export type { EntityType };
 import { getVaultConfig } from '@/config/index.ts';
@@ -21,21 +22,40 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Detect entity type from file path.
+ * Detect entity type from file path using configured directories.
  *
- * This checks if the path contains '/projects/' or '/areas/' subdirectories.
- * Falls back to 'task' if neither is found.
+ * Checks if the resolved path falls within the configured projectsDir,
+ * areasDir, or tasksDir. Falls back to 'task' if no match is found.
  *
- * TODO: Once config is fully implemented, this should check if the path falls
- * under the user's configured projects_dir, tasks_dir, or areas_dir.
+ * @param filePath - The file path to check
+ * @param config - Optional vault config (defaults to getVaultConfig())
  */
-export function detectEntityType(filePath: string): EntityType {
-  if (filePath.includes('/projects/')) {
+export function detectEntityType(filePath: string, config?: VaultConfig): EntityType {
+  const vaultConfig = config || getVaultConfig();
+  const resolvedPath = path.resolve(filePath);
+
+  // Normalize paths for comparison (ensure trailing slash for directory matching)
+  const normalizeDir = (dir: string) => {
+    const resolved = path.resolve(dir);
+    return resolved.endsWith(path.sep) ? resolved : resolved + path.sep;
+  };
+
+  const projectsDir = normalizeDir(vaultConfig.projectsDir);
+  const areasDir = normalizeDir(vaultConfig.areasDir);
+  const tasksDir = normalizeDir(vaultConfig.tasksDir);
+
+  // Check if the file path starts with one of the configured directories
+  if (resolvedPath.startsWith(projectsDir) || resolvedPath === vaultConfig.projectsDir) {
     return 'project';
   }
-  if (filePath.includes('/areas/')) {
+  if (resolvedPath.startsWith(areasDir) || resolvedPath === vaultConfig.areasDir) {
     return 'area';
   }
+  if (resolvedPath.startsWith(tasksDir) || resolvedPath === vaultConfig.tasksDir) {
+    return 'task';
+  }
+
+  // Default to 'task' if no match
   return 'task';
 }
 
