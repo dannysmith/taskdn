@@ -46,8 +46,8 @@ Checklist tracking implementation of all CLI commands and features.
 
 ### Convenience Commands
 
-- [ ] `today` - Due/scheduled today + overdue
-- [ ] `inbox` - Inbox tasks
+- [x] `today` - Due/scheduled today + overdue
+- [x] `inbox` - Inbox tasks
 
 ### Write Commands
 

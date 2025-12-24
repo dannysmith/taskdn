@@ -2,7 +2,7 @@
 
 **Work Directory:** `tdn-cli/`
 
-**Depends on:** Task 6 (Write Operations)
+**Depends on:** Task 6B (Modify Operations)
 
 ## Overview
 
