@@ -1,6 +1,13 @@
 #!/usr/bin/env bun
 import { Command } from '@commander-js/extra-typings';
-import { showCommand, listCommand, addCommand, contextCommand } from '@/commands/index.ts';
+import {
+  showCommand,
+  listCommand,
+  addCommand,
+  contextCommand,
+  todayCommand,
+  inboxCommand,
+} from '@/commands/index.ts';
 
 const program = new Command()
   .name('taskdn')
@@ -15,6 +22,8 @@ program.addCommand(listCommand);
 program.addCommand(showCommand);
 program.addCommand(addCommand);
 program.addCommand(contextCommand);
+program.addCommand(todayCommand);
+program.addCommand(inboxCommand);
 
 // Parse and execute
 program.parse();
