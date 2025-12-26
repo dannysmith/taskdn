@@ -101,3 +101,11 @@ export {
 
 // String utilities
 export { toKebabCase } from './string-utils.ts';
+
+// Field ordering and inclusion (for consistent output)
+export {
+  getCanonicalFieldOrder,
+  getCamelCaseFieldOrder,
+  type EntityType as FieldEntityType,
+} from './field-ordering.ts';
+export { getRequiredFields, shouldShowField, getFieldsToShow } from './field-inclusion.ts';

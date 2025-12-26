@@ -36,14 +36,16 @@ function taskToJson(task: Task, includeBody = true) {
     path: task.path,
     title: task.title,
     status: toKebabCase(task.status),
+    // Required fields per S1 spec Section 3.3
+    createdAt: task.createdAt || null,
+    updatedAt: task.updatedAt || null,
+    // Optional fields - only include if present
+    ...(task.completedAt && { completedAt: task.completedAt }),
     ...(task.due && { due: task.due }),
     ...(task.scheduled && { scheduled: task.scheduled }),
     ...(task.deferUntil && { deferUntil: task.deferUntil }),
     ...(task.project && { project: task.project }),
     ...(task.area && { area: task.area }),
-    ...(task.createdAt && { createdAt: task.createdAt }),
-    ...(task.updatedAt && { updatedAt: task.updatedAt }),
-    ...(task.completedAt && { completedAt: task.completedAt }),
     ...(includeBody && task.body && { body: task.body }),
   };
 }

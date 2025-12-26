@@ -63,14 +63,17 @@ function formatTask(task: Task): string {
   lines.push(`- **path:** ${task.path}`);
   lines.push(`- **status:** ${toKebabCase(task.status)}`);
 
+  // Required fields per S1 spec Section 3.3
+  lines.push(`- **created-at:** ${task.createdAt || '(missing)'}`);
+  lines.push(`- **updated-at:** ${task.updatedAt || '(missing)'}`);
+
+  // Optional fields - only show if present
+  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
   if (task.due) lines.push(`- **due:** ${task.due}`);
   if (task.scheduled) lines.push(`- **scheduled:** ${task.scheduled}`);
   if (task.deferUntil) lines.push(`- **defer-until:** ${task.deferUntil}`);
   if (task.project) lines.push(`- **project:** ${task.project}`);
   if (task.area) lines.push(`- **area:** ${task.area}`);
-  if (task.createdAt) lines.push(`- **created-at:** ${task.createdAt}`);
-  if (task.updatedAt) lines.push(`- **updated-at:** ${task.updatedAt}`);
-  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
 
   if (task.body) {
     lines.push('');
@@ -156,7 +159,16 @@ function formatTaskListItem(task: Task): string {
   lines.push(`- **path:** ${task.path}`);
   lines.push(`- **status:** ${toKebabCase(task.status)}`);
 
+  // Required fields per S1 spec Section 3.3
+  lines.push(`- **created-at:** ${task.createdAt || '(missing)'}`);
+  lines.push(`- **updated-at:** ${task.updatedAt || '(missing)'}`);
+
+  // Optional fields - show if present
+  if (task.completedAt) lines.push(`- **completed-at:** ${task.completedAt}`);
   if (task.due) lines.push(`- **due:** ${task.due}`);
+  if (task.scheduled) lines.push(`- **scheduled:** ${task.scheduled}`);
+  if (task.deferUntil) lines.push(`- **defer-until:** ${task.deferUntil}`);
+
   // Per CLI spec: show project, or area if no project
   if (task.project) {
     lines.push(`- **project:** ${task.project}`);
@@ -1526,7 +1538,11 @@ function formatTaskCreated(task: Task): string {
   lines.push('');
   lines.push(`- **path:** ${task.path}`);
   lines.push(`- **status:** ${toKebabCase(task.status)}`);
-  if (task.createdAt) lines.push(`- **created-at:** ${task.createdAt}`);
+
+  // Required field per S1 spec Section 3.3
+  lines.push(`- **created-at:** ${task.createdAt || '(missing)'}`);
+
+  // Optional fields - only show if set during creation
   if (task.due) lines.push(`- **due:** ${task.due}`);
   if (task.scheduled) lines.push(`- **scheduled:** ${task.scheduled}`);
   if (task.project) lines.push(`- **project:** ${task.project}`);

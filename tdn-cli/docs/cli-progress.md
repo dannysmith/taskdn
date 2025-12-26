@@ -92,6 +92,16 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Errors in AI mode (stdout, structured)
 - [x] Errors in JSON mode (stdout, JSON)
 
+### Output Standardization (Task 1)
+
+- [x] Spec-compliant field inclusion (S1 core spec)
+- [x] Tasks always show `created-at` and `updated-at` (required fields)
+- [x] Projects/areas never show `created-at`/`updated-at` (not in spec)
+- [x] Canonical field ordering across all formatters
+- [x] Field ordering utilities (`field-ordering.ts`, `field-inclusion.ts`)
+- [x] Output format specification documented (`docs/developer/output-format-spec.md`)
+- [ ] Shared formatter templates (current formatters work correctly; utilities available for future formatters)
+
 ---
 
 ## Error Codes
