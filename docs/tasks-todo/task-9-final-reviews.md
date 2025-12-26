@@ -10,7 +10,7 @@ the output of each review should write a full and detailed analysis document to 
 - [ ] Error handling
 - [ ] Test Coverage
 - [ ] Security Review
-- [ ] Rust Refactoring in preparation for extracting the Rust SDK (maybe including NAPI TS Bindings so we get a TS API for free?) into a package which can be used in the Tauri app (and eventually published)
+- [ ] Rust Refactoring in preparation for possibly extracting the Rust SDK (maybe including NAPI TS Bindings so we get a TS API for free?) into a package which can be used in the Tauri app (and eventually published for other users)
 
 ## Documentation
 

@@ -24,7 +24,7 @@ taskdn init
 2. Prompt for tasks directory path
 3. Prompt for projects directory path
 4. Prompt for areas directory path
-5. Create `.taskdn.json` in home directory
+5. Create `.taskdn.json` in user's home directory
 
 **Config file format:**
 
@@ -60,7 +60,7 @@ Configuration
   Projects directory: ~/notes/projects
   Areas directory:    ~/notes/areas
 
-  Config file: ~/.config/taskdn/config.json
+  Config file: ~/.taskdn.json
 ```
 
 **Show output (AI mode):**
@@ -71,7 +71,7 @@ Configuration
 - **tasks-dir:** ~/notes/tasks
 - **projects-dir:** ~/notes/projects
 - **areas-dir:** ~/notes/areas
-- **config-file:** ~/.config/taskdn/config.json
+- **config-file:** ~/.taskdn.json
 ```
 
 **Config precedence (highest to lowest):**
@@ -79,7 +79,7 @@ Configuration
 1. CLI flags (`--tasks-dir`)
 2. Environment variables (`TASKDN_TASKS_DIR`)
 3. Local config (`./.taskdn.json`)
-4. User config (`~/.config/taskdn/config.json`)
+4. User config (`~/.taskdn.json`)
 5. Defaults
 
 ### Phase 3: Doctor Command
@@ -114,7 +114,7 @@ taskdn doctor --json
 **Human mode output:**
 
 ```
-✓ Config found (~/.config/taskdn/config.json)
+✓ Config found (~/.taskdn.json)
 ✓ Tasks directory (47 files)
 ✓ Projects directory (6 files)
 ✓ Areas directory (4 files)
@@ -144,7 +144,7 @@ Summary: 3 issues in 57 files checked
 
 > **Includes fuzzy disambiguation from Task 2 Phase 6**
 >
-> This phase wires up interactive prompts to all commands that accept entity names: `show`, `complete`, `drop`, `status`, `update`, `archive`. Uses the fuzzy lookup utility from Task 3 Phase 10.
+> This phase wires up interactive prompts to all commands that accept entity names. Much of this has already been implemented, but we need to check that we have actually done everything properly here.
 
 Implement interactive features for human mode.
 
@@ -176,20 +176,7 @@ When a fuzzy search returns multiple matches:
 - `archive <name>` - archive entity
 
 **AI/JSON mode behavior:**
-When multiple matches found, return `AMBIGUOUS` error:
-
-```json
-{
-  "error": true,
-  "code": "AMBIGUOUS",
-  "message": "Multiple tasks match 'login'",
-  "matches": [
-    { "title": "Fix login bug", "path": "~/tasks/fix-login-bug.md" },
-    { "title": "Login page redesign", "path": "~/tasks/login-redesign.md" }
-  ],
-  "suggestion": "Use a more specific name or provide the full path"
-}
-```
+When multiple matches found, return `AMBIGUOUS` error, Properly formatted according to the output spec.
 
 **Confirmation prompts:**
 For destructive operations (if we add any):
@@ -209,18 +196,6 @@ When `taskdn add` is called with no arguments:
 
 Creating task...
 ✓ Created ~/tasks/review-quarterly-report.md
-```
-
-**Test cases for fuzzy disambiguation:**
-
-```typescript
-describe('fuzzy matching prompts', () => {
-  test('shows prompt when multiple matches (human mode)')
-  test('returns AMBIGUOUS error with matches (AI mode)')
-  test('returns AMBIGUOUS error with matches (JSON mode)')
-  test('proceeds without prompt for single match')
-  test('returns NOT_FOUND when no matches')
-})
 ```
 
 ### Phase 5: Short Flags
@@ -257,7 +232,7 @@ taskdn list --json | jq '.tasks[] | select(.status == "ready")'
 
 The `--json` output is already pipeable. Add `--stdin` for input.
 
-## Test Cases
+## Example Test Cases
 
 ```typescript
 describe('init command', () => {
@@ -295,23 +270,7 @@ describe('piping', () => {
 })
 ```
 
-## Verification
-
-- [ ] `init` creates config interactively and non-interactively
-- [ ] `config` shows and sets values
-- [ ] `doctor` checks all aspects and reports issues
-- [ ] Fuzzy disambiguation prompts work for show, complete, drop, etc.
-- [ ] AMBIGUOUS error returned in AI/JSON mode for multiple matches
-- [ ] Interactive prompts work for `add` with no args
-- [ ] Short flags work for all common options
-- [ ] `--stdin` accepts piped input
-- [ ] Shell completions generate correctly
-- [ ] All commands work in all output modes
-- [ ] cli-progress.md fully checked off
-
 ## Notes
 
 - `@clack/prompts` is already a dependency - use it for interactive prompts
-- Commander.js supports completion generation
 - Doctor command should be efficient for large vaults
-- Consider: should doctor have a `--fix` option? (Probably not for v1)
