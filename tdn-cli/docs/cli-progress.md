@@ -80,8 +80,6 @@ Checklist tracking implementation of all CLI commands and features.
 - [ ] `config` - Show config
 - [ ] `config --set <key>=<value>` - Set config
 - [ ] `doctor` - Health check
-- [ ] `--version` - Show version
-- [ ] `--help` - Show help
 
 ---
 

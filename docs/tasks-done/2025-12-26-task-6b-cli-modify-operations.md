@@ -267,83 +267,83 @@ taskdn archive ~/tasks/foo.md --dry-run
 
 ```typescript
 describe('complete command', () => {
-  test('sets status to done');
-  test('sets completed-at timestamp');
-  test('updates updated-at timestamp');
-  test('requires exact path in AI mode');
-  test('accepts fuzzy title in human mode');
-  test('errors if file not found');
-});
+  test('sets status to done')
+  test('sets completed-at timestamp')
+  test('updates updated-at timestamp')
+  test('requires exact path in AI mode')
+  test('accepts fuzzy title in human mode')
+  test('errors if file not found')
+})
 
 describe('drop command', () => {
-  test('sets status to dropped');
-  test('sets completed-at timestamp');
-});
+  test('sets status to dropped')
+  test('sets completed-at timestamp')
+})
 
 describe('status command', () => {
-  test('changes to valid status');
-  test('rejects invalid status with INVALID_STATUS error');
-  test('sets completed-at when changing to done/dropped');
-  test('clears completed-at when changing from done to ready');
-});
+  test('changes to valid status')
+  test('rejects invalid status with INVALID_STATUS error')
+  test('sets completed-at when changing to done/dropped')
+  test('clears completed-at when changing from done to ready')
+})
 
 describe('update command', () => {
-  test('updates single field');
-  test('updates multiple fields');
-  test('unsets field with --unset');
-  test('validates status values');
-  test('validates date formats');
-  test('allows unknown fields (custom)');
-  test('preserves unknown fields not being updated');
-});
+  test('updates single field')
+  test('updates multiple fields')
+  test('unsets field with --unset')
+  test('validates status values')
+  test('validates date formats')
+  test('allows unknown fields (custom)')
+  test('preserves unknown fields not being updated')
+})
 
 describe('archive command', () => {
-  test('moves file to archive directory');
-  test('creates archive directory if needed');
-  test('handles duplicate filename in archive');
-  test('updates updated-at in moved file');
-});
+  test('moves file to archive directory')
+  test('creates archive directory if needed')
+  test('handles duplicate filename in archive')
+  test('updates updated-at in moved file')
+})
 
 describe('batch operations', () => {
-  test('processes all items even if some fail');
-  test('reports successes and failures separately');
-  test('exit code 1 if any failure');
-  test('exit code 0 if all succeed');
-});
+  test('processes all items even if some fail')
+  test('reports successes and failures separately')
+  test('exit code 1 if any failure')
+  test('exit code 0 if all succeed')
+})
 
 describe('edit command', () => {
-  test('opens file in $EDITOR');
-  test('errors in AI mode');
-  test('falls back through VISUAL → EDITOR → vim → nano');
-});
+  test('opens file in $EDITOR')
+  test('errors in AI mode')
+  test('falls back through VISUAL → EDITOR → vim → nano')
+})
 
 describe('dry run', () => {
-  test('shows what add would create');
-  test('shows what update would change');
-  test('does not create files');
-  test('does not modify files');
-});
+  test('shows what add would create')
+  test('shows what update would change')
+  test('does not create files')
+  test('does not modify files')
+})
 ```
 
 ## Verification
 
-- [ ] `complete` sets status and completed-at
-- [ ] `drop` sets status and completed-at
-- [ ] `status` validates and updates correctly
-- [ ] `status` handles completed-at for done/dropped transitions
-- [ ] `update --set` works for all field types
-- [ ] `update --unset` removes fields
-- [ ] `update` preserves fields not being modified
-- [ ] `archive` moves files to correct location
-- [ ] `archive` handles existing files in archive
-- [ ] Batch operations continue on individual failures
-- [ ] Batch operations report correctly
-- [ ] `edit` opens editor in human mode
-- [ ] `edit` errors in AI mode
-- [ ] `--dry-run` shows preview for all write commands
-- [ ] `--dry-run` does not modify filesystem
-- [ ] All output modes (human, AI, JSON) work
-- [ ] cli-progress.md updated
+- [x] `complete` sets status and completed-at
+- [x] `drop` sets status and completed-at
+- [x] `status` validates and updates correctly
+- [x] `status` handles completed-at for done/dropped transitions
+- [x] `update --set` works for all field types
+- [x] `update --unset` removes fields
+- [x] `update` preserves fields not being modified
+- [x] `archive` moves files to correct location
+- [x] `archive` handles existing files in archive
+- [x] Batch operations continue on individual failures
+- [x] Batch operations report correctly
+- [x] `edit` opens editor in human mode
+- [x] `edit` errors in AI mode
+- [x] `--dry-run` shows preview for all write commands
+- [x] `--dry-run` does not modify filesystem
+- [x] All output modes (human, AI, JSON) work
+- [x] cli-progress.md updated
 
 ## Notes
 
