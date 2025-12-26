@@ -9,9 +9,9 @@ import type {
   AreaResult,
   FormattableResult,
 } from '@/output/index.ts';
-import { createError, type CliError } from '@/errors/types.ts';
 import { formatError } from '@/errors/format.ts';
 import { detectEntityType } from '@/lib/entity-lookup.ts';
+import { parseRustError } from '@/lib/rust-error-parser.ts';
 
 /**
  * Show command - view a single entity with full content
@@ -56,23 +56,8 @@ export const showCommand = new Command('show')
 
       console.log(formatOutput(result, globalOpts));
     } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-
-      // Detect error type from the Rust error message
-      let cliError: CliError;
-      if (message.includes('File not found')) {
-        cliError = createError.notFound(entityType, absolutePath);
-      } else if (
-        message.includes('Failed to parse frontmatter') ||
-        message.includes('No frontmatter found')
-      ) {
-        // Extract details from the parse error message
-        const details = message.replace(/^Failed to parse frontmatter:\s*/, '');
-        cliError = createError.parseError(absolutePath, undefined, details);
-      } else {
-        // Generic parse error for other cases
-        cliError = createError.parseError(absolutePath, undefined, message);
-      }
+      // Parse the structured Rust error
+      const cliError = parseRustError(error, entityType);
 
       // Format and output the error
       const output = formatError(cliError, mode);

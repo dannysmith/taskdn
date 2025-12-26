@@ -1,3 +1,4 @@
+use crate::TdnError;
 use gray_matter::{Matter, engine::YAML};
 use napi::bindgen_prelude::*;
 use serde::{Deserialize, Serialize};
@@ -80,33 +81,24 @@ pub fn parse_task_file(file_path: String) -> Result<Task> {
 
     // Check file exists
     if !path.exists() {
-        return Err(Error::new(
-            Status::GenericFailure,
-            format!("File not found: {}", file_path),
-        ));
+        return Err(TdnError::file_not_found(&file_path).into());
     }
 
     // Read file contents
     let content = fs::read_to_string(path).map_err(|e| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to read file: {}", e),
-        )
+        TdnError::file_read_error(&file_path, e.to_string())
     })?;
 
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
     let parsed = matter.parse::<TaskFrontmatter>(&content).map_err(|e| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to parse frontmatter: {}", e),
-        )
+        TdnError::parse_error(&file_path, None, e.to_string())
     })?;
 
     // Extract frontmatter data
     let frontmatter = parsed
         .data
-        .ok_or_else(|| Error::new(Status::GenericFailure, "No frontmatter found"))?;
+        .ok_or_else(|| TdnError::parse_error(&file_path, None, "No frontmatter found"))?;
 
     // Extract project from projects array (first element)
     let project = frontmatter

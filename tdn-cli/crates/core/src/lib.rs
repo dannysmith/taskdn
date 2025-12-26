@@ -2,6 +2,7 @@
 extern crate napi_derive;
 
 mod area;
+mod error;
 mod project;
 mod task;
 mod test_utils;
@@ -11,6 +12,7 @@ mod wikilink;
 mod writer;
 
 pub use area::*;
+pub use error::*;
 pub use project::*;
 pub use task::*;
 pub use vault::*;
