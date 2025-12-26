@@ -6,10 +6,7 @@ import {
   newCommand,
   contextCommand,
   todayCommand,
-  inboxCommand,
-  completeCommand,
-  dropCommand,
-  statusCommand,
+  setCommand,
   updateCommand,
   archiveCommand,
   openCommand,
@@ -30,10 +27,7 @@ program.addCommand(showCommand);
 program.addCommand(newCommand);
 program.addCommand(contextCommand);
 program.addCommand(todayCommand);
-program.addCommand(inboxCommand);
-program.addCommand(completeCommand);
-program.addCommand(dropCommand);
-program.addCommand(statusCommand);
+program.addCommand(setCommand);
 program.addCommand(updateCommand);
 program.addCommand(archiveCommand);
 program.addCommand(openCommand);

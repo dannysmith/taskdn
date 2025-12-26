@@ -5,7 +5,7 @@ import { tmpdir } from 'os';
 import { join } from 'path';
 
 /**
- * E2E tests for modify commands: complete, drop, status, update, archive, edit
+ * E2E tests for modify commands: set status, update, archive, open
  *
  * These tests verify:
  * - Status changes are applied correctly
@@ -56,11 +56,11 @@ created-at: 2025-01-01T00:00:00
   return filePath;
 }
 
-describe('taskdn complete', () => {
+describe('taskdn set status (complete)', () => {
   test('sets status to done', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--json'], {
       useFixtureVault: false,
     });
 
@@ -72,7 +72,7 @@ describe('taskdn complete', () => {
   test('sets completed-at timestamp', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--json'], {
       useFixtureVault: false,
     });
 
@@ -85,7 +85,7 @@ describe('taskdn complete', () => {
   test('updates updated-at timestamp', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--json'], {
       useFixtureVault: false,
     });
 
@@ -98,7 +98,7 @@ describe('taskdn complete', () => {
 
   test('errors if file not found', async () => {
     const { stderr, exitCode } = await runCli(
-      ['complete', join(tasksDir, 'nonexistent.md'), '--json'],
+      ['set', 'status', join(tasksDir, 'nonexistent.md'), 'done', '--json'],
       { useFixtureVault: false }
     );
 
@@ -109,7 +109,7 @@ describe('taskdn complete', () => {
   test('dry-run shows preview without modifying', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath, '--dry-run', '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--dry-run', '--json'], {
       useFixtureVault: false,
     });
 
@@ -126,11 +126,11 @@ describe('taskdn complete', () => {
   });
 });
 
-describe('taskdn drop', () => {
+describe('taskdn set status (drop)', () => {
   test('sets status to dropped', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['drop', taskPath, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'dropped', '--json'], {
       useFixtureVault: false,
     });
 
@@ -142,7 +142,7 @@ describe('taskdn drop', () => {
   test('sets completed-at timestamp', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['drop', taskPath, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'dropped', '--json'], {
       useFixtureVault: false,
     });
 
@@ -154,7 +154,7 @@ describe('taskdn drop', () => {
   test('dry-run shows preview without modifying', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['drop', taskPath, '--dry-run', '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'dropped', '--dry-run', '--json'], {
       useFixtureVault: false,
     });
 
@@ -168,11 +168,11 @@ describe('taskdn drop', () => {
   });
 });
 
-describe('taskdn status', () => {
+describe('taskdn set status (general)', () => {
   test('changes to valid status', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['status', taskPath, 'in-progress', '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'in-progress', '--json'], {
       useFixtureVault: false,
     });
 
@@ -185,7 +185,7 @@ describe('taskdn status', () => {
   test('rejects invalid status with INVALID_STATUS error', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stderr, exitCode } = await runCli(['status', taskPath, 'invalid-status', '--json'], {
+    const { stderr, exitCode } = await runCli(['set', 'status', taskPath, 'invalid-status', '--json'], {
       useFixtureVault: false,
     });
 
@@ -196,7 +196,7 @@ describe('taskdn status', () => {
   test('sets completed-at when changing to done', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['status', taskPath, 'done', '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--json'], {
       useFixtureVault: false,
     });
 
@@ -208,7 +208,7 @@ describe('taskdn status', () => {
   test('sets completed-at when changing to dropped', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['status', taskPath, 'dropped', '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'dropped', '--json'], {
       useFixtureVault: false,
     });
 
@@ -223,7 +223,7 @@ describe('taskdn status', () => {
       completedAt: '2025-01-15T12:00:00',
     });
 
-    const { stdout, exitCode } = await runCli(['status', taskPath, 'ready', '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'ready', '--json'], {
       useFixtureVault: false,
     });
 
@@ -237,7 +237,7 @@ describe('taskdn status', () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
     const { stdout, exitCode } = await runCli(
-      ['status', taskPath, 'in-progress', '--dry-run', '--json'],
+      ['set', 'status', taskPath, 'in-progress', '--dry-run', '--json'],
       { useFixtureVault: false }
     );
 
@@ -455,7 +455,7 @@ describe('batch operations', () => {
     const nonexistent = join(tasksDir, 'nonexistent.md');
 
     const { stdout, exitCode } = await runCli(
-      ['complete', task1, nonexistent, task2, '--json'],
+      ['set', 'status', task1, nonexistent, task2, 'done', '--json'],
       { useFixtureVault: false }
     );
 
@@ -471,7 +471,7 @@ describe('batch operations', () => {
     const task1 = createTestTask('task1.md', { title: 'Task 1' });
     const nonexistent = join(tasksDir, 'nonexistent.md');
 
-    const { stdout, exitCode } = await runCli(['complete', task1, nonexistent, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', task1, nonexistent, 'done', '--json'], {
       useFixtureVault: false,
     });
 
@@ -488,7 +488,7 @@ describe('batch operations', () => {
     const task1 = createTestTask('task1.md', { title: 'Task 1' });
     const task2 = createTestTask('task2.md', { title: 'Task 2' });
 
-    const { exitCode } = await runCli(['complete', task1, task2, '--json'], {
+    const { exitCode } = await runCli(['set', 'status', task1, task2, 'done', '--json'], {
       useFixtureVault: false,
     });
 
@@ -500,7 +500,7 @@ describe('batch operations', () => {
     const task2 = createTestTask('task2.md', { status: 'ready' });
 
     const { stdout, exitCode } = await runCli(
-      ['status', task1, task2, 'in-progress', '--json'],
+      ['set', 'status', task1, task2, 'in-progress', '--json'],
       { useFixtureVault: false }
     );
 
@@ -552,24 +552,24 @@ describe('output modes', () => {
   test('complete human mode shows confirmation', async () => {
     const taskPath = createTestTask('test-task.md', { title: 'Human Mode Task' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done'], {
       useFixtureVault: false,
     });
 
     expect(exitCode).toBe(0);
-    expect(stdout).toContain('completed');
+    expect(stdout).toContain('status changed');
     expect(stdout).toContain('Human Mode Task');
   });
 
   test('complete AI mode shows structured markdown', async () => {
     const taskPath = createTestTask('test-task.md', { title: 'AI Mode Task' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath, '--ai'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--ai'], {
       useFixtureVault: false,
     });
 
     expect(exitCode).toBe(0);
-    expect(stdout).toContain('## Task Completed');
+    expect(stdout).toContain('## Task Status Changed');
     expect(stdout).toContain('### AI Mode Task');
     expect(stdout).toContain('- **path:**');
     expect(stdout).toContain('- **status:** done');
@@ -578,13 +578,13 @@ describe('output modes', () => {
   test('complete JSON mode shows machine-readable output', async () => {
     const taskPath = createTestTask('test-task.md', { title: 'JSON Mode Task' });
 
-    const { stdout, exitCode } = await runCli(['complete', taskPath, '--json'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'done', '--json'], {
       useFixtureVault: false,
     });
 
     expect(exitCode).toBe(0);
     const output = JSON.parse(stdout);
-    expect(output.summary).toContain('Completed');
+    expect(output.summary).toContain('Changed status');
     expect(output.task).toBeDefined();
     expect(output.task.status).toBe('done');
   });
@@ -592,7 +592,7 @@ describe('output modes', () => {
   test('status change shows previous status', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
-    const { stdout, exitCode } = await runCli(['status', taskPath, 'in-progress', '--ai'], {
+    const { stdout, exitCode } = await runCli(['set', 'status', taskPath, 'in-progress', '--ai'], {
       useFixtureVault: false,
     });
 
@@ -618,17 +618,17 @@ describe('output modes', () => {
     const taskPath = createTestTask('test-task.md');
 
     // Human mode
-    const human = await runCli(['complete', taskPath, '--dry-run'], { useFixtureVault: false });
+    const human = await runCli(['set', 'status', taskPath, 'done', '--dry-run'], { useFixtureVault: false });
     expect(human.stdout).toContain('Dry run');
 
     // AI mode
-    const ai = await runCli(['complete', taskPath, '--dry-run', '--ai'], {
+    const ai = await runCli(['set', 'status', taskPath, 'done', '--dry-run', '--ai'], {
       useFixtureVault: false,
     });
     expect(ai.stdout).toContain('Dry Run');
 
     // JSON mode
-    const json = await runCli(['complete', taskPath, '--dry-run', '--json'], {
+    const json = await runCli(['set', 'status', taskPath, 'done', '--dry-run', '--json'], {
       useFixtureVault: false,
     });
     const output = JSON.parse(json.stdout);

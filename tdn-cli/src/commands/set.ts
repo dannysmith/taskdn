@@ -15,12 +15,15 @@ import { toKebabCase } from '@/output/helpers/index.ts';
 import { detectEntityType } from '@/lib/entity-lookup.ts';
 
 /**
- * Status command - change task status
+ * Set command - parent command for setting entity fields
+ *
+ * Currently only implements 'set status', which consolidates the old
+ * complete, drop, and status commands.
  *
  * Usage:
- *   taskdn status ~/tasks/foo.md ready
- *   taskdn status ~/tasks/foo.md in-progress
- *   taskdn status ~/tasks/a.md ~/tasks/b.md blocked    # Batch
+ *   taskdn set status ~/tasks/foo.md done
+ *   taskdn set status ~/tasks/foo.md ready
+ *   taskdn set status ~/tasks/a.md ~/tasks/b.md blocked    # Batch
  */
 
 /**
@@ -61,7 +64,7 @@ function changeTaskStatus(
   // Validate this is a task (not a project or area)
   const entityType = detectEntityType(fullPath);
   if (entityType !== 'task') {
-    throw createError.invalidEntityType('status', entityType, ['task']);
+    throw createError.invalidEntityType('set status', entityType, ['task']);
   }
 
   // Read current task to get previous status
@@ -107,7 +110,7 @@ function previewStatusChange(taskPath: string, newStatus: string): DryRunResult 
   // Validate this is a task (not a project or area)
   const entityType = detectEntityType(fullPath);
   if (entityType !== 'task') {
-    throw createError.invalidEntityType('status', entityType, ['task']);
+    throw createError.invalidEntityType('set status', entityType, ['task']);
   }
 
   const task = parseTaskFile(fullPath);
@@ -130,7 +133,7 @@ function previewStatusChange(taskPath: string, newStatus: string): DryRunResult 
 
   return {
     type: 'dry-run',
-    operation: 'status',
+    operation: 'set-status',
     entityType: 'task',
     title: task.title,
     path: fullPath,
@@ -138,8 +141,9 @@ function previewStatusChange(taskPath: string, newStatus: string): DryRunResult 
   };
 }
 
-export const statusCommand = new Command('status')
-  .description('Change task status')
+// Create the 'set status' subcommand
+const setStatusCommand = new Command('status')
+  .description('Change task status (auto-manages completed-at field)')
   .argument('<args...>', 'Path(s) followed by status value')
   .option('--dry-run', 'Preview changes without modifying files')
   .action(async (args, options, command) => {
@@ -149,7 +153,7 @@ export const statusCommand = new Command('status')
 
     // The last argument is the status, everything before is paths
     if (args.length < 2) {
-      console.error('Error: status command requires at least one path and a status');
+      console.error('Error: set status command requires at least one path and a status');
       process.exit(2);
     }
 
@@ -254,3 +258,8 @@ export const statusCommand = new Command('status')
       process.exit(1);
     }
   });
+
+// Create the parent 'set' command
+export const setCommand = new Command('set')
+  .description('Set entity fields')
+  .addCommand(setStatusCommand);

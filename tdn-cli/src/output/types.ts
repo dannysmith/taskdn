@@ -340,7 +340,7 @@ export interface BatchResult {
  */
 export interface DryRunResult {
   type: 'dry-run';
-  operation: 'create' | 'complete' | 'drop' | 'status' | 'update' | 'archive' | 'append-body';
+  operation: 'create' | 'set-status' | 'update' | 'archive' | 'append-body';
   entityType: 'task' | 'project' | 'area';
   title: string;
   path: string;

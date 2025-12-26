@@ -1116,17 +1116,13 @@ function formatDryRunHuman(result: DryRunResult): string {
   const opName =
     result.operation === 'create'
       ? 'would create'
-      : result.operation === 'complete'
-        ? 'would complete'
-        : result.operation === 'drop'
-          ? 'would drop'
-          : result.operation === 'status'
-            ? 'would update status'
-            : result.operation === 'update'
-              ? 'would update'
-              : result.operation === 'append-body'
-                ? 'would append to body'
-                : 'would archive';
+      : result.operation === 'set-status'
+        ? 'would change status'
+        : result.operation === 'update'
+          ? 'would update'
+          : result.operation === 'append-body'
+            ? 'would append to body'
+            : 'would archive';
 
   lines.push('');
   lines.push(`${cyan('⊘')} Dry run: ${opName}`);

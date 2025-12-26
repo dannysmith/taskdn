@@ -1803,17 +1803,13 @@ function formatDryRun(result: DryRunResult): string {
   const opName =
     result.operation === 'create'
       ? 'Would Be Created'
-      : result.operation === 'complete'
-        ? 'Would Be Completed'
-        : result.operation === 'drop'
-          ? 'Would Be Dropped'
-          : result.operation === 'status'
-            ? 'Would Be Updated'
-            : result.operation === 'update'
-              ? 'Would Be Updated'
-              : result.operation === 'append-body'
-                ? 'Would Be Appended'
-                : 'Would Be Archived';
+      : result.operation === 'set-status'
+        ? 'Status Would Be Changed'
+        : result.operation === 'update'
+          ? 'Would Be Updated'
+          : result.operation === 'append-body'
+            ? 'Would Be Appended'
+            : 'Would Be Archived';
 
   const entityName =
     result.entityType === 'task' ? 'Task' : result.entityType === 'project' ? 'Project' : 'Area';
