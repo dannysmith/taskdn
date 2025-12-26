@@ -329,15 +329,6 @@ Displays complete entity details including body content.
 
 ## Implementation
 
-### Shared Utilities
-
-Field ordering and inclusion logic is centralized in:
-
-- `src/output/helpers/field-ordering.ts` - Canonical field order per entity type
-- `src/output/helpers/field-inclusion.ts` - Required vs. optional field rules
-
-These utilities document the specification and can be used by future formatters.
-
 ### Current Formatters
 
 - `src/output/ai.ts` - AI mode (structured Markdown)

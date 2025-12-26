@@ -98,9 +98,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] Tasks always show `created-at` and `updated-at` (required fields)
 - [x] Projects/areas never show `created-at`/`updated-at` (not in spec)
 - [x] Canonical field ordering across all formatters
-- [x] Field ordering utilities (`field-ordering.ts`, `field-inclusion.ts`)
 - [x] Output format specification documented (`docs/developer/output-format-spec.md`)
-- [ ] Shared formatter templates (current formatters work correctly; utilities available for future formatters)
 
 ---
 
