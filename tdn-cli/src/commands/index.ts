@@ -1,6 +1,6 @@
 export { showCommand } from './show.ts';
 export { listCommand } from './list.ts';
-export { addCommand } from './add.ts';
+export { newCommand } from './new.ts';
 export { contextCommand } from './context.ts';
 export { todayCommand } from './today.ts';
 export { inboxCommand } from './inbox.ts';
@@ -9,5 +9,5 @@ export { dropCommand } from './drop.ts';
 export { statusCommand } from './status.ts';
 export { updateCommand } from './update.ts';
 export { archiveCommand } from './archive.ts';
-export { editCommand } from './edit.ts';
+export { openCommand } from './open.ts';
 export { appendBodyCommand } from './append-body.ts';

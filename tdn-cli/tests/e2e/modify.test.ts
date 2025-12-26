@@ -523,11 +523,11 @@ describe('batch operations', () => {
   });
 });
 
-describe('taskdn edit', () => {
+describe('taskdn open', () => {
   test('errors in AI mode', async () => {
     const taskPath = createTestTask('test-task.md');
 
-    const { stderr, exitCode } = await runCli(['edit', taskPath, '--ai'], {
+    const { stderr, exitCode } = await runCli(['open', taskPath, '--ai'], {
       useFixtureVault: false,
     });
 
@@ -539,7 +539,7 @@ describe('taskdn edit', () => {
   test('errors in JSON mode', async () => {
     const taskPath = createTestTask('test-task.md');
 
-    const { stderr, exitCode } = await runCli(['edit', taskPath, '--json'], {
+    const { stderr, exitCode } = await runCli(['open', taskPath, '--json'], {
       useFixtureVault: false,
     });
 

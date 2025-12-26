@@ -9,10 +9,10 @@ import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { detectEntityType } from '@/lib/entity-lookup.ts';
 
 /**
- * Edit command - open file in $EDITOR
+ * Open command - open file in $EDITOR
  *
  * Usage:
- *   taskdn edit ~/tasks/foo.md
+ *   taskdn open ~/tasks/foo.md
  *
  * Only works in interactive (human) mode.
  * Returns error in AI mode since it requires user interaction.
@@ -40,7 +40,7 @@ function editFile(filePath: string): void {
   // Validate this is a task (not a project or area)
   const entityType = detectEntityType(fullPath);
   if (entityType !== 'task') {
-    throw createError.invalidEntityType('edit', entityType, ['task']);
+    throw createError.invalidEntityType('open', entityType, ['task']);
   }
 
   // Validate it's a valid task file
@@ -67,17 +67,17 @@ function editFile(filePath: string): void {
   }
 }
 
-export const editCommand = new Command('edit')
+export const openCommand = new Command('open')
   .description('Open task in $EDITOR (interactive mode only)')
   .argument('<path>', 'Path to task file')
   .action(async (path, _options, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;
     const mode = getOutputMode(globalOpts);
 
-    // Edit command is only available in human (interactive) mode
+    // Open command is only available in human (interactive) mode
     if (mode !== 'human') {
       const error = createError.notSupported(
-        'Edit command requires interactive mode',
+        'Open command requires interactive mode',
         'Use `update --set` for programmatic changes'
       );
       console.error(formatError(error, mode));
@@ -86,9 +86,9 @@ export const editCommand = new Command('edit')
 
     try {
       editFile(path);
-      // After edit, optionally show the updated task
+      // After opening, optionally show the updated task
       const task = parseTaskFile(resolve(path));
-      console.log(`\nEdited: ${task.title}`);
+      console.log(`\nOpened: ${task.title}`);
     } catch (error) {
       if (isCliError(error)) {
         console.error(formatError(error, mode));

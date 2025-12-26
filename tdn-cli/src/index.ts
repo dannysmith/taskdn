@@ -3,7 +3,7 @@ import { Command } from '@commander-js/extra-typings';
 import {
   showCommand,
   listCommand,
-  addCommand,
+  newCommand,
   contextCommand,
   todayCommand,
   inboxCommand,
@@ -12,7 +12,7 @@ import {
   statusCommand,
   updateCommand,
   archiveCommand,
-  editCommand,
+  openCommand,
   appendBodyCommand,
 } from '@/commands/index.ts';
 
@@ -27,7 +27,7 @@ const program = new Command()
 // Register commands
 program.addCommand(listCommand);
 program.addCommand(showCommand);
-program.addCommand(addCommand);
+program.addCommand(newCommand);
 program.addCommand(contextCommand);
 program.addCommand(todayCommand);
 program.addCommand(inboxCommand);
@@ -36,7 +36,7 @@ program.addCommand(dropCommand);
 program.addCommand(statusCommand);
 program.addCommand(updateCommand);
 program.addCommand(archiveCommand);
-program.addCommand(editCommand);
+program.addCommand(openCommand);
 program.addCommand(appendBodyCommand);
 
 // Parse and execute

@@ -22,14 +22,14 @@ import { parseNaturalDate } from '@/output/helpers/index.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 
 /**
- * Add command - create new entities
+ * New command - create new entities
  *
  * Usage:
- *   taskdn add "Task title"                           # Quick add task
- *   taskdn add "Task" --project "Q1" --due friday     # With metadata
- *   taskdn add                                        # Interactive (human only)
- *   taskdn add project "Q1 Planning"                  # Add project
- *   taskdn add area "Work"                            # Add area
+ *   taskdn new "Task title"                           # Quick new task
+ *   taskdn new "Task" --project "Q1" --due friday     # With metadata
+ *   taskdn new                                        # Interactive (human only)
+ *   taskdn new project "Q1 Planning"                  # New project
+ *   taskdn new area "Work"                            # New area
  */
 
 interface AddOptions {
@@ -456,7 +456,7 @@ async function interactiveAdd(): Promise<
   }
 }
 
-export const addCommand = new Command('add')
+export const newCommand = new Command('new')
   .description('Create a new entity')
   .argument('[entity-or-title]', 'Entity type (project/area) or task title')
   .argument('[title]', 'Title (when entity type is specified)')

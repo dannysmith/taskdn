@@ -26,10 +26,10 @@ afterEach(() => {
   }
 });
 
-describe('taskdn add', () => {
+describe('taskdn new', () => {
   describe('task creation', () => {
     test('creates task with minimal args', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'Test Task', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'Test Task', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -47,7 +47,7 @@ describe('taskdn add', () => {
     });
 
     test('generates slug filename from title', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'Hello World Task!', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'Hello World Task!', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -63,7 +63,7 @@ describe('taskdn add', () => {
 
     test('handles duplicate filenames with suffix', async () => {
       // Create first task
-      await runCli(['add', 'Duplicate Title', '--json'], {
+      await runCli(['new', 'Duplicate Title', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -73,7 +73,7 @@ describe('taskdn add', () => {
       });
 
       // Create second task with same title
-      const { stdout, exitCode } = await runCli(['add', 'Duplicate Title', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'Duplicate Title', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -88,7 +88,7 @@ describe('taskdn add', () => {
     });
 
     test('sets created-at and updated-at', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'Timestamped Task', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'Timestamped Task', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -104,7 +104,7 @@ describe('taskdn add', () => {
     });
 
     test('defaults to inbox status', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'Default Status Task', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'Default Status Task', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -121,7 +121,7 @@ describe('taskdn add', () => {
     test('creates task with all options', async () => {
       const { stdout, exitCode } = await runCli(
         [
-          'add',
+          'new',
           'Full Task',
           '--status',
           'ready',
@@ -157,7 +157,7 @@ describe('taskdn add', () => {
 
     test('converts natural language dates to ISO 8601', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'Due Tomorrow', '--due', 'tomorrow', '--json'],
+        ['new', 'Due Tomorrow', '--due', 'tomorrow', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -177,7 +177,7 @@ describe('taskdn add', () => {
 
     test('converts weekday names to ISO 8601', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'Due Friday', '--due', 'friday', '--json'],
+        ['new', 'Due Friday', '--due', 'friday', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -197,7 +197,7 @@ describe('taskdn add', () => {
 
     test('converts relative days to ISO 8601', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'Due In 3 Days', '--due', '+3d', '--json'],
+        ['new', 'Due In 3 Days', '--due', '+3d', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -216,7 +216,7 @@ describe('taskdn add', () => {
     });
 
     test('errors in AI mode with no title', async () => {
-      const { stderr, exitCode } = await runCli(['add', '--ai'], {
+      const { stderr, exitCode } = await runCli(['new', '--ai'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -231,7 +231,7 @@ describe('taskdn add', () => {
 
     test('writes valid frontmatter to file', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'Check File Content', '--project', 'Test Project', '--json'],
+        ['new', 'Check File Content', '--project', 'Test Project', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -258,7 +258,7 @@ describe('taskdn add', () => {
   describe('project creation', () => {
     test('creates project file', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'project', 'Q1 Planning', '--json'],
+        ['new', 'project', 'Q1 Planning', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -278,7 +278,7 @@ describe('taskdn add', () => {
 
     test('sets area reference correctly', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'project', 'Test Project', '--area', 'Work', '--json'],
+        ['new', 'project', 'Test Project', '--area', 'Work', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -296,7 +296,7 @@ describe('taskdn add', () => {
 
     test('handles optional status', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'project', 'Planning Project', '--status', 'planning', '--json'],
+        ['new', 'project', 'Planning Project', '--status', 'planning', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -313,7 +313,7 @@ describe('taskdn add', () => {
     });
 
     test('errors with no project title', async () => {
-      const { stderr, exitCode } = await runCli(['add', 'project', '--json'], {
+      const { stderr, exitCode } = await runCli(['new', 'project', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -329,7 +329,7 @@ describe('taskdn add', () => {
 
   describe('area creation', () => {
     test('creates area file', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'area', 'Work', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'area', 'Work', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -347,7 +347,7 @@ describe('taskdn add', () => {
 
     test('sets type field if provided', async () => {
       const { stdout, exitCode } = await runCli(
-        ['add', 'area', 'Acme Corp', '--type', 'client', '--json'],
+        ['new', 'area', 'Acme Corp', '--type', 'client', '--json'],
         {
           useFixtureVault: false,
           env: {
@@ -364,7 +364,7 @@ describe('taskdn add', () => {
     });
 
     test('defaults status to active', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'area', 'Default Area', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'area', 'Default Area', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -379,7 +379,7 @@ describe('taskdn add', () => {
     });
 
     test('errors with no area title', async () => {
-      const { stderr, exitCode } = await runCli(['add', 'area', '--json'], {
+      const { stderr, exitCode } = await runCli(['new', 'area', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -395,7 +395,7 @@ describe('taskdn add', () => {
 
   describe('output modes', () => {
     test('human mode shows confirmation', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'Human Output Task'], {
+      const { stdout, exitCode } = await runCli(['new', 'Human Output Task'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -410,7 +410,7 @@ describe('taskdn add', () => {
     });
 
     test('AI mode shows structured markdown', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'AI Output Task', '--ai'], {
+      const { stdout, exitCode } = await runCli(['new', 'AI Output Task', '--ai'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
@@ -427,7 +427,7 @@ describe('taskdn add', () => {
     });
 
     test('JSON mode shows machine-readable output', async () => {
-      const { stdout, exitCode } = await runCli(['add', 'JSON Output Task', '--json'], {
+      const { stdout, exitCode } = await runCli(['new', 'JSON Output Task', '--json'], {
         useFixtureVault: false,
         env: {
           TASKDN_TASKS_DIR: tasksDir,
