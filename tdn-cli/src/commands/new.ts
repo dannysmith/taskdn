@@ -266,18 +266,18 @@ async function interactiveAddTask(): Promise<TaskCreatedResult | null> {
 
   p.outro('Creating task...');
 
-  // Create the task
-  const parsedDue = due ? parseNaturalDate(due) : undefined;
-  const parsedScheduled = scheduled ? parseNaturalDate(scheduled) : undefined;
-  const parsedDeferUntil = deferUntil ? parseNaturalDate(deferUntil) : undefined;
+  // Create the task - validate dates using the same logic as non-interactive mode
+  const parsedDue = parseDateOption(due, 'due');
+  const parsedScheduled = parseDateOption(scheduled, 'scheduled');
+  const parsedDeferUntil = parseDateOption(deferUntil, 'defer-until');
 
   const fields: TaskCreateFields = {
     status: status as string,
     project: project || undefined,
     area: area || undefined,
-    due: parsedDue ?? undefined,
-    scheduled: parsedScheduled ?? undefined,
-    deferUntil: parsedDeferUntil ?? undefined,
+    due: parsedDue,
+    scheduled: parsedScheduled,
+    deferUntil: parsedDeferUntil,
   };
 
   const task = createTaskFile(config.tasksDir, title, fields);
@@ -512,11 +512,19 @@ export const newCommand = new Command('new')
 
       // If no arguments in AI/JSON mode, error
       if (!entityOrTitle) {
-        const error = createError.missingField(
-          'title',
-          'Title is required in non-interactive mode'
-        );
-        console.error(formatError(error, mode));
+        if (mode === 'human') {
+          console.error('Error: Title or entity type is required in non-interactive mode.');
+          console.error('\nExamples:');
+          console.error('  taskdn new "Task title"');
+          console.error('  taskdn new project "Project title"');
+        } else {
+          console.error(
+            JSON.stringify({
+              error: 'MISSING_ARGUMENT',
+              message: 'Title or entity type is required in non-interactive mode',
+            })
+          );
+        }
         process.exit(2);
       }
 
@@ -529,16 +537,34 @@ export const newCommand = new Command('new')
       if (normalizedType === 'project') {
         // Creating a project
         if (!title) {
-          const error = createError.missingField('title', 'Project title is required');
-          console.error(formatError(error, mode));
+          if (mode === 'human') {
+            console.error('Error: Project title is required.');
+            console.error('\nExample: taskdn new project "My Project"');
+          } else {
+            console.error(
+              JSON.stringify({
+                error: 'MISSING_ARGUMENT',
+                message: 'Project title is required',
+              })
+            );
+          }
           process.exit(2);
         }
         result = createProject(title, options as AddOptions);
       } else if (normalizedType === 'area') {
         // Creating an area
         if (!title) {
-          const error = createError.missingField('title', 'Area title is required');
-          console.error(formatError(error, mode));
+          if (mode === 'human') {
+            console.error('Error: Area title is required.');
+            console.error('\nExample: taskdn new area "My Area"');
+          } else {
+            console.error(
+              JSON.stringify({
+                error: 'MISSING_ARGUMENT',
+                message: 'Area title is required',
+              })
+            );
+          }
           process.exit(2);
         }
         result = createArea(title, options as AddOptions);

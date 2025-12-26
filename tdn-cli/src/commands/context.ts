@@ -62,7 +62,7 @@ function resolveTaskPath(identifier: string, tasksDir: string): string {
     return identifier;
   }
   // If it contains a path separator, resolve relative to CWD
-  if (identifier.includes('/')) {
+  if (identifier.includes('/') || identifier.includes('\\')) {
     return resolve(identifier);
   }
   // Bare filename (e.g., "my-task.md") - resolve relative to tasks dir
@@ -84,7 +84,8 @@ function groupTasksByProject(tasks: Task[], projects: Project[]): Map<string, Ta
     if (task.project) {
       // Task has a project reference - find the matching project by title
       // The task.project is a wikilink like "[[Test Project]]" or just the name
-      const projectName = task.project.replace(/^\[\[|\]\]$/g, '');
+      // Strip wikilink brackets if present
+      const projectName = task.project.replace(/^\[\[(.*)\]\]$/, '$1');
 
       // Find project with matching title (case-insensitive exact match)
       const matchingProject = projects.find(

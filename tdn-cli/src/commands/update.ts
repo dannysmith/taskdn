@@ -384,7 +384,6 @@ function normalizeStatusValues(updates: FieldUpdate[]): void {
 function buildChanges(
   updates: FieldUpdate[],
   oldValues: Map<string, string | undefined>,
-  entityType: EntityType,
   updatedStatus?: string
 ): FieldChange[] {
   const changes: FieldChange[] = [];
@@ -430,7 +429,7 @@ function updateTask(
   updateFileFields(fullPath, updates);
 
   const updatedTask = parseTaskFile(fullPath);
-  const changes = buildChanges(updates, oldValues, 'task', updatedTask.status);
+  const changes = buildChanges(updates, oldValues, updatedTask.status);
 
   return { task: updatedTask, changes };
 }
@@ -459,7 +458,7 @@ function updateProject(
   updateFileFields(fullPath, updates);
 
   const updatedProject = parseProjectFile(fullPath);
-  const changes = buildChanges(updates, oldValues, 'project', updatedProject.status);
+  const changes = buildChanges(updates, oldValues, updatedProject.status);
 
   return { project: updatedProject, changes };
 }
@@ -488,7 +487,7 @@ function updateArea(
   updateFileFields(fullPath, updates);
 
   const updatedArea = parseAreaFile(fullPath);
-  const changes = buildChanges(updates, oldValues, 'area', updatedArea.status);
+  const changes = buildChanges(updates, oldValues, updatedArea.status);
 
   return { area: updatedArea, changes };
 }
@@ -513,7 +512,7 @@ function previewUpdateTask(
 
   const task = parseTaskFile(fullPath);
   const oldValues = getOldValuesForTask(task, updates);
-  const changes = buildChanges(updates, oldValues, 'task');
+  const changes = buildChanges(updates, oldValues);
 
   // For dry-run, return the current (unchanged) task with the changes that would be made
   return {
@@ -544,7 +543,7 @@ function previewUpdateProject(
 
   const project = parseProjectFile(fullPath);
   const oldValues = getOldValuesForProject(project, updates);
-  const changes = buildChanges(updates, oldValues, 'project');
+  const changes = buildChanges(updates, oldValues);
 
   // For dry-run, return the current (unchanged) project with the changes that would be made
   return {
@@ -575,7 +574,7 @@ function previewUpdateArea(
 
   const area = parseAreaFile(fullPath);
   const oldValues = getOldValuesForArea(area, updates);
-  const changes = buildChanges(updates, oldValues, 'area');
+  const changes = buildChanges(updates, oldValues);
 
   // For dry-run, return the current (unchanged) area with the changes that would be made
   return {

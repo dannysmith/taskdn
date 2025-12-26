@@ -59,16 +59,6 @@ pub struct FieldUpdate {
     pub value: Option<String>,
 }
 
-/// Result of a file creation operation
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct CreateResult {
-    /// Full path to the created file
-    pub path: String,
-    /// The filename (without directory)
-    pub filename: String,
-}
-
 // ============================================================================
 // Helper Utilities
 // ============================================================================
@@ -169,8 +159,9 @@ fn uuid_simple() -> String {
     format!("{:x}", duration.as_nanos())
 }
 
-/// Get current timestamp in ISO 8601 format (local time).
-/// Format: YYYY-MM-DDTHH:MM:SS
+/// Get current timestamp in ISO 8601 format (UTC).
+/// Format: YYYY-MM-DDTHH:MM:SSZ
+/// TODO: Consider using chrono for production if more timezone flexibility is needed.
 pub fn now_iso8601() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -178,8 +169,6 @@ pub fn now_iso8601() -> String {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default();
 
-    // Convert to local time components
-    // Note: This is a simplified implementation. For production, consider using chrono.
     let secs = now.as_secs();
 
     // Calculate UTC components
@@ -193,7 +182,7 @@ pub fn now_iso8601() -> String {
     let (year, month, day) = days_to_ymd(days);
 
     format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}",
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
         year, month, day, hours, minutes, seconds
     )
 }
@@ -452,7 +441,16 @@ pub fn create_task_file(
     atomic_write(&file_path, &content)?;
 
     // Parse and return the created task
-    parse_task_file(file_path.to_string_lossy().to_string())
+    // If parsing fails, remove the orphaned file
+    let path_str = file_path.to_string_lossy().to_string();
+    match parse_task_file(path_str) {
+        Ok(task) => Ok(task),
+        Err(e) => {
+            // Attempt to remove the file, but prioritize returning the original parse error
+            let _ = std::fs::remove_file(&file_path);
+            Err(e)
+        }
+    }
 }
 
 /// Create a new project file with the given title and optional fields.
@@ -531,7 +529,16 @@ pub fn create_project_file(
     atomic_write(&file_path, &content)?;
 
     // Parse and return the created project
-    parse_project_file(file_path.to_string_lossy().to_string())
+    // If parsing fails, remove the orphaned file
+    let path_str = file_path.to_string_lossy().to_string();
+    match parse_project_file(path_str) {
+        Ok(project) => Ok(project),
+        Err(e) => {
+            // Attempt to remove the file, but prioritize returning the original parse error
+            let _ = std::fs::remove_file(&file_path);
+            Err(e)
+        }
+    }
 }
 
 /// Create a new area file with the given title and optional fields.
@@ -591,7 +598,16 @@ pub fn create_area_file(
     atomic_write(&file_path, &content)?;
 
     // Parse and return the created area
-    parse_area_file(file_path.to_string_lossy().to_string())
+    // If parsing fails, remove the orphaned file
+    let path_str = file_path.to_string_lossy().to_string();
+    match parse_area_file(path_str) {
+        Ok(area) => Ok(area),
+        Err(e) => {
+            // Attempt to remove the file, but prioritize returning the original parse error
+            let _ = std::fs::remove_file(&file_path);
+            Err(e)
+        }
+    }
 }
 
 // ============================================================================

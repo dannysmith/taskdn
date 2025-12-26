@@ -61,6 +61,7 @@ export interface InvalidDateError extends CliErrorBase {
   code: 'INVALID_DATE';
   providedDate: string;
   expectedFormats: string[];
+  fieldName?: string;
 }
 
 /**
@@ -213,6 +214,7 @@ export const createError = {
       message: `Invalid date format for ${fieldName}: "${providedDate}"`,
       providedDate,
       expectedFormats,
+      fieldName,
     };
   },
 

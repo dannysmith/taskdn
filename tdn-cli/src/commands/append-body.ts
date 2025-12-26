@@ -135,6 +135,10 @@ function appendToBody(
 
   // Find the end of frontmatter (second ---)
   // Frontmatter format is: ---\n...\n---\n<body>
+  // NOTE: This simple string-based approach could fail if the YAML frontmatter
+  // contains "---" within a multi-line string value. For production use,
+  // consider using a proper frontmatter parser library or delegating to the
+  // Rust writer module which handles YAML parsing correctly.
   const frontmatterStartIndex = content.indexOf('---');
   if (frontmatterStartIndex === -1) {
     throw createError.parseError(filePath, undefined, 'No frontmatter found');

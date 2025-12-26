@@ -23,10 +23,17 @@ function getUniqueArchivePath(archiveDir: string, filename: string): string {
 
   let targetPath = join(archiveDir, filename);
   let counter = 1;
+  const MAX_ATTEMPTS = 10000; // Safety limit to prevent infinite loop
 
-  while (existsSync(targetPath)) {
+  while (existsSync(targetPath) && counter < MAX_ATTEMPTS) {
     targetPath = join(archiveDir, `${baseName}-${counter}${ext}`);
     counter++;
+  }
+
+  if (counter >= MAX_ATTEMPTS) {
+    throw new Error(
+      `Could not find unique archive path for ${filename} after ${MAX_ATTEMPTS} attempts`
+    );
   }
 
   return targetPath;
@@ -168,6 +175,12 @@ export const archiveCommand = new Command('archive')
         } catch (error) {
           if (isCliError(error)) {
             console.error(formatError(error, mode));
+          } else {
+            // Log unexpected non-CLI errors to stderr
+            console.error(
+              'Unexpected error:',
+              error instanceof Error ? error.message : String(error)
+            );
           }
         }
       }
