@@ -22,7 +22,6 @@ import type {
   AreaUpdatedResult,
   ArchivedResult,
   BatchResult,
-  DryRunResult,
   BodyAppendedResult,
 } from './types.ts';
 import type { Task, Project, Area } from '@bindings';
@@ -295,8 +294,10 @@ export const jsonFormatter: Formatter = {
         const statusResult = result as TaskStatusChangedResult;
         const task = statusResult.task;
         const output = {
-          summary: `Changed status: ${task.title}`,
-          updated: true,
+          summary: statusResult.dryRun
+            ? `Dry run: set-status ${task.title}`
+            : `Changed status: ${task.title}`,
+          ...(statusResult.dryRun ? { dryRun: true } : { updated: true }),
           task: taskToJson(task),
           previousStatus: statusResult.previousStatus,
         };
@@ -306,8 +307,10 @@ export const jsonFormatter: Formatter = {
         const updatedResult = result as TaskUpdatedResult;
         const task = updatedResult.task;
         const output = {
-          summary: `Updated task: ${task.title}`,
-          updated: true,
+          summary: updatedResult.dryRun
+            ? `Dry run: update ${task.title}`
+            : `Updated task: ${task.title}`,
+          ...(updatedResult.dryRun ? { dryRun: true } : { updated: true }),
           task: taskToJson(task),
           changes: updatedResult.changes,
         };
@@ -317,8 +320,10 @@ export const jsonFormatter: Formatter = {
         const updatedResult = result as ProjectUpdatedResult;
         const project = updatedResult.project;
         const output = {
-          summary: `Updated project: ${project.title}`,
-          updated: true,
+          summary: updatedResult.dryRun
+            ? `Dry run: update ${project.title}`
+            : `Updated project: ${project.title}`,
+          ...(updatedResult.dryRun ? { dryRun: true } : { updated: true }),
           project: projectToJson(project),
           changes: updatedResult.changes,
         };
@@ -328,8 +333,10 @@ export const jsonFormatter: Formatter = {
         const updatedResult = result as AreaUpdatedResult;
         const area = updatedResult.area;
         const output = {
-          summary: `Updated area: ${area.title}`,
-          updated: true,
+          summary: updatedResult.dryRun
+            ? `Dry run: update ${area.title}`
+            : `Updated area: ${area.title}`,
+          ...(updatedResult.dryRun ? { dryRun: true } : { updated: true }),
           area: areaToJson(area),
           changes: updatedResult.changes,
         };
@@ -338,8 +345,10 @@ export const jsonFormatter: Formatter = {
       case 'archived': {
         const archivedResult = result as ArchivedResult;
         const output = {
-          summary: `Archived: ${archivedResult.title}`,
-          archived: true,
+          summary: archivedResult.dryRun
+            ? `Dry run: archive ${archivedResult.title}`
+            : `Archived: ${archivedResult.title}`,
+          ...(archivedResult.dryRun ? { dryRun: true } : { archived: true }),
           title: archivedResult.title,
           from: archivedResult.fromPath,
           to: archivedResult.toPath,
@@ -363,27 +372,13 @@ export const jsonFormatter: Formatter = {
         };
         return JSON.stringify(output, null, 2);
       }
-      case 'dry-run': {
-        const dryRunResult = result as DryRunResult;
-        const output = {
-          summary: `Dry run: ${dryRunResult.operation} ${dryRunResult.title}`,
-          dryRun: true,
-          operation: dryRunResult.operation,
-          entityType: dryRunResult.entityType,
-          title: dryRunResult.title,
-          path: dryRunResult.path,
-          ...(dryRunResult.wouldCreate && { wouldCreate: true }),
-          ...(dryRunResult.changes && { changes: dryRunResult.changes }),
-          ...(dryRunResult.toPath && { to: dryRunResult.toPath }),
-          ...(dryRunResult.appendText && { appendText: dryRunResult.appendText }),
-        };
-        return JSON.stringify(output, null, 2);
-      }
       case 'body-appended': {
         const appendedResult = result as BodyAppendedResult;
         const output = {
-          summary: `Body appended: ${appendedResult.title}`,
-          appended: true,
+          summary: appendedResult.dryRun
+            ? `Dry run: append-body ${appendedResult.title}`
+            : `Body appended: ${appendedResult.title}`,
+          ...(appendedResult.dryRun ? { dryRun: true } : { appended: true }),
           entityType: appendedResult.entityType,
           title: appendedResult.title,
           path: appendedResult.path,

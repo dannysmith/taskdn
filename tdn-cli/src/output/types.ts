@@ -277,6 +277,7 @@ export interface TaskStatusChangedResult {
   type: 'task-status-changed';
   task: Task;
   previousStatus: string;
+  dryRun?: boolean;
 }
 
 /**
@@ -286,6 +287,7 @@ export interface TaskUpdatedResult {
   type: 'task-updated';
   task: Task;
   changes: FieldChange[];
+  dryRun?: boolean;
 }
 
 /**
@@ -295,6 +297,7 @@ export interface ProjectUpdatedResult {
   type: 'project-updated';
   project: Project;
   changes: FieldChange[];
+  dryRun?: boolean;
 }
 
 /**
@@ -304,6 +307,7 @@ export interface AreaUpdatedResult {
   type: 'area-updated';
   area: Area;
   changes: FieldChange[];
+  dryRun?: boolean;
 }
 
 /**
@@ -314,6 +318,7 @@ export interface ArchivedResult {
   title: string;
   fromPath: string;
   toPath: string;
+  dryRun?: boolean;
 }
 
 /**
@@ -336,21 +341,6 @@ export interface BatchResult {
 }
 
 /**
- * Dry run preview result
- */
-export interface DryRunResult {
-  type: 'dry-run';
-  operation: 'create' | 'set-status' | 'update' | 'archive' | 'append-body';
-  entityType: 'task' | 'project' | 'area';
-  title: string;
-  path: string;
-  wouldCreate?: boolean;
-  changes?: FieldChange[];
-  toPath?: string; // for archive
-  appendText?: string; // for append-body
-}
-
-/**
  * Result of appending to a body
  */
 export interface BodyAppendedResult {
@@ -359,6 +349,7 @@ export interface BodyAppendedResult {
   title: string;
   path: string;
   appendedText: string;
+  dryRun?: boolean;
 }
 
 export type FormattableResult =
@@ -383,7 +374,6 @@ export type FormattableResult =
   | AreaUpdatedResult
   | ArchivedResult
   | BatchResult
-  | DryRunResult
   | BodyAppendedResult
   | StubResult;
 

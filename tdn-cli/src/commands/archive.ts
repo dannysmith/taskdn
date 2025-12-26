@@ -2,7 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { dirname, basename, join } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, ArchivedResult, BatchResult, DryRunResult } from '@/output/types.ts';
+import type { GlobalOptions, ArchivedResult, BatchResult } from '@/output/types.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 
@@ -87,7 +87,7 @@ function archiveFile(taskQuery: string): { title: string; fromPath: string; toPa
  * Preview archiving a file (for dry-run mode).
  * Supports both path-based and fuzzy title-based lookup.
  */
-function previewArchive(taskQuery: string): DryRunResult {
+function previewArchive(taskQuery: string): ArchivedResult {
   // Look up the task (supports both paths and fuzzy matching)
   const lookupResult = lookupTask(taskQuery);
 
@@ -113,12 +113,11 @@ function previewArchive(taskQuery: string): DryRunResult {
   const targetPath = getUniqueArchivePath(archiveDir, filename);
 
   return {
-    type: 'dry-run',
-    operation: 'archive',
-    entityType: 'task',
+    type: 'archived',
     title: task.title,
-    path: fullPath,
+    fromPath: fullPath,
     toPath: targetPath,
+    dryRun: true,
   };
 }
 

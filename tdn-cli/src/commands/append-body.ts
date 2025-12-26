@@ -2,7 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, BodyAppendedResult, DryRunResult } from '@/output/types.ts';
+import type { GlobalOptions, BodyAppendedResult } from '@/output/types.ts';
 import { parseTaskFile, parseProjectFile, parseAreaFile } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import {
@@ -179,7 +179,11 @@ function appendToBody(
 /**
  * Preview append-body (for dry-run mode)
  */
-function previewAppendBody(filePath: string, text: string, entityType: EntityType): DryRunResult {
+function previewAppendBody(
+  filePath: string,
+  text: string,
+  entityType: EntityType
+): BodyAppendedResult {
   const fullPath = resolve(filePath);
 
   if (!existsSync(fullPath)) {
@@ -190,12 +194,12 @@ function previewAppendBody(filePath: string, text: string, entityType: EntityTyp
   const formattedText = formatAppendText(text);
 
   return {
-    type: 'dry-run',
-    operation: 'append-body',
+    type: 'body-appended',
     entityType,
     title,
     path: fullPath,
-    appendText: formattedText,
+    appendedText: formattedText,
+    dryRun: true,
   };
 }
 

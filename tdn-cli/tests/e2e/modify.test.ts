@@ -116,9 +116,9 @@ describe('taskdn set status (complete)', () => {
     expect(exitCode).toBe(0);
     const output = JSON.parse(stdout);
     expect(output.dryRun).toBe(true);
-    expect(output.changes).toContainEqual(
-      expect.objectContaining({ field: 'status', oldValue: 'ready', newValue: 'done' })
-    );
+    expect(output.task).toBeDefined();
+    expect(output.task.status).toBe('done');
+    expect(output.previousStatus).toBe('ready');
 
     // File should not be modified
     const content = readFileSync(taskPath, 'utf-8');
@@ -637,39 +637,125 @@ describe('output modes', () => {
 });
 
 describe('fuzzy matching in write commands', () => {
+  let fuzzyTempDir: string;
+  let fuzzyTasksDir: string;
+  let fuzzyProjectsDir: string;
+  let fuzzyAreasDir: string;
+
+  beforeEach(() => {
+    fuzzyTempDir = mkdtempSync(join(tmpdir(), 'taskdn-fuzzy-test-'));
+    fuzzyTasksDir = join(fuzzyTempDir, 'tasks');
+    fuzzyProjectsDir = join(fuzzyTempDir, 'projects');
+    fuzzyAreasDir = join(fuzzyTempDir, 'areas');
+    mkdirSync(fuzzyTasksDir, { recursive: true });
+    mkdirSync(fuzzyProjectsDir, { recursive: true });
+    mkdirSync(fuzzyAreasDir, { recursive: true });
+    mkdirSync(join(fuzzyTasksDir, 'archive'), { recursive: true });
+
+    // Create test tasks
+    writeFileSync(
+      join(fuzzyTasksDir, 'unique-task.md'),
+      `---
+title: Unique Task
+status: ready
+created-at: 2025-01-10
+updated-at: 2025-01-10
+---
+`
+    );
+
+    writeFileSync(
+      join(fuzzyTasksDir, 'task-one.md'),
+      `---
+title: Similar Task One
+status: ready
+created-at: 2025-01-10
+updated-at: 2025-01-10
+---
+`
+    );
+
+    writeFileSync(
+      join(fuzzyTasksDir, 'task-two.md'),
+      `---
+title: Similar Task Two
+status: ready
+created-at: 2025-01-10
+updated-at: 2025-01-10
+---
+`
+    );
+
+    writeFileSync(
+      join(fuzzyTasksDir, 'inbox-task.md'),
+      `---
+title: Inbox Task
+status: inbox
+created-at: 2025-01-10
+updated-at: 2025-01-10
+---
+`
+    );
+
+    // Create test project
+    writeFileSync(
+      join(fuzzyProjectsDir, 'test-project.md'),
+      `---
+title: Test Project
+status: in-progress
+---
+`
+    );
+  });
+
+  afterEach(() => {
+    if (fuzzyTempDir && existsSync(fuzzyTempDir)) {
+      rmSync(fuzzyTempDir, { recursive: true, force: true });
+    }
+  });
+
   describe('set status with fuzzy matching', () => {
     test('works with unique fuzzy title match', async () => {
-      const { stdout, exitCode } = await runCli([
-        'set',
-        'status',
-        'Minimal Task',
-        'done',
-        '--dry-run',
-        '--json',
-      ]);
+      const { stdout, exitCode } = await runCli(['set', 'status', 'Unique Task', 'done', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: fuzzyTasksDir,
+          TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+          TASKDN_AREAS_DIR: fuzzyAreasDir,
+        },
+      });
       expect(exitCode).toBe(0);
       const output = JSON.parse(stdout);
-      expect(output.title).toBe('Minimal Task');
-      expect(output.changes).toBeDefined();
-      expect(output.changes.find((c) => c.field === 'status')?.newValue).toBe('done');
+      expect(output.task.title).toBe('Unique Task');
+      expect(output.task.status).toBe('done');
     });
 
     test('is case-insensitive', async () => {
-      const { stdout, exitCode } = await runCli([
-        'set',
-        'status',
-        'minimal task',
-        'in-progress',
-        '--dry-run',
-        '--json',
-      ]);
+      const { stdout, exitCode } = await runCli(
+        ['set', 'status', 'unique task', 'in-progress', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: fuzzyTasksDir,
+            TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+            TASKDN_AREAS_DIR: fuzzyAreasDir,
+          },
+        }
+      );
       expect(exitCode).toBe(0);
       const output = JSON.parse(stdout);
-      expect(output.title).toBe('Minimal Task');
+      expect(output.task.title).toBe('Unique Task');
     });
 
     test('returns AMBIGUOUS error for multiple matches', async () => {
-      const { stderr, exitCode } = await runCli(['set', 'status', 'Task', 'done', '--json']);
+      const { stderr, exitCode } = await runCli(['set', 'status', 'Similar Task', 'done', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: fuzzyTasksDir,
+          TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+          TASKDN_AREAS_DIR: fuzzyAreasDir,
+        },
+      });
       expect(exitCode).toBe(1);
       const error = JSON.parse(stderr);
       expect(error.code).toBe('AMBIGUOUS');
@@ -678,13 +764,17 @@ describe('fuzzy matching in write commands', () => {
     });
 
     test('returns NOT_FOUND for no matches', async () => {
-      const { stderr, exitCode } = await runCli([
-        'set',
-        'status',
-        'Nonexistent Task XYZ123',
-        'done',
-        '--json',
-      ]);
+      const { stderr, exitCode } = await runCli(
+        ['set', 'status', 'Nonexistent Task XYZ123', 'done', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: fuzzyTasksDir,
+            TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+            TASKDN_AREAS_DIR: fuzzyAreasDir,
+          },
+        }
+      );
       expect(exitCode).toBe(1);
       const error = JSON.parse(stderr);
       expect(error.code).toBe('NOT_FOUND');
@@ -693,37 +783,53 @@ describe('fuzzy matching in write commands', () => {
 
   describe('update with fuzzy matching', () => {
     test('works with fuzzy title for tasks', async () => {
-      const { stdout, exitCode } = await runCli([
-        'update',
-        'Minimal Task',
-        '--set',
-        'status=blocked',
-        '--dry-run',
-        '--json',
-      ]);
+      const { stdout, exitCode } = await runCli(
+        ['update', 'Unique Task', '--set', 'status=blocked', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: fuzzyTasksDir,
+            TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+            TASKDN_AREAS_DIR: fuzzyAreasDir,
+          },
+        }
+      );
       expect(exitCode).toBe(0);
       const output = JSON.parse(stdout);
-      expect(output.title).toBe('Minimal Task');
-      expect(output.entityType).toBe('task');
+      expect(output.task.title).toBe('Unique Task');
+      expect(output.task.status).toBe('blocked');
     });
 
     test('works with fuzzy title for projects', async () => {
-      const { stdout, exitCode } = await runCli([
-        'update',
-        'Minimal Project',
-        '--set',
-        'status=paused',
-        '--dry-run',
-        '--json',
-      ]);
+      const { stdout, exitCode } = await runCli(
+        ['update', 'Test Project', '--set', 'status=paused', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: fuzzyTasksDir,
+            TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+            TASKDN_AREAS_DIR: fuzzyAreasDir,
+          },
+        }
+      );
       expect(exitCode).toBe(0);
       const output = JSON.parse(stdout);
-      expect(output.title).toBe('Minimal Project');
-      expect(output.entityType).toBe('project');
+      expect(output.project.title).toBe('Test Project');
+      expect(output.project.status).toBe('paused');
     });
 
     test('returns AMBIGUOUS for multiple matches', async () => {
-      const { stderr, exitCode } = await runCli(['update', 'Task', '--set', 'status=blocked', '--json']);
+      const { stderr, exitCode } = await runCli(
+        ['update', 'Similar Task', '--set', 'status=blocked', '--json'],
+        {
+          useFixtureVault: false,
+          env: {
+            TASKDN_TASKS_DIR: fuzzyTasksDir,
+            TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+            TASKDN_AREAS_DIR: fuzzyAreasDir,
+          },
+        }
+      );
       expect(exitCode).toBe(1);
       const error = JSON.parse(stderr);
       expect(error.code).toBe('AMBIGUOUS');
@@ -732,21 +838,42 @@ describe('fuzzy matching in write commands', () => {
 
   describe('archive with fuzzy matching', () => {
     test('works with fuzzy title match', async () => {
-      const { stdout, exitCode } = await runCli(['archive', 'Inbox Task', '--dry-run', '--json']);
+      const { stdout, exitCode } = await runCli(['archive', 'Inbox Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: fuzzyTasksDir,
+          TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+          TASKDN_AREAS_DIR: fuzzyAreasDir,
+        },
+      });
       expect(exitCode).toBe(0);
       const output = JSON.parse(stdout);
       expect(output.title).toBe('Inbox Task');
     });
 
     test('case-insensitive matching', async () => {
-      const { stdout, exitCode } = await runCli(['archive', 'inbox task', '--dry-run', '--json']);
+      const { stdout, exitCode } = await runCli(['archive', 'inbox task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: fuzzyTasksDir,
+          TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+          TASKDN_AREAS_DIR: fuzzyAreasDir,
+        },
+      });
       expect(exitCode).toBe(0);
       const output = JSON.parse(stdout);
       expect(output.title).toBe('Inbox Task');
     });
 
     test('returns AMBIGUOUS for multiple matches', async () => {
-      const { stderr, exitCode } = await runCli(['archive', 'Task', '--dry-run', '--json']);
+      const { stderr, exitCode } = await runCli(['archive', 'Similar Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: fuzzyTasksDir,
+          TASKDN_PROJECTS_DIR: fuzzyProjectsDir,
+          TASKDN_AREAS_DIR: fuzzyAreasDir,
+        },
+      });
       expect(exitCode).toBe(1);
       const error = JSON.parse(stderr);
       expect(error.code).toBe('AMBIGUOUS');

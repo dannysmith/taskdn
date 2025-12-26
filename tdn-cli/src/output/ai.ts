@@ -23,7 +23,6 @@ import type {
   AreaUpdatedResult,
   ArchivedResult,
   BatchResult,
-  DryRunResult,
   BodyAppendedResult,
   FieldChange,
 } from './types.ts';
@@ -1795,53 +1794,6 @@ function formatBatchResult(result: BatchResult): string {
 }
 
 /**
- * Format dry run result for AI mode
- */
-function formatDryRun(result: DryRunResult): string {
-  const lines: string[] = [];
-
-  const opName =
-    result.operation === 'create'
-      ? 'Would Be Created'
-      : result.operation === 'set-status'
-        ? 'Status Would Be Changed'
-        : result.operation === 'update'
-          ? 'Would Be Updated'
-          : result.operation === 'append-body'
-            ? 'Would Be Appended'
-            : 'Would Be Archived';
-
-  const entityName =
-    result.entityType === 'task' ? 'Task' : result.entityType === 'project' ? 'Project' : 'Area';
-
-  lines.push(`## Dry Run: ${entityName} ${opName}`);
-  lines.push('');
-  lines.push(`### ${result.title}`);
-  lines.push('');
-  lines.push(`- **path:** ${result.path}${result.wouldCreate ? ' (would be created)' : ''}`);
-
-  if (result.changes && result.changes.length > 0) {
-    lines.push('');
-    lines.push('### Changes');
-    lines.push('');
-    lines.push(formatFieldChanges(result.changes));
-  }
-
-  if (result.toPath) {
-    lines.push(`- **to:** ${result.toPath}`);
-  }
-
-  if (result.appendText) {
-    lines.push('');
-    lines.push('### Text to Append');
-    lines.push('');
-    lines.push(result.appendText);
-  }
-
-  return lines.join('\n');
-}
-
-/**
  * Format body appended result for AI mode
  */
 function formatBodyAppended(result: BodyAppendedResult): string {
@@ -1930,35 +1882,41 @@ export const aiFormatter: Formatter = {
       }
       case 'task-status-changed': {
         const statusResult = result as TaskStatusChangedResult;
-        return formatTaskStatusChanged(statusResult.task, statusResult.previousStatus);
+        const output = formatTaskStatusChanged(statusResult.task, statusResult.previousStatus);
+        return statusResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'task-updated': {
         const updatedResult = result as TaskUpdatedResult;
-        return formatTaskUpdated(updatedResult.task, updatedResult.changes);
+        const output = formatTaskUpdated(updatedResult.task, updatedResult.changes);
+        return updatedResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'project-updated': {
         const updatedResult = result as ProjectUpdatedResult;
-        return formatProjectUpdated(updatedResult.project, updatedResult.changes);
+        const output = formatProjectUpdated(updatedResult.project, updatedResult.changes);
+        return updatedResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'area-updated': {
         const updatedResult = result as AreaUpdatedResult;
-        return formatAreaUpdated(updatedResult.area, updatedResult.changes);
+        const output = formatAreaUpdated(updatedResult.area, updatedResult.changes);
+        return updatedResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'archived': {
         const archivedResult = result as ArchivedResult;
-        return formatArchived(archivedResult.title, archivedResult.fromPath, archivedResult.toPath);
+        const output = formatArchived(
+          archivedResult.title,
+          archivedResult.fromPath,
+          archivedResult.toPath
+        );
+        return archivedResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'batch-result': {
         const batchResult = result as BatchResult;
         return formatBatchResult(batchResult);
       }
-      case 'dry-run': {
-        const dryRunResult = result as DryRunResult;
-        return formatDryRun(dryRunResult);
-      }
       case 'body-appended': {
         const appendedResult = result as BodyAppendedResult;
-        return formatBodyAppended(appendedResult);
+        const output = formatBodyAppended(appendedResult);
+        return appendedResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       default:
         return `## ${result.type}\n\n(stub output)`;

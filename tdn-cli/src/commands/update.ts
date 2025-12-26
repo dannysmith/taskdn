@@ -8,7 +8,6 @@ import type {
   ProjectUpdatedResult,
   AreaUpdatedResult,
   FieldChange,
-  DryRunResult,
 } from '@/output/types.ts';
 import {
   updateFileFields,
@@ -497,7 +496,11 @@ function updateArea(
 /**
  * Preview task update changes (for dry-run mode).
  */
-function previewUpdateTask(taskPath: string, setArgs: string[], unsetArgs: string[]): DryRunResult {
+function previewUpdateTask(
+  taskPath: string,
+  setArgs: string[],
+  unsetArgs: string[]
+): TaskUpdatedResult {
   const fullPath = resolve(taskPath);
 
   if (!existsSync(fullPath)) {
@@ -512,13 +515,12 @@ function previewUpdateTask(taskPath: string, setArgs: string[], unsetArgs: strin
   const oldValues = getOldValuesForTask(task, updates);
   const changes = buildChanges(updates, oldValues, 'task');
 
+  // For dry-run, return the current (unchanged) task with the changes that would be made
   return {
-    type: 'dry-run',
-    operation: 'update',
-    entityType: 'task',
-    title: task.title,
-    path: fullPath,
+    type: 'task-updated',
+    task,
     changes,
+    dryRun: true,
   };
 }
 
@@ -529,7 +531,7 @@ function previewUpdateProject(
   projectPath: string,
   setArgs: string[],
   unsetArgs: string[]
-): DryRunResult {
+): ProjectUpdatedResult {
   const fullPath = resolve(projectPath);
 
   if (!existsSync(fullPath)) {
@@ -544,20 +546,23 @@ function previewUpdateProject(
   const oldValues = getOldValuesForProject(project, updates);
   const changes = buildChanges(updates, oldValues, 'project');
 
+  // For dry-run, return the current (unchanged) project with the changes that would be made
   return {
-    type: 'dry-run',
-    operation: 'update',
-    entityType: 'project',
-    title: project.title,
-    path: fullPath,
+    type: 'project-updated',
+    project,
     changes,
+    dryRun: true,
   };
 }
 
 /**
  * Preview area update changes (for dry-run mode).
  */
-function previewUpdateArea(areaPath: string, setArgs: string[], unsetArgs: string[]): DryRunResult {
+function previewUpdateArea(
+  areaPath: string,
+  setArgs: string[],
+  unsetArgs: string[]
+): AreaUpdatedResult {
   const fullPath = resolve(areaPath);
 
   if (!existsSync(fullPath)) {
@@ -572,13 +577,12 @@ function previewUpdateArea(areaPath: string, setArgs: string[], unsetArgs: strin
   const oldValues = getOldValuesForArea(area, updates);
   const changes = buildChanges(updates, oldValues, 'area');
 
+  // For dry-run, return the current (unchanged) area with the changes that would be made
   return {
-    type: 'dry-run',
-    operation: 'update',
-    entityType: 'area',
-    title: area.title,
-    path: fullPath,
+    type: 'area-updated',
+    area,
     changes,
+    dryRun: true,
   };
 }
 
@@ -617,7 +621,7 @@ export const updateCommand = new Command('update')
       const { path: fullPath, entityType } = resolved;
 
       if (dryRun) {
-        let result: DryRunResult;
+        let result: TaskUpdatedResult | ProjectUpdatedResult | AreaUpdatedResult;
         switch (entityType) {
           case 'task':
             result = previewUpdateTask(fullPath, setArgs, unsetArgs);

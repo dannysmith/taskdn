@@ -1,12 +1,6 @@
 import { Command } from '@commander-js/extra-typings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type {
-  GlobalOptions,
-  TaskStatusChangedResult,
-  BatchResult,
-  DryRunResult,
-  FieldChange,
-} from '@/output/types.ts';
+import type { GlobalOptions, TaskStatusChangedResult, BatchResult } from '@/output/types.ts';
 import { updateFileFields, parseTaskFile, type FieldUpdate, type Task } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
@@ -101,7 +95,7 @@ function changeTaskStatus(
  * Preview status change (for dry-run mode).
  * Supports both path-based and fuzzy title-based lookup.
  */
-function previewStatusChange(taskQuery: string, newStatus: string): DryRunResult {
+function previewStatusChange(taskQuery: string, newStatus: string): TaskStatusChangedResult {
   // Look up the task (supports both paths and fuzzy matching)
   const lookupResult = lookupTask(taskQuery);
 
@@ -124,24 +118,22 @@ function previewStatusChange(taskQuery: string, newStatus: string): DryRunResult
   const wasCompleted = COMPLETION_STATUSES.includes(previousStatus);
   const willBeCompleted = COMPLETION_STATUSES.includes(normalizedNewStatus);
 
-  const changes: FieldChange[] = [
-    { field: 'status', oldValue: previousStatus, newValue: normalizedNewStatus },
-  ];
+  // Create updated task with new status
+  const updatedTask = { ...task, status: normalizedNewStatus as Task['status'] };
 
+  // Update completed-at if needed
   if (!wasCompleted && willBeCompleted) {
     const now = new Date().toISOString().slice(0, 19);
-    changes.push({ field: 'completed-at', oldValue: task.completedAt, newValue: now });
+    updatedTask.completedAt = now;
   } else if (wasCompleted && !willBeCompleted) {
-    changes.push({ field: 'completed-at', oldValue: task.completedAt, newValue: undefined });
+    updatedTask.completedAt = undefined;
   }
 
   return {
-    type: 'dry-run',
-    operation: 'set-status',
-    entityType: 'task',
-    title: task.title,
-    path: task.path,
-    changes,
+    type: 'task-status-changed',
+    task: updatedTask,
+    previousStatus,
+    dryRun: true,
   };
 }
 
