@@ -35,7 +35,7 @@ Rather than compromise, we embrace this split with distinct modes.
 Some human-mode operations require interactive prompts:
 
 - **Fuzzy match with multiple results:** User selects from a list
-- **`taskdn add` with no arguments:** Prompts for title, status, etc.
+- **`taskdn new` with no arguments:** Prompts for title, status, etc.
 - **Confirmations:** Destructive operations may prompt for confirmation
 
 The exact UX for these prompts will be designed during implementation using a TUI library. Key principles:
@@ -335,15 +335,15 @@ taskdn list                    # List tasks (implied)
 taskdn list tasks              # List tasks (explicit)
 taskdn list projects           # List projects
 taskdn list areas              # List areas
-taskdn add "Task title"        # Add task (implied)
-taskdn add task "Task title"   # Add task (explicit)
-taskdn add project "Q1"        # Add project
-taskdn add area "Work"         # Add area
+taskdn new "Task title"        # Add task (implied)
+taskdn new task "Task title"   # Add task (explicit)
+taskdn new project "Q1"        # Add project
+taskdn new area "Work"         # Add area
 ```
 
 Tasks are 90% of usage, so they get the shortest syntax. Projects and areas require explicit naming.
 
-**Note:** `taskdn add "Task title"` is equivalent to `taskdn add task "Task title"`. The explicit `task` keyword is optional but accepted. This means `--project` as a flag (assigning a task to a project) is never ambiguous with `project` as an entity type (creating a project).
+**Note:** `taskdn new "Task title"` is equivalent to `taskdn new task "Task title"`. The explicit `task` keyword is optional but accepted. This means `--project` as a flag (assigning a task to a project) is never ambiguous with `project` as an entity type (creating a project).
 
 ### Convenience Commands
 
@@ -351,7 +351,7 @@ These shortcuts exist for high-frequency daily operations:
 
 ```bash
 taskdn today                   # Tasks due today + scheduled for today
-taskdn inbox                   # Tasks with status: inbox
+# Note: Use `taskdn list --status inbox` for inbox tasks
 ```
 
 ### Context Command
@@ -568,26 +568,26 @@ taskdn list --overdue --limit 5      # Top 5 overdue tasks
 
 Results are limited _after_ sorting, so `--limit` combined with `--sort` gives you "top N by X".
 
-### Add Command
+### New Command
 
 Create new tasks, projects, or areas.
 
 ```bash
 # Tasks
-taskdn add "Review quarterly report"                    # Quick add to inbox
-taskdn add "Review report" --project "Q1" --due friday  # With metadata
-taskdn add "Task" --status ready --area "Work"          # With status and area
-taskdn add "Task" --scheduled tomorrow                  # With scheduled date
-taskdn add "Task" --defer-until "next monday"           # Deferred task
-taskdn add                                              # Interactive (human only)
+taskdn new "Review quarterly report"                    # Quick add to inbox
+taskdn new "Review report" --project "Q1" --due friday  # With metadata
+taskdn new "Task" --status ready --area "Work"          # With status and area
+taskdn new "Task" --scheduled tomorrow                  # With scheduled date
+taskdn new "Task" --defer-until "next monday"           # Deferred task
+taskdn new                                              # Interactive (human only)
 
 # Projects
-taskdn add project "Q1 Planning"
-taskdn add project "Q1 Planning" --area "Work" --status planning
+taskdn new project "Q1 Planning"
+taskdn new project "Q1 Planning" --area "Work" --status planning
 
 # Areas
-taskdn add area "Work"
-taskdn add area "Acme Corp" --type client
+taskdn new area "Work"
+taskdn new area "Acme Corp" --type client
 ```
 
 **AI mode output:**
@@ -635,12 +635,13 @@ Projects and areas follow the same pattern:
 
 ```bash
 # Status changes
-taskdn complete ~/tasks/foo.md           # Mark done
-taskdn drop ~/tasks/foo.md               # Mark dropped
-taskdn status ~/tasks/foo.md blocked     # Change to any status
+taskdn set status ~/tasks/foo.md done         # Mark done
+taskdn set status ~/tasks/foo.md dropped      # Mark dropped
+taskdn set status ~/tasks/foo.md blocked      # Change to any status
+# Note: Automatically manages completed-at field for done/dropped
 
-# Edit
-taskdn edit ~/tasks/foo.md               # Open in $EDITOR (human only)
+# Open in editor
+taskdn open ~/tasks/foo.md               # Open in $EDITOR (human only)
 
 # Programmatic update (for AI/scripts)
 taskdn update ~/tasks/foo.md --set status=ready
@@ -776,10 +777,10 @@ Exit code 1 for issues follows linter conventions—useful for CI pipelines.
 
 ```bash
 # Human: fuzzy search OK, prompts if multiple matches
-taskdn complete "login bug"
+taskdn set status "login bug" done
 
 # AI: must use path (obtained from previous query)
-taskdn complete ~/tasks/fix-login-bug.md --ai
+taskdn set status ~/tasks/fix-login-bug.md done --ai
 ```
 
 **Path format in AI mode output:** Full paths, using `~` notation when the file is under the user's home directory (e.g., `~/notes/tasks/fix-login.md`), otherwise absolute paths (e.g., `/Volumes/External/vault/tasks/fix-login.md`). This ensures paths are unambiguous and usable for follow-up operations.
@@ -891,10 +892,10 @@ taskdn list --deferred-this-week         # Tasks becoming visible this week
 **Input:** Natural language accepted in all modes.
 
 ```bash
-taskdn add "Task" --due tomorrow
-taskdn add "Task" --due "next friday"
-taskdn add "Task" --due 2025-12-20
-taskdn add "Task" --due +3d              # 3 days from now
+taskdn new "Task" --due tomorrow
+taskdn new "Task" --due "next friday"
+taskdn new "Task" --due 2025-12-20
+taskdn new "Task" --due +3d              # 3 days from now
 ```
 
 **Output:** Always ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).
@@ -964,16 +965,16 @@ taskdn add "Task" --due +3d              # 3 days from now
 ### Dry Run Mode
 
 ```bash
-taskdn add "New task" --dry-run          # Shows what would be created
-taskdn complete ~/tasks/foo.md --dry-run # Shows what would change
+taskdn new "New task" --dry-run                        # Shows what would be created
+taskdn set status ~/tasks/foo.md done --dry-run        # Shows what would change
 ```
 
 ### Piping Support
 
 ```bash
 # Pipe in data
-echo '{"title": "New task"}' | taskdn add --stdin
-echo 'title: New task' | taskdn add --stdin
+echo '{"title": "New task"}' | taskdn new --stdin
+echo 'title: New task' | taskdn new --stdin
 
 # Pipe out for processing
 taskdn list --json | jq '.[] | select(.status == "ready")'
@@ -982,8 +983,8 @@ taskdn list --json | jq '.[] | select(.status == "ready")'
 ### Bulk Operations
 
 ```bash
-# Complete multiple tasks
-taskdn complete ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md
+# Change status of multiple tasks
+taskdn set status ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md done
 ```
 
 **Partial failure behavior:**
@@ -1055,7 +1056,7 @@ Common flags have single-letter shortcuts:
 | Command | Exit Code | Reason |
 |---------|-----------|--------|
 | `taskdn list --status invalid` | 2 | Bad argument value |
-| `taskdn complete nonexistent.md` | 1 | File not found |
+| `taskdn set status nonexistent.md done` | 1 | File not found |
 | `taskdn list --due "not a date"` | 2 | Unparseable CLI input |
 | `taskdn list` (with malformed files) | 0 | Succeeded, bad files skipped with warnings |
 | `taskdn list --project "Q1"` (no matches) | 0 | Empty result is valid |

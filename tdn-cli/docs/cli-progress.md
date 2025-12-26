@@ -47,29 +47,28 @@ Checklist tracking implementation of all CLI commands and features.
 ### Convenience Commands
 
 - [x] `today` - Due/scheduled today + overdue
-- [x] `inbox` - Inbox tasks
+- [x] ~~`inbox` - Inbox tasks~~ (removed: use `list --status inbox`)
 
 ### Write Commands
 
-- [x] `add <title>` - Quick add task
-- [x] `add <title> --status <s>` - With status
-- [x] `add <title> --project <p>` - With project
-- [x] `add <title> --area <a>` - With area
-- [x] `add <title> --due <date>` - With due date (natural language supported)
-- [x] `add <title> --scheduled <date>` - With scheduled
-- [x] `add <title> --defer-until <date>` - With defer
-- [x] `add` (no args, human mode) - Interactive add
-- [x] `add project <name>` - Add project
-- [x] `add project <name> --area <a> --status <s>` - With options
-- [x] `add area <name>` - Add area
-- [x] `add area <name> --type <t>` - With type
-- [x] `complete <path>` - Mark done
-- [x] `drop <path>` - Mark dropped
-- [x] `status <path> <status>` - Change status
+- [x] `new <title>` - Quick add task (renamed from `add`)
+- [x] `new <title> --status <s>` - With status
+- [x] `new <title> --project <p>` - With project
+- [x] `new <title> --area <a>` - With area
+- [x] `new <title> --due <date>` - With due date (natural language supported)
+- [x] `new <title> --scheduled <date>` - With scheduled
+- [x] `new <title> --defer-until <date>` - With defer
+- [x] `new` (no args, human mode) - Interactive add
+- [x] `new project <name>` - Add project
+- [x] `new project <name> --area <a> --status <s>` - With options
+- [x] `new area <name>` - Add area
+- [x] `new area <name> --type <t>` - With type
+- [x] `set status <path> <status>` - Change status (replaces `complete`, `drop`, `status`)
+- [x] Auto-manages `completed-at` field on status transitions
 - [x] `update <path> --set <field>=<value>` - Update field
 - [x] `update <path> --unset <field>` - Clear field
 - [x] `archive <path>` - Move to archive
-- [x] `edit <path>` - Open in $EDITOR
+- [x] `open <path>` - Open in $EDITOR (renamed from `edit`)
 - [x] Batch operations (multiple paths)
 - [x] `--dry-run` - Preview changes
 
@@ -132,7 +131,7 @@ Checklist tracking implementation of all CLI commands and features.
 ### Interactive Features (Human Mode)
 
 - [ ] Fuzzy match disambiguation prompt
-- [x] Interactive `add` (no args)
+- [x] Interactive `new` (no args)
 - [ ] Confirmation prompts
 
 ### Other Features
