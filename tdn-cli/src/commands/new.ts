@@ -29,8 +29,28 @@ import { createError, formatError, isCliError } from '@/errors/index.ts';
  *   taskdn new "Task" --project "Q1" --due friday     # With metadata
  *   taskdn new                                        # Interactive (human only)
  *   taskdn new project "Q1 Planning"                  # New project
+ *   taskdn new projects "Q1 Planning"                 # Plural form also supported
  *   taskdn new area "Work"                            # New area
+ *   taskdn new areas "Work"                           # Plural form also supported
  */
+
+/**
+ * Normalize entity type to singular form for creation.
+ * Accepts both singular and plural forms.
+ */
+function normalizeEntityType(type: string): string {
+  const normalized = type.toLowerCase();
+  if (normalized === 'task' || normalized === 'tasks') {
+    return 'task';
+  }
+  if (normalized === 'project' || normalized === 'projects') {
+    return 'project';
+  }
+  if (normalized === 'area' || normalized === 'areas') {
+    return 'area';
+  }
+  return normalized; // Pass through unknown values
+}
 
 interface AddOptions {
   project?: string;
@@ -458,7 +478,7 @@ async function interactiveAdd(): Promise<
 
 export const newCommand = new Command('new')
   .description('Create a new entity')
-  .argument('[entity-or-title]', 'Entity type (project/area) or task title')
+  .argument('[entity-or-title]', 'Entity type (project(s)/area(s)) or task title')
   .argument('[title]', 'Title (when entity type is specified)')
   .option('--project <project>', 'Assign to project (tasks only)')
   .option('--area <area>', 'Assign to area')
@@ -495,7 +515,10 @@ export const newCommand = new Command('new')
       // Determine what we're creating
       let result: TaskCreatedResult | ProjectCreatedResult | AreaCreatedResult;
 
-      if (entityOrTitle.toLowerCase() === 'project') {
+      // Normalize entity type to support both singular and plural forms
+      const normalizedType = normalizeEntityType(entityOrTitle);
+
+      if (normalizedType === 'project') {
         // Creating a project
         if (!title) {
           const error = createError.missingField('title', 'Project title is required');
@@ -503,7 +526,7 @@ export const newCommand = new Command('new')
           process.exit(2);
         }
         result = createProject(title, options as AddOptions);
-      } else if (entityOrTitle.toLowerCase() === 'area') {
+      } else if (normalizedType === 'area') {
         // Creating an area
         if (!title) {
           const error = createError.missingField('title', 'Area title is required');

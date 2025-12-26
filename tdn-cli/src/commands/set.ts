@@ -1,6 +1,4 @@
 import { Command } from '@commander-js/extra-typings';
-import { existsSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type {
   GlobalOptions,
@@ -12,7 +10,7 @@ import type {
 import { updateFileFields, parseTaskFile, type FieldUpdate, type Task } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
-import { detectEntityType } from '@/lib/entity-lookup.ts';
+import { lookupTask } from '@/lib/entity-lookup.ts';
 
 /**
  * Set command - parent command for setting entity fields
@@ -49,26 +47,29 @@ function validateStatus(status: string): void {
 /**
  * Change a task's status.
  * Handles completed-at logic for done/dropped transitions.
+ * Supports both path-based and fuzzy title-based lookup.
  */
 function changeTaskStatus(
-  taskPath: string,
+  taskQuery: string,
   newStatus: string
 ): { task: Task; previousStatus: string } {
-  const fullPath = resolve(taskPath);
+  // Look up the task (supports both paths and fuzzy matching)
+  const lookupResult = lookupTask(taskQuery);
 
-  // Validate file exists
-  if (!existsSync(fullPath)) {
-    throw createError.notFound('task', taskPath);
+  // Handle lookup results
+  if (lookupResult.type === 'none') {
+    throw createError.notFound('task', taskQuery);
   }
 
-  // Validate this is a task (not a project or area)
-  const entityType = detectEntityType(fullPath);
-  if (entityType !== 'task') {
-    throw createError.invalidEntityType('set status', entityType, ['task']);
+  if (lookupResult.type === 'multiple') {
+    // Multiple matches - return ambiguous error with all match titles
+    const matchTitles = lookupResult.matches.map((t) => t.title);
+    throw createError.ambiguous(taskQuery, matchTitles);
   }
 
-  // Read current task to get previous status
-  const currentTask = parseTaskFile(fullPath);
+  // Single match (either exact path or single fuzzy match)
+  const currentTask = lookupResult.matches[0]!;
+  const fullPath = currentTask.path;
   const previousStatus = toKebabCase(currentTask.status);
   const normalizedNewStatus = newStatus.toLowerCase();
 
@@ -98,22 +99,25 @@ function changeTaskStatus(
 
 /**
  * Preview status change (for dry-run mode).
+ * Supports both path-based and fuzzy title-based lookup.
  */
-function previewStatusChange(taskPath: string, newStatus: string): DryRunResult {
-  const fullPath = resolve(taskPath);
+function previewStatusChange(taskQuery: string, newStatus: string): DryRunResult {
+  // Look up the task (supports both paths and fuzzy matching)
+  const lookupResult = lookupTask(taskQuery);
 
-  // Validate file exists
-  if (!existsSync(fullPath)) {
-    throw createError.notFound('task', taskPath);
+  // Handle lookup results
+  if (lookupResult.type === 'none') {
+    throw createError.notFound('task', taskQuery);
   }
 
-  // Validate this is a task (not a project or area)
-  const entityType = detectEntityType(fullPath);
-  if (entityType !== 'task') {
-    throw createError.invalidEntityType('set status', entityType, ['task']);
+  if (lookupResult.type === 'multiple') {
+    // Multiple matches - return ambiguous error with all match titles
+    const matchTitles = lookupResult.matches.map((t) => t.title);
+    throw createError.ambiguous(taskQuery, matchTitles);
   }
 
-  const task = parseTaskFile(fullPath);
+  // Single match (either exact path or single fuzzy match)
+  const task = lookupResult.matches[0]!;
   const previousStatus = toKebabCase(task.status);
   const normalizedNewStatus = newStatus.toLowerCase();
 
@@ -136,7 +140,7 @@ function previewStatusChange(taskPath: string, newStatus: string): DryRunResult 
     operation: 'set-status',
     entityType: 'task',
     title: task.title,
-    path: fullPath,
+    path: task.path,
     changes,
   };
 }

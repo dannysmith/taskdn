@@ -13,6 +13,24 @@ import { getVaultConfig } from '@/config/index.ts';
 import { getToday, getTomorrow, getEndOfWeek, getStartOfWeek } from '@/output/helpers/index.ts';
 
 /**
+ * Normalize entity type to plural form.
+ * Accepts both singular and plural forms.
+ */
+function normalizeEntityType(type: string): string {
+  const normalized = type.toLowerCase();
+  if (normalized === 'task' || normalized === 'tasks') {
+    return 'tasks';
+  }
+  if (normalized === 'project' || normalized === 'projects') {
+    return 'projects';
+  }
+  if (normalized === 'area' || normalized === 'areas') {
+    return 'areas';
+  }
+  return normalized; // Pass through unknown values
+}
+
+/**
  * Check if a project is "active" per CLI spec:
  * - Status is unset OR status NOT IN (done)
  */
@@ -72,14 +90,16 @@ interface ListOptions {
  * Usage:
  *   taskdn list                           # List tasks (default)
  *   taskdn list tasks                     # List tasks (explicit)
+ *   taskdn list task                      # Singular form also supported
  *   taskdn list projects                  # List projects
+ *   taskdn list project                   # Singular form also supported
  *   taskdn list areas                     # List areas
  *   taskdn list --status ready            # Filter by status
  *   taskdn list --project "Q1"            # Filter by project
  */
 export const listCommand = new Command('list')
   .description('List entities with optional filters')
-  .argument('[entity-type]', 'Entity type: tasks, projects, or areas', 'tasks')
+  .argument('[entity-type]', 'Entity type: task(s), project(s), or area(s)', 'tasks')
   .option('--status <status>', 'Filter by status (comma-separated for OR)')
   .option('--project <project>', 'Filter by project name')
   .option('--area <area>', 'Filter by area name')
@@ -106,8 +126,11 @@ export const listCommand = new Command('list')
     const config = getVaultConfig();
     const today = getToday();
 
+    // Normalize entity type to support both singular and plural forms
+    const normalizedType = normalizeEntityType(entityType);
+
     // Handle projects
-    if (entityType === 'projects') {
+    if (normalizedType === 'projects') {
       let projects = scanProjects(config);
 
       // Filter for active projects by default
@@ -122,7 +145,7 @@ export const listCommand = new Command('list')
     }
 
     // Handle areas
-    if (entityType === 'areas') {
+    if (normalizedType === 'areas') {
       let areas = scanAreas(config);
 
       // Filter for active areas by default

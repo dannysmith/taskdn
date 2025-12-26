@@ -1,11 +1,10 @@
 import { Command } from '@commander-js/extra-typings';
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
-import { resolve, dirname, basename, join } from 'node:path';
+import { dirname, basename, join } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions, ArchivedResult, BatchResult, DryRunResult } from '@/output/types.ts';
-import { parseTaskFile } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
-import { detectEntityType } from '@/lib/entity-lookup.ts';
+import { lookupTask } from '@/lib/entity-lookup.ts';
 
 /**
  * Archive command - move file(s) to archive subdirectory
@@ -36,23 +35,26 @@ function getUniqueArchivePath(archiveDir: string, filename: string): string {
 /**
  * Archive a single file.
  * Moves it to an 'archive' subdirectory in the same parent directory.
+ * Supports both path-based and fuzzy title-based lookup.
  */
-function archiveFile(filePath: string): { title: string; fromPath: string; toPath: string } {
-  const fullPath = resolve(filePath);
+function archiveFile(taskQuery: string): { title: string; fromPath: string; toPath: string } {
+  // Look up the task (supports both paths and fuzzy matching)
+  const lookupResult = lookupTask(taskQuery);
 
-  // Validate file exists
-  if (!existsSync(fullPath)) {
-    throw createError.notFound('task', filePath);
+  // Handle lookup results
+  if (lookupResult.type === 'none') {
+    throw createError.notFound('task', taskQuery);
   }
 
-  // Validate this is a task (not a project or area)
-  const entityType = detectEntityType(fullPath);
-  if (entityType !== 'task') {
-    throw createError.invalidEntityType('archive', entityType, ['task']);
+  if (lookupResult.type === 'multiple') {
+    // Multiple matches - return ambiguous error with all match titles
+    const matchTitles = lookupResult.matches.map((t) => t.title);
+    throw createError.ambiguous(taskQuery, matchTitles);
   }
 
-  // Read the task to get its title
-  const task = parseTaskFile(fullPath);
+  // Single match (either exact path or single fuzzy match)
+  const task = lookupResult.matches[0]!;
+  const fullPath = task.path;
   const title = task.title;
 
   // Determine archive directory (parent/archive/)
@@ -83,23 +85,26 @@ function archiveFile(filePath: string): { title: string; fromPath: string; toPat
 
 /**
  * Preview archiving a file (for dry-run mode).
+ * Supports both path-based and fuzzy title-based lookup.
  */
-function previewArchive(filePath: string): DryRunResult {
-  const fullPath = resolve(filePath);
+function previewArchive(taskQuery: string): DryRunResult {
+  // Look up the task (supports both paths and fuzzy matching)
+  const lookupResult = lookupTask(taskQuery);
 
-  // Validate file exists
-  if (!existsSync(fullPath)) {
-    throw createError.notFound('task', filePath);
+  // Handle lookup results
+  if (lookupResult.type === 'none') {
+    throw createError.notFound('task', taskQuery);
   }
 
-  // Validate this is a task (not a project or area)
-  const entityType = detectEntityType(fullPath);
-  if (entityType !== 'task') {
-    throw createError.invalidEntityType('archive', entityType, ['task']);
+  if (lookupResult.type === 'multiple') {
+    // Multiple matches - return ambiguous error with all match titles
+    const matchTitles = lookupResult.matches.map((t) => t.title);
+    throw createError.ambiguous(taskQuery, matchTitles);
   }
 
-  // Read the task to get its title
-  const task = parseTaskFile(fullPath);
+  // Single match (either exact path or single fuzzy match)
+  const task = lookupResult.matches[0]!;
+  const fullPath = task.path;
 
   // Determine archive directory and target path
   const parentDir = dirname(fullPath);
@@ -119,7 +124,7 @@ function previewArchive(filePath: string): DryRunResult {
 
 export const archiveCommand = new Command('archive')
   .description('Move file(s) to archive subdirectory')
-  .argument('<paths...>', 'Path(s) to file(s) to archive')
+  .argument('<queries...>', 'Task path(s) or title(s) to archive')
   .option('--dry-run', 'Preview changes without modifying files')
   .action(async (paths, options, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;

@@ -22,17 +22,80 @@ import {
 } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
-import { detectEntityType, type EntityType } from '@/lib/entity-lookup.ts';
+import {
+  detectEntityType,
+  lookupTask,
+  lookupProject,
+  lookupArea,
+  type EntityType,
+} from '@/lib/entity-lookup.ts';
 
 /**
  * Update command - programmatic field updates
  *
+ * Supports both path-based and fuzzy title-based lookup.
+ *
  * Usage:
  *   taskdn update ~/tasks/foo.md --set status=ready
+ *   taskdn update "my task" --set status=ready
  *   taskdn update ~/tasks/foo.md --set "title=New Title" --set due=2025-12-20
  *   taskdn update ~/tasks/foo.md --unset project
  *   taskdn update ~/tasks/foo.md --set project="[[Q1 Planning]]"
  */
+
+/**
+ * Resolve an entity query to a path and entity type.
+ * Tries fuzzy matching across all entity types if not a path.
+ */
+function resolveEntityQuery(
+  query: string
+): { path: string; entityType: EntityType } | { error: string; matches?: string[] } {
+  // Check if query looks like a path - if so, use traditional path-based lookup
+  const looksLikePath =
+    query.startsWith('/') ||
+    query.startsWith('./') ||
+    query.startsWith('../') ||
+    query.startsWith('~') ||
+    query.includes('/') ||
+    query.endsWith('.md');
+
+  if (looksLikePath) {
+    const fullPath = resolve(query);
+    const entityType = detectEntityType(fullPath);
+    return { path: fullPath, entityType };
+  }
+
+  // Fuzzy lookup - try each entity type in order of likelihood
+  const taskResult = lookupTask(query);
+  if (taskResult.type === 'exact' || taskResult.type === 'single') {
+    return { path: taskResult.matches[0]!.path, entityType: 'task' };
+  }
+  if (taskResult.type === 'multiple') {
+    const matchTitles = taskResult.matches.map((t) => t.title);
+    return { error: `Multiple tasks match "${query}"`, matches: matchTitles };
+  }
+
+  const projectResult = lookupProject(query);
+  if (projectResult.type === 'exact' || projectResult.type === 'single') {
+    return { path: projectResult.matches[0]!.path, entityType: 'project' };
+  }
+  if (projectResult.type === 'multiple') {
+    const matchTitles = projectResult.matches.map((p) => p.title);
+    return { error: `Multiple projects match "${query}"`, matches: matchTitles };
+  }
+
+  const areaResult = lookupArea(query);
+  if (areaResult.type === 'exact' || areaResult.type === 'single') {
+    return { path: areaResult.matches[0]!.path, entityType: 'area' };
+  }
+  if (areaResult.type === 'multiple') {
+    const matchTitles = areaResult.matches.map((a) => a.title);
+    return { error: `Multiple areas match "${query}"`, matches: matchTitles };
+  }
+
+  // No matches in any entity type
+  return { error: `No entity found matching "${query}"` };
+}
 
 /**
  * Valid task statuses (kebab-case)
@@ -521,11 +584,11 @@ function previewUpdateArea(areaPath: string, setArgs: string[], unsetArgs: strin
 
 export const updateCommand = new Command('update')
   .description('Update task, project, or area fields')
-  .argument('<path>', 'Path to task, project, or area file')
+  .argument('<query>', 'Path or title of task, project, or area')
   .option('--set <field=value...>', 'Set field to value (can be repeated)')
   .option('--unset <field...>', 'Remove field (can be repeated)')
   .option('--dry-run', 'Preview changes without modifying files')
-  .action(async (path, options, command) => {
+  .action(async (queryOrPath, options, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;
     const mode = getOutputMode(globalOpts);
     const dryRun = options.dryRun ?? false;
@@ -539,27 +602,38 @@ export const updateCommand = new Command('update')
     }
 
     try {
-      const fullPath = resolve(path);
-      const entityType = detectEntityType(fullPath);
+      // Resolve the query to a path and entity type (supports both paths and fuzzy matching)
+      const resolved = resolveEntityQuery(queryOrPath);
+
+      if ('error' in resolved) {
+        // Lookup failed
+        if (resolved.matches) {
+          throw createError.ambiguous(queryOrPath, resolved.matches);
+        } else {
+          throw createError.notFound('task', queryOrPath);
+        }
+      }
+
+      const { path: fullPath, entityType } = resolved;
 
       if (dryRun) {
         let result: DryRunResult;
         switch (entityType) {
           case 'task':
-            result = previewUpdateTask(path, setArgs, unsetArgs);
+            result = previewUpdateTask(fullPath, setArgs, unsetArgs);
             break;
           case 'project':
-            result = previewUpdateProject(path, setArgs, unsetArgs);
+            result = previewUpdateProject(fullPath, setArgs, unsetArgs);
             break;
           case 'area':
-            result = previewUpdateArea(path, setArgs, unsetArgs);
+            result = previewUpdateArea(fullPath, setArgs, unsetArgs);
             break;
         }
         console.log(formatOutput(result, globalOpts));
       } else {
         switch (entityType) {
           case 'task': {
-            const { task, changes } = updateTask(path, setArgs, unsetArgs);
+            const { task, changes } = updateTask(fullPath, setArgs, unsetArgs);
             const result: TaskUpdatedResult = {
               type: 'task-updated',
               task,
@@ -569,7 +643,7 @@ export const updateCommand = new Command('update')
             break;
           }
           case 'project': {
-            const { project, changes } = updateProject(path, setArgs, unsetArgs);
+            const { project, changes } = updateProject(fullPath, setArgs, unsetArgs);
             const result: ProjectUpdatedResult = {
               type: 'project-updated',
               project,
@@ -579,7 +653,7 @@ export const updateCommand = new Command('update')
             break;
           }
           case 'area': {
-            const { area, changes } = updateArea(path, setArgs, unsetArgs);
+            const { area, changes } = updateArea(fullPath, setArgs, unsetArgs);
             const result: AreaUpdatedResult = {
               type: 'area-updated',
               area,
