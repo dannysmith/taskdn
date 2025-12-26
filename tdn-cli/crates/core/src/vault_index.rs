@@ -31,6 +31,15 @@ pub struct TasksInAreaResult {
     pub warnings: Vec<String>,
 }
 
+/// Result for projects-in-area query
+#[derive(Debug, Clone)]
+#[napi(object)]
+pub struct ProjectsInAreaResult {
+    pub projects: Vec<Project>,
+    /// Warnings about broken references (e.g., "Project 'X' references unknown area 'Y'")
+    pub warnings: Vec<String>,
+}
+
 /// Full context for an area (for context command)
 #[derive(Debug, Clone)]
 #[napi(object)]
@@ -220,16 +229,37 @@ impl VaultIndex {
     }
 
     /// Get projects in an area.
-    fn get_projects_in_area(&self, area_name: &str) -> Vec<&Project> {
+    /// Returns (projects, warnings).
+    /// Generates warnings for projects that reference non-existent areas.
+    fn get_projects_in_area(&self, area_name: &str) -> (Vec<&Project>, Vec<String>) {
+        let mut warnings = Vec::new();
+
         let area_idx = match self.area_by_name.get(&area_name.to_lowercase()) {
             Some(&idx) => idx,
-            None => return Vec::new(),
+            None => return (Vec::new(), warnings),
         };
 
-        self.projects_by_area
+        let projects = self.projects_by_area
             .get(&area_idx)
-            .map(|indices| indices.iter().map(|&i| &self.projects[i]).collect())
-            .unwrap_or_default()
+            .map(|indices| {
+                indices.iter().map(|&i| {
+                    let project = &self.projects[i];
+                    // Check if this project's area reference is valid
+                    if let Some(ref area_ref) = project.area
+                        && let Some(referenced_area_name) = extract_wikilink_name(area_ref)
+                        && !self.area_by_name.contains_key(&referenced_area_name.to_lowercase())
+                    {
+                        warnings.push(format!(
+                            "Project '{}' references unknown area '{}'",
+                            project.title, referenced_area_name
+                        ));
+                    }
+                    &self.projects[i]
+                }).collect()
+            })
+            .unwrap_or_default();
+
+        (projects, warnings)
     }
 
     /// Get tasks in an area (direct + via projects), with deduplication.
@@ -347,14 +377,16 @@ pub fn get_tasks_in_area(config: VaultConfig, area_name: String) -> TasksInAreaR
 
 /// Get projects in an area. Does NOT read task files.
 /// Reads: areas, projects only.
+/// Returns projects and warnings about broken area references.
 #[napi]
-pub fn get_projects_in_area(config: VaultConfig, area_name: String) -> Vec<Project> {
+pub fn get_projects_in_area(config: VaultConfig, area_name: String) -> ProjectsInAreaResult {
     let index = VaultIndex::build_without_tasks(&config);
-    index
-        .get_projects_in_area(&area_name)
-        .into_iter()
-        .cloned()
-        .collect()
+    let (projects, warnings) = index.get_projects_in_area(&area_name);
+
+    ProjectsInAreaResult {
+        projects: projects.into_iter().cloned().collect(),
+        warnings,
+    }
 }
 
 /// Get full context for an area (for context command).
@@ -363,16 +395,16 @@ pub fn get_area_context(config: VaultConfig, area_name: String) -> AreaContextRe
     let index = VaultIndex::build(&config);
 
     let area = index.find_area(&area_name).cloned();
-    let projects: Vec<Project> = index
-        .get_projects_in_area(&area_name)
-        .into_iter()
-        .cloned()
-        .collect();
-    let (tasks, warnings) = index.get_tasks_in_area(&area_name);
+    let (projects, project_warnings) = index.get_projects_in_area(&area_name);
+    let (tasks, task_warnings) = index.get_tasks_in_area(&area_name);
+
+    // Combine warnings from both projects and tasks
+    let mut warnings = project_warnings;
+    warnings.extend(task_warnings);
 
     AreaContextResult {
         area,
-        projects,
+        projects: projects.into_iter().cloned().collect(),
         tasks: tasks.into_iter().cloned().collect(),
         warnings,
     }
@@ -425,23 +457,25 @@ fn is_path_identifier(identifier: &str) -> bool {
 }
 
 /// Get full context for a task (for context command).
-/// Accepts either a task path (absolute, starting with `/`) or a task title.
-/// - If identifier is a path: looks up by exact path match
-/// - If identifier is a title: looks up by case-insensitive title match
-/// - If multiple tasks match the title, returns them in `ambiguous_matches`
+///
+/// Accepts either an absolute file path or a task title:
+/// - **Path lookup** (starts with `/`): Returns task at exact path, or None if not found
+/// - **Title lookup** (doesn't start with `/`): Case-insensitive search by title
+///   - Returns single match if unique
+///   - Returns multiple matches in `ambiguous_matches` if title matches multiple tasks
 #[napi]
-pub fn get_task_context(config: VaultConfig, identifier: String) -> TaskContextResult {
+pub fn get_task_context(config: VaultConfig, path_or_title: String) -> TaskContextResult {
     let index = VaultIndex::build(&config);
     let mut warnings = Vec::new();
 
     // Determine if this is a path or title lookup
-    let (task, ambiguous_matches) = if is_path_identifier(&identifier) {
+    let (task, ambiguous_matches) = if is_path_identifier(&path_or_title) {
         // Path lookup - find by exact path
-        let task = index.find_task_by_path(&identifier).cloned();
+        let task = index.find_task_by_path(&path_or_title).cloned();
         (task, Vec::new())
     } else {
         // Title lookup - case-insensitive, may have multiple matches
-        let matches = index.find_tasks_by_title(&identifier);
+        let matches = index.find_tasks_by_title(&path_or_title);
         match matches.len() {
             0 => (None, Vec::new()),
             1 => (Some(matches[0].clone()), Vec::new()),
@@ -811,12 +845,13 @@ mod tests {
             "---\ntitle: Personal Project\narea: \"[[Personal]]\"\n---\n",
         );
 
-        let projects = get_projects_in_area(config, "Work".to_string());
+        let result = get_projects_in_area(config, "Work".to_string());
 
-        assert_eq!(projects.len(), 2);
-        let titles: Vec<&str> = projects.iter().map(|p| p.title.as_str()).collect();
+        assert_eq!(result.projects.len(), 2);
+        let titles: Vec<&str> = result.projects.iter().map(|p| p.title.as_str()).collect();
         assert!(titles.contains(&"Q1"));
         assert!(titles.contains(&"Q2"));
+        assert!(result.warnings.is_empty());
     }
 
     #[test]
@@ -830,9 +865,45 @@ mod tests {
             "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
         );
 
-        let projects = get_projects_in_area(config, "Nonexistent".to_string());
+        let result = get_projects_in_area(config, "Nonexistent".to_string());
 
-        assert!(projects.is_empty());
+        assert!(result.projects.is_empty());
+        assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn get_projects_in_area_warns_on_broken_area_reference() {
+        let temp_dir = create_temp_vault();
+        let config = create_vault_config(&temp_dir);
+
+        // Create Work area
+        write_file(
+            Path::new(&config.areas_dir),
+            "work.md",
+            "---\ntitle: Work\n---\n",
+        );
+
+        // Create project with valid area
+        write_file(
+            Path::new(&config.projects_dir),
+            "q1.md",
+            "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
+        );
+
+        // Create project with broken area reference
+        write_file(
+            Path::new(&config.projects_dir),
+            "orphan.md",
+            "---\ntitle: Orphan Project\narea: \"[[NonexistentArea]]\"\n---\n",
+        );
+
+        let result = get_projects_in_area(config, "Work".to_string());
+
+        assert_eq!(result.projects.len(), 1);
+        assert_eq!(result.projects[0].title, "Q1");
+
+        // Should NOT have warnings because Q1's area reference is valid
+        assert!(result.warnings.is_empty());
     }
 
     // =========================================================================

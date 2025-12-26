@@ -6,7 +6,7 @@
 //! Key design principle: Don't round-trip through typed structs. Instead,
 //! manipulate raw YAML to preserve structure the typed structs would discard.
 
-use crate::{Area, Project, Task, parse_area_file, parse_project_file, parse_task_file};
+use crate::{Area, Project, Task, TdnError, parse_area_file, parse_project_file, parse_task_file};
 use gray_matter::{Matter, engine::YAML};
 use napi::bindgen_prelude::*;
 use serde::Deserialize;
@@ -232,20 +232,15 @@ fn is_leap_year(year: i32) -> bool {
 ///
 /// Writes to a temporary file first, then renames to avoid partial writes.
 pub fn atomic_write(path: &Path, content: &str) -> Result<()> {
+    let path_str = path.display().to_string();
     let parent = path.parent().ok_or_else(|| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Invalid path: {}", path.display()),
-        )
+        TdnError::validation_error(&path_str, "path", "Invalid path - no parent directory")
     })?;
 
     // Create parent directory if it doesn't exist
     if !parent.exists() {
         fs::create_dir_all(parent).map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to create directory: {}", e),
-            )
+            TdnError::write_error(&path_str, format!("Failed to create directory: {}", e))
         })?;
     }
 
@@ -255,20 +250,22 @@ pub fn atomic_write(path: &Path, content: &str) -> Result<()> {
 
     // Write to temp file
     fs::write(&temp_path, content).map_err(|e| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to write temp file: {}", e),
-        )
+        TdnError::write_error(&path_str, format!("Failed to write temp file: {}", e))
+    })?;
+
+    // Sync to disk (fsync) to ensure durability before rename
+    let file = fs::File::open(&temp_path).map_err(|e| {
+        TdnError::write_error(&path_str, format!("Failed to open temp file for sync: {}", e))
+    })?;
+    file.sync_all().map_err(|e| {
+        TdnError::write_error(&path_str, format!("Failed to sync file to disk: {}", e))
     })?;
 
     // Rename temp file to target (atomic on most filesystems)
     fs::rename(&temp_path, path).map_err(|e| {
         // Clean up temp file on failure
         let _ = fs::remove_file(&temp_path);
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to rename file: {}", e),
-        )
+        TdnError::write_error(&path_str, format!("Failed to rename file: {}", e))
     })?;
 
     Ok(())
@@ -291,10 +288,7 @@ fn parse_file_parts(content: &str) -> Result<(serde_yaml::Mapping, String)> {
     let matter = Matter::<YAML>::new();
     // Parse with a minimal struct - we only need access to .matter and .content
     let parsed = matter.parse::<MinimalFrontmatter>(content).map_err(|e| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to parse frontmatter: {}", e),
-        )
+        TdnError::parse_error("(content)", None, e.to_string())
     })?;
 
     // Get the raw YAML string from between the --- delimiters
@@ -305,10 +299,7 @@ fn parse_file_parts(content: &str) -> Result<(serde_yaml::Mapping, String)> {
         serde_yaml::Mapping::new()
     } else {
         serde_yaml::from_str(&yaml_str).map_err(|e| {
-            Error::new(
-                Status::GenericFailure,
-                format!("Failed to parse YAML: {}", e),
-            )
+            TdnError::parse_error("(content)", None, format!("Failed to parse YAML: {}", e))
         })?
     };
 
@@ -330,10 +321,7 @@ fn remove_yaml_field(mapping: &mut serde_yaml::Mapping, key: &str) {
 /// Serialize a YAML mapping to string with proper formatting.
 fn serialize_yaml(mapping: &serde_yaml::Mapping) -> Result<String> {
     serde_yaml::to_string(mapping).map_err(|e| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to serialize YAML: {}", e),
-        )
+        TdnError::write_error("(content)", format!("Failed to serialize YAML: {}", e)).into()
     })
 }
 
@@ -628,18 +616,12 @@ pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()>
 
     // Check file exists
     if !file_path.exists() {
-        return Err(Error::new(
-            Status::GenericFailure,
-            format!("File not found: {}", path),
-        ));
+        return Err(TdnError::file_not_found(&path).into());
     }
 
     // Read original content
     let content = fs::read_to_string(file_path).map_err(|e| {
-        Error::new(
-            Status::GenericFailure,
-            format!("Failed to read file: {}", e),
-        )
+        TdnError::file_read_error(&path, e.to_string())
     })?;
 
     // Parse into parts
