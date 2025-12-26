@@ -59,11 +59,11 @@ function projectToJson(project: Project, includeBody = true) {
     title: project.title,
     ...(project.status && { status: toKebabCase(project.status) }),
     ...(project.area && { area: project.area }),
+    ...(project.description && { description: project.description }),
     ...(project.startDate && { startDate: project.startDate }),
     ...(project.endDate && { endDate: project.endDate }),
-    ...(project.description && { description: project.description }),
-    ...(project.blockedBy && project.blockedBy.length > 0 && { blockedBy: project.blockedBy }),
     ...(project.uniqueId && { uniqueId: project.uniqueId }),
+    ...(project.blockedBy && project.blockedBy.length > 0 && { blockedBy: project.blockedBy }),
     ...(includeBody && project.body && { body: project.body }),
   };
 }
