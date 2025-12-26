@@ -11,6 +11,9 @@ import {
   archiveCommand,
   openCommand,
   appendBodyCommand,
+  initCommand,
+  configCommand,
+  doctorCommand,
 } from '@/commands/index.ts';
 
 const program = new Command()
@@ -32,6 +35,9 @@ program.addCommand(updateCommand);
 program.addCommand(archiveCommand);
 program.addCommand(openCommand);
 program.addCommand(appendBodyCommand);
+program.addCommand(initCommand);
+program.addCommand(configCommand);
+program.addCommand(doctorCommand);
 
 // Parse and execute
 program.parse();

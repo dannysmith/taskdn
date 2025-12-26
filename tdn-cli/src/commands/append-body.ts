@@ -2,7 +2,7 @@ import { Command } from '@commander-js/extra-typings';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, BodyAppendedResult } from '@/output/types.ts';
+import type { GlobalOptions, BodyAppendedResult, OutputMode } from '@/output/types.ts';
 import { parseTaskFile, parseProjectFile, parseAreaFile } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import {
@@ -12,6 +12,11 @@ import {
   lookupArea,
   type EntityType,
 } from '@/lib/entity-lookup.ts';
+import {
+  disambiguateTasks,
+  disambiguateProjects,
+  disambiguateAreas,
+} from '@/lib/disambiguation.ts';
 
 /**
  * Append-body command - add text to the end of an entity's body
@@ -59,10 +64,12 @@ function formatAppendText(text: string): string {
 /**
  * Resolve an entity query to a path and type.
  * Supports both direct paths and fuzzy matching.
+ * In human mode, shows interactive disambiguation for multiple matches.
  */
-function resolveEntityQuery(
-  query: string
-): { path: string; entityType: EntityType } | { error: string; matches?: string[] } {
+async function resolveEntityQuery(
+  query: string,
+  mode: OutputMode
+): Promise<{ path: string; entityType: EntityType } | { error: string; matches?: string[] }> {
   // Check if it looks like a path
   const looksLikePath =
     query.startsWith('/') ||
@@ -84,6 +91,11 @@ function resolveEntityQuery(
     return { path: taskResult.matches[0]!.path, entityType: 'task' };
   }
   if (taskResult.type === 'multiple') {
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateTasks(query, taskResult.matches, mode);
+      return { path: selected.path, entityType: 'task' };
+    }
     const matchTitles = taskResult.matches.map((t) => t.title);
     return { error: `Multiple tasks match "${query}"`, matches: matchTitles };
   }
@@ -93,6 +105,11 @@ function resolveEntityQuery(
     return { path: projectResult.matches[0]!.path, entityType: 'project' };
   }
   if (projectResult.type === 'multiple') {
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateProjects(query, projectResult.matches, mode);
+      return { path: selected.path, entityType: 'project' };
+    }
     const matchTitles = projectResult.matches.map((p) => p.title);
     return { error: `Multiple projects match "${query}"`, matches: matchTitles };
   }
@@ -102,6 +119,11 @@ function resolveEntityQuery(
     return { path: areaResult.matches[0]!.path, entityType: 'area' };
   }
   if (areaResult.type === 'multiple') {
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateAreas(query, areaResult.matches, mode);
+      return { path: selected.path, entityType: 'area' };
+    }
     const matchTitles = areaResult.matches.map((a) => a.title);
     return { error: `Multiple areas match "${query}"`, matches: matchTitles };
   }
@@ -219,7 +241,7 @@ export const appendBodyCommand = new Command('append-body')
 
     try {
       // Resolve the entity query (supports both paths and fuzzy matching)
-      const resolution = resolveEntityQuery(query);
+      const resolution = await resolveEntityQuery(query, mode);
 
       if ('error' in resolution) {
         if (resolution.matches) {

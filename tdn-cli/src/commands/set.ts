@@ -1,11 +1,12 @@
 import { Command } from '@commander-js/extra-typings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, TaskStatusChangedResult } from '@/output/types.ts';
+import type { GlobalOptions, TaskStatusChangedResult, OutputMode } from '@/output/types.ts';
 import { updateFileFields, parseTaskFile, type FieldUpdate, type Task } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 import { processBatch } from '@/lib/batch.ts';
+import { disambiguateTasks } from '@/lib/disambiguation.ts';
 
 /**
  * Set command - parent command for setting entity fields
@@ -43,11 +44,13 @@ function validateStatus(status: string): void {
  * Change a task's status.
  * Handles completed-at logic for done/dropped transitions.
  * Supports both path-based and fuzzy title-based lookup.
+ * In human mode, shows interactive disambiguation for multiple matches.
  */
-function changeTaskStatus(
+async function changeTaskStatus(
   taskQuery: string,
-  newStatus: string
-): { task: Task; previousStatus: string } {
+  newStatus: string,
+  mode: OutputMode
+): Promise<{ task: Task; previousStatus: string }> {
   // Look up the task (supports both paths and fuzzy matching)
   const lookupResult = lookupTask(taskQuery);
 
@@ -56,14 +59,20 @@ function changeTaskStatus(
     throw createError.notFound('task', taskQuery);
   }
 
+  let currentTask: Task;
   if (lookupResult.type === 'multiple') {
-    // Multiple matches - return ambiguous error with all match titles
-    const matchTitles = lookupResult.matches.map((t) => t.title);
-    throw createError.ambiguous(taskQuery, matchTitles);
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      currentTask = await disambiguateTasks(taskQuery, lookupResult.matches, mode);
+    } else {
+      // In AI/JSON mode, throw ambiguous error
+      const matchTitles = lookupResult.matches.map((t) => t.title);
+      throw createError.ambiguous(taskQuery, matchTitles);
+    }
+  } else {
+    // Single match (either exact path or single fuzzy match)
+    currentTask = lookupResult.matches[0]!;
   }
-
-  // Single match (either exact path or single fuzzy match)
-  const currentTask = lookupResult.matches[0]!;
   const fullPath = currentTask.path;
   const previousStatus = toKebabCase(currentTask.status);
   const normalizedNewStatus = newStatus.toLowerCase();
@@ -95,8 +104,13 @@ function changeTaskStatus(
 /**
  * Preview status change (for dry-run mode).
  * Supports both path-based and fuzzy title-based lookup.
+ * In human mode, shows interactive disambiguation for multiple matches.
  */
-function previewStatusChange(taskQuery: string, newStatus: string): TaskStatusChangedResult {
+async function previewStatusChange(
+  taskQuery: string,
+  newStatus: string,
+  mode: OutputMode
+): Promise<TaskStatusChangedResult> {
   // Look up the task (supports both paths and fuzzy matching)
   const lookupResult = lookupTask(taskQuery);
 
@@ -105,14 +119,20 @@ function previewStatusChange(taskQuery: string, newStatus: string): TaskStatusCh
     throw createError.notFound('task', taskQuery);
   }
 
+  let task: Task;
   if (lookupResult.type === 'multiple') {
-    // Multiple matches - return ambiguous error with all match titles
-    const matchTitles = lookupResult.matches.map((t) => t.title);
-    throw createError.ambiguous(taskQuery, matchTitles);
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      task = await disambiguateTasks(taskQuery, lookupResult.matches, mode);
+    } else {
+      // In AI/JSON mode, throw ambiguous error
+      const matchTitles = lookupResult.matches.map((t) => t.title);
+      throw createError.ambiguous(taskQuery, matchTitles);
+    }
+  } else {
+    // Single match (either exact path or single fuzzy match)
+    task = lookupResult.matches[0]!;
   }
-
-  // Single match (either exact path or single fuzzy match)
-  const task = lookupResult.matches[0]!;
   const previousStatus = toKebabCase(task.status);
   const normalizedNewStatus = newStatus.toLowerCase();
 
@@ -174,10 +194,10 @@ const setStatusCommand = new Command('status')
       const singlePath = paths[0]!;
       try {
         if (dryRun) {
-          const result = previewStatusChange(singlePath, newStatus);
+          const result = await previewStatusChange(singlePath, newStatus, mode);
           console.log(formatOutput(result, globalOpts));
         } else {
-          const { task, previousStatus } = changeTaskStatus(singlePath, newStatus);
+          const { task, previousStatus } = await changeTaskStatus(singlePath, newStatus, mode);
           const result: TaskStatusChangedResult = {
             type: 'task-status-changed',
             task,
@@ -201,7 +221,7 @@ const setStatusCommand = new Command('status')
     if (dryRun) {
       for (const taskPath of paths) {
         try {
-          const result = previewStatusChange(taskPath, newStatus);
+          const result = await previewStatusChange(taskPath, newStatus, mode);
           console.log(formatOutput(result, globalOpts));
         } catch (error) {
           if (isCliError(error)) {
@@ -213,11 +233,11 @@ const setStatusCommand = new Command('status')
     }
 
     // Batch case - process all, collect results
-    const result = processBatch(
+    const result = await processBatch(
       paths,
       'status-changed',
-      (taskPath) => {
-        const { task } = changeTaskStatus(taskPath, newStatus);
+      async (taskPath) => {
+        const { task } = await changeTaskStatus(taskPath, newStatus, mode);
         return {
           path: task.path,
           title: task.title,

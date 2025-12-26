@@ -44,33 +44,33 @@ export interface BatchResult {
  *
  * @param items - Array of items to process
  * @param operation - The operation type for the result
- * @param processor - Function that processes each item and returns success info
+ * @param processor - Function that processes each item and returns success info (sync or async)
  * @param extractPath - Function to extract the path from an item (for error reporting)
  * @returns BatchResult with successes and failures
  *
  * @example
- * const result = processBatch(
+ * const result = await processBatch(
  *   taskPaths,
  *   'status-changed',
- *   (path) => {
- *     const { task } = changeTaskStatus(path, 'Done');
+ *   async (path) => {
+ *     const { task } = await changeTaskStatus(path, 'Done');
  *     return { path: task.path, title: task.title, task };
  *   },
  *   (path) => path
  * );
  */
-export function processBatch<TInput>(
+export async function processBatch<TInput>(
   items: TInput[],
   operation: BatchResult['operation'],
-  processor: (item: TInput) => BatchSuccessInfo,
+  processor: (item: TInput) => BatchSuccessInfo | Promise<BatchSuccessInfo>,
   extractPath: (item: TInput) => string
-): BatchResult {
+): Promise<BatchResult> {
   const successes: BatchSuccessInfo[] = [];
   const failures: BatchFailureInfo[] = [];
 
   for (const item of items) {
     try {
-      const result = processor(item);
+      const result = await processor(item);
       successes.push(result);
     } catch (error) {
       const path = extractPath(item);

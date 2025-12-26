@@ -486,21 +486,99 @@ export const newCommand = new Command('new')
   .description('Create a new entity')
   .argument('[entity-or-title]', 'Entity type (project(s)/area(s)) or task title')
   .argument('[title]', 'Title (when entity type is specified)')
-  .option('--project <project>', 'Assign to project (tasks only)')
-  .option('--area <area>', 'Assign to area')
-  .option('--status <status>', 'Initial status')
-  .option('--due <date>', 'Due date (tasks only)')
+  .option('-p, --project <project>', 'Assign to project (tasks only)')
+  .option('-a, --area <area>', 'Assign to area')
+  .option('-s, --status <status>', 'Initial status')
+  .option('-d, --due <date>', 'Due date (tasks only)')
   .option('--scheduled <date>', 'Scheduled date (tasks only)')
   .option('--defer-until <date>', 'Defer until date (tasks only)')
   .option('--start-date <date>', 'Start date (projects only)')
   .option('--end-date <date>', 'End date (projects only)')
   .option('--type <type>', 'Area type (areas only)')
   .option('--dry-run', 'Show what would be created without creating')
+  .option('--stdin', 'Accept JSON input from stdin')
   .action(async (entityOrTitle, title, options, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;
     const mode = getOutputMode(globalOpts);
 
     try {
+      // Handle --stdin flag for piped JSON input
+      if (options.stdin) {
+        // Read from stdin
+        const chunks: Buffer[] = [];
+        for await (const chunk of process.stdin) {
+          chunks.push(chunk);
+        }
+        const input = Buffer.concat(chunks).toString('utf-8');
+
+        // Parse JSON
+        let jsonData: unknown;
+        try {
+          jsonData = JSON.parse(input);
+        } catch {
+          if (mode === 'human') {
+            console.error('Error: Invalid JSON input');
+          } else {
+            console.error(
+              JSON.stringify({
+                error: 'INVALID_INPUT',
+                message: 'Invalid JSON input',
+              })
+            );
+          }
+          process.exit(2);
+        }
+
+        // Validate it's an object
+        if (typeof jsonData !== 'object' || jsonData === null) {
+          if (mode === 'human') {
+            console.error('Error: JSON input must be an object');
+          } else {
+            console.error(
+              JSON.stringify({
+                error: 'INVALID_INPUT',
+                message: 'JSON input must be an object',
+              })
+            );
+          }
+          process.exit(2);
+        }
+
+        const data = jsonData as Record<string, unknown>;
+
+        // Extract title
+        if (!data.title || typeof data.title !== 'string') {
+          if (mode === 'human') {
+            console.error('Error: JSON input must include a "title" field');
+          } else {
+            console.error(
+              JSON.stringify({
+                error: 'MISSING_FIELD',
+                message: 'JSON input must include a "title" field',
+              })
+            );
+          }
+          process.exit(2);
+        }
+
+        const taskTitle = data.title as string;
+
+        // Build options from JSON data
+        const stdinOptions: AddOptions = {
+          status: typeof data.status === 'string' ? data.status : undefined,
+          project: typeof data.project === 'string' ? data.project : undefined,
+          area: typeof data.area === 'string' ? data.area : undefined,
+          due: typeof data.due === 'string' ? data.due : undefined,
+          scheduled: typeof data.scheduled === 'string' ? data.scheduled : undefined,
+          deferUntil: typeof data.deferUntil === 'string' ? data.deferUntil : undefined,
+        };
+
+        // Create the task
+        const result = createTask(taskTitle, stdinOptions);
+        console.log(formatOutput(result, globalOpts));
+        return;
+      }
+
       // If no arguments and human mode, trigger interactive prompts
       if (!entityOrTitle && mode === 'human') {
         const result = await interactiveAdd();
