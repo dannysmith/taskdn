@@ -105,7 +105,7 @@ export const listCommand = new Command('list')
   .option('--area <area>', 'Filter by area name')
   .option('--due <when>', 'Filter by due date (today, tomorrow, this-week)')
   .option('--overdue', 'Show overdue tasks')
-  .option('--scheduled <when>', 'Filter by scheduled date (today)')
+  .option('--scheduled <when>', 'Filter by scheduled date (today, tomorrow, this-week)')
   .option('--query <text>', 'Search in title and body')
   .option('--sort <field>', 'Sort by field (due, created, updated, title)')
   .option('--desc', 'Sort descending')
@@ -136,6 +136,75 @@ export const listCommand = new Command('list')
       // Filter for active projects by default
       projects = projects.filter((project) => isActiveProject(project));
 
+      // Apply status filter if provided
+      if (options.status) {
+        const statuses = options.status.split(',').map((s) => s.trim().toLowerCase());
+        projects = projects.filter((project) => {
+          if (!project.status) return false;
+          const projectStatus = project.status.toLowerCase().replaceAll('-', '');
+          return statuses.some((s) => {
+            const normalized = s.replaceAll('-', '');
+            return projectStatus === normalized || project.status!.toLowerCase() === s;
+          });
+        });
+      }
+
+      // Apply area filter if provided (case-insensitive substring match)
+      if (options.area) {
+        const areaQuery = options.area.toLowerCase();
+        projects = projects.filter((project) => {
+          if (!project.area) return false;
+          return project.area.toLowerCase().includes(areaQuery);
+        });
+      }
+
+      // Apply --query filter if provided (search in title and description)
+      if (options.query) {
+        const queryLower = options.query.toLowerCase();
+        projects = projects.filter((project) => {
+          const titleMatch = project.title.toLowerCase().includes(queryLower);
+          const descMatch = project.description
+            ? project.description.toLowerCase().includes(queryLower)
+            : false;
+          return titleMatch || descMatch;
+        });
+      }
+
+      // Apply sorting if --sort is provided
+      if (options.sort) {
+        const sortField = options.sort.toLowerCase();
+        const descending = options.desc === true;
+
+        const fieldMap: Record<string, keyof Project> = {
+          title: 'title',
+          'start-date': 'startDate',
+          'end-date': 'endDate',
+        };
+
+        const projectField = fieldMap[sortField];
+        if (projectField) {
+          projects = projects.sort((a, b) => {
+            const aVal = a[projectField];
+            const bVal = b[projectField];
+
+            if (aVal === undefined && bVal === undefined) return 0;
+            if (aVal === undefined) return 1;
+            if (bVal === undefined) return -1;
+
+            const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+            return descending ? -comparison : comparison;
+          });
+        }
+      }
+
+      // Apply limit if provided
+      if (options.limit) {
+        const limit = Number.parseInt(options.limit, 10);
+        if (!Number.isNaN(limit) && limit > 0) {
+          projects = projects.slice(0, limit);
+        }
+      }
+
       const result: ProjectListResult = {
         type: 'project-list',
         projects,
@@ -150,6 +219,64 @@ export const listCommand = new Command('list')
 
       // Filter for active areas by default
       areas = areas.filter((area) => isActiveArea(area));
+
+      // Apply status filter if provided
+      if (options.status) {
+        const statuses = options.status.split(',').map((s) => s.trim().toLowerCase());
+        areas = areas.filter((area) => {
+          if (!area.status) return false;
+          const areaStatus = area.status.toLowerCase().replaceAll('-', '');
+          return statuses.some((s) => {
+            const normalized = s.replaceAll('-', '');
+            return areaStatus === normalized || area.status!.toLowerCase() === s;
+          });
+        });
+      }
+
+      // Apply --query filter if provided (search in title and description)
+      if (options.query) {
+        const queryLower = options.query.toLowerCase();
+        areas = areas.filter((area) => {
+          const titleMatch = area.title.toLowerCase().includes(queryLower);
+          const descMatch = area.description
+            ? area.description.toLowerCase().includes(queryLower)
+            : false;
+          return titleMatch || descMatch;
+        });
+      }
+
+      // Apply sorting if --sort is provided
+      if (options.sort) {
+        const sortField = options.sort.toLowerCase();
+        const descending = options.desc === true;
+
+        const fieldMap: Record<string, keyof Area> = {
+          title: 'title',
+        };
+
+        const areaField = fieldMap[sortField];
+        if (areaField) {
+          areas = areas.sort((a, b) => {
+            const aVal = a[areaField];
+            const bVal = b[areaField];
+
+            if (aVal === undefined && bVal === undefined) return 0;
+            if (aVal === undefined) return 1;
+            if (bVal === undefined) return -1;
+
+            const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+            return descending ? -comparison : comparison;
+          });
+        }
+      }
+
+      // Apply limit if provided
+      if (options.limit) {
+        const limit = Number.parseInt(options.limit, 10);
+        if (!Number.isNaN(limit) && limit > 0) {
+          areas = areas.slice(0, limit);
+        }
+      }
 
       const result: AreaListResult = {
         type: 'area-list',
@@ -298,14 +425,25 @@ export const listCommand = new Command('list')
     if (options.scheduled) {
       const scheduledValue = options.scheduled.toLowerCase();
       let targetDate: string | null = null;
+      let endDate: string | null = null;
 
       if (scheduledValue === 'today') {
         targetDate = today;
+      } else if (scheduledValue === 'tomorrow') {
+        targetDate = getTomorrow(today);
+      } else if (scheduledValue === 'this-week') {
+        targetDate = today;
+        endDate = getEndOfWeek(today);
       }
 
       if (targetDate) {
         tasks = tasks.filter((task) => {
           if (!task.scheduled) return false;
+          if (endDate) {
+            // Range filter: today through end of week
+            return task.scheduled >= targetDate && task.scheduled <= endDate;
+          }
+          // Exact date match
           return task.scheduled === targetDate;
         });
       }

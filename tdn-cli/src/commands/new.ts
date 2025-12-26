@@ -60,6 +60,8 @@ interface AddOptions {
   scheduled?: string;
   deferUntil?: string;
   type?: string;
+  startDate?: string;
+  endDate?: string;
   dryRun?: boolean;
 }
 
@@ -117,12 +119,16 @@ function createTask(title: string, options: AddOptions): TaskCreatedResult {
 function createProject(title: string, options: AddOptions): ProjectCreatedResult {
   const config = getVaultConfig();
 
+  // Parse date fields
+  const startDate = parseDateOption(options.startDate, 'start-date');
+  const endDate = parseDateOption(options.endDate, 'end-date');
+
   const fields: ProjectCreateFields = {
     status: options.status,
     area: options.area,
     description: undefined, // Could add --description option later
-    startDate: undefined,
-    endDate: undefined,
+    startDate,
+    endDate,
   };
 
   const project = createProjectFile(config.projectsDir, title, fields);
@@ -486,6 +492,8 @@ export const newCommand = new Command('new')
   .option('--due <date>', 'Due date (tasks only)')
   .option('--scheduled <date>', 'Scheduled date (tasks only)')
   .option('--defer-until <date>', 'Defer until date (tasks only)')
+  .option('--start-date <date>', 'Start date (projects only)')
+  .option('--end-date <date>', 'End date (projects only)')
   .option('--type <type>', 'Area type (areas only)')
   .option('--dry-run', 'Show what would be created without creating')
   .action(async (entityOrTitle, title, options, command) => {

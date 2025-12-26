@@ -635,3 +635,121 @@ describe('output modes', () => {
     expect(output.dryRun).toBe(true);
   });
 });
+
+describe('fuzzy matching in write commands', () => {
+  describe('set status with fuzzy matching', () => {
+    test('works with unique fuzzy title match', async () => {
+      const { stdout, exitCode } = await runCli([
+        'set',
+        'status',
+        'Minimal Task',
+        'done',
+        '--dry-run',
+        '--json',
+      ]);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.title).toBe('Minimal Task');
+      expect(output.changes).toBeDefined();
+      expect(output.changes.find((c) => c.field === 'status')?.newValue).toBe('done');
+    });
+
+    test('is case-insensitive', async () => {
+      const { stdout, exitCode } = await runCli([
+        'set',
+        'status',
+        'minimal task',
+        'in-progress',
+        '--dry-run',
+        '--json',
+      ]);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.title).toBe('Minimal Task');
+    });
+
+    test('returns AMBIGUOUS error for multiple matches', async () => {
+      const { stderr, exitCode } = await runCli(['set', 'status', 'Task', 'done', '--json']);
+      expect(exitCode).toBe(1);
+      const error = JSON.parse(stderr);
+      expect(error.code).toBe('AMBIGUOUS');
+      expect(error.matches).toBeDefined();
+      expect(error.matches.length).toBeGreaterThan(1);
+    });
+
+    test('returns NOT_FOUND for no matches', async () => {
+      const { stderr, exitCode } = await runCli([
+        'set',
+        'status',
+        'Nonexistent Task XYZ123',
+        'done',
+        '--json',
+      ]);
+      expect(exitCode).toBe(1);
+      const error = JSON.parse(stderr);
+      expect(error.code).toBe('NOT_FOUND');
+    });
+  });
+
+  describe('update with fuzzy matching', () => {
+    test('works with fuzzy title for tasks', async () => {
+      const { stdout, exitCode } = await runCli([
+        'update',
+        'Minimal Task',
+        '--set',
+        'status=blocked',
+        '--dry-run',
+        '--json',
+      ]);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.title).toBe('Minimal Task');
+      expect(output.entityType).toBe('task');
+    });
+
+    test('works with fuzzy title for projects', async () => {
+      const { stdout, exitCode } = await runCli([
+        'update',
+        'Minimal Project',
+        '--set',
+        'status=paused',
+        '--dry-run',
+        '--json',
+      ]);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.title).toBe('Minimal Project');
+      expect(output.entityType).toBe('project');
+    });
+
+    test('returns AMBIGUOUS for multiple matches', async () => {
+      const { stderr, exitCode } = await runCli(['update', 'Task', '--set', 'status=blocked', '--json']);
+      expect(exitCode).toBe(1);
+      const error = JSON.parse(stderr);
+      expect(error.code).toBe('AMBIGUOUS');
+    });
+  });
+
+  describe('archive with fuzzy matching', () => {
+    test('works with fuzzy title match', async () => {
+      const { stdout, exitCode } = await runCli(['archive', 'Inbox Task', '--dry-run', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.title).toBe('Inbox Task');
+    });
+
+    test('case-insensitive matching', async () => {
+      const { stdout, exitCode } = await runCli(['archive', 'inbox task', '--dry-run', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.title).toBe('Inbox Task');
+    });
+
+    test('returns AMBIGUOUS for multiple matches', async () => {
+      const { stderr, exitCode } = await runCli(['archive', 'Task', '--dry-run', '--json']);
+      expect(exitCode).toBe(1);
+      const error = JSON.parse(stderr);
+      expect(error.code).toBe('AMBIGUOUS');
+    });
+  });
+});

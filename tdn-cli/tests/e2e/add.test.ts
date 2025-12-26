@@ -444,3 +444,162 @@ describe('taskdn new', () => {
     });
   });
 });
+
+describe('singular and plural entity types', () => {
+  test('accepts "project" (singular)', async () => {
+    const { stdout, exitCode} = await runCli(['new', 'project', 'Test Project Singular', '--json'], {
+      useFixtureVault: false,
+      env: {
+        TASKDN_TASKS_DIR: tasksDir,
+        TASKDN_PROJECTS_DIR: projectsDir,
+        TASKDN_AREAS_DIR: areasDir,
+      },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.project).toBeDefined();
+    expect(output.project.title).toBe('Test Project Singular');
+  });
+
+  test('accepts "projects" (plural)', async () => {
+    const { stdout, exitCode } = await runCli(['new', 'projects', 'Test Project Plural', '--json'], {
+      useFixtureVault: false,
+      env: {
+        TASKDN_TASKS_DIR: tasksDir,
+        TASKDN_PROJECTS_DIR: projectsDir,
+        TASKDN_AREAS_DIR: areasDir,
+      },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.project).toBeDefined();
+    expect(output.project.title).toBe('Test Project Plural');
+  });
+
+  test('accepts "area" (singular)', async () => {
+    const { stdout, exitCode } = await runCli(['new', 'area', 'Test Area Singular', '--json'], {
+      useFixtureVault: false,
+      env: {
+        TASKDN_TASKS_DIR: tasksDir,
+        TASKDN_PROJECTS_DIR: projectsDir,
+        TASKDN_AREAS_DIR: areasDir,
+      },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.area).toBeDefined();
+    expect(output.area.title).toBe('Test Area Singular');
+  });
+
+  test('accepts "areas" (plural)', async () => {
+    const { stdout, exitCode } = await runCli(['new', 'areas', 'Test Area Plural', '--json'], {
+      useFixtureVault: false,
+      env: {
+        TASKDN_TASKS_DIR: tasksDir,
+        TASKDN_PROJECTS_DIR: projectsDir,
+        TASKDN_AREAS_DIR: areasDir,
+      },
+    });
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.area).toBeDefined();
+    expect(output.area.title).toBe('Test Area Plural');
+  });
+});
+
+describe('new project date flags', () => {
+  test('--start-date flag works', async () => {
+    const { stdout, exitCode } = await runCli(
+      ['new', 'project', 'Project With Start', '--start-date', '2025-03-01', '--json'],
+      {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.project.startDate).toBe('2025-03-01');
+  });
+
+  test('--end-date flag works', async () => {
+    const { stdout, exitCode } = await runCli(
+      ['new', 'project', 'Project With End', '--end-date', '2025-06-30', '--json'],
+      {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.project.endDate).toBe('2025-06-30');
+  });
+
+  test('both --start-date and --end-date together', async () => {
+    const { stdout, exitCode } = await runCli(
+      [
+        'new',
+        'project',
+        'Q1 Project',
+        '--start-date',
+        '2025-01-01',
+        '--end-date',
+        '2025-03-31',
+        '--json',
+      ],
+      {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.project.startDate).toBe('2025-01-01');
+    expect(output.project.endDate).toBe('2025-03-31');
+  });
+
+  test('combines with other project options', async () => {
+    const { stdout, exitCode } = await runCli(
+      [
+        'new',
+        'project',
+        'Full Project',
+        '--status',
+        'planning',
+        '--area',
+        'Work',
+        '--start-date',
+        '2025-02-01',
+        '--end-date',
+        '2025-04-30',
+        '--json',
+      ],
+      {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      }
+    );
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.project.title).toBe('Full Project');
+    expect(output.project.status).toBe('planning');
+    expect(output.project.area).toContain('Work');
+    expect(output.project.startDate).toBe('2025-02-01');
+    expect(output.project.endDate).toBe('2025-04-30');
+  });
+});

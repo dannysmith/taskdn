@@ -27,6 +27,7 @@ Rename commands to be more intuitive and descriptive.
 ### 1.1 Rename `add` → `new`
 
 - [ ] **Implementation**
+
   - Update command name everywhere: `new`, `new project`, `new area`, `new task`
   - Update all code naming to match the interface
 
@@ -35,6 +36,7 @@ Rename commands to be more intuitive and descriptive.
 ### 1.2 Rename `edit` → `open`
 
 - [ ] **Implementation**
+
   - Update command name, help text, and all documentation
   - Update all code naming to match the interface
 
@@ -49,6 +51,7 @@ Unify status-related commands under a single, consistent interface.
 ### 2.1 Replace `complete`, `drop`, and `status` with `set status`
 
 - [ ] **Implementation**
+
   - Remove commands: `taskdn complete <path>`, `taskdn drop <path>`, `taskdn status <path> <value>`
   - Add command: `taskdn set status <path> <value>`
   - Support all status values: `inbox`, `ready`, `in-progress`, `blocked`, `done`, `dropped`, `icebox`
@@ -64,6 +67,7 @@ Unify status-related commands under a single, consistent interface.
 ### 2.2 Remove `inbox` convenience command
 
 - [ ] **Implementation**
+
   - Remove `taskdn inbox` command
   - Document that users should use `taskdn list --status inbox` instead
 
@@ -80,10 +84,12 @@ Make the interface consistent and ergonomic for all input patterns.
 ### 3.1 Standardize all commands to accept both paths AND fuzzy matching
 
 - [ ] **Current Problem**
+
   - Some commands document fuzzy matching, some require paths, but behavior is inconsistent
   - Current docs say write operations require paths in AI mode "for safety", but this provides no actual safety benefit since ambiguous fuzzy matches already error
 
 - [ ] **Implementation**
+
   - Commands to update: `set status`, `update`, `archive`, `open`, `append-body` (and any other commands currently requiring paths)
   - Make them accept either: exact file paths OR fuzzy title search
   - Examples:
@@ -91,11 +97,13 @@ Make the interface consistent and ergonomic for all input patterns.
     - Path: `taskdn set status ~/tasks/login-bug.md done`
 
 - [ ] **Ambiguity Handling**
+
   - Human mode: Interactive prompt to select if multiple fuzzy matches found
   - AI mode: Return AMBIGUOUS error with list of all matches
   - Exact paths: Always work (no fuzzy matching attempted)
 
 - [ ] **Performance Considerations**
+
   - Path lookup: Single file read operation (fast)
   - Fuzzy matching: Requires scanning all files in directory (slower)
   - Use existing Rust scan functions (scanTasks/scanProjects/scanAreas)
@@ -111,6 +119,7 @@ Make the interface consistent and ergonomic for all input patterns.
 ### 3.2 Accept both singular and plural entity types
 
 - [ ] **Implementation**
+
   - Accept both forms for all entity types:
     - `list task` and `list tasks`
     - `list project` and `list projects`
@@ -132,6 +141,7 @@ Fix incomplete filter implementations and missing flags.
 ### 4.1 Add filtering to `list projects`
 
 - [ ] **Implementation**
+
   - Add support for: `--status`, `--limit`, `--query`
   - Add support for: `--sort`, `--desc`
   - Add support for: `--area` (filter projects by area)
@@ -141,6 +151,7 @@ Fix incomplete filter implementations and missing flags.
 ### 4.2 Add filtering to `list areas`
 
 - [ ] **Implementation**
+
   - Add support for: `--status`, `--limit`, `--query`
   - Add support for: `--sort`, `--desc`
 
@@ -156,6 +167,7 @@ Fix incomplete filter implementations and missing flags.
 ### 4.4 Add date flags to `new project` command
 
 - [ ] **Implementation**
+
   - Add `--start-date` flag
   - Add `--end-date` flag
 
@@ -176,10 +188,3 @@ Update all documentation to reflect the new interface.
   - Make it clear that `set status` auto-manages `completed-at` field (unlike `update --set status=X`)
   - Explain when to use `set status` (single status change) vs `update --set` (multiple fields at once)
   - Update all command help text to reflect new naming and behavior
-
-### 5.2 Update all documentation
-
-- [ ] **Implementation**
-  - Update README and user-facing documentation
-  - Update examples to use new command names
-  - Document the fuzzy matching behavior and ambiguity handling

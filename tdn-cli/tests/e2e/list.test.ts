@@ -1056,3 +1056,137 @@ describe('completed date filters', () => {
     );
   });
 });
+
+describe('singular and plural entity types', () => {
+  test('accepts "task" (singular)', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'task', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toBeDefined();
+  });
+
+  test('accepts "tasks" (plural)', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'tasks', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.tasks).toBeDefined();
+  });
+
+  test('accepts "project" (singular)', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'project', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.projects).toBeDefined();
+  });
+
+  test('accepts "projects" (plural)', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'projects', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.projects).toBeDefined();
+  });
+
+  test('accepts "area" (singular)', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'area', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.areas).toBeDefined();
+  });
+
+  test('accepts "areas" (plural)', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'areas', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.areas).toBeDefined();
+  });
+});
+
+describe('list projects filtering', () => {
+  test('--status filter works', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'projects', '--status', 'ready', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    if (output.projects.length > 0) {
+      expect(output.projects.every((p: { status: string }) => p.status === 'ready')).toBe(true);
+    }
+  });
+
+  test('--area filter works', async () => {
+    const { exitCode } = await runCli(['list', 'projects', '--area', 'Work', '--json']);
+    expect(exitCode).toBe(0);
+  });
+
+  test('--query filter works', async () => {
+    const { exitCode } = await runCli(['list', 'projects', '--query', 'project', '--json']);
+    expect(exitCode).toBe(0);
+  });
+
+  test('--sort title works', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'projects', '--sort', 'title', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    if (output.projects.length > 1) {
+      const titles = output.projects.map((p: { title: string }) => p.title);
+      const sortedTitles = [...titles].sort();
+      expect(titles).toEqual(sortedTitles);
+    }
+  });
+
+  test('--limit reduces results', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'projects', '--limit', '2', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.projects.length).toBeLessThanOrEqual(2);
+  });
+});
+
+describe('list areas filtering', () => {
+  test('--status filter works', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'areas', '--status', 'active', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    if (output.areas.length > 0) {
+      expect(output.areas.every((a: { status: string }) => a.status === 'active')).toBe(true);
+    }
+  });
+
+  test('--query filter works', async () => {
+    const { exitCode } = await runCli(['list', 'areas', '--query', 'area', '--json']);
+    expect(exitCode).toBe(0);
+  });
+
+  test('--sort title works', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'areas', '--sort', 'title', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    if (output.areas.length > 1) {
+      const titles = output.areas.map((a: { title: string }) => a.title);
+      const sortedTitles = [...titles].sort();
+      expect(titles).toEqual(sortedTitles);
+    }
+  });
+
+  test('--limit reduces results', async () => {
+    const { stdout, exitCode } = await runCli(['list', 'areas', '--limit', '2', '--json']);
+    expect(exitCode).toBe(0);
+    const output = JSON.parse(stdout);
+    expect(output.areas.length).toBeLessThanOrEqual(2);
+  });
+});
+
+describe('enhanced --scheduled filter', () => {
+  test('accepts "today"', async () => {
+    const { exitCode } = await runCli(['list', '--scheduled', 'today', '--json']);
+    expect(exitCode).toBe(0);
+  });
+
+  test('accepts "tomorrow"', async () => {
+    const { exitCode } = await runCli(['list', '--scheduled', 'tomorrow', '--json']);
+    expect(exitCode).toBe(0);
+  });
+
+  test('accepts "this-week"', async () => {
+    const { exitCode } = await runCli(['list', '--scheduled', 'this-week', '--json']);
+    expect(exitCode).toBe(0);
+  });
+});
