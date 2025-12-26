@@ -2,17 +2,16 @@
 
 **Work Directory:** `tdn-cli/`
 
-**Depends on:** Task 6B (Modify Operations)
-
 ## Overview
 
-This is a comprehensive review checkpoint after implementing all core functionality (read and write operations). Before proceeding to polish and configuration, we pause to:
+This is a comprehensive review checkpoint after implementing all core functionality (read and write operations). Before proceeding to polish and configuration, we pause to review our implementation.
 
-1. Review the Rust "external" API design
-2. Review read/write patterns including batching
-3. Assess type design completeness
-4. Identify and execute refactoring opportunities
-5. Review TypeScript structure
+Relevant docs for information:
+
+- `tdn-cli/docs/developer/cli-interface-guide.md`
+- `tdn-cli/docs/developer/output-format-spec.md`
+- `tdn-cli/docs/developer/ai-context.md`
+- `../../docs/product-overviews/cli/cli-tech.md`
 
 ## Why This Checkpoint Exists
 
@@ -24,21 +23,43 @@ At this point we have:
 - All filtering and sorting
 - Context command
 - Convenience commands
-- File writing with round-trip fidelity
+- File writing
 - Status changes and updates
 - Batch operations
 
 This is the right time to step back and ensure the architecture is sound before adding configuration, doctor, and polish features.
 
-## Phases
+## Review Sessions
 
-### Phase 1: Rust API Design Review
+These reviews should be conducted as **separate sessions**, in the order shown below. Each session should start with a fresh read of the relevant code.
 
-Evaluate the "external" API exposed via NAPI.
+### For Each Session
 
-**Deferred from Task 4:** Structured error types were identified as a "low priority" improvement in the Task 4 review. Consider implementing during this review phase. The current approach uses string-based error messages which TypeScript pattern-matches on—this works but is fragile.
+- Start with fresh read of relevant code
+- Identify issues (not just check boxes)
+- Propose changes to user before implementing
+- Focus on "ACTUALLY good" not just "passes checklist"
+- Keep scope tight (one session = one review area)
 
-**Questions to answer:**
+---
+
+### Session 1: Type & API Contract Review
+
+**Scope:** Rust type design + NAPI API surface (the contract between layers)
+
+**Why first:** Everything else depends on getting this interface right. Types and API are too intertwined to review separately.
+
+**Deferred from Task 4:** Structured error types were identified as a "low priority" improvement in the Task 4 review. Consider implementing during this session. The current approach uses string-based error messages which TypeScript pattern-matches on—this works but is fragile.
+
+#### Type Design Questions
+
+- Do we have all the types we need?
+- Are enums marked `#[non_exhaustive]` where appropriate?
+- Is the `Option<Option<T>>` pattern used correctly for updates?
+- Are there redundant types that could be consolidated?
+- Is NAPI type generation producing clean TypeScript types?
+
+#### API Design Questions
 
 - Is the API surface appropriate? Too large? Too granular?
 - Are function signatures consistent?
@@ -47,22 +68,27 @@ Evaluate the "external" API exposed via NAPI.
 - Should any internal functions be exposed? Any exposed functions be internal?
 - Should we implement structured error types now?
 
-**Checklist:**
+#### Checklist
 
+- [ ] Review all public structs
+- [ ] Review all enums
 - [ ] List all `#[napi]` functions
-- [ ] Review each for naming consistency
-- [ ] Review each for error handling pattern
-- [ ] Identify any missing functions
+- [ ] Review each function for naming consistency
+- [ ] Review each function for error handling pattern
+- [ ] Identify any missing types or functions
 - [ ] Identify any functions that should be merged or split
+- [ ] Check for redundant types
 - [ ] Decision on structured error types
 
-### Phase 2: Read/Write Pattern Review
+---
 
-Evaluate the file I/O patterns.
+### Session 2: Read/Write Implementation Review
+
+**Scope:** File I/O patterns and round-trip fidelity
 
 **Context from Task 4:** The "Read vs Write Separation" pattern (see `cli-tech.md`) was established during Task 4 review. Read operations use typed "parsed view" structs; write operations manipulate raw YAML. Verify this pattern is working as designed.
 
-**Questions to answer:**
+#### Questions to Answer
 
 - Is read performance acceptable for large vaults?
 - Is write round-trip fidelity working correctly per S3 spec?
@@ -70,7 +96,7 @@ Evaluate the file I/O patterns.
 - Is error recovery appropriate (partial failures)?
 - Is the read/write separation pattern working well in practice?
 
-**Specific checks:**
+#### Specific Checks
 
 - [ ] Profile vault scanning for 1000+ files (if possible)
 - [ ] Verify unknown frontmatter fields survive read/write
@@ -78,124 +104,76 @@ Evaluate the file I/O patterns.
 - [ ] Verify file reference format preservation (wikilink vs path)
 - [ ] Verify batch operations report partial failures correctly
 - [ ] Verify YAML field ordering is reasonably preserved
+- [ ] Review error handling in file operations
+- [ ] Check for any file reading redundancy
 
-### Phase 3: Type Design Review
+---
 
-Evaluate Rust type design.
+### Session 3: TypeScript Layer Review
 
-**Questions to answer:**
+**Scope:** Command structure, formatters, and usage of Rust API
 
-- Do we have all the types we need?
-- Are enums marked `#[non_exhaustive]` where appropriate?
-- Is the `Option<Option<T>>` pattern used correctly for updates?
-- Are there redundant types that could be consolidated?
+**Why after Session 1:** If Session 1 changes the API, we'll know what TypeScript needs to adapt to.
 
-**Checklist:**
-
-- [ ] Review all public structs
-- [ ] Review all enums
-- [ ] Check for missing types
-- [ ] Check for redundant types
-- [ ] Verify NAPI type generation is clean
-
-### Phase 4: Rust Refactoring
-
-Execute identified refactoring opportunities.
-
-**Common patterns to look for:**
-
-- Duplicated parsing logic
-- Inconsistent error creation
-- Functions that are too long
-- Missing abstractions
-- Dead code
-
-**Approach:**
-
-1. List all identified issues from phases 1-3
-2. Prioritize by impact vs effort
-3. Execute high-value refactors
-4. Document any deferred items
-
-### Phase 5: TypeScript Structure Review
-
-Evaluate TypeScript code organization.
-
-**Questions to answer:**
+#### Questions to Answer
 
 - Is the command structure consistent?
 - Are formatters well-organized?
 - Is there duplicated logic that should be extracted?
 - Are types properly defined and used?
 - Is error handling consistent?
+- Are we using the Rust API appropriately?
 
-**Checklist:**
+#### Checklist
 
 - [ ] Review `src/commands/` structure
 - [ ] Review `src/output/` structure
 - [ ] Check for duplicated formatting logic
 - [ ] Check for proper TypeScript types (not `any`)
 - [ ] Review error handling patterns
+- [ ] Verify consistent command structure
+- [ ] Check for opportunities to extract common utilities
 
-### Phase 6: TypeScript Refactoring
+---
 
-Execute identified refactoring opportunities.
+### Session 4: Test Coverage Review
 
-**Common patterns to look for:**
+**Scope:** E2E test coverage and quality assessment
 
-- Duplicated output formatting
-- Inconsistent option handling
-- Missing utility functions
-- Type assertions that could be avoided
+**Why last:** Validates everything after any refactoring from earlier sessions.
 
-### Phase 7: Test Coverage Review
+**Not in scope:** Achieving 100% coverage. Just identify obvious gaps.
 
-Evaluate test coverage and quality.
-
-**Questions to answer:**
+#### Questions to Answer
 
 - Are all commands tested in all output modes?
 - Are error cases covered?
 - Are edge cases covered?
 - Are Rust unit tests adequate?
 
-**Not in scope:** Achieving 100% coverage. Just identify obvious gaps.
+#### Checklist
 
-### Phase 8: Documentation Update
+- [ ] Review test coverage across all commands
+- [ ] Check coverage of all output modes (human, ai, json, ai-json)
+- [ ] Identify gaps in error case testing
+- [ ] Identify gaps in edge case testing
+- [ ] Review quality of existing tests
+- [ ] Review Rust unit test coverage
 
-Update developer documentation to reflect current architecture.
+---
 
-**Documents to review/update:**
-
-- `tdn-cli/docs/developer/architecture-guide.md`
-- `tdn-cli/docs/developer/testing.md`
-- Any new documents needed in `tdn-cli/docs/developer/`
-- `docs/product-overviews/cli-tech.md`
-
-## Verification
-
-- [ ] All `#[napi]` functions reviewed
-- [ ] Read/write patterns verified
-- [ ] Type design reviewed
-- [ ] Rust refactoring complete
-- [ ] TypeScript refactoring complete
-- [ ] Test coverage gaps identified
-- [ ] Documentation updated
-- [ ] All tests pass
-- [ ] `bun run check` passes
-
-## Output
+## Expected Output
 
 This task should produce:
 
 1. A cleaner, more maintainable codebase
-2. Updated documentation
+2. Updated documentation (if patterns or interfaces change)
 3. A list of any deferred improvements (for future consideration)
 4. Confidence that the foundation is solid for Task 8
 
 ## Notes
 
 - This is a review task, not a feature task
-- Don't over-engineer - fix obvious issues, defer speculative improvements
-- Keep changes focused and testable
 - If major changes are needed, discuss with user first
+- Each session should be conducted separately with fresh eyes
+- Focus on internal code quality, not external CLI interface (unless major issues found)
