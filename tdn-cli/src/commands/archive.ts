@@ -2,9 +2,10 @@ import { Command } from '@commander-js/extra-typings';
 import { existsSync, mkdirSync, renameSync } from 'node:fs';
 import { dirname, basename, join } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, ArchivedResult, BatchResult } from '@/output/types.ts';
+import type { GlobalOptions, ArchivedResult } from '@/output/types.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
+import { processBatch } from '@/lib/batch.ts';
 
 /**
  * Archive command - move file(s) to archive subdirectory
@@ -188,45 +189,24 @@ export const archiveCommand = new Command('archive')
     }
 
     // Batch case - process all, collect results
-    const successes: BatchResult['successes'] = [];
-    const failures: BatchResult['failures'] = [];
-
-    for (const filePath of paths) {
-      try {
+    const result = processBatch(
+      paths,
+      'archived',
+      (filePath) => {
         const { title, fromPath, toPath } = archiveFile(filePath);
-        successes.push({
+        return {
           path: fromPath,
           title,
           toPath,
-        });
-      } catch (error) {
-        if (isCliError(error)) {
-          failures.push({
-            path: filePath,
-            code: error.code,
-            message: error.message,
-          });
-        } else {
-          failures.push({
-            path: filePath,
-            code: 'UNKNOWN',
-            message: String(error),
-          });
-        }
-      }
-    }
-
-    const result: BatchResult = {
-      type: 'batch-result',
-      operation: 'archived',
-      successes,
-      failures,
-    };
+        };
+      },
+      (filePath) => filePath
+    );
 
     console.log(formatOutput(result, globalOpts));
 
     // Exit code 1 if any failed
-    if (failures.length > 0) {
+    if (result.failures.length > 0) {
       process.exit(1);
     }
   });

@@ -249,23 +249,29 @@ impl VaultIndex {
             None => return (Vec::new(), warnings),
         };
 
-        let projects = self.projects_by_area
+        let projects = self
+            .projects_by_area
             .get(&area_idx)
             .map(|indices| {
-                indices.iter().map(|&i| {
-                    let project = &self.projects[i];
-                    // Check if this project's area reference is valid
-                    if let Some(ref area_ref) = project.area
-                        && let Some(referenced_area_name) = extract_wikilink_name(area_ref)
-                        && !self.area_by_name.contains_key(&referenced_area_name.to_lowercase())
-                    {
-                        warnings.push(format!(
-                            "Project '{}' references unknown area '{}'",
-                            project.title, referenced_area_name
-                        ));
-                    }
-                    &self.projects[i]
-                }).collect()
+                indices
+                    .iter()
+                    .map(|&i| {
+                        let project = &self.projects[i];
+                        // Check if this project's area reference is valid
+                        if let Some(ref area_ref) = project.area
+                            && let Some(referenced_area_name) = extract_wikilink_name(area_ref)
+                            && !self
+                                .area_by_name
+                                .contains_key(&referenced_area_name.to_lowercase())
+                        {
+                            warnings.push(format!(
+                                "Project '{}' references unknown area '{}'",
+                                project.title, referenced_area_name
+                            ));
+                        }
+                        &self.projects[i]
+                    })
+                    .collect()
             })
             .unwrap_or_default();
 
@@ -364,9 +370,7 @@ impl VaultIndex {
 
     /// Find a task by path (O(1) lookup via HashMap).
     fn find_task_by_path(&self, path: &str) -> Option<&Task> {
-        self.task_by_path
-            .get(path)
-            .map(|&idx| &self.tasks[idx])
+        self.task_by_path.get(path).map(|&idx| &self.tasks[idx])
     }
 }
 
