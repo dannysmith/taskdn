@@ -21,16 +21,16 @@ interface ConfigFile {
 }
 
 /**
- * Get the user config file path (~/.config/taskdn/config.json)
+ * Get the user config file path (~/.taskdn.json)
  */
-function getUserConfigPath(): string {
-  return resolve(homedir(), '.config', 'taskdn', 'config.json');
+export function getUserConfigPath(): string {
+  return resolve(homedir(), '.taskdn.json');
 }
 
 /**
  * Get the local config file path (./.taskdn.json)
  */
-function getLocalConfigPath(): string {
+export function getLocalConfigPath(): string {
   return resolve(process.cwd(), '.taskdn.json');
 }
 
@@ -78,7 +78,7 @@ function readConfigFile(path: string): ConfigFile | null {
  * Get vault configuration with the following precedence:
  * 1. Environment variables (TASKDN_TASKS_DIR, TASKDN_PROJECTS_DIR, TASKDN_AREAS_DIR)
  * 2. Local config (./.taskdn.json)
- * 3. User config (~/.config/taskdn/config.json)
+ * 3. User config (~/.taskdn.json)
  * 4. Defaults (./tasks, ./projects, ./areas relative to cwd)
  */
 export function getVaultConfig(): VaultConfig {
@@ -121,5 +121,36 @@ export function getVaultConfig(): VaultConfig {
     tasksDir,
     projectsDir,
     areasDir,
+  };
+}
+
+/**
+ * Configuration source information
+ */
+export interface ConfigSource {
+  userConfigPath: string;
+  userConfigExists: boolean;
+  localConfigPath: string;
+  localConfigExists: boolean;
+  effectiveConfig: VaultConfig;
+}
+
+/**
+ * Get configuration source information for display purposes.
+ * Shows which config files exist and the effective configuration values.
+ */
+export function getConfigSource(): ConfigSource {
+  const userConfigPath = getUserConfigPath();
+  const localConfigPath = getLocalConfigPath();
+  const userConfigExists = existsSync(userConfigPath);
+  const localConfigExists = existsSync(localConfigPath);
+  const effectiveConfig = getVaultConfig();
+
+  return {
+    userConfigPath,
+    userConfigExists,
+    localConfigPath,
+    localConfigExists,
+    effectiveConfig,
   };
 }

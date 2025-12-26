@@ -8,3 +8,6 @@ export { updateCommand } from './update.ts';
 export { archiveCommand } from './archive.ts';
 export { openCommand } from './open.ts';
 export { appendBodyCommand } from './append-body.ts';
+export { initCommand } from './init.ts';
+export { configCommand } from './config.ts';
+export { doctorCommand } from './doctor.ts';

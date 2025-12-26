@@ -17,10 +17,10 @@ function createMockTask(overrides: Partial<Task> = {}): Task {
 }
 
 describe('processBatch', () => {
-  test('processes all items successfully', () => {
+  test('processes all items successfully', async () => {
     const items = ['/task1.md', '/task2.md', '/task3.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'status-changed',
       (path) => {
@@ -39,10 +39,10 @@ describe('processBatch', () => {
     expect(result.successes[2]?.title).toBe('Task /task3.md');
   });
 
-  test('handles all failures', () => {
+  test('handles all failures', async () => {
     const items = ['/task1.md', '/task2.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'status-changed',
       (path) => {
@@ -61,10 +61,10 @@ describe('processBatch', () => {
     expect(result.failures[1]?.path).toBe('/task2.md');
   });
 
-  test('handles mixed success and failure', () => {
+  test('handles mixed success and failure', async () => {
     const items = ['/task1.md', '/task2.md', '/task3.md', '/task4.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'status-changed',
       (path) => {
@@ -85,10 +85,10 @@ describe('processBatch', () => {
     expect(result.failures[1]?.path).toBe('/task4.md');
   });
 
-  test('handles CLI errors correctly', () => {
+  test('handles CLI errors correctly', async () => {
     const items = ['/task1.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'archived',
       (path) => {
@@ -102,10 +102,10 @@ describe('processBatch', () => {
     expect(result.failures[0]?.message).toContain('Multiple matches found');
   });
 
-  test('handles non-CLI errors with UNKNOWN code', () => {
+  test('handles non-CLI errors with UNKNOWN code', async () => {
     const items = ['/task1.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'status-changed',
       (path) => {
@@ -119,7 +119,7 @@ describe('processBatch', () => {
     expect(result.failures[0]?.message).toBe('Error: Unexpected error');
   });
 
-  test('works with different operations', () => {
+  test('works with different operations', async () => {
     const operations: Array<'completed' | 'dropped' | 'status-changed' | 'updated' | 'archived'> = [
       'completed',
       'dropped',
@@ -129,7 +129,7 @@ describe('processBatch', () => {
     ];
 
     for (const operation of operations) {
-      const result = processBatch(
+      const result = await processBatch(
         ['/task.md'],
         operation,
         (path) => {
@@ -143,10 +143,10 @@ describe('processBatch', () => {
     }
   });
 
-  test('includes optional fields in success info', () => {
+  test('includes optional fields in success info', async () => {
     const items = ['/task1.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'archived',
       (path) => {
@@ -166,7 +166,7 @@ describe('processBatch', () => {
     expect(result.successes[0]?.task).toBeDefined();
   });
 
-  test('uses custom path extractor for error reporting', () => {
+  test('uses custom path extractor for error reporting', async () => {
     interface TaskInput {
       id: string;
       path: string;
@@ -177,7 +177,7 @@ describe('processBatch', () => {
       { id: '2', path: '/task2.md' },
     ];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'status-changed',
       (item) => {
@@ -194,8 +194,8 @@ describe('processBatch', () => {
     expect(result.failures[0]?.path).toBe('/task2.md');
   });
 
-  test('handles empty input array', () => {
-    const result = processBatch(
+  test('handles empty input array', async () => {
+    const result = await processBatch(
       [],
       'status-changed',
       (path) => ({ path, title: 'Test' }),
@@ -206,10 +206,10 @@ describe('processBatch', () => {
     expect(result.failures).toHaveLength(0);
   });
 
-  test('preserves error messages from CLI errors', () => {
+  test('preserves error messages from CLI errors', async () => {
     const items = ['/task1.md'];
 
-    const result = processBatch(
+    const result = await processBatch(
       items,
       'status-changed',
       (path) => {

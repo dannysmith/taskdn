@@ -6,6 +6,8 @@ import type { GlobalOptions, ArchivedResult } from '@/output/types.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 import { processBatch } from '@/lib/batch.ts';
+import { disambiguateTasks } from '@/lib/disambiguation.ts';
+import type { OutputMode } from '@/output/types.ts';
 
 /**
  * Archive command - move file(s) to archive subdirectory
@@ -45,7 +47,10 @@ function getUniqueArchivePath(archiveDir: string, filename: string): string {
  * Moves it to an 'archive' subdirectory in the same parent directory.
  * Supports both path-based and fuzzy title-based lookup.
  */
-function archiveFile(taskQuery: string): { title: string; fromPath: string; toPath: string } {
+async function archiveFile(
+  taskQuery: string,
+  mode: OutputMode
+): Promise<{ title: string; fromPath: string; toPath: string }> {
   // Look up the task (supports both paths and fuzzy matching)
   const lookupResult = lookupTask(taskQuery);
 
@@ -55,7 +60,36 @@ function archiveFile(taskQuery: string): { title: string; fromPath: string; toPa
   }
 
   if (lookupResult.type === 'multiple') {
-    // Multiple matches - return ambiguous error with all match titles
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateTasks(taskQuery, lookupResult.matches, mode);
+      const fullPath = selected.path;
+      const title = selected.title;
+
+      // Determine archive directory (parent/archive/)
+      const parentDir = dirname(fullPath);
+      const archiveDir = join(parentDir, 'archive');
+      const filename = basename(fullPath);
+
+      // Create archive directory if needed
+      if (!existsSync(archiveDir)) {
+        mkdirSync(archiveDir, { recursive: true });
+      }
+
+      // Get unique target path
+      const targetPath = getUniqueArchivePath(archiveDir, filename);
+
+      // Move the file
+      renameSync(fullPath, targetPath);
+
+      return {
+        title,
+        fromPath: fullPath,
+        toPath: targetPath,
+      };
+    }
+
+    // In AI/JSON mode, throw ambiguous error
     const matchTitles = lookupResult.matches.map((t) => t.title);
     throw createError.ambiguous(taskQuery, matchTitles);
   }
@@ -95,7 +129,7 @@ function archiveFile(taskQuery: string): { title: string; fromPath: string; toPa
  * Preview archiving a file (for dry-run mode).
  * Supports both path-based and fuzzy title-based lookup.
  */
-function previewArchive(taskQuery: string): ArchivedResult {
+async function previewArchive(taskQuery: string, mode: OutputMode): Promise<ArchivedResult> {
   // Look up the task (supports both paths and fuzzy matching)
   const lookupResult = lookupTask(taskQuery);
 
@@ -105,7 +139,27 @@ function previewArchive(taskQuery: string): ArchivedResult {
   }
 
   if (lookupResult.type === 'multiple') {
-    // Multiple matches - return ambiguous error with all match titles
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateTasks(taskQuery, lookupResult.matches, mode);
+      const fullPath = selected.path;
+
+      // Determine archive directory and target path
+      const parentDir = dirname(fullPath);
+      const archiveDir = join(parentDir, 'archive');
+      const filename = basename(fullPath);
+      const targetPath = getUniqueArchivePath(archiveDir, filename);
+
+      return {
+        type: 'archived',
+        title: selected.title,
+        fromPath: fullPath,
+        toPath: targetPath,
+        dryRun: true,
+      };
+    }
+
+    // In AI/JSON mode, throw ambiguous error
     const matchTitles = lookupResult.matches.map((t) => t.title);
     throw createError.ambiguous(taskQuery, matchTitles);
   }
@@ -143,10 +197,10 @@ export const archiveCommand = new Command('archive')
       const singlePath = paths[0]!;
       try {
         if (dryRun) {
-          const result = previewArchive(singlePath);
+          const result = await previewArchive(singlePath, mode);
           console.log(formatOutput(result, globalOpts));
         } else {
-          const { title, fromPath, toPath } = archiveFile(singlePath);
+          const { title, fromPath, toPath } = await archiveFile(singlePath, mode);
           const result: ArchivedResult = {
             type: 'archived',
             title,
@@ -171,7 +225,7 @@ export const archiveCommand = new Command('archive')
     if (dryRun) {
       for (const filePath of paths) {
         try {
-          const result = previewArchive(filePath);
+          const result = await previewArchive(filePath, mode);
           console.log(formatOutput(result, globalOpts));
         } catch (error) {
           if (isCliError(error)) {
@@ -189,15 +243,45 @@ export const archiveCommand = new Command('archive')
     }
 
     // Batch case - process all, collect results
-    const result = processBatch(
+    // Note: For batch operations, we don't use disambiguation - if there are ambiguous
+    // queries in batch mode, they will error out. Disambiguation is meant for interactive
+    // single-entity operations in human mode.
+    const result = await processBatch(
       paths,
       'archived',
       (filePath) => {
-        const { title, fromPath, toPath } = archiveFile(filePath);
+        const lookupResult = lookupTask(filePath);
+        if (lookupResult.type === 'none') {
+          throw createError.notFound('task', filePath);
+        }
+        if (lookupResult.type === 'multiple') {
+          const matchTitles = lookupResult.matches.map((t) => t.title);
+          throw createError.ambiguous(filePath, matchTitles);
+        }
+        const task = lookupResult.matches[0]!;
+        const fullPath = task.path;
+        const title = task.title;
+
+        // Determine archive directory
+        const parentDir = dirname(fullPath);
+        const archiveDir = join(parentDir, 'archive');
+        const filename = basename(fullPath);
+
+        // Create archive directory if needed
+        if (!existsSync(archiveDir)) {
+          mkdirSync(archiveDir, { recursive: true });
+        }
+
+        // Get unique target path
+        const targetPath = getUniqueArchivePath(archiveDir, filename);
+
+        // Move the file
+        renameSync(fullPath, targetPath);
+
         return {
-          path: fromPath,
+          path: fullPath,
           title,
-          toPath,
+          toPath: targetPath,
         };
       },
       (filePath) => filePath

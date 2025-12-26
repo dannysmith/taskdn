@@ -8,6 +8,7 @@ import type {
   ProjectUpdatedResult,
   AreaUpdatedResult,
   FieldChange,
+  OutputMode,
 } from '@/output/types.ts';
 import {
   updateFileFields,
@@ -28,6 +29,11 @@ import {
   lookupArea,
   type EntityType,
 } from '@/lib/entity-lookup.ts';
+import {
+  disambiguateTasks,
+  disambiguateProjects,
+  disambiguateAreas,
+} from '@/lib/disambiguation.ts';
 
 /**
  * Update command - programmatic field updates
@@ -45,10 +51,12 @@ import {
 /**
  * Resolve an entity query to a path and entity type.
  * Tries fuzzy matching across all entity types if not a path.
+ * In human mode, shows interactive disambiguation for multiple matches.
  */
-function resolveEntityQuery(
-  query: string
-): { path: string; entityType: EntityType } | { error: string; matches?: string[] } {
+async function resolveEntityQuery(
+  query: string,
+  mode: OutputMode
+): Promise<{ path: string; entityType: EntityType } | { error: string; matches?: string[] }> {
   // Check if query looks like a path - if so, use traditional path-based lookup
   const looksLikePath =
     query.startsWith('/') ||
@@ -70,6 +78,11 @@ function resolveEntityQuery(
     return { path: taskResult.matches[0]!.path, entityType: 'task' };
   }
   if (taskResult.type === 'multiple') {
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateTasks(query, taskResult.matches, mode);
+      return { path: selected.path, entityType: 'task' };
+    }
     const matchTitles = taskResult.matches.map((t) => t.title);
     return { error: `Multiple tasks match "${query}"`, matches: matchTitles };
   }
@@ -79,6 +92,11 @@ function resolveEntityQuery(
     return { path: projectResult.matches[0]!.path, entityType: 'project' };
   }
   if (projectResult.type === 'multiple') {
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateProjects(query, projectResult.matches, mode);
+      return { path: selected.path, entityType: 'project' };
+    }
     const matchTitles = projectResult.matches.map((p) => p.title);
     return { error: `Multiple projects match "${query}"`, matches: matchTitles };
   }
@@ -88,6 +106,11 @@ function resolveEntityQuery(
     return { path: areaResult.matches[0]!.path, entityType: 'area' };
   }
   if (areaResult.type === 'multiple') {
+    // In human mode, show interactive disambiguation
+    if (mode === 'human') {
+      const selected = await disambiguateAreas(query, areaResult.matches, mode);
+      return { path: selected.path, entityType: 'area' };
+    }
     const matchTitles = areaResult.matches.map((a) => a.title);
     return { error: `Multiple areas match "${query}"`, matches: matchTitles };
   }
@@ -606,7 +629,7 @@ export const updateCommand = new Command('update')
 
     try {
       // Resolve the query to a path and entity type (supports both paths and fuzzy matching)
-      const resolved = resolveEntityQuery(queryOrPath);
+      const resolved = await resolveEntityQuery(queryOrPath, mode);
 
       if ('error' in resolved) {
         // Lookup failed
