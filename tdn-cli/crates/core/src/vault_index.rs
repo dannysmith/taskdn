@@ -101,6 +101,8 @@ struct VaultIndex {
     project_by_name: HashMap<String, usize>,
     /// Map from lowercase task title to indices in `tasks` (Vec because titles may not be unique)
     task_by_title: HashMap<String, Vec<usize>>,
+    /// Map from task path to index in `tasks` (for O(1) path lookups)
+    task_by_path: HashMap<String, usize>,
     /// Map from project index to list of task indices
     tasks_by_project: HashMap<usize, Vec<usize>>,
     /// Map from area index to list of task indices (direct assignment)
@@ -167,6 +169,13 @@ impl VaultIndex {
                 .push(task_idx);
         }
 
+        // Build task path lookup (for O(1) path lookups)
+        let task_by_path: HashMap<String, usize> = tasks
+            .iter()
+            .enumerate()
+            .map(|(i, task)| (task.path.clone(), i))
+            .collect();
+
         // Build tasks-by-project and tasks-by-area indices
         let mut tasks_by_project: HashMap<usize, Vec<usize>> = HashMap::new();
         let mut tasks_by_area: HashMap<usize, Vec<usize>> = HashMap::new();
@@ -199,6 +208,7 @@ impl VaultIndex {
             area_by_name,
             project_by_name,
             task_by_title,
+            task_by_path,
             tasks_by_project,
             tasks_by_area,
             projects_by_area,
@@ -352,9 +362,11 @@ impl VaultIndex {
         None
     }
 
-    /// Find a task by path.
+    /// Find a task by path (O(1) lookup via HashMap).
     fn find_task_by_path(&self, path: &str) -> Option<&Task> {
-        self.tasks.iter().find(|t| t.path == path)
+        self.task_by_path
+            .get(path)
+            .map(|&idx| &self.tasks[idx])
     }
 }
 
@@ -451,9 +463,11 @@ pub fn get_project_context(config: VaultConfig, project_name: String) -> Project
 }
 
 /// Check if a string looks like a file path (vs a title).
-/// Returns true if the identifier starts with `/` (absolute path).
+/// Returns true if the identifier is an absolute path.
+/// Cross-platform: handles Unix paths (/foo/bar) and Windows paths (C:\foo\bar).
 fn is_path_identifier(identifier: &str) -> bool {
-    identifier.starts_with('/')
+    use std::path::Path;
+    Path::new(identifier).is_absolute()
 }
 
 /// Get full context for a task (for context command).

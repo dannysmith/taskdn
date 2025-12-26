@@ -1,8 +1,10 @@
 use napi::bindgen_prelude::*;
+use serde::Serialize;
 
 /// Error kind enum exposed to TypeScript as a string union
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 #[napi(string_enum)]
+#[serde(rename_all = "PascalCase")]
 pub enum TdnErrorKind {
     FileNotFound,
     FileReadError,
@@ -97,7 +99,7 @@ impl From<TdnError> for Error {
         // NAPI requires us to return Error, but we'll serialize TdnError as JSON
         // in the message so TypeScript can parse it back
         let json = serde_json::json!({
-            "kind": format!("{:?}", err.kind),
+            "kind": err.kind,
             "message": err.message,
             "path": err.path,
             "field": err.field,
