@@ -27,6 +27,8 @@ export {
   formatDayWithDate,
   hoursAgo,
   parseNaturalDate,
+  formatShortDate,
+  formatLongDate,
 } from './date-utils.ts';
 
 // Status emoji maps

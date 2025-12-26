@@ -31,7 +31,7 @@ import type {
   BodyAppendedResult,
   FieldChange,
 } from './types.ts';
-import { toKebabCase } from './helpers/index.ts';
+import { toKebabCase, formatShortDate, formatLongDate } from './helpers/index.ts';
 
 // Configure marked-terminal with our color palette
 marked.use(
@@ -76,24 +76,6 @@ marked.use(
  */
 function extractFilename(path: string): string {
   return path.split('/').pop() ?? path;
-}
-
-/**
- * Format a short date for list views (e.g., "Jan 20")
- */
-function formatShortDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-}
-
-/**
- * Format a long date for detail views (e.g., "20 January 2025")
- */
-function formatLongDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 /**

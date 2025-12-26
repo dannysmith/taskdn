@@ -233,6 +233,28 @@ export function hoursAgo(isoTimestamp: string): number {
 }
 
 // ============================================================================
+// Display Formatting
+// ============================================================================
+
+/**
+ * Format a short date for list views (e.g., "Jan 20")
+ */
+export function formatShortDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Format a long date for detail views (e.g., "20 January 2025")
+ */
+export function formatLongDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return dateStr;
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+}
+
+// ============================================================================
 // Natural Language Date Parsing
 // ============================================================================
 
