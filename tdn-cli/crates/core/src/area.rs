@@ -58,15 +58,14 @@ pub fn parse_area_file(file_path: String) -> Result<Area> {
     }
 
     // Read file contents
-    let content = fs::read_to_string(path).map_err(|e| {
-        TdnError::file_read_error(&file_path, e.to_string())
-    })?;
+    let content = fs::read_to_string(path)
+        .map_err(|e| TdnError::file_read_error(&file_path, e.to_string()))?;
 
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
-    let parsed = matter.parse::<AreaFrontmatter>(&content).map_err(|e| {
-        TdnError::parse_error(&file_path, None, e.to_string())
-    })?;
+    let parsed = matter
+        .parse::<AreaFrontmatter>(&content)
+        .map_err(|e| TdnError::parse_error(&file_path, None, e.to_string()))?;
 
     // Extract frontmatter data
     let frontmatter = parsed

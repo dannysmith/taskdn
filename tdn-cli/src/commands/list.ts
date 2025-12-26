@@ -11,6 +11,7 @@ import type {
 } from '@/output/index.ts';
 import { getVaultConfig } from '@/config/index.ts';
 import { getToday, getTomorrow, getEndOfWeek, getStartOfWeek } from '@/output/helpers/index.ts';
+import { filterByStatus, sortEntities, filterByQuery, limitResults } from '@/lib/filtering.ts';
 
 /**
  * Normalize entity type to plural form.
@@ -138,15 +139,7 @@ export const listCommand = new Command('list')
 
       // Apply status filter if provided
       if (options.status) {
-        const statuses = options.status.split(',').map((s) => s.trim().toLowerCase());
-        projects = projects.filter((project) => {
-          if (!project.status) return false;
-          const projectStatus = project.status.toLowerCase().replaceAll('-', '');
-          return statuses.some((s) => {
-            const normalized = s.replaceAll('-', '');
-            return projectStatus === normalized || project.status!.toLowerCase() === s;
-          });
-        });
+        projects = filterByStatus(projects, options.status);
       }
 
       // Apply area filter if provided (case-insensitive substring match)
@@ -160,14 +153,7 @@ export const listCommand = new Command('list')
 
       // Apply --query filter if provided (search in title and description)
       if (options.query) {
-        const queryLower = options.query.toLowerCase();
-        projects = projects.filter((project) => {
-          const titleMatch = project.title.toLowerCase().includes(queryLower);
-          const descMatch = project.description
-            ? project.description.toLowerCase().includes(queryLower)
-            : false;
-          return titleMatch || descMatch;
-        });
+        projects = filterByQuery(projects, options.query, ['title', 'description']);
       }
 
       // Apply sorting if --sort is provided
@@ -183,26 +169,13 @@ export const listCommand = new Command('list')
 
         const projectField = fieldMap[sortField];
         if (projectField) {
-          projects = projects.sort((a, b) => {
-            const aVal = a[projectField];
-            const bVal = b[projectField];
-
-            if (aVal === undefined && bVal === undefined) return 0;
-            if (aVal === undefined) return 1;
-            if (bVal === undefined) return -1;
-
-            const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-            return descending ? -comparison : comparison;
-          });
+          projects = sortEntities(projects, projectField, descending);
         }
       }
 
       // Apply limit if provided
       if (options.limit) {
-        const limit = Number.parseInt(options.limit, 10);
-        if (!Number.isNaN(limit) && limit > 0) {
-          projects = projects.slice(0, limit);
-        }
+        projects = limitResults(projects, options.limit);
       }
 
       const result: ProjectListResult = {
@@ -222,27 +195,12 @@ export const listCommand = new Command('list')
 
       // Apply status filter if provided
       if (options.status) {
-        const statuses = options.status.split(',').map((s) => s.trim().toLowerCase());
-        areas = areas.filter((area) => {
-          if (!area.status) return false;
-          const areaStatus = area.status.toLowerCase().replaceAll('-', '');
-          return statuses.some((s) => {
-            const normalized = s.replaceAll('-', '');
-            return areaStatus === normalized || area.status!.toLowerCase() === s;
-          });
-        });
+        areas = filterByStatus(areas, options.status);
       }
 
       // Apply --query filter if provided (search in title and description)
       if (options.query) {
-        const queryLower = options.query.toLowerCase();
-        areas = areas.filter((area) => {
-          const titleMatch = area.title.toLowerCase().includes(queryLower);
-          const descMatch = area.description
-            ? area.description.toLowerCase().includes(queryLower)
-            : false;
-          return titleMatch || descMatch;
-        });
+        areas = filterByQuery(areas, options.query, ['title', 'description']);
       }
 
       // Apply sorting if --sort is provided
@@ -256,26 +214,13 @@ export const listCommand = new Command('list')
 
         const areaField = fieldMap[sortField];
         if (areaField) {
-          areas = areas.sort((a, b) => {
-            const aVal = a[areaField];
-            const bVal = b[areaField];
-
-            if (aVal === undefined && bVal === undefined) return 0;
-            if (aVal === undefined) return 1;
-            if (bVal === undefined) return -1;
-
-            const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
-            return descending ? -comparison : comparison;
-          });
+          areas = sortEntities(areas, areaField, descending);
         }
       }
 
       // Apply limit if provided
       if (options.limit) {
-        const limit = Number.parseInt(options.limit, 10);
-        if (!Number.isNaN(limit) && limit > 0) {
-          areas = areas.slice(0, limit);
-        }
+        areas = limitResults(areas, options.limit);
       }
 
       const result: AreaListResult = {
@@ -361,15 +306,7 @@ export const listCommand = new Command('list')
 
     // Apply status filter if provided
     if (options.status) {
-      const statuses = options.status.split(',').map((s) => s.trim().toLowerCase());
-      tasks = tasks.filter((task) => {
-        const taskStatus = task.status.toLowerCase().replaceAll('-', '');
-        return statuses.some((s) => {
-          // Handle kebab-case and pascal-case matching
-          const normalized = s.replaceAll('-', '');
-          return taskStatus === normalized || task.status.toLowerCase() === s;
-        });
-      });
+      tasks = filterByStatus(tasks, options.status);
     }
 
     // Apply project filter if provided (case-insensitive substring match)
@@ -451,12 +388,7 @@ export const listCommand = new Command('list')
 
     // Apply --query filter if provided (search in title and body)
     if (options.query) {
-      const queryLower = options.query.toLowerCase();
-      tasks = tasks.filter((task) => {
-        const titleMatch = task.title.toLowerCase().includes(queryLower);
-        const bodyMatch = task.body.toLowerCase().includes(queryLower);
-        return titleMatch || bodyMatch;
-      });
+      tasks = filterByQuery(tasks, options.query, ['title', 'body']);
     }
 
     // Apply completed date filters
@@ -507,37 +439,13 @@ export const listCommand = new Command('list')
 
       const taskField = fieldMap[sortField];
       if (taskField) {
-        tasks = tasks.sort((a, b) => {
-          const aVal = a[taskField];
-          const bVal = b[taskField];
-
-          // Items without the sort field go last, regardless of direction
-          if (aVal === undefined && bVal === undefined) return 0;
-          if (aVal === undefined) return 1;
-          if (bVal === undefined) return -1;
-
-          // Compare values (works for strings including dates)
-          let comparison = 0;
-          if (typeof aVal === 'string' && typeof bVal === 'string') {
-            // Case-insensitive comparison for title
-            if (taskField === 'title') {
-              comparison = aVal.toLowerCase().localeCompare(bVal.toLowerCase());
-            } else {
-              comparison = aVal.localeCompare(bVal);
-            }
-          }
-
-          return descending ? -comparison : comparison;
-        });
+        tasks = sortEntities(tasks, taskField, descending);
       }
     }
 
     // Apply limit if --limit is provided
     if (options.limit) {
-      const limit = parseInt(options.limit, 10);
-      if (!isNaN(limit) && limit > 0) {
-        tasks = tasks.slice(0, limit);
-      }
+      tasks = limitResults(tasks, options.limit);
     }
 
     const result: TaskListResult = {

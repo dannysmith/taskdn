@@ -255,7 +255,10 @@ pub fn atomic_write(path: &Path, content: &str) -> Result<()> {
 
     // Sync to disk (fsync) to ensure durability before rename
     let file = fs::File::open(&temp_path).map_err(|e| {
-        TdnError::write_error(&path_str, format!("Failed to open temp file for sync: {}", e))
+        TdnError::write_error(
+            &path_str,
+            format!("Failed to open temp file for sync: {}", e),
+        )
     })?;
     file.sync_all().map_err(|e| {
         TdnError::write_error(&path_str, format!("Failed to sync file to disk: {}", e))
@@ -287,9 +290,9 @@ struct MinimalFrontmatter {
 fn parse_file_parts(content: &str) -> Result<(serde_yaml::Mapping, String)> {
     let matter = Matter::<YAML>::new();
     // Parse with a minimal struct - we only need access to .matter and .content
-    let parsed = matter.parse::<MinimalFrontmatter>(content).map_err(|e| {
-        TdnError::parse_error("(content)", None, e.to_string())
-    })?;
+    let parsed = matter
+        .parse::<MinimalFrontmatter>(content)
+        .map_err(|e| TdnError::parse_error("(content)", None, e.to_string()))?;
 
     // Get the raw YAML string from between the --- delimiters
     let yaml_str = parsed.matter;
@@ -620,9 +623,8 @@ pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()>
     }
 
     // Read original content
-    let content = fs::read_to_string(file_path).map_err(|e| {
-        TdnError::file_read_error(&path, e.to_string())
-    })?;
+    let content = fs::read_to_string(file_path)
+        .map_err(|e| TdnError::file_read_error(&path, e.to_string()))?;
 
     // Parse into parts
     let (mut mapping, body) = parse_file_parts(&content)?;

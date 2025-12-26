@@ -1,10 +1,11 @@
 import { Command } from '@commander-js/extra-typings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
-import type { GlobalOptions, TaskStatusChangedResult, BatchResult } from '@/output/types.ts';
+import type { GlobalOptions, TaskStatusChangedResult } from '@/output/types.ts';
 import { updateFileFields, parseTaskFile, type FieldUpdate, type Task } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
+import { processBatch } from '@/lib/batch.ts';
 
 /**
  * Set command - parent command for setting entity fields
@@ -212,45 +213,24 @@ const setStatusCommand = new Command('status')
     }
 
     // Batch case - process all, collect results
-    const successes: BatchResult['successes'] = [];
-    const failures: BatchResult['failures'] = [];
-
-    for (const taskPath of paths) {
-      try {
+    const result = processBatch(
+      paths,
+      'status-changed',
+      (taskPath) => {
         const { task } = changeTaskStatus(taskPath, newStatus);
-        successes.push({
+        return {
           path: task.path,
           title: task.title,
           task,
-        });
-      } catch (error) {
-        if (isCliError(error)) {
-          failures.push({
-            path: taskPath,
-            code: error.code,
-            message: error.message,
-          });
-        } else {
-          failures.push({
-            path: taskPath,
-            code: 'UNKNOWN',
-            message: String(error),
-          });
-        }
-      }
-    }
-
-    const result: BatchResult = {
-      type: 'batch-result',
-      operation: 'status-changed',
-      successes,
-      failures,
-    };
+        };
+      },
+      (taskPath) => taskPath
+    );
 
     console.log(formatOutput(result, globalOpts));
 
     // Exit code 1 if any failed
-    if (failures.length > 0) {
+    if (result.failures.length > 0) {
       process.exit(1);
     }
   });

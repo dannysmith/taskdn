@@ -75,7 +75,11 @@ impl TdnError {
         let field_str = field.into();
         Self {
             kind: TdnErrorKind::ValidationError,
-            message: format!("Validation error in field '{}': {}", field_str, details.into()),
+            message: format!(
+                "Validation error in field '{}': {}",
+                field_str,
+                details.into()
+            ),
             path: Some(path_str),
             field: Some(field_str),
         }
@@ -122,7 +126,11 @@ mod tests {
 
     #[test]
     fn test_parse_error_with_field() {
-        let err = TdnError::parse_error("/path/to/file.md", Some("title".to_string()), "Missing required field");
+        let err = TdnError::parse_error(
+            "/path/to/file.md",
+            Some("title".to_string()),
+            "Missing required field",
+        );
         assert!(matches!(err.kind, TdnErrorKind::ParseError));
         assert_eq!(err.field, Some("title".to_string()));
         assert!(err.message.contains("Failed to parse frontmatter"));

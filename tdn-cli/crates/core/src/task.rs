@@ -85,15 +85,14 @@ pub fn parse_task_file(file_path: String) -> Result<Task> {
     }
 
     // Read file contents
-    let content = fs::read_to_string(path).map_err(|e| {
-        TdnError::file_read_error(&file_path, e.to_string())
-    })?;
+    let content = fs::read_to_string(path)
+        .map_err(|e| TdnError::file_read_error(&file_path, e.to_string()))?;
 
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
-    let parsed = matter.parse::<TaskFrontmatter>(&content).map_err(|e| {
-        TdnError::parse_error(&file_path, None, e.to_string())
-    })?;
+    let parsed = matter
+        .parse::<TaskFrontmatter>(&content)
+        .map_err(|e| TdnError::parse_error(&file_path, None, e.to_string()))?;
 
     // Extract frontmatter data
     let frontmatter = parsed
