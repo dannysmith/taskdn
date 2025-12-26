@@ -6,11 +6,13 @@
 
 ## Overview
 
-Implement configuration commands (`init`, `config`), system health check (`doctor`), interactive features, and polish items like short flags and shell completions.
+Implement configuration commands (`init`, `config`), system health check (`doctor`), interactive disambiguation, and polish items like short flags and piping support.
 
 ## Phases
 
 ### Phase 1: Init Command
+
+> **Note:** Config system exists in `src/config/index.ts` but currently uses `~/.config/taskdn/config.json`. This phase updates it to use `~/.taskdn.json` and adds the user-facing `init` command.
 
 Interactive setup for new users.
 
@@ -18,13 +20,14 @@ Interactive setup for new users.
 taskdn init
 ```
 
-**Behavior:**
+**What to achieve:**
 
-1. Check if config already exists (offer to overwrite)
-2. Prompt for tasks directory path
-3. Prompt for projects directory path
-4. Prompt for areas directory path
-5. Create `.taskdn.json` in user's home directory
+1. Update config system to use `~/.taskdn.json` instead of `~/.config/taskdn/config.json`
+2. Create `init` command that:
+   - Checks if config already exists (offer to overwrite)
+   - Prompts for tasks/projects/areas directory paths
+   - Creates `~/.taskdn.json` with user's choices
+3. Support non-interactive mode with flags: `--tasks-dir`, `--projects-dir`, `--areas-dir`
 
 **Config file format:**
 
@@ -36,22 +39,19 @@ taskdn init
 }
 ```
 
-**Non-interactive mode:**
-
-```bash
-taskdn init --tasks-dir ./tasks --projects-dir ./projects --areas-dir ./areas
-```
-
 ### Phase 2: Config Command
 
-View and modify configuration.
+View current configuration (read-only).
 
 ```bash
-taskdn config                           # Show current config
-taskdn config --set tasksDir=./tasks    # Set a value
+taskdn config
 ```
 
-**Show output (human mode):**
+**What to achieve:**
+
+Create `config` command that shows effective configuration values.
+
+**Human mode output example:**
 
 ```
 Configuration
@@ -63,7 +63,7 @@ Configuration
   Config file: ~/.taskdn.json
 ```
 
-**Show output (AI mode):**
+**AI mode output example:**
 
 ```markdown
 ## Configuration
@@ -74,13 +74,7 @@ Configuration
 - **config-file:** ~/.taskdn.json
 ```
 
-**Config precedence (highest to lowest):**
-
-1. CLI flags (`--tasks-dir`)
-2. Environment variables (`TASKDN_TASKS_DIR`)
-3. Local config (`./.taskdn.json`)
-4. User config (`~/.taskdn.json`)
-5. Defaults
+**Note:** Users can edit `~/.taskdn.json` directly to change config - no `--set` needed.
 
 ### Phase 3: Doctor Command
 
@@ -88,30 +82,33 @@ Comprehensive health check for the vault.
 
 ```bash
 taskdn doctor
-taskdn doctor --ai
-taskdn doctor --json
 ```
 
-**What it checks:**
+**What to achieve:**
 
-| Level      | Checks                                                                     |
-| ---------- | -------------------------------------------------------------------------- |
-| System     | Config file exists and is valid                                            |
-| System     | Tasks/projects/areas directories exist and are accessible                  |
-| File       | YAML frontmatter is parseable                                              |
-| File       | Required fields present (title, status for tasks)                          |
-| File       | Status values are valid                                                    |
-| File       | Date fields are valid format                                               |
-| File       | Tasks have at most one project                                             |
-| File       | `taskdn-type` consistency (if any file in a directory uses it, all should) |
-| References | Project references point to existing projects                              |
-| References | Area references point to existing areas                                    |
+Create `doctor` command that validates:
 
-**Note on `taskdn-type` check:** Per S1 spec sections 4.4 and 5.4, if ANY file in a directory contains `taskdn-type: project` (or `area`), files without this field should be ignored. Doctor should warn about this inconsistency.
+**System checks:**
+- Config file exists and is valid JSON
+- Tasks/projects/areas directories exist and are readable
 
-**Implementation Note:** The reference checks can leverage the `warnings` field from Task 4's relationship query functions (`get_area_context`, `get_project_context`). These functions already detect and report broken wikilinks as part of their normal operation.
+**File checks:**
+- YAML frontmatter is parseable
+- Required fields present (title, status for tasks)
+- Status values are valid
+- Date fields are valid ISO 8601 format
+- Tasks have at most one project
+- `taskdn-type` consistency (if ANY file uses it, all in directory should)
 
-**Human mode output:**
+**Reference checks:**
+- Project references point to existing projects
+- Area references point to existing areas
+
+**Output:**
+- List issues found with file paths and clear descriptions
+- Exit 0 if clean, exit 1 if issues found, exit 2 if command fails
+
+**Human mode output example:**
 
 ```
 ✓ Config found (~/.taskdn.json)
@@ -122,7 +119,7 @@ taskdn doctor --json
 ⚠ 3 issues found:
 
   ~/tasks/fix-login.md
-    → References non-existent project "Q1 Planing" (did you mean "Q1 Planning"?)
+    → References non-existent project "Q1 Planing"
 
   ~/tasks/old-task.md
     → Invalid status "inprogress" (valid: inbox, ready, in-progress, ...)
@@ -133,23 +130,30 @@ taskdn doctor --json
 Summary: 3 issues in 57 files checked
 ```
 
-**Exit codes:**
-| Code | Meaning |
-|------|---------|
-| 0 | All checks passed |
-| 1 | Issues found (command succeeded, but problems exist) |
-| 2 | Command failed to run (couldn't read config, etc.) |
+### Phase 4: Interactive Disambiguation
 
-### Phase 4: Interactive Prompts & Fuzzy Disambiguation
+> **Note:** Interactive prompts already work in `new` command. Commands already throw AMBIGUOUS errors when queries match multiple entities. This phase intercepts those errors in human mode and shows an interactive picker.
 
-> **Includes fuzzy disambiguation from Task 2 Phase 6**
->
-> This phase wires up interactive prompts to all commands that accept entity names. Much of this has already been implemented, but we need to check that we have actually done everything properly here.
+**What to achieve:**
 
-Implement interactive features for human mode.
+When a command throws an AMBIGUOUS error in human mode (not `--ai` or `--json`):
+- Show interactive list with entity titles and file paths
+- Let user select which one they mean
+- Cancel if user presses Ctrl-C
+- Execute the command with the selected entity
 
-**Fuzzy match disambiguation (human mode):**
-When a fuzzy search returns multiple matches:
+In AI/JSON mode:
+- Keep current behavior (return AMBIGUOUS error)
+
+**Commands that already handle ambiguous queries:**
+- `show <query>`
+- `update <query>`
+- `archive <query>`
+- `open <query>`
+- `append-body <query>`
+- `set status <query> <status>`
+
+**Human mode example:**
 
 ```
 ? Multiple tasks match "login":
@@ -160,77 +164,40 @@ When a fuzzy search returns multiple matches:
   ○ Login page redesign
     ~/tasks/login-redesign.md
 
-  ○ Write login tests
-    ~/tasks/login-tests.md
-
   Select one (or press Ctrl-C to cancel):
-```
-
-**Commands that use disambiguation:**
-
-- `show <name>` - show a task/project/area by name
-- `complete <name>` - mark task complete
-- `drop <name>` - mark task dropped
-- `status <name> <status>` - change status
-- `update <name>` - update fields
-- `archive <name>` - archive entity
-
-**AI/JSON mode behavior:**
-When multiple matches found, return `AMBIGUOUS` error, Properly formatted according to the output spec.
-
-**Confirmation prompts:**
-For destructive operations (if we add any):
-
-```
-? Are you sure you want to archive 5 tasks? (y/N)
-```
-
-**Interactive add:**
-When `taskdn add` is called with no arguments:
-
-```
-? Task title: Review quarterly report
-? Status: (inbox) ready
-? Project: (none) Q1 Planning
-? Due date: (none) friday
-
-Creating task...
-✓ Created ~/tasks/review-quarterly-report.md
 ```
 
 ### Phase 5: Short Flags
 
 Add single-letter shortcuts for common flags.
 
-| Short | Long        | Usage        |
-| ----- | ----------- | ------------ |
-| `-s`  | `--status`  | `-s ready`   |
-| `-p`  | `--project` | `-p "Q1"`    |
-| `-a`  | `--area`    | `-a "Work"`  |
-| `-d`  | `--due`     | `-d today`   |
-| `-q`  | `--query`   | `-q "login"` |
-| `-l`  | `--limit`   | `-l 20`      |
+**What to achieve:**
 
-**Implementation:** Add to Commander.js option definitions.
+Add short aliases to existing long flags:
+
+| Short | Long        | Commands      |
+| ----- | ----------- | ------------- |
+| `-s`  | `--status`  | list, new     |
+| `-p`  | `--project` | list, new     |
+| `-a`  | `--area`    | list, new     |
+| `-d`  | `--due`     | list, new     |
+| `-l`  | `--limit`   | list          |
+
+Example: `taskdn list -s ready -p "Q1" -l 10`
 
 ### Phase 6: Piping Support
 
-Support for piping data in and out.
+**What to achieve:**
 
-**Pipe in:**
+Add `--stdin` flag to `new` command to accept piped JSON input.
 
-```bash
-echo '{"title": "New task"}' | taskdn add --stdin
-echo 'title: New task' | taskdn add --stdin
-```
-
-**Pipe out:**
+**Example:**
 
 ```bash
-taskdn list --json | jq '.tasks[] | select(.status == "ready")'
+echo '{"title": "New task", "status": "ready"}' | taskdn new --stdin
 ```
 
-The `--json` output is already pipeable. Add `--stdin` for input.
+**Note:** Only support JSON (not YAML) to keep it simple. `--json` output already works for piping out.
 
 ## Example Test Cases
 
@@ -244,8 +211,7 @@ describe('init command', () => {
 
 describe('config command', () => {
   test('shows current config')
-  test('sets config values')
-  test('shows config sources')
+  test('shows effective values from different sources')
 })
 
 describe('doctor command', () => {
@@ -264,8 +230,7 @@ describe('short flags', () => {
 })
 
 describe('piping', () => {
-  test('--stdin accepts JSON')
-  test('--stdin accepts YAML')
+  test('--stdin accepts JSON for new command')
   test('--json output is valid JSON')
 })
 ```
