@@ -1,7 +1,7 @@
 import { resolve, isAbsolute, join } from 'path';
 import { homedir } from 'os';
 import { Command } from '@commander-js/extra-typings';
-import { getAreaContext, getProjectContext, getTaskContext } from '@bindings';
+import { createVaultSession, getAreaContext, getProjectContext, getTaskContext } from '@bindings';
 import type { Task, Project } from '@bindings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type {
@@ -363,7 +363,8 @@ export const contextCommand = new Command('context')
       }
 
       const config = getVaultConfig();
-      const result = getAreaContext(config, target);
+      const session = createVaultSession(config);
+      const result = getAreaContext(session, target);
 
       if (!result.area) {
         // Area not found
@@ -420,7 +421,8 @@ export const contextCommand = new Command('context')
       }
 
       const config = getVaultConfig();
-      const result = getProjectContext(config, target);
+      const session = createVaultSession(config);
+      const result = getProjectContext(session, target);
 
       if (!result.project) {
         // Project not found
@@ -474,11 +476,12 @@ export const contextCommand = new Command('context')
       }
 
       const config = getVaultConfig();
+      const session = createVaultSession(config);
 
       // Determine if target is a path or title, and resolve if path-like
       const identifier = isPathLike(target) ? resolveTaskPath(target, config.tasksDir) : target;
 
-      const result = getTaskContext(config, identifier);
+      const result = getTaskContext(session, identifier);
 
       // Check for ambiguous matches
       if (result.ambiguousMatches.length > 0) {

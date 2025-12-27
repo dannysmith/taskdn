@@ -6,6 +6,7 @@
  */
 
 import {
+  createVaultSession,
   findTasksByTitle,
   findProjectsByTitle,
   findAreasByTitle,
@@ -13,7 +14,7 @@ import {
   parseProjectFile,
   parseAreaFile,
 } from '@bindings';
-import type { Task, Project, Area } from '@bindings';
+import type { Task, Project, Area, VaultSession } from '@bindings';
 import type { VaultConfig } from '@bindings';
 import type { EntityType } from '@/errors/types.ts';
 export type { EntityType };
@@ -119,13 +120,18 @@ function resolvePath(query: string, baseDir: string): string {
  * Look up a task by query.
  *
  * If query looks like a path, attempts exact path lookup.
- * Otherwise, performs fuzzy title matching.
+ * Otherwise, performs fuzzy title matching using a vault session.
  *
  * @param query - Task identifier (path or title substring)
  * @param config - Optional vault config (defaults to getVaultConfig())
+ * @param session - Optional vault session for reusing index (recommended for multiple lookups)
  * @returns LookupResult with matched tasks
  */
-export function lookupTask(query: string, config?: VaultConfig): LookupResult<Task> {
+export function lookupTask(
+  query: string,
+  config?: VaultConfig,
+  session?: VaultSession
+): LookupResult<Task> {
   const vaultConfig = config || getVaultConfig();
 
   // Path-based lookup
@@ -146,8 +152,9 @@ export function lookupTask(query: string, config?: VaultConfig): LookupResult<Ta
     }
   }
 
-  // Title-based fuzzy lookup
-  const matches = findTasksByTitle(vaultConfig, query);
+  // Title-based fuzzy lookup using session
+  const vaultSession = session || createVaultSession(vaultConfig);
+  const matches = findTasksByTitle(vaultSession, query);
 
   if (matches.length === 0) {
     return { type: 'none', matches: [] };
@@ -164,13 +171,18 @@ export function lookupTask(query: string, config?: VaultConfig): LookupResult<Ta
  * Look up a project by query.
  *
  * If query looks like a path, attempts exact path lookup.
- * Otherwise, performs fuzzy title matching.
+ * Otherwise, performs fuzzy title matching using a vault session.
  *
  * @param query - Project identifier (path or title substring)
  * @param config - Optional vault config (defaults to getVaultConfig())
+ * @param session - Optional vault session for reusing index (recommended for multiple lookups)
  * @returns LookupResult with matched projects
  */
-export function lookupProject(query: string, config?: VaultConfig): LookupResult<Project> {
+export function lookupProject(
+  query: string,
+  config?: VaultConfig,
+  session?: VaultSession
+): LookupResult<Project> {
   const vaultConfig = config || getVaultConfig();
 
   // Path-based lookup
@@ -191,8 +203,9 @@ export function lookupProject(query: string, config?: VaultConfig): LookupResult
     }
   }
 
-  // Title-based fuzzy lookup
-  const matches = findProjectsByTitle(vaultConfig, query);
+  // Title-based fuzzy lookup using session
+  const vaultSession = session || createVaultSession(vaultConfig);
+  const matches = findProjectsByTitle(vaultSession, query);
 
   if (matches.length === 0) {
     return { type: 'none', matches: [] };
@@ -209,13 +222,18 @@ export function lookupProject(query: string, config?: VaultConfig): LookupResult
  * Look up an area by query.
  *
  * If query looks like a path, attempts exact path lookup.
- * Otherwise, performs fuzzy title matching.
+ * Otherwise, performs fuzzy title matching using a vault session.
  *
  * @param query - Area identifier (path or title substring)
  * @param config - Optional vault config (defaults to getVaultConfig())
+ * @param session - Optional vault session for reusing index (recommended for multiple lookups)
  * @returns LookupResult with matched areas
  */
-export function lookupArea(query: string, config?: VaultConfig): LookupResult<Area> {
+export function lookupArea(
+  query: string,
+  config?: VaultConfig,
+  session?: VaultSession
+): LookupResult<Area> {
   const vaultConfig = config || getVaultConfig();
 
   // Path-based lookup
@@ -236,8 +254,9 @@ export function lookupArea(query: string, config?: VaultConfig): LookupResult<Ar
     }
   }
 
-  // Title-based fuzzy lookup
-  const matches = findAreasByTitle(vaultConfig, query);
+  // Title-based fuzzy lookup using session
+  const vaultSession = session || createVaultSession(vaultConfig);
+  const matches = findAreasByTitle(vaultSession, query);
 
   if (matches.length === 0) {
     return { type: 'none', matches: [] };

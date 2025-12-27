@@ -1,6 +1,6 @@
 import { join } from 'path';
 import { Command } from '@commander-js/extra-typings';
-import { scanTasks, scanProjects, scanAreas, getTasksInArea } from '@bindings';
+import { scanTasks, scanProjects, scanAreas, createVaultSession, getTasksInArea } from '@bindings';
 import type { Task, Project, Area } from '@bindings';
 import { formatOutput } from '@/output/index.ts';
 import type {
@@ -245,7 +245,8 @@ export const listCommand = new Command('list')
     } else if (options.area) {
       // Use relationship-aware query for area filtering
       // This finds tasks with direct area assignment AND tasks via projects
-      const result = getTasksInArea(config, options.area);
+      const session = createVaultSession(config);
+      const result = getTasksInArea(session, options.area);
       tasks = result.tasks;
       // Note: result.warnings could be displayed if needed
     } else {
