@@ -1,5 +1,6 @@
 import { Command } from '@commander-js/extra-typings';
 import { spawnSync } from 'node:child_process';
+import { basename } from 'node:path';
 import { getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions } from '@/output/types.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
@@ -20,11 +21,73 @@ import { createVaultSession } from '@bindings';
  */
 
 /**
+ * Allowed editors for security purposes.
+ * Common editors that are safe to execute without shell interpretation.
+ */
+const ALLOWED_EDITORS = [
+  'vim',
+  'vim.exe',
+  'vi',
+  'vi.exe',
+  'nvim',
+  'nvim.exe',
+  'nano',
+  'nano.exe',
+  'emacs',
+  'emacs.exe',
+  'code',
+  'code.exe',
+  'subl',
+  'subl.exe',
+  'atom',
+  'atom.exe',
+  'gedit',
+  'gedit.exe',
+  'kate',
+  'kate.exe',
+  'notepad',
+  'notepad.exe',
+  'notepad++',
+  'notepad++.exe',
+  'micro',
+  'micro.exe',
+  'helix',
+  'helix.exe',
+  'hx',
+  'hx.exe',
+];
+
+/**
+ * Validate that the editor command is safe to execute.
+ * Checks for dangerous shell metacharacters first, then validates against allowed list.
+ * Exported for testing.
+ */
+export function validateEditor(editor: string): void {
+  // CRITICAL: Check for shell metacharacters FIRST before any processing
+  const dangerousChars = /[;&|`$()<>]/;
+  if (dangerousChars.test(editor)) {
+    throw new Error(`Editor path contains dangerous shell metacharacters: ${editor}`);
+  }
+
+  // Extract base command name and validate against allowed list
+  const editorBasename = basename(editor).toLowerCase();
+  if (!ALLOWED_EDITORS.includes(editorBasename)) {
+    throw new Error(
+      `Editor "${editorBasename}" is not in the allowed list. ` +
+        `Allowed editors: ${ALLOWED_EDITORS.join(', ')}`
+    );
+  }
+}
+
+/**
  * Get the editor command to use.
- * Priority: $VISUAL → $EDITOR → vim → nano
+ * Priority: $VISUAL → $EDITOR → vim
+ * Validates the editor for security.
  */
 function getEditor(): string {
-  return process.env.VISUAL || process.env.EDITOR || 'vim';
+  const editor = process.env.VISUAL || process.env.EDITOR || 'vim';
+  validateEditor(editor);
+  return editor;
 }
 
 export const openCommand = new Command('open')
@@ -65,7 +128,7 @@ export const openCommand = new Command('open')
       const editor = getEditor();
       const result = spawnSync(editor, [task.path], {
         stdio: 'inherit',
-        shell: true,
+        shell: false, // SECURITY: Prevents command injection via $EDITOR
       });
 
       if (result.error) {

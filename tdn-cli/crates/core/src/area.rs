@@ -52,14 +52,14 @@ pub struct Area {
 pub fn parse_area_file(file_path: String) -> Result<Area> {
     let path = Path::new(&file_path);
 
-    // Check file exists
-    if !path.exists() {
-        return Err(TdnError::file_not_found(&file_path).into());
-    }
-
-    // Read file contents
-    let content = fs::read_to_string(path)
-        .map_err(|e| TdnError::file_read_error(&file_path, e.to_string()))?;
+    // Read file contents directly - no TOCTOU race condition
+    let content = fs::read_to_string(path).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            TdnError::file_not_found(&file_path)
+        } else {
+            TdnError::file_read_error(&file_path, e.to_string())
+        }
+    })?;
 
     // Parse frontmatter
     let matter = Matter::<YAML>::new();

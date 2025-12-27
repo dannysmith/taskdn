@@ -8,6 +8,10 @@ use crate::area::{Area, parse_area_file};
 use crate::project::{Project, parse_project_file};
 use crate::task::{Task, parse_task_file};
 
+// SECURITY: Resource limits to prevent DoS via large vaults (HIGH-6)
+const MAX_FILES_PER_SCAN: usize = 10_000;
+const MAX_PARALLEL_THREADS: usize = 8;
+
 /// Configuration for vault directories
 #[derive(Debug, Clone)]
 #[napi(object)]
@@ -104,31 +108,45 @@ where
                 .map(|ext| ext == "md")
                 .unwrap_or(false)
         })
+        .take(MAX_FILES_PER_SCAN) // SECURITY: Limit file count
         .collect();
 
-    debug!(
-        "Found {} .md files to process in {}",
-        entries.len(),
-        dir_path
-    );
+    let file_count = entries.len();
+    debug!("Found {} .md files to process in {}", file_count, dir_path);
 
-    // Process files in parallel
-    let results: Vec<T> = entries
-        .par_iter()
-        .filter_map(|entry| {
-            let file_path = entry.path().to_string_lossy().to_string();
-            match parse_fn(file_path.clone()) {
-                Ok(entity) => {
-                    debug!("Successfully parsed: {}", file_path);
-                    Some(entity)
+    // Warn if we hit the file limit
+    if file_count == MAX_FILES_PER_SCAN {
+        warn!(
+            "Directory {} contains {} or more files - processing limited to {} for safety",
+            dir_path, MAX_FILES_PER_SCAN, MAX_FILES_PER_SCAN
+        );
+    }
+
+    // SECURITY: Configure thread pool with resource limits
+    let pool = rayon::ThreadPoolBuilder::new()
+        .num_threads(MAX_PARALLEL_THREADS)
+        .build()
+        .unwrap();
+
+    // Process files in parallel with limited concurrency
+    let results: Vec<T> = pool.install(|| {
+        entries
+            .par_iter()
+            .filter_map(|entry| {
+                let file_path = entry.path().to_string_lossy().to_string();
+                match parse_fn(file_path.clone()) {
+                    Ok(entity) => {
+                        debug!("Successfully parsed: {}", file_path);
+                        Some(entity)
+                    }
+                    Err(e) => {
+                        warn!("Failed to parse file {}: {}", file_path, e);
+                        None
+                    }
                 }
-                Err(e) => {
-                    warn!("Failed to parse file {}: {}", file_path, e);
-                    None
-                }
-            }
-        })
-        .collect();
+            })
+            .collect()
+    });
 
     debug!(
         "Successfully parsed {} entities from {}",
