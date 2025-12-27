@@ -557,14 +557,14 @@ pub fn create_area_file(
 pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()> {
     let file_path = Path::new(&path);
 
-    // Check file exists
-    if !file_path.exists() {
-        return Err(TdnError::file_not_found(&path).into());
-    }
-
-    // Read original content
-    let content = fs::read_to_string(file_path)
-        .map_err(|e| TdnError::file_read_error(&path, e.to_string()))?;
+    // Read original content directly - no TOCTOU race condition
+    let content = fs::read_to_string(file_path).map_err(|e| {
+        if e.kind() == std::io::ErrorKind::NotFound {
+            TdnError::file_not_found(&path)
+        } else {
+            TdnError::file_read_error(&path, e.to_string())
+        }
+    })?;
 
     // Parse into parts
     let (mut mapping, body) = parse_file_parts(&content)?;

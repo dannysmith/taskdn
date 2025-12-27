@@ -1,6 +1,6 @@
 import { resolve } from 'path';
 import { existsSync, readFileSync } from 'fs';
-import { homedir } from 'os';
+import { homedir, platform } from 'os';
 
 /**
  * Vault configuration for directory paths
@@ -18,6 +18,65 @@ interface ConfigFile {
   tasksDir?: string;
   projectsDir?: string;
   areasDir?: string;
+}
+
+/**
+ * System directories that should never be used as vault paths.
+ * Attempting to use these could lead to data corruption or security issues.
+ */
+const SYSTEM_DIRECTORIES = ['/etc', '/usr', '/bin', '/sbin', '/root', '/boot', '/sys'];
+
+/**
+ * Validate and sanitize a vault path for security.
+ *
+ * SECURITY: This function prevents path traversal attacks (CRIT-2) by:
+ * 1. Blocking access to system directories
+ * 2. Warning if path is outside user's home directory
+ * 3. Resolving the path to absolute form
+ *
+ * @param path - The path to validate (can be relative or absolute)
+ * @param pathType - Description of what this path is for (e.g., "tasksDir")
+ * @returns The validated absolute path
+ * @throws Error if the path points to a system directory
+ */
+export function validateVaultPath(path: string, pathType: string = 'vault path'): string {
+  const absolutePath = resolve(path);
+
+  // Only apply system directory checks on Unix-like systems
+  if (platform() !== 'win32') {
+    // Check if path is or starts with a system directory
+    for (const sysDir of SYSTEM_DIRECTORIES) {
+      if (absolutePath === sysDir || absolutePath.startsWith(sysDir + '/')) {
+        throw new Error(
+          `Security: ${pathType} cannot point to system directory "${sysDir}". ` +
+            `Vault paths must be in user-writable locations.`
+        );
+      }
+    }
+
+    // Also block dangerous /var subdirectories (but allow /var/folders for temp files)
+    const dangerousVarPaths = ['/var/log', '/var/lib', '/var/db', '/var/mail'];
+    for (const dangerousPath of dangerousVarPaths) {
+      if (absolutePath === dangerousPath || absolutePath.startsWith(dangerousPath + '/')) {
+        throw new Error(
+          `Security: ${pathType} cannot point to system directory "${dangerousPath}". ` +
+            `Vault paths must be in user-writable locations.`
+        );
+      }
+    }
+
+    // Warn if outside home directory (informational, not blocking)
+    // Exception: /var/folders is allowed (macOS temp directory)
+    const home = homedir();
+    if (!absolutePath.startsWith(home) && !absolutePath.startsWith('/var/folders/')) {
+      console.warn(
+        `Warning: ${pathType} is outside your home directory: ${absolutePath}\n` +
+          `This may cause permission issues or affect system files.`
+      );
+    }
+  }
+
+  return absolutePath;
 }
 
 /**
@@ -80,41 +139,55 @@ function readConfigFile(path: string): ConfigFile | null {
  * 2. Local config (./.taskdn.json)
  * 3. User config (~/.taskdn.json)
  * 4. Defaults (./tasks, ./projects, ./areas relative to cwd)
+ *
+ * All paths are validated for security using validateVaultPath().
  */
 export function getVaultConfig(): VaultConfig {
   // Load config files (lower priority sources first, will be overwritten)
   const userConfig = readConfigFile(getUserConfigPath());
   const localConfig = readConfigFile(getLocalConfigPath());
 
-  // Start with defaults
+  // Start with defaults (validated)
   const cwd = process.cwd();
-  let tasksDir = resolve(cwd, 'tasks');
-  let projectsDir = resolve(cwd, 'projects');
-  let areasDir = resolve(cwd, 'areas');
+  let tasksDir = validateVaultPath(resolve(cwd, 'tasks'), 'tasksDir');
+  let projectsDir = validateVaultPath(resolve(cwd, 'projects'), 'projectsDir');
+  let areasDir = validateVaultPath(resolve(cwd, 'areas'), 'areasDir');
 
-  // Apply user config
+  // Apply user config (with validation)
   if (userConfig) {
-    if (userConfig.tasksDir) tasksDir = resolve(userConfig.tasksDir);
-    if (userConfig.projectsDir) projectsDir = resolve(userConfig.projectsDir);
-    if (userConfig.areasDir) areasDir = resolve(userConfig.areasDir);
+    if (userConfig.tasksDir) {
+      tasksDir = validateVaultPath(resolve(userConfig.tasksDir), 'tasksDir');
+    }
+    if (userConfig.projectsDir) {
+      projectsDir = validateVaultPath(resolve(userConfig.projectsDir), 'projectsDir');
+    }
+    if (userConfig.areasDir) {
+      areasDir = validateVaultPath(resolve(userConfig.areasDir), 'areasDir');
+    }
   }
 
-  // Apply local config (overrides user config)
+  // Apply local config (overrides user config, with validation)
   if (localConfig) {
-    if (localConfig.tasksDir) tasksDir = resolve(localConfig.tasksDir);
-    if (localConfig.projectsDir) projectsDir = resolve(localConfig.projectsDir);
-    if (localConfig.areasDir) areasDir = resolve(localConfig.areasDir);
+    if (localConfig.tasksDir) {
+      tasksDir = validateVaultPath(resolve(localConfig.tasksDir), 'tasksDir');
+    }
+    if (localConfig.projectsDir) {
+      projectsDir = validateVaultPath(resolve(localConfig.projectsDir), 'projectsDir');
+    }
+    if (localConfig.areasDir) {
+      areasDir = validateVaultPath(resolve(localConfig.areasDir), 'areasDir');
+    }
   }
 
-  // Apply environment variables (highest priority)
+  // Apply environment variables (highest priority, with validation)
   if (process.env.TASKDN_TASKS_DIR) {
-    tasksDir = resolve(process.env.TASKDN_TASKS_DIR);
+    tasksDir = validateVaultPath(resolve(process.env.TASKDN_TASKS_DIR), 'tasksDir');
   }
   if (process.env.TASKDN_PROJECTS_DIR) {
-    projectsDir = resolve(process.env.TASKDN_PROJECTS_DIR);
+    projectsDir = validateVaultPath(resolve(process.env.TASKDN_PROJECTS_DIR), 'projectsDir');
   }
   if (process.env.TASKDN_AREAS_DIR) {
-    areasDir = resolve(process.env.TASKDN_AREAS_DIR);
+    areasDir = validateVaultPath(resolve(process.env.TASKDN_AREAS_DIR), 'areasDir');
   }
 
   return {
