@@ -73,8 +73,9 @@ pub struct Task {
     pub body: String,
 }
 
-/// Parse a task file and return the Task struct
-/// Returns null if the file cannot be parsed
+/// Parse a task file and return the Task struct.
+///
+/// Returns `Ok(Task)` on success, or `Err` if the file cannot be read or parsed.
 #[napi]
 pub fn parse_task_file(file_path: String) -> Result<Task> {
     let path = Path::new(&file_path);

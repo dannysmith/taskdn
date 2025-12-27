@@ -191,4 +191,28 @@ Body content.
         let result = parse_project_file(file.path().to_str().unwrap().to_string());
         assert!(result.is_err());
     }
+
+    #[test]
+    fn parse_project_invalid_status() {
+        let content = r#"---
+title: Test
+status: invalid-status
+---
+Body.
+"#;
+        let file = create_temp_file(content);
+        let result = parse_project_file(file.path().to_str().unwrap().to_string());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn parse_project_malformed_yaml() {
+        let content = r#"---
+title: Test
+status planning
+---"#;
+        let file = create_temp_file(content);
+        let result = parse_project_file(file.path().to_str().unwrap().to_string());
+        assert!(result.is_err());
+    }
 }
