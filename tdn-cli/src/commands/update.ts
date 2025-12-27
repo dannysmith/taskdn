@@ -34,6 +34,11 @@ import {
   disambiguateProjects,
   disambiguateAreas,
 } from '@/lib/disambiguation.ts';
+import {
+  VALID_TASK_STATUSES,
+  VALID_PROJECT_STATUSES,
+  VALID_AREA_STATUSES,
+} from '@/lib/constants.ts';
 
 /**
  * Update command - programmatic field updates
@@ -120,29 +125,6 @@ async function resolveEntityQuery(
 }
 
 /**
- * Valid task statuses (kebab-case)
- */
-const VALID_TASK_STATUSES = [
-  'inbox',
-  'icebox',
-  'ready',
-  'in-progress',
-  'blocked',
-  'done',
-  'dropped',
-];
-
-/**
- * Valid project statuses (kebab-case)
- */
-const VALID_PROJECT_STATUSES = ['planning', 'ready', 'in-progress', 'blocked', 'paused', 'done'];
-
-/**
- * Valid area statuses (kebab-case)
- */
-const VALID_AREA_STATUSES = ['active', 'archived'];
-
-/**
  * Date fields that need validation (for tasks)
  */
 const TASK_DATE_FIELDS = [
@@ -162,7 +144,7 @@ const PROJECT_DATE_FIELDS = ['start-date', 'end-date'];
 /**
  * Get valid statuses for an entity type
  */
-function getValidStatuses(entityType: EntityType): string[] {
+function getValidStatuses(entityType: EntityType): readonly string[] {
   switch (entityType) {
     case 'task':
       return VALID_TASK_STATUSES;
@@ -233,7 +215,7 @@ function validateUpdates(updates: FieldUpdate[], entityType: EntityType): void {
     if (update.field === 'status' && update.value) {
       const normalized = update.value.toLowerCase();
       if (!validStatuses.includes(normalized)) {
-        throw createError.invalidStatus(update.value, validStatuses);
+        throw createError.invalidStatus(update.value, [...validStatuses]);
       }
     }
 

@@ -15,6 +15,11 @@ import {
   type Project,
   type Area,
 } from '@bindings';
+import {
+  VALID_TASK_STATUSES,
+  VALID_PROJECT_STATUSES,
+  VALID_AREA_STATUSES,
+} from '@/lib/constants.ts';
 
 /**
  * Doctor command - comprehensive health check for the vault
@@ -88,36 +93,6 @@ function isValidIsoDate(dateStr: string): boolean {
 }
 
 /**
- * Valid task statuses per S1 spec
- */
-const VALID_TASK_STATUSES = [
-  'inbox',
-  'ready',
-  'in-progress',
-  'blocked',
-  'icebox',
-  'completed',
-  'cancelled',
-];
-
-/**
- * Valid project statuses per S1 spec
- */
-const VALID_PROJECT_STATUSES = [
-  'planning',
-  'ready',
-  'in-progress',
-  'blocked',
-  'paused',
-  'completed',
-];
-
-/**
- * Valid area statuses per S1 spec
- */
-const VALID_AREA_STATUSES = ['active', 'archived'];
-
-/**
  * Check if a file has valid YAML frontmatter structure
  */
 function checkYamlParseable(filePath: string): string | null {
@@ -161,8 +136,12 @@ function validateTask(task: Task, projectTitles: Set<string>): string[] {
 
   if (!task.status) {
     issues.push('Missing required field: status');
-  } else if (!VALID_TASK_STATUSES.includes(task.status.toLowerCase())) {
-    issues.push(`Invalid status "${task.status}" (valid: ${VALID_TASK_STATUSES.join(', ')})`);
+  } else {
+    const statusLower = task.status.toLowerCase();
+    const validStatuses = VALID_TASK_STATUSES as readonly string[];
+    if (!validStatuses.includes(statusLower)) {
+      issues.push(`Invalid status "${task.status}" (valid: ${VALID_TASK_STATUSES.join(', ')})`);
+    }
   }
 
   // Check date fields are valid ISO 8601
@@ -181,6 +160,10 @@ function validateTask(task: Task, projectTitles: Set<string>): string[] {
     issues.push(`References non-existent project "${task.project}"`);
   }
 
+  // Note: Multi-project validation would require checking raw YAML before parsing,
+  // since the Rust parser converts projects array to singular project field.
+  // This check is not currently implemented.
+
   return issues;
 }
 
@@ -196,8 +179,14 @@ function validateProject(project: Project, areaTitles: Set<string>): string[] {
   }
 
   // Status is optional for projects, but if present must be valid
-  if (project.status && !VALID_PROJECT_STATUSES.includes(project.status.toLowerCase())) {
-    issues.push(`Invalid status "${project.status}" (valid: ${VALID_PROJECT_STATUSES.join(', ')})`);
+  if (project.status) {
+    const statusLower = project.status.toLowerCase();
+    const validStatuses = VALID_PROJECT_STATUSES as readonly string[];
+    if (!validStatuses.includes(statusLower)) {
+      issues.push(
+        `Invalid status "${project.status}" (valid: ${VALID_PROJECT_STATUSES.join(', ')})`
+      );
+    }
   }
 
   // Check date fields are valid ISO 8601
@@ -228,8 +217,12 @@ function validateArea(area: Area): string[] {
   }
 
   // Status is optional for areas, but if present must be valid
-  if (area.status && !VALID_AREA_STATUSES.includes(area.status.toLowerCase())) {
-    issues.push(`Invalid status "${area.status}" (valid: ${VALID_AREA_STATUSES.join(', ')})`);
+  if (area.status) {
+    const statusLower = area.status.toLowerCase();
+    const validStatuses = VALID_AREA_STATUSES as readonly string[];
+    if (!validStatuses.includes(statusLower)) {
+      issues.push(`Invalid status "${area.status}" (valid: ${VALID_AREA_STATUSES.join(', ')})`);
+    }
   }
 
   return issues;
@@ -420,9 +413,14 @@ export const doctorCommand = new Command('doctor')
         }
       } else {
         // JSON mode
+        const summary =
+          issues.length === 0
+            ? `Vault is healthy (${totalFiles} files checked)`
+            : `Found ${issues.length} issue${issues.length === 1 ? '' : 's'} (${totalFiles} files checked)`;
         console.log(
           JSON.stringify(
             {
+              summary,
               healthy: issues.length === 0,
               filesChecked: totalFiles,
               taskFiles: taskFiles.length,

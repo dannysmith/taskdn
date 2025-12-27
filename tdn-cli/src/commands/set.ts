@@ -7,6 +7,7 @@ import { toKebabCase } from '@/output/helpers/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 import { processBatch } from '@/lib/batch.ts';
 import { disambiguateTasks } from '@/lib/disambiguation.ts';
+import { VALID_TASK_STATUSES, COMPLETION_STATUSES } from '@/lib/constants.ts';
 
 /**
  * Set command - parent command for setting entity fields
@@ -21,22 +22,14 @@ import { disambiguateTasks } from '@/lib/disambiguation.ts';
  */
 
 /**
- * Valid task statuses (kebab-case)
- */
-const VALID_STATUSES = ['inbox', 'icebox', 'ready', 'in-progress', 'blocked', 'done', 'dropped'];
-
-/**
- * Statuses that represent completion (need completed-at)
- */
-const COMPLETION_STATUSES = ['done', 'dropped'];
-
-/**
  * Validate a status value against allowed values.
  */
 function validateStatus(status: string): void {
   const normalized = status.toLowerCase();
-  if (!VALID_STATUSES.includes(normalized)) {
-    throw createError.invalidStatus(status, VALID_STATUSES);
+  // Type assertion needed because VALID_TASK_STATUSES is readonly
+  const validStatuses = VALID_TASK_STATUSES as readonly string[];
+  if (!validStatuses.includes(normalized)) {
+    throw createError.invalidStatus(status, [...VALID_TASK_STATUSES]);
   }
 }
 
@@ -81,8 +74,9 @@ async function changeTaskStatus(
   const updates: FieldUpdate[] = [{ field: 'status', value: normalizedNewStatus }];
 
   // Handle completed-at transitions
-  const wasCompleted = COMPLETION_STATUSES.includes(previousStatus);
-  const willBeCompleted = COMPLETION_STATUSES.includes(normalizedNewStatus);
+  const completionStatuses = COMPLETION_STATUSES as readonly string[];
+  const wasCompleted = completionStatuses.includes(previousStatus);
+  const willBeCompleted = completionStatuses.includes(normalizedNewStatus);
 
   if (!wasCompleted && willBeCompleted) {
     // Moving TO a completion status: completed-at will be set automatically by updateFileFields
@@ -136,8 +130,9 @@ async function previewStatusChange(
   const previousStatus = toKebabCase(task.status);
   const normalizedNewStatus = newStatus.toLowerCase();
 
-  const wasCompleted = COMPLETION_STATUSES.includes(previousStatus);
-  const willBeCompleted = COMPLETION_STATUSES.includes(normalizedNewStatus);
+  const completionStatuses = COMPLETION_STATUSES as readonly string[];
+  const wasCompleted = completionStatuses.includes(previousStatus);
+  const willBeCompleted = completionStatuses.includes(normalizedNewStatus);
 
   // Create updated task with new status
   const updatedTask = { ...task, status: normalizedNewStatus as Task['status'] };
