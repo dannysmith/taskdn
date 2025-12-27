@@ -1,3 +1,33 @@
+/**
+ * Entity listing utilities for tasks, projects, and areas.
+ *
+ * This module provides the core listing logic for the `taskdn list` command,
+ * handling filtering, sorting, and pagination of entities.
+ *
+ * ## Key Responsibilities
+ * - Scan vault directories for tasks, projects, and areas
+ * - Apply filters (status, project, area, due date, query, etc.)
+ * - Handle relationship-aware queries (e.g., tasks in an area)
+ * - Support archive and active entity filtering
+ * - Sort and limit results
+ *
+ * ## Design Decisions
+ * - Uses vault session for performance when filtering by relationships
+ * - Supports both active and archived entity queries
+ * - Delegates actual filtering logic to shared filtering utilities
+ * - Active status rules differ by entity type (see isActiveProject, isActiveArea)
+ *
+ * ## Usage
+ * ```typescript
+ * import { listTasks, listProjects, listAreas } from '@/lib/list-entities';
+ *
+ * const config = getVaultConfig();
+ * const tasks = listTasks(config, { status: 'ready', limit: '10' });
+ * const projects = listProjects(config, { status: 'active' });
+ * const areas = listAreas(config, { query: 'work' });
+ * ```
+ */
+
 import { join } from 'path';
 import { scanTasks, scanProjects, scanAreas, createVaultSession, getTasksInArea } from '@bindings';
 import type { Task, Project, Area, VaultConfig } from '@bindings';

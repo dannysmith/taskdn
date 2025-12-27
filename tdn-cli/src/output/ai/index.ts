@@ -1,3 +1,53 @@
+/**
+ * AI-optimized structured markdown formatter (router).
+ *
+ * This module provides the main entry point for AI-readable CLI output formatting.
+ * It routes result types to specialized formatter modules that produce structured
+ * markdown optimized for LLM consumption.
+ *
+ * ## Architecture
+ * Similar to human formatter, but optimized for machine readability:
+ * - `task.ts` - Single task in structured markdown
+ * - `project.ts` - Single project in structured markdown
+ * - `area.ts` - Single area in structured markdown
+ * - `list.ts` - List views with clear hierarchical structure
+ * - `context.ts` - Context views with relationship metadata
+ * - `modify.ts` - Write operation results with field changes
+ * - `shared.ts` - Shared markdown utilities
+ *
+ * ## Design Decisions
+ * - Uses markdown headings (##, ###) for clear hierarchy
+ * - Includes full entity metadata as markdown lists (- **field:** value)
+ * - No colors or terminal-specific formatting
+ * - Includes file paths for all entities
+ * - Uses wikilinks for entity references ([[Entity Name]])
+ * - Provides structured field change information for updates
+ *
+ * ## AI Output Format
+ * AI mode output characteristics:
+ * - Headings: ## for sections, ### for entity names
+ * - Metadata: Bulleted lists with bold field names
+ * - Content: Full body content (no truncation)
+ * - References: Explicit wikilink notation
+ * - Relationships: Hierarchical markdown lists
+ * - Stats: Explicit counts and aggregations
+ *
+ * ## Use Cases
+ * AI-formatted output is designed for:
+ * - LLM consumption (Claude, GPT, etc.)
+ * - Piping to other tools that parse markdown
+ * - Logging and audit trails
+ * - Documentation generation
+ *
+ * ## Usage
+ * ```typescript
+ * import { formatOutput } from '@/output';
+ *
+ * const result = { type: 'task-list', tasks };
+ * console.log(formatOutput(result, { ai: true, json: false }));
+ * ```
+ */
+
 import type { Task, Project, Area } from '@bindings';
 import type {
   Formatter,
