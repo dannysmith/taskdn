@@ -1,16 +1,26 @@
 # The CLI Tool - Requirements & Overview
 
+**Status:** Implemented (v0.1.0)
+
 Command-line interface for humans and AI agents.
 
-> **Note:** This document defines CLI-specific behavior. For general interface design patterns (modes, output formats, error handling, etc.), see [S2: Interface Design](/tdn-specs/S2-interface-design.md). The CLI implements S2 patterns with CLI-specific syntax and features.
+> **Note:** This document describes the high-level requirements and design philosophy for the CLI. For detailed command reference and usage patterns, see:
+>
+> - [CLI Interface Guide](../../tdn-cli/docs/developer/cli-interface-guide.md) - Complete command reference
+> - [AI Context Output](../../tdn-cli/docs/developer/ai-context.md) - AI mode output specification
+> - [Output Format Spec](../../tdn-cli/docs/developer/output-format-spec.md) - Output format details
+> - [S1: Core Specification](/tdn-specs/S1-core.md) - File format specification
+> - [S2: Interface Design](/tdn-specs/S2-interface-design.md) - General interface patterns
 
-## Context & Dependencies
+## Context & Purpose
 
-**Consumed by:**
+**Primary users:**
 
-- Human users (terminal)
-- AI coding assistants (Claude Code etc.)
+- Human users (terminal interaction)
+- AI coding assistants (Claude Code, Cursor, etc.)
 - Shell scripts and automation
+
+**Design goal:** Serve both human and AI users exceptionally well with distinct modes, rather than compromising with a one-size-fits-all approach.
 
 ---
 
@@ -50,888 +60,204 @@ Interactive prompt behavior is not covered by automated tests.
 
 ## Output Modes & Flags
 
-> See also: [S2 §4 Output Formats](/tdn-specs/S2-interface-design.md#4-output-formats) for general output patterns
+The CLI supports three output modes to serve different consumers:
 
-### The Flag System
+| Flags         | Format                | Prompts? | Use Case                         |
+| ------------- | --------------------- | -------- | -------------------------------- |
+| (none)        | Pretty terminal (colors, tables) | Yes      | Human at terminal                |
+| `--ai`        | Structured Markdown   | No       | AI agents (Claude Code, etc.)    |
+| `--json`      | JSON                  | No       | Scripts, programmatic access     |
+| `--ai --json` | Markdown in JSON      | No       | AI agents needing JSON envelope  |
 
-| Flags         | Format                  | Prompts? | Paths Included | Use Case                         |
-| ------------- | ----------------------- | -------- | -------------- | -------------------------------- |
-| (none)        | Pretty (colors, tables) | Yes      | Sometimes      | Human at terminal                |
-| `--json`      | JSON                    | No       | Yes            | Scripts, piping to `jq`, interop |
-| `--ai`        | Markdown (structured)   | No       | Yes            | AI agents (Claude Code, etc.)    |
-| `--ai --json` | JSON                    | No       | Yes            | AI agents needing JSON           |
+### Key Differences
 
-**How the flags work:**
+**Human mode (default):**
+- Colored, formatted output optimized for terminal viewing
+- Interactive prompts when needed (fuzzy search disambiguation, confirmations)
+- Friendly error messages with suggestions
 
-- **`--ai`** is a _mode_ that changes behavior: no prompts, always includes file paths, structured errors, token-efficient Markdown output. Some commands may return AI-optimized content (e.g., more context, different field selection).
+**AI mode (`--ai`):**
+- Structured Markdown optimized for LLM consumption
+- Token-efficient (compact notation, progressive disclosure)
+- File paths always included (for follow-up commands)
+- No prompts—succeeds or fails with structured error
+- Degrades gracefully when truncated
 
-- **`--json`** is a _format_ that also implies non-interactive behavior: no prompts, paths included, structured errors in JSON. Useful for piping to other tools, saving to disk, or programmatic parsing.
-
-- **`--ai --json`** combines both: JSON format with any AI-specific behavioral differences. In practice, mostly equivalent to `--json` alone, but ensures AI-optimized content if a command provides it.
-
-### AI Mode Behaviors
-
-When `--ai` is set:
-
-- Output is structured Markdown optimized for LLM consumption
-- File paths are always included in output (for follow-up commands)
-- Never prompts for input—either succeeds or fails with clear error
-- Errors are structured and include actionable information
-- Output degrades gracefully when truncated (e.g., via `head -100`)
+**JSON mode (`--json`):**
+- Machine-readable structured data
+- Always includes `summary` field for self-documentation
+- CamelCase field names (JavaScript convention)
+- No prompts, structured errors
 
 ### Why Markdown for AI Mode?
 
-AI coding agents (Claude Code, Cursor, etc.) run CLI commands and receive stdout in their next turn. The output format should:
+AI agents receive CLI output in their context window. Markdown is ideal because:
 
-1. **Be token-efficient** — LLMs pay per token; verbose formats waste context
-2. **Degrade gracefully** — Agents often pipe through `head -100`; partial output should still be useful
-3. **Require no parsing** — LLMs can read Markdown directly without code execution
-4. **Be familiar** — LLMs are trained heavily on Markdown (docs, READMEs, etc.)
+1. **Token-efficient** — More compact than JSON/YAML
+2. **Degrades gracefully** — Partial output (e.g., via `head -100`) remains useful
+3. **No parsing needed** — LLMs read Markdown directly
+4. **Familiar format** — LLMs are heavily trained on Markdown
 
-JSON fails criteria 2 and 3: truncated JSON is invalid, and LLMs must mentally parse structure. YAML is better but still has structure that breaks mid-stream. Markdown is text that happens to be organized.
-
-### Example Output Comparison
-
-**Human mode (default):**
-
-```
-📋 Tasks (3)
-
-  🔵 In Progress
-  • Fix login bug                    due: today
-    ~/tasks/fix-login-bug.md
-
-  ⚪ Ready
-  • Write documentation              project: Q1 Planning
-```
-
-**AI mode (`--ai`):**
-
-```markdown
-## Tasks (2)
-
-### Fix login bug
-
-- **path:** ~/tasks/fix-login-bug.md
-- **status:** in-progress
-- **due:** 2025-12-15
-- **project:** Q1 Planning
-
-### Write documentation
-
-- **path:** ~/tasks/write-docs.md
-- **status:** ready
-- **project:** Q1 Planning
-```
-
-**JSON mode (`--json`):**
-
-```json
-{
-  "summary": "Found 2 tasks",
-  "tasks": [
-    {
-      "path": "~/tasks/fix-login-bug.md",
-      "title": "Fix login bug",
-      "status": "in-progress",
-      "due": "2025-12-15"
-    },
-    {
-      "path": "~/tasks/write-docs.md",
-      "title": "Write documentation",
-      "status": "ready",
-      "project": "Q1 Planning"
-    }
-  ]
-}
-```
-
-### JSON Output Structure
-
-JSON output always includes a `summary` field alongside the data:
-
-```json
-{
-  "summary": "<one-sentence description of what was returned>",
-  "<entity-type>": [...]
-}
-```
-
-**Examples:**
-
-```json
-// Task list
-{
-  "summary": "Found 3 tasks",
-  "tasks": [...]
-}
-
-// Empty result
-{
-  "summary": "No tasks match the specified criteria",
-  "tasks": []
-}
-
-// Context command (multiple entity types)
-{
-  "summary": "Work area with 2 projects and 8 tasks",
-  "area": {...},
-  "projects": [...],
-  "tasks": [...]
-}
-
-// Single entity (show command)
-{
-  "summary": "Task: Fix login bug",
-  "task": {...}
-}
-```
-
-This structure ensures:
-
-- Results are self-documenting
-- Empty results are explicit (not silent)
-- Entity types are clear from the keys
-- Scripts access data via `.tasks`, `.projects`, etc.
-
-### Empty Results
-
-Empty results are always explicit, never silent:
-
-**Human mode:**
-
-```
-No tasks found matching your criteria.
-```
-
-**AI mode:**
-
-```markdown
-## Tasks (0)
-
-No tasks match the specified criteria.
-```
-
-**JSON mode:**
-
-```json
-{
-  "summary": "No tasks match the specified criteria",
-  "tasks": []
-}
-```
-
-### AI Mode Output Specification
-
-This section details the exact format for `--ai` mode output.
-
-#### Heading Structure
-
-Output follows a logical heading hierarchy that is readable by both humans and LLMs:
-
-- `##` for top-level sections (entity type + count)
-- `###` for individual entities
-- Nested contexts may go deeper as needed for logical structure
-
-#### Fields by Command
-
-**`list` command** — Scannable summary for decision-making:
-
-| Category     | Fields                                                          |
-| ------------ | --------------------------------------------------------------- |
-| Always shown | path, title (in heading), status                                |
-| Shown if set | due, project (or area if no project)                            |
-| Omitted      | tags, scheduled, defer-until, created, updated, completed, body |
-
-**`show` command** — Full detail for examination:
-
-- All frontmatter fields (nothing omitted)
-- Full body content
-
-**`context` command** — AI-optimized output with progressive disclosure:
-
-The context commands (`context`, `context area`, `context project`, `context task`) use a specialized format optimized for AI agents. See `tdn-cli/docs/developer/ai-context.md` for the complete specification. Key points:
-
-- **Primary entity:** Full frontmatter + body (no truncation)
-- **Related entities:** Excerpts (truncated: first 20 lines OR 200 words)
-- **In-progress tasks:** Always include body excerpts
-- **Reference table:** File paths for all mentioned entities
-
-#### Array Fields
-
-Array values are displayed as comma-separated inline values:
-
-```markdown
-- **blocked-by:** [[Project A]], [[Project B]]
-```
-
-**Edge cases:**
-
-| Case           | Display                                          |
-| -------------- | ------------------------------------------------ |
-| Empty array    | `- **blocked-by:** (none)`                       |
-| Single item    | `- **blocked-by:** [[Project A]]` (no comma)     |
-| Multiple items | `- **blocked-by:** [[Project A]], [[Project B]]` |
-
-**Note on unknown fields:** The spec requires implementations to preserve unknown frontmatter fields (like `tags`). The `show` command displays all frontmatter fields, including unknown ones, using the same formatting rules. Unknown fields are not displayed in `list` output.
-
-#### Field Name Display
-
-Field names are displayed differently depending on mode:
-
-**AI mode** — Uses exact field names from the spec (kebab-case). This ensures consistency with file contents and `--set` commands.
-
-```markdown
-- **path:** ~/tasks/fix-login-bug.md
-- **status:** in-progress
-- **created-at:** 2025-12-15T14:30:00
-- **defer-until:** 2025-12-20
-```
-
-**Human mode** — Uses friendly labels for readability.
-
-| File Field     | Human Label    |
-| -------------- | -------------- |
-| `status`       | Status         |
-| `created-at`   | Created        |
-| `updated-at`   | Updated        |
-| `completed-at` | Completed      |
-| `due`          | Due            |
-| `scheduled`    | Scheduled      |
-| `defer-until`  | Deferred Until |
-| `project`      | Project        |
-| `area`         | Area           |
-| `description`  | Description    |
-| `start-date`   | Start Date     |
-| `end-date`     | End Date       |
-| `blocked-by`   | Blocked By     |
-| `type`         | Type           |
-
-#### Date Formats
-
-| Field type                                     | Format                | Example               |
-| ---------------------------------------------- | --------------------- | --------------------- |
-| Date fields (due, scheduled, defer-until)      | `YYYY-MM-DD`          | `2025-12-20`          |
-| Timestamp fields (created, updated, completed) | `YYYY-MM-DDTHH:MM:SS` | `2025-12-15T14:30:00` |
-
-#### Body Inclusion Rules
-
-| Command   | Body behavior                                                                |
-| --------- | ---------------------------------------------------------------------------- |
-| `list`    | Never includes bodies                                                        |
-| `show`    | Always includes full body                                                    |
-| `context` | See `tdn-cli/docs/developer/ai-context.md` for context-specific body rules   |
+For detailed output specifications and examples, see:
+- [Output Format Spec](../../tdn-cli/docs/developer/output-format-spec.md) - All output modes
+- [AI Context Output](../../tdn-cli/docs/developer/ai-context.md) - AI mode specifics
 
 ---
 
 ## Commands
 
-### Command Grammar
+The CLI provides comprehensive commands for managing tasks, projects, and areas. For complete command reference with detailed syntax and examples, see [CLI Interface Guide](../../tdn-cli/docs/developer/cli-interface-guide.md).
 
-Commands follow a verb-first pattern where tasks are the implied default:
+### Command Categories
+
+**Core Commands:**
+
+| Command     | Purpose                               | Example                                  |
+| ----------- | ------------------------------------- | ---------------------------------------- |
+| `list`      | Query and filter entities             | `taskdn list --status ready --due today` |
+| `show`      | Display full entity details           | `taskdn show "Fix bug"`                  |
+| `new`       | Create entities                       | `taskdn new "Write docs" --due tomorrow` |
+| `context`   | Show entity + relationships           | `taskdn context area "Work" --ai`        |
+| `today`     | Show today's actionable tasks         | `taskdn today`                           |
+
+**Mutation Commands:**
+
+| Command       | Purpose                    | Example                             |
+| ------------- | -------------------------- | ----------------------------------- |
+| `set status`  | Change task/project status | `taskdn set status "Fix bug" done`  |
+| `update`      | Modify entity fields       | `taskdn update task --set due=2025-01-20` |
+| `archive`     | Move to archive subdirectory | `taskdn archive "Old task"`         |
+| `open`        | Open in $EDITOR            | `taskdn open "Fix bug"`             |
+| `append-body` | Add content to body        | `taskdn append-body task "Progress note"` |
+
+**Utility Commands:**
+
+| Command  | Purpose                | Example                  |
+| -------- | ---------------------- | ------------------------ |
+| `doctor` | Health check vault     | `taskdn doctor --ai`     |
+| `config` | Show/modify config     | `taskdn config`          |
+| `init`   | Interactive setup      | `taskdn init`            |
+
+### Key Command Features
+
+**Context Command** - The primary command for AI agents:
 
 ```bash
-taskdn list                    # List tasks (implied)
-taskdn list tasks              # List tasks (explicit)
-taskdn list projects           # List projects
-taskdn list areas              # List areas
-taskdn new "Task title"        # Add task (implied)
-taskdn new task "Task title"   # Add task (explicit)
-taskdn new project "Q1"        # Add project
-taskdn new area "Work"         # Add area
+taskdn context --ai                    # Vault overview
+taskdn context area "Work" --ai        # Area + projects + tasks
+taskdn context project "Q1" --ai       # Project + tasks + parent area
+taskdn context task "Fix bug" --ai     # Task + parent project/area
 ```
 
-Tasks are 90% of usage, so they get the shortest syntax. Projects and areas require explicit naming.
+Returns structured Markdown with progressive disclosure:Stats → Structure → Timeline → In-Progress Details → Excerpts → Reference table.
 
-**Note:** `taskdn new "Task title"` is equivalent to `taskdn new task "Task title"`. The explicit `task` keyword is optional but accepted. This means `--project` as a flag (assigning a task to a project) is never ambiguous with `project` as an entity type (creating a project).
+See [ai-context.md](../../tdn-cli/docs/developer/ai-context.md) for complete specification.
 
-### Convenience Commands
+**Filtering and Sorting:**
 
-These shortcuts exist for high-frequency daily operations:
+- Boolean filter logic: same type = OR, different types = AND
+- Natural language dates: `--due tomorrow`, `--scheduled "next friday"`
+- Text search: `--query "login"`
+- Sort by any field: `--sort due --desc`
+
+**Batch Operations:**
 
 ```bash
-taskdn today                   # Tasks due today + scheduled for today
-# Note: Use `taskdn list --status inbox` for inbox tasks
+taskdn set status task1.md task2.md task3.md done
 ```
 
-### Context Command
+Processes all targets, reports successes and failures separately.
 
-The key command for AI agents. Returns an entity plus its related context in a single call.
+**Entity Lookup:**
 
-```bash
-# Vault overview (AI agents)
-taskdn context --ai                   # Returns structured overview of all active work
+- Human mode: Fuzzy title matching with disambiguation prompts
+- AI mode: Exact file paths required (obtained from previous queries)
 
-# Area context: area + its projects + all their tasks
-taskdn context area "Work" --ai
-taskdn context area "Acme" --ai       # Fuzzy matches "Acme Corp"
-
-# Project context: project + its tasks + parent area
-taskdn context project "Q1 Planning" --ai
-
-# Task context: task + parent project + parent area
-taskdn context task ~/tasks/foo.md --ai
-
-# Human mode (no --ai flag, no arguments)
-taskdn context                        # Error: prompts to specify entity or use --ai
-```
-
-**AI-optimized output:** The `--ai` flag produces token-efficient, structured Markdown optimized for LLM consumption. The format is documented in detail in `tdn-cli/docs/developer/ai-context.md`. Key features:
-
-- **Progressive disclosure:** Stats → Structure → Timeline → In-Progress Details → Excerpts → Reference
-- **Emoji status indicators:** 🔵 in-progress, 🟢 ready, ⏸️ paused, etc.
-- **Compact task counts:** `(2▶️ 4🟢 1📥)` instead of verbose labels
-- **Tree structures:** Hierarchical view of areas/projects/tasks
-- **Reference table:** File paths for all mentioned entities
-
-**Vault overview (`taskdn context --ai` with no arguments):**
-
-Returns a high-level overview of all active work:
-
-```markdown
-# Overview
-
-**Stats:** 3 areas · 8 active projects · 34 active tasks · ⚠️ 2 overdue · 📅 3 due today · ▶️ 5 in-progress
-_Excludes: done/dropped/icebox tasks, done projects, archived areas_
+For detailed command syntax, filtering rules, date handling, and output formats, see [CLI Interface Guide](../../tdn-cli/docs/developer/cli-interface-guide.md).
 
 ---
 
-## Structure
+## Entity Identification
 
-### 📁 Work
+The CLI uses different identification approaches for human and AI users:
 
-Tasks: 18 total (4 direct, 14 via projects)
-├── 🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 4🟢 1📥 1🚫)
-│   ├── ▶️ Fix authentication bug
-│   └── ▶️ Document API v2 endpoints
-├── 🟢 Client Onboarding [ready] — 4 tasks (4🟢)
-└── 📋 Direct: 4 tasks (1▶️ 2🟢 1📥)
-    └── ▶️ Review team capacity
+**Human mode:**
+- Fuzzy title matching (case-insensitive substring)
+- Interactive disambiguation when multiple matches
+- File paths also accepted
 
-...
+**AI mode:**
+- Write operations require exact file paths (no ambiguity)
+- Read operations can use fuzzy matching
+- All output includes file paths for follow-up commands
 
-## Timeline
+**Fuzzy matching:** Simple case-insensitive substring search. "login" matches "Fix login bug". No typo tolerance ("logn" won't match "login").
 
-### Overdue (2)
-
-- **Fix critical security issue** — due Jan 10 — Q1 Planning → Work
-- **Submit expense report** — due Jan 12 — Work (direct)
-
-### Due Today (3)
-
-- **Review PR #847** — Q1 Planning → Work
-...
-
-## In-Progress Tasks (5)
-
-### Fix authentication bug
-
-Q1 Planning → Work · due 2025-01-18
-
-The SSO authentication flow is failing for enterprise users...
-
-...
-
-## Reference
-
-| Entity                 | Type    | Path                    |
-| ---------------------- | ------- | ----------------------- |
-| Work                   | area    | areas/work.md           |
-| Q1 Planning            | project | projects/q1-planning.md |
-| Fix authentication bug | task    | tasks/fix-auth-bug.md   |
-```
-
-**Human mode (no `--ai` flag, no arguments):** Returns an error prompting the user to either specify an entity or use `--ai` for vault overview. Human-mode vault overview may be added in a future version.
-
-```
-Error: Please specify an entity (area, project, or task) or use --ai for vault overview.
-
-Examples:
-  taskdn context area "Work"
-  taskdn context project "Q1 Planning"
-  taskdn context --ai
-```
-
-**Scoped context commands:** Each scoped command (`context area`, `context project`, `context task`) has its own optimized output format. See `tdn-cli/docs/developer/ai-context.md` for complete specifications and examples.
-
-### Show Command
-
-View a single entity with its full content (body included). No expanded context.
-
-```bash
-taskdn show ~/tasks/fix-login-bug.md
-taskdn show project "Q1 Planning"
-taskdn show area "Work"
-```
-
-### List Command
-
-List and filter entities. Supports text search via `--query`.
-
-```bash
-# Tasks (default)
-taskdn list                              # All active tasks
-taskdn list --status ready               # Filter by status
-taskdn list --status ready,in-progress   # Multiple statuses
-taskdn list --project "Q1 Planning"      # Filter by project
-taskdn list --area "Work"                # Filter by area
-taskdn list --due today                  # Due today
-taskdn list --due tomorrow               # Due tomorrow
-taskdn list --due this-week              # Due this week
-taskdn list --overdue                    # Past due date
-taskdn list --scheduled today            # Scheduled for today
-taskdn list --query "login"              # Text search in title/body
-
-# Projects
-taskdn list projects                     # All active projects
-taskdn list projects --area "Work"       # Filter by area
-taskdn list projects --status planning   # Filter by status
-
-# Areas
-taskdn list areas                        # All active areas
-```
-
-#### Sorting
-
-```bash
-taskdn list --sort due                   # By due date (ascending)
-taskdn list --sort created               # By creation date
-taskdn list --sort updated               # By last update
-taskdn list --sort title                 # Alphabetical
-taskdn list --sort due --desc            # Descending order
-```
-
-**Default sort order:** `created` (newest first). Use `--sort` for custom ordering.
-
-**Null handling:** Tasks without a value for the sort field always appear last in the output, regardless of sort direction.
-
-```bash
-taskdn list --sort due
-# Output: Tasks with due dates (earliest first), then tasks without due dates
-
-taskdn list --sort due --desc
-# Output: Tasks with due dates (latest first), then tasks without due dates
-```
-
-#### Filter Combination Logic
-
-Filters combine using boolean logic:
-
-- **Same filter with comma-separated values = OR**
-
-  ```bash
-  taskdn list --status ready,in-progress
-  # Returns tasks where status = ready OR status = in-progress
-  ```
-
-- **Different filter types = AND**
-
-  ```bash
-  taskdn list --project "Q1" --status ready
-  # Returns tasks where project = "Q1" AND status = ready
-  ```
-
-- **Contradictory filters = empty result (no error)**
-  ```bash
-  taskdn list --due today --overdue
-  # Logically contradictory, returns empty result
-  # No error—this is mathematically correct (empty intersection)
-  ```
-
-This follows standard CLI conventions (similar to `find`, `grep`, etc.) and produces predictable, composable behavior.
-
-#### Completed Task Queries
-
-To query completed tasks, use `--include-done` or `--include-closed` with date filters:
-
-```bash
-# Primitive filters (composable)
-taskdn list --include-done --completed-after 2025-12-01
-taskdn list --include-done --completed-before 2025-12-15
-taskdn list --include-done --completed-after 2025-12-01 --completed-before 2025-12-15
-
-# Convenience aliases
-taskdn list --include-done --completed-today       # Finished today
-taskdn list --include-done --completed-this-week   # Finished this week
-```
-
-The `--completed-after` and `--completed-before` filters can be combined for date ranges. The convenience aliases (`--completed-today`, `--completed-this-week`) are shorthand for the appropriate date range.
-
-**Note:** These filters require `--include-done` or `--include-closed` to be explicit about including completed tasks.
-
-#### Limiting Results
-
-```bash
-taskdn list --limit 20               # Return at most 20 results
-taskdn list --overdue --limit 5      # Top 5 overdue tasks
-```
-
-Results are limited _after_ sorting, so `--limit` combined with `--sort` gives you "top N by X".
-
-### New Command
-
-Create new tasks, projects, or areas.
-
-```bash
-# Tasks
-taskdn new "Review quarterly report"                    # Quick add to inbox
-taskdn new "Review report" --project "Q1" --due friday  # With metadata
-taskdn new "Task" --status ready --area "Work"          # With status and area
-taskdn new "Task" --scheduled tomorrow                  # With scheduled date
-taskdn new "Task" --defer-until "next monday"           # Deferred task
-taskdn new                                              # Interactive (human only)
-
-# Projects
-taskdn new project "Q1 Planning"
-taskdn new project "Q1 Planning" --area "Work" --status planning
-
-# Areas
-taskdn new area "Work"
-taskdn new area "Acme Corp" --type client
-```
-
-**AI mode output:**
-
-The output always includes the path so AI agents can reference the created entity in follow-up commands.
-
-```markdown
-## Task Created
-
-### Review quarterly report
-
-- **path:** ~/tasks/review-quarterly-report.md
-- **status:** inbox
-- **created-at:** 2025-12-18T14:30:00
-```
-
-With additional fields specified:
-
-```markdown
-## Task Created
-
-### Review quarterly report
-
-- **path:** ~/tasks/review-quarterly-report.md
-- **status:** ready
-- **project:** Q1 Planning
-- **due:** 2025-12-20
-- **created-at:** 2025-12-18T14:30:00
-```
-
-Projects and areas follow the same pattern:
-
-```markdown
-## Project Created
-
-### Q1 Planning
-
-- **path:** ~/projects/q1-planning.md
-- **status:** planning
-- **area:** Work
-- **created-at:** 2025-12-18T14:30:00
-```
-
-### Task Operations
-
-```bash
-# Status changes
-taskdn set status ~/tasks/foo.md done         # Mark done
-taskdn set status ~/tasks/foo.md dropped      # Mark dropped
-taskdn set status ~/tasks/foo.md blocked      # Change to any status
-# Note: Automatically manages completed-at field for done/dropped
-
-# Open in editor
-taskdn open ~/tasks/foo.md               # Open in $EDITOR (human only)
-
-# Programmatic update (for AI/scripts)
-taskdn update ~/tasks/foo.md --set status=ready
-taskdn update ~/tasks/foo.md --set title="New Title" --set due=2025-12-20
-taskdn update ~/tasks/foo.md --unset project    # Remove field
-
-# Values with spaces need quotes (either style works)
-taskdn update ~/tasks/foo.md --set title="My Task Title"
-taskdn update ~/tasks/foo.md --set "title=My Task Title"
-
-# Archive (manual)
-taskdn archive ~/tasks/foo.md            # Move to tasks/archive/
-```
-
-### Utility Commands
-
-```bash
-taskdn                                   # Shows --help
-taskdn --version                         # Show version
-taskdn config                            # Show current config
-taskdn config --set tasksDir=./tasks     # Set a value
-taskdn init                              # Interactive setup (creates config)
-```
-
-### Doctor Command
-
-Comprehensive health check for the entire vault. Reports problems but does not fix them.
-
-```bash
-taskdn doctor                            # Full health check
-taskdn doctor --ai                       # Structured output for AI agents
-taskdn doctor --json                     # JSON output for scripts
-```
-
-**What it checks:**
-
-| Level      | Checks                                                    |
-| ---------- | --------------------------------------------------------- |
-| System     | Config file exists and is valid                           |
-| System     | Tasks/projects/areas directories exist and are accessible |
-| File       | YAML frontmatter is parseable                             |
-| File       | Required fields present (title, status)                   |
-| File       | Status values are valid                                   |
-| File       | Date fields are valid format                              |
-| File       | Tasks have at most one project (warns if multiple)        |
-| References | Project references point to existing projects             |
-| References | Area references point to existing areas                   |
-
-**Human mode output:**
-
-```
-✓ Config found (~/.config/taskdn/config.json)
-✓ Tasks directory (47 files)
-✓ Projects directory (6 files)
-✓ Areas directory (4 files)
-
-⚠ 3 issues found:
-
-  ~/tasks/fix-login.md
-    → References non-existent project "Q1 Planing" (did you mean "Q1 Planning"?)
-
-  ~/tasks/old-task.md
-    → Invalid status "inprogress" (valid: inbox, ready, in-progress, ...)
-
-  ~/projects/abandoned.md
-    → YAML parse error on line 3
-
-Summary: 3 issues in 57 files checked
-```
-
-**AI mode output:**
-
-```markdown
-## System Health
-
-- **config:** OK (~/.config/taskdn/config.json)
-- **tasks:** OK (47 files)
-- **projects:** OK (6 files)
-- **areas:** OK (4 files)
-
-## Issues (3)
-
-### ~/tasks/fix-login.md
-
-- **code:** REFERENCE_ERROR
-- **field:** project
-- **message:** References non-existent project "Q1 Planing"
-- **suggestion:** Did you mean "Q1 Planning"?
-
-### ~/tasks/old-task.md
-
-- **code:** INVALID_STATUS
-- **field:** status
-- **value:** inprogress
-- **valid-values:** inbox, ready, in-progress, blocked, done, dropped, icebox
-
-### ~/projects/abandoned.md
-
-- **code:** PARSE_ERROR
-- **line:** 3
-- **message:** Unexpected key in YAML frontmatter
-
-## Summary
-
-3 issues found across 57 files checked.
-```
-
-**Exit codes:**
-
-| Code | Meaning                                              |
-| ---- | ---------------------------------------------------- |
-| 0    | All checks passed                                    |
-| 1    | Issues found (command succeeded, but problems exist) |
-| 2    | Command failed to run (couldn't read config, etc.)   |
-
-Exit code 1 for issues follows linter conventions—useful for CI pipelines.
+For detailed rules and examples, see [CLI Interface Guide - Entity Lookup](../../tdn-cli/docs/developer/cli-interface-guide.md#entity-lookup--path-resolution).
 
 ---
 
-## Identification: Paths vs Fuzzy Search
+## Active vs Completed/Archived Entities
 
-> See also: [S2 §7 Identification Patterns](/tdn-specs/S2-interface-design.md#7-identification-patterns)
+By default, commands show "active" entities:
 
-**For writes (complete, drop, status, update, archive):**
+**Active tasks:**
+- Status NOT IN (done, dropped, icebox)
+- Not deferred (defer-until ≤ today or unset)
+- Not in archive/ subdirectory
 
-- AI mode: Requires exact file paths. No ambiguity allowed.
-- Human mode: Accepts fuzzy search on title. Prompts if ambiguous.
+**Active projects:**
+- Status NOT IN (done)
 
-**For reads (list, context, show):**
+**Active areas:**
+- Status = active OR unset
 
-- Both modes accept fuzzy search where it makes sense.
-- AI mode always returns absolute paths so follow-up commands can use them.
+**Inclusion flags** allow querying non-active entities:
 
-```bash
-# Human: fuzzy search OK, prompts if multiple matches
-taskdn set status "login bug" done
+- `--include-done`, `--include-dropped`, `--include-icebox`
+- `--include-closed` (done + dropped)
+- `--include-deferred` (tasks with future defer-until dates)
+- `--include-archived` (files in archive/ subdirectory)
+- `--only-archived` (exclusively from archive/)
 
-# AI: must use path (obtained from previous query)
-taskdn set status ~/tasks/fix-login-bug.md done --ai
-```
-
-**Path format in AI mode output:** Full paths, using `~` notation when the file is under the user's home directory (e.g., `~/notes/tasks/fix-login.md`), otherwise absolute paths (e.g., `/Volumes/External/vault/tasks/fix-login.md`). This ensures paths are unambiguous and usable for follow-up operations.
-
-**Path format for input:** The CLI accepts paths in any format and resolves them appropriately:
-
-- Filename: `fix-login.md` (resolved relative to the appropriate directory based on command)
-- Relative: `archive/old-task.md` (resolved relative to tasks_dir)
-- Tilde: `~/notes/tasks/fix-login.md` (expanded)
-- Absolute: `/Users/danny/notes/tasks/fix-login.md` (used as-is)
-
-### Fuzzy Matching Rules
-
-Fuzzy matching uses simple, predictable rules:
-
-1. **Case-insensitive** — "LOGIN" matches "Fix login bug"
-2. **Substring match** — Query must appear somewhere in the title
-3. **No typo tolerance** — "logn" does NOT match "login"
-
-**Examples:**
-
-```bash
-# Query: "login"
-# ✓ Matches: "Fix login bug", "Login page redesign", "Update login tests"
-# ✗ No match: "Authentication system" (no substring "login")
-
-# Query: "LOGIN"
-# ✓ Matches same as above (case-insensitive)
-
-# Query: "logn" (typo)
-# ✗ Matches nothing (exact substring required)
-```
-
-**Multiple match behavior:**
-
-| Mode  | Operation                    | Multiple matches                              |
-| ----- | ---------------------------- | --------------------------------------------- |
-| Human | Read (show, context)         | Prompt user to select                         |
-| Human | Write (complete, drop, etc.) | Prompt user to select                         |
-| AI    | Read (show, context)         | Return `AMBIGUOUS` error with list of matches |
-| AI    | Write                        | Not allowed—must use exact path               |
-
----
-
-## Completed & Archived Tasks
-
-### What "Active" Means
-
-Commands like `taskdn list` return "active" entities by default. Here's what "active" means for each entity type:
-
-**Active tasks** have ALL of:
-
-- Status NOT IN (`done`, `dropped`, `icebox`)
-- `defer-until` is either unset or ≤ today
-- File is not in the `archive/` subdirectory
-
-**Active projects** have ALL of:
-
-- Status is unset OR status NOT IN (`done`)
-
-**Active areas** have ALL of:
-
-- Status is unset OR status = `active`
-
-Note: Project status `paused` is still considered active (just on hold). Area status values other than `active` (e.g., `archived`) are excluded by default.
-
-### Inclusion Flags
-
-| State                  | Default Behavior | Flag to Include      |
-| ---------------------- | ---------------- | -------------------- |
-| Active (see above)     | Included         | —                    |
-| `icebox`               | Excluded         | `--include-icebox`   |
-| `done`                 | Excluded         | `--include-done`     |
-| `dropped`              | Excluded         | `--include-dropped`  |
-| Both done + dropped    | Excluded         | `--include-closed`   |
-| Deferred (future date) | Excluded         | `--include-deferred` |
-| Archived (in archive/) | Excluded         | `--include-archived` |
-
-All `--include-*` flags add items to the normal query results.
-
-**Archive-only queries:**
-
-Use `--only-archived` to query exclusively from the archive directory:
-
-```bash
-taskdn list --only-archived                    # All archived tasks
-taskdn list --only-archived --project "Q1"     # Archived tasks from Q1
-```
-
-Archiving is manual via `taskdn archive <path>`.
-
-### Deferred Tasks
-
-Tasks with `defer-until` set to a future date are automatically hidden from all queries until that date arrives. This is implicit filtering—you don't need to add `--exclude-deferred`.
-
-To see deferred tasks:
-
-```bash
-taskdn list --include-deferred           # Show all, including deferred
-taskdn list --deferred-this-week         # Tasks becoming visible this week
-```
+For detailed filtering rules and examples, see [CLI Interface Guide](../../tdn-cli/docs/developer/cli-interface-guide.md).
 
 ---
 
 ## Date Handling
 
-> See also: [S2 §6 Date Handling](/tdn-specs/S2-interface-design.md#6-date-handling) for input/output format standards
-
-**Input:** Natural language accepted in all modes.
+**Input:** Natural language or ISO 8601:
 
 ```bash
 taskdn new "Task" --due tomorrow
 taskdn new "Task" --due "next friday"
-taskdn new "Task" --due 2025-12-20
-taskdn new "Task" --due +3d              # 3 days from now
+taskdn new "Task" --due 2025-12-20        # ISO 8601 (recommended for AI agents)
+taskdn new "Task" --due +3d               # Relative (3 days from now)
 ```
 
 **Output:** Always ISO 8601 format (YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS).
 
-### Natural Language Date Rules
+**Natural language rules:**
+- Day names = next occurrence ("friday" on Wednesday = this Friday)
+- "next X" = skip immediate ("next friday" on Thursday = Friday in 8 days)
+- Relative: `+3d`, `+1w`, `+2m`
+- System local timezone
 
-1. **Reference point:** "today" is midnight in system local time
-2. **Day names:** Always mean the _next_ occurrence
-   - If today is Friday, "friday" = next Friday (7 days away)
-   - If today is Wednesday, "friday" = this Friday (2 days away)
-3. **"next X":** Skips the immediate occurrence
-   - "next friday" on Thursday = Friday 8 days away, not tomorrow
-4. **Relative dates:**
-   - `+3d` = 3 days from today
-   - `+1w` = 1 week from today
-   - `+2m` = 2 months from today
-5. **Numeric dates:** Only ISO format (`YYYY-MM-DD`) accepted
-   - Ambiguous formats like `12/1` or `1/12` are rejected with `INVALID_DATE` error
-6. **Time zone:** All dates interpreted in system local time
-
-**Recommendation for AI agents:**
-
-> AI agents SHOULD use ISO 8601 format (`YYYY-MM-DD`) for all date inputs to avoid ambiguity. Natural language parsing is provided for human convenience but introduces interpretation edge cases.
+For complete date parsing rules, see [CLI Interface Guide - Date Handling](../../tdn-cli/docs/developer/cli-interface-guide.md#date-handling).
 
 ---
 
 ## Configuration
 
-### File Locations
+**Configuration sources** (highest to lowest precedence):
 
-```
-~/.config/taskdn/config.json    # User config
-./.taskdn.json                  # Local override (project-specific)
-```
+1. CLI flags (`--tasks-dir ./tasks`)
+2. Environment variables (`TASKDN_TASKS_DIR`)
+3. Local config (`./.taskdn.json`)
+4. User config (`~/.config/taskdn/config.json`)
+5. Defaults (`./tasks`, `./projects`, `./areas`)
 
-### Configuration Schema
+**Schema:**
 
 ```json
 {
@@ -941,213 +267,63 @@ taskdn new "Task" --due +3d              # 3 days from now
 }
 ```
 
-### Precedence (highest to lowest)
-
-1. CLI flags (`--tasks-dir ./tasks`)
-2. Environment variables (`TASKDN_TASKS_DIR`)
-3. Local config (`./.taskdn.json`)
-4. User config (`~/.config/taskdn/config.json`)
-5. Defaults
-
-### Init Command
-
-`taskdn init` runs an interactive setup:
-
-1. Prompts for tasks directory path
-2. Prompts for projects directory path
-3. Prompts for areas directory path
-4. Creates `.taskdn.json` with those paths
+**Interactive setup:** `taskdn init` creates `.taskdn.json` with prompted directory paths.
 
 ---
 
 ## Additional Features
 
-### Dry Run Mode
+**Batch operations:** Multiple targets supported for mutation commands. Processes all, reports successes and failures separately.
 
 ```bash
-taskdn new "New task" --dry-run                        # Shows what would be created
-taskdn set status ~/tasks/foo.md done --dry-run        # Shows what would change
+taskdn set status task1.md task2.md task3.md done
 ```
 
-### Piping Support
+**Dry run mode:** Preview changes without executing.
 
 ```bash
-# Pipe in data
-echo '{"title": "New task"}' | taskdn new --stdin
-echo 'title: New task' | taskdn new --stdin
-
-# Pipe out for processing
-taskdn list --json | jq '.[] | select(.status == "ready")'
+taskdn new "Task" --dry-run
+taskdn set status task.md done --dry-run
 ```
 
-### Bulk Operations
+**Short flags:** Common flags have single-letter shortcuts (`-s`, `-p`, `-a`, `-d`, `-q`, `-l`).
 
-```bash
-# Change status of multiple tasks
-taskdn set status ~/tasks/a.md ~/tasks/b.md ~/tasks/c.md done
-```
-
-**Partial failure behavior:**
-
-- All items are processed (don't stop at first error)
-- Successes and failures are reported separately
-- Exit code is `1` if ANY operation failed, `0` if all succeeded
-
-**AI mode output:**
-
-```markdown
-## Completed (2)
-
-### ~/tasks/a.md
-
-- **title:** Fix login bug
-- **status:** done
-- **completed-at:** 2025-12-18T14:30:00
-
-### ~/tasks/c.md
-
-- **title:** Write tests
-- **status:** done
-- **completed-at:** 2025-12-18T14:30:01
-
-## Errors (1)
-
-### ~/tasks/b.md
-
-- **code:** NOT_FOUND
-- **message:** Task file does not exist
-```
-
-If all operations succeed, the "Errors" section is omitted. If all operations fail, the "Completed" section is omitted.
-
-### Short Flags
-
-Common flags have single-letter shortcuts:
-
-| Short | Long        | Usage              |
-| ----- | ----------- | ------------------ |
-| `-s`  | `--status`  | `-s ready`         |
-| `-p`  | `--project` | `-p "Q1 Planning"` |
-| `-a`  | `--area`    | `-a "Work"`        |
-| `-d`  | `--due`     | `-d today`         |
-| `-q`  | `--query`   | `-q "login"`       |
-| `-l`  | `--limit`   | `-l 20`            |
+For complete feature documentation, see [CLI Interface Guide](../../tdn-cli/docs/developer/cli-interface-guide.md).
 
 ---
 
 ## Non-Functional Requirements
 
-> See also: [S2 §9 Error Handling](/tdn-specs/S2-interface-design.md#9-error-handling) for error codes and patterns
-
 ### Exit Codes
 
-| Code | Meaning                                                                         |
-| ---- | ------------------------------------------------------------------------------- |
-| `0`  | Success (including empty results—that's a valid outcome)                        |
-| `1`  | Runtime error (file not found, permission denied, parse error, reference error) |
-| `2`  | Usage error (invalid arguments, unknown flags, bad date format in CLI input)    |
+| Code | Meaning                              |
+| ---- | ------------------------------------ |
+| `0`  | Success (including empty results)    |
+| `1`  | Runtime error (file/vault issues)    |
+| `2`  | Usage error (invalid arguments)      |
 
-**The distinction:**
+**Distinction:** Exit code 2 = "command syntax wrong", Exit code 1 = "command valid but operation failed"
 
-- Code `2` = "you typed the command wrong" — fix your command
-- Code `1` = "the command was valid but something went wrong" — vault/file issue
+### Error Handling
 
-**Examples:**
-| Command | Exit Code | Reason |
-|---------|-----------|--------|
-| `taskdn list --status invalid` | 2 | Bad argument value |
-| `taskdn set status nonexistent.md done` | 1 | File not found |
-| `taskdn list --due "not a date"` | 2 | Unparseable CLI input |
-| `taskdn list` (with malformed files) | 0 | Succeeded, bad files skipped with warnings |
-| `taskdn list --project "Q1"` (no matches) | 0 | Empty result is valid |
-| `taskdn update task.md --set status=invalid` | 2 | Bad argument value |
-| `taskdn show task.md` (YAML parse error) | 1 | File exists but is malformed |
+**Structured errors** with machine-readable codes:
+- `NOT_FOUND`, `AMBIGUOUS`, `INVALID_STATUS`, `INVALID_DATE`, `PARSE_ERROR`, `REFERENCE_ERROR`, etc.
+- Include contextual information and suggestions
+- Formatted appropriately for each output mode
 
-**Note:** The `doctor` command has its own exit code semantics (see Doctor Command section) since "issues found" is a distinct diagnostic outcome.
+**Error output streams:**
+- Human mode: stderr (Unix standard)
+- AI/JSON modes: stdout (ensures agents receive errors)
 
-### Error Messages
-
-- Should be helpful and suggest fixes
-- In AI mode, errors include structured information (error code, suggestions)
-- In human mode, errors are friendly prose with "Did you mean?" suggestions
-
-### Error Codes
-
-Errors include a machine-readable code and contextual information:
-
-| Code                | When                                 | Includes                                |
-| ------------------- | ------------------------------------ | --------------------------------------- |
-| `NOT_FOUND`         | File/entity doesn't exist            | Suggestions for similar items           |
-| `AMBIGUOUS`         | Fuzzy search matched multiple items  | List of matches with paths              |
-| `INVALID_STATUS`    | Bad status value                     | List of valid statuses                  |
-| `INVALID_DATE`      | Unparseable date string              | Expected formats                        |
-| `INVALID_PATH`      | Path outside configured directories  | Configured directory paths              |
-| `PARSE_ERROR`       | YAML frontmatter malformed           | Line number, specific issue             |
-| `MISSING_FIELD`     | Required field absent                | Which field is missing                  |
-| `REFERENCE_ERROR`   | Project/area reference doesn't exist | The broken reference                    |
-| `MULTIPLE_PROJECTS` | Task has more than one project       | The extra projects (warning, not error) |
-| `PERMISSION_ERROR`  | Can't read/write file                | File path                               |
-| `CONFIG_ERROR`      | Config missing or invalid            | Suggestion to run `taskdn init`         |
-
-**Error structure (AI mode):**
-
-Each error includes:
-
-- `code` — Machine-readable identifier from the table above
-- `message` — Human-readable explanation of what went wrong
-- `details` — Context-specific information (the bad value, the path, etc.)
-- `suggestions` — When applicable (similar items, valid values, next steps)
-
-**AI mode error examples:**
-
-```markdown
-## Error: NOT_FOUND
-
-- **message:** Task file does not exist
-- **path:** ~/tasks/nonexistent.md
-- **suggestion:** Did you mean ~/tasks/existent-task.md?
-```
-
-```markdown
-## Error: AMBIGUOUS
-
-- **message:** Multiple tasks match "login"
-- **matches:**
-  - ~/tasks/fix-login-bug.md — "Fix login bug"
-  - ~/tasks/login-redesign.md — "Login page redesign"
-  - ~/tasks/login-tests.md — "Write login tests"
-```
-
-```markdown
-## Error: INVALID_STATUS
-
-- **message:** Invalid status value
-- **value:** inprogress
-- **valid-values:** inbox, icebox, ready, in-progress, blocked, done, dropped
-```
-
-The heading always includes the error code for quick identification. Fields vary by error type but follow the structure above.
-
-Additional error codes may be added as needed during implementation.
-
-### Error Output Destination
-
-Errors go to different streams depending on mode:
-
-- **Human mode:** stderr (Unix standard, allows `taskdn list > file.txt` without errors in file)
-- **AI mode:** stdout (guarantees agents see errors as part of the response)
-- **JSON mode:** stdout (errors are structured data)
-
-This ensures AI agents always receive error information, while human mode follows Unix conventions for piping.
-
-### Shell Completions
-
-The CLI should support auto-completion for bash, zsh, and fish shells.
+For complete error code reference and examples, see [CLI Interface Guide - Error Handling](../../tdn-cli/docs/developer/cli-interface-guide.md#error-handling).
 
 ### Performance
 
-- Startup time should be fast enough for interactive use
-- Commands should complete quickly for typical vault sizes (hundreds of tasks)
+Target performance (achieved on typical laptop hardware):
+- CLI startup: <100ms
+- Single file parse: <1ms
+- 5000 file vault scan: <1000ms
+- Feels responsive for vaults up to a few thousand files
 
 ---
 
