@@ -238,16 +238,6 @@ impl VaultIndex {
         }
     }
 
-    /// Get all projects in the index.
-    pub(crate) fn projects(&self) -> &[Project] {
-        &self.projects
-    }
-
-    /// Get all areas in the index.
-    pub(crate) fn areas(&self) -> &[Area] {
-        &self.areas
-    }
-
     /// Find area by name (case-insensitive).
     fn find_area(&self, name: &str) -> Option<&Area> {
         self.area_by_name
