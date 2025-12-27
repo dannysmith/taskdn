@@ -317,9 +317,8 @@ impl VaultIndex {
 
     /// Get projects in an area.
     /// Returns (projects, warnings).
-    /// Generates warnings for projects that reference non-existent areas.
     fn get_projects_in_area(&self, area_name: &str) -> (Vec<&Project>, Vec<String>) {
-        let mut warnings = Vec::new();
+        let warnings = Vec::new();
 
         let area_idx = match self.area_by_name.get(&area_name.to_lowercase()) {
             Some(&idx) => idx,
@@ -329,27 +328,7 @@ impl VaultIndex {
         let projects = self
             .projects_by_area
             .get(&area_idx)
-            .map(|indices| {
-                indices
-                    .iter()
-                    .map(|&i| {
-                        let project = &self.projects[i];
-                        // Check if this project's area reference is valid
-                        if let Some(ref area_ref) = project.area
-                            && let Some(referenced_area_name) = extract_wikilink_name(area_ref)
-                            && !self
-                                .area_by_name
-                                .contains_key(&referenced_area_name.to_lowercase())
-                        {
-                            warnings.push(format!(
-                                "Project '{}' references unknown area '{}'",
-                                project.title, referenced_area_name
-                            ));
-                        }
-                        &self.projects[i]
-                    })
-                    .collect()
-            })
+            .map(|indices| indices.iter().map(|&i| &self.projects[i]).collect())
             .unwrap_or_default();
 
         (projects, warnings)
