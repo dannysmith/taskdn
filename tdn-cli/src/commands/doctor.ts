@@ -25,7 +25,7 @@ import {
  * Doctor command - comprehensive health check for the vault
  *
  * Usage:
- *   taskdn doctor
+ *   tdn doctor
  */
 
 interface DoctorIssue {

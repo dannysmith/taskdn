@@ -14,14 +14,14 @@ import { listTasks, listProjects, listAreas, type ListOptions } from '@/lib/list
  * List command - list entities with optional filters
  *
  * Usage:
- *   taskdn list                           # List tasks (default)
- *   taskdn list tasks                     # List tasks (explicit)
- *   taskdn list task                      # Singular form also supported
- *   taskdn list projects                  # List projects
- *   taskdn list project                   # Singular form also supported
- *   taskdn list areas                     # List areas
- *   taskdn list --status ready            # Filter by status
- *   taskdn list --project "Q1"            # Filter by project
+ *   tdn list                           # List tasks (default)
+ *   tdn list tasks                     # List tasks (explicit)
+ *   tdn list task                      # Singular form also supported
+ *   tdn list projects                  # List projects
+ *   tdn list project                   # Singular form also supported
+ *   tdn list areas                     # List areas
+ *   tdn list --status ready            # Filter by status
+ *   tdn list --project "Q1"            # Filter by project
  */
 export const listCommand = new Command('list')
   .description('List entities with optional filters')

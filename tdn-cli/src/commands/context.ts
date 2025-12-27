@@ -321,10 +321,10 @@ function calculateProjectStats(tasks: Task[], timeline: TimelineData): ProjectSt
  * Context command - get expanded context for an entity
  *
  * Usage:
- *   taskdn context area "Work"            # Area + projects + tasks
- *   taskdn context project "Q1"           # Project + tasks + parent area
- *   taskdn context task ~/tasks/foo.md    # Task + parent project + area
- *   taskdn context --ai                   # Vault overview (AI only)
+ *   tdn context area "Work"            # Area + projects + tasks
+ *   tdn context project "Q1"           # Project + tasks + parent area
+ *   tdn context task ~/tasks/foo.md    # Task + parent project + area
+ *   tdn context --ai                   # Vault overview (AI only)
  */
 export const contextCommand = new Command('context')
   .description('Get expanded context for an entity')

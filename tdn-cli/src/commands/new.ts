@@ -26,13 +26,13 @@ import { normalizeEntityType } from '@/lib/entity-type.ts';
  * New command - create new entities
  *
  * Usage:
- *   taskdn new "Task title"                           # Quick new task
- *   taskdn new "Task" --project "Q1" --due friday     # With metadata
- *   taskdn new                                        # Interactive (human only)
- *   taskdn new project "Q1 Planning"                  # New project
- *   taskdn new projects "Q1 Planning"                 # Plural form also supported
- *   taskdn new area "Work"                            # New area
- *   taskdn new areas "Work"                           # Plural form also supported
+ *   tdn new "Task title"                           # Quick new task
+ *   tdn new "Task" --project "Q1" --due friday     # With metadata
+ *   tdn new                                        # Interactive (human only)
+ *   tdn new project "Q1 Planning"                  # New project
+ *   tdn new projects "Q1 Planning"                 # Plural form also supported
+ *   tdn new area "Work"                            # New area
+ *   tdn new areas "Work"                           # Plural form also supported
  */
 
 interface AddOptions {
@@ -576,8 +576,8 @@ export const newCommand = new Command('new')
         if (mode === 'human') {
           console.error('Error: Title or entity type is required in non-interactive mode.');
           console.error('\nExamples:');
-          console.error('  taskdn new "Task title"');
-          console.error('  taskdn new project "Project title"');
+          console.error('  tdn new "Task title"');
+          console.error('  tdn new project "Project title"');
         } else {
           console.error(
             JSON.stringify({
@@ -600,7 +600,7 @@ export const newCommand = new Command('new')
         if (!title) {
           if (mode === 'human') {
             console.error('Error: Project title is required.');
-            console.error('\nExample: taskdn new project "My Project"');
+            console.error('\nExample: tdn new project "My Project"');
           } else {
             console.error(
               JSON.stringify({
@@ -617,7 +617,7 @@ export const newCommand = new Command('new')
         if (!title) {
           if (mode === 'human') {
             console.error('Error: Area title is required.');
-            console.error('\nExample: taskdn new area "My Area"');
+            console.error('\nExample: tdn new area "My Area"');
           } else {
             console.error(
               JSON.stringify({

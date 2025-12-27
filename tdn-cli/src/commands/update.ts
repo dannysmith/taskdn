@@ -48,11 +48,11 @@ import {
  * Supports both path-based and fuzzy title-based lookup.
  *
  * Usage:
- *   taskdn update ~/tasks/foo.md --set status=ready
- *   taskdn update "my task" --set status=ready
- *   taskdn update ~/tasks/foo.md --set "title=New Title" --set due=2025-12-20
- *   taskdn update ~/tasks/foo.md --unset project
- *   taskdn update ~/tasks/foo.md --set project="[[Q1 Planning]]"
+ *   tdn update ~/tasks/foo.md --set status=ready
+ *   tdn update "my task" --set status=ready
+ *   tdn update ~/tasks/foo.md --set "title=New Title" --set due=2025-12-20
+ *   tdn update ~/tasks/foo.md --unset project
+ *   tdn update ~/tasks/foo.md --set project="[[Q1 Planning]]"
  */
 
 /**

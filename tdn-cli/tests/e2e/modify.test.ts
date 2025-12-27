@@ -19,7 +19,7 @@ let tempDir: string;
 let tasksDir: string;
 
 beforeEach(() => {
-  tempDir = mkdtempSync(join(tmpdir(), 'taskdn-modify-test-'));
+  tempDir = mkdtempSync(join(tmpdir(), 'tdn-modify-test-'));
   tasksDir = join(tempDir, 'tasks');
   mkdirSync(tasksDir, { recursive: true });
 });
@@ -56,7 +56,7 @@ created-at: 2025-01-01T00:00:00
   return filePath;
 }
 
-describe('taskdn set status (complete)', () => {
+describe('tdn set status (complete)', () => {
   test('sets status to done', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
@@ -126,7 +126,7 @@ describe('taskdn set status (complete)', () => {
   });
 });
 
-describe('taskdn set status (drop)', () => {
+describe('tdn set status (drop)', () => {
   test('sets status to dropped', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
@@ -168,7 +168,7 @@ describe('taskdn set status (drop)', () => {
   });
 });
 
-describe('taskdn set status (general)', () => {
+describe('tdn set status (general)', () => {
   test('changes to valid status', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
@@ -251,7 +251,7 @@ describe('taskdn set status (general)', () => {
   });
 });
 
-describe('taskdn update', () => {
+describe('tdn update', () => {
   test('updates single field', async () => {
     const taskPath = createTestTask('test-task.md', { status: 'ready' });
 
@@ -372,7 +372,7 @@ my-custom-field: some value
   });
 });
 
-describe('taskdn archive', () => {
+describe('tdn archive', () => {
   test('moves file to archive directory', async () => {
     const taskPath = createTestTask('test-task.md', { title: 'Archive Me' });
 
@@ -523,7 +523,7 @@ describe('batch operations', () => {
   });
 });
 
-describe('taskdn open', () => {
+describe('tdn open', () => {
   test('errors in AI mode', async () => {
     const taskPath = createTestTask('test-task.md');
 

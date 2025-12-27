@@ -14,7 +14,7 @@ let projectsDir: string;
 let areasDir: string;
 
 beforeEach(() => {
-  tempDir = mkdtempSync(join(tmpdir(), 'taskdn-test-'));
+  tempDir = mkdtempSync(join(tmpdir(), 'tdn-test-'));
   tasksDir = join(tempDir, 'tasks');
   projectsDir = join(tempDir, 'projects');
   areasDir = join(tempDir, 'areas');
@@ -26,7 +26,7 @@ afterEach(() => {
   }
 });
 
-describe('taskdn new', () => {
+describe('tdn new', () => {
   describe('task creation', () => {
     test('creates task with minimal args', async () => {
       const { stdout, exitCode } = await runCli(['new', 'Test Task', '--json'], {

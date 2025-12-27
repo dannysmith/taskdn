@@ -17,7 +17,7 @@ import {
 } from '@/commands/index.ts';
 
 const program = new Command()
-  .name('taskdn')
+  .name('tdn')
   .description('Task management CLI for humans and AI agents')
   .version('0.1.0')
   // Global options available to all commands

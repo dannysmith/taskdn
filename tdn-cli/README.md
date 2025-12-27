@@ -19,7 +19,40 @@ Key features:
 - Batch operations with detailed change tracking
 - VaultSession pattern for 3× faster multi-query operations
 
-## Setup
+## Installation (Production Use)
+
+To install `tdn` globally on your machine for daily use:
+
+```bash
+# From the project root
+./scripts/install-local.sh
+```
+
+This script will:
+1. Install dependencies
+2. Build the Rust bindings
+3. Create a symlink at `~/.local/bin/tdn`
+4. Verify the installation
+
+After installation, you can use `tdn` from anywhere:
+
+```bash
+tdn --help
+tdn list tasks --ai
+```
+
+**Updating:** When you pull new changes, simply rebuild the bindings:
+
+```bash
+cd tdn-cli
+bun run build
+```
+
+The symlink continues to point to the latest code.
+
+## Setup (Development)
+
+For local development without installing globally:
 
 ```bash
 bun install

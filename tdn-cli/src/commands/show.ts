@@ -17,8 +17,8 @@ import { parseRustError } from '@/lib/rust-error-parser.ts';
  * Show command - view a single entity with full content
  *
  * Usage:
- *   taskdn show <path>                    # Show task or project by path
- *   taskdn show area "Work"               # Show area by name (stub)
+ *   tdn show <path>                    # Show task or project by path
+ *   tdn show area "Work"               # Show area by name (stub)
  */
 export const showCommand = new Command('show')
   .description('View a single entity with full content')

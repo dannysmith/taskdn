@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { runCli } from '../helpers/cli';
 
-describe('taskdn list', () => {
+describe('tdn list', () => {
   describe('default behavior (active tasks)', () => {
     test('returns exit code 0', async () => {
       const { exitCode } = await runCli(['list']);
@@ -256,7 +256,7 @@ describe('taskdn list', () => {
   });
 });
 
-describe('taskdn list projects', () => {
+describe('tdn list projects', () => {
   describe('default behavior (active projects)', () => {
     test('returns exit code 0', async () => {
       const { exitCode } = await runCli(['list', 'projects']);
@@ -346,7 +346,7 @@ describe('taskdn list projects', () => {
   });
 });
 
-describe('taskdn list areas', () => {
+describe('tdn list areas', () => {
   describe('default behavior (active areas)', () => {
     test('returns exit code 0', async () => {
       const { exitCode } = await runCli(['list', 'areas']);
@@ -462,7 +462,7 @@ describe('taskdn list areas', () => {
 
 const MOCK_TODAY = '2025-06-16';
 
-describe('taskdn list --due filter', () => {
+describe('tdn list --due filter', () => {
   test('--due today returns tasks due on mocked date', async () => {
     const { stdout, exitCode } = await runCli(['list', '--due', 'today', '--json'], {
       env: { TASKDN_MOCK_DATE: MOCK_TODAY },
@@ -525,7 +525,7 @@ describe('taskdn list --due filter', () => {
   });
 });
 
-describe('taskdn list --overdue filter', () => {
+describe('tdn list --overdue filter', () => {
   test('returns tasks with due date before today', async () => {
     const { stdout, exitCode } = await runCli(['list', '--overdue', '--json'], {
       env: { TASKDN_MOCK_DATE: '2025-06-15' },
@@ -583,7 +583,7 @@ describe('taskdn list --overdue filter', () => {
   });
 });
 
-describe('taskdn list --scheduled filter', () => {
+describe('tdn list --scheduled filter', () => {
   test('--scheduled today returns tasks scheduled for mocked date', async () => {
     const { stdout, exitCode } = await runCli(['list', '--scheduled', 'today', '--json'], {
       env: { TASKDN_MOCK_DATE: '2025-06-15' },
@@ -658,7 +658,7 @@ describe('date filter combinations', () => {
 // Phase 7: Sorting and Limits
 // ============================================================================
 
-describe('taskdn list --sort flag', () => {
+describe('tdn list --sort flag', () => {
   test('sorts by due date ascending by default', async () => {
     const { stdout, exitCode } = await runCli(['list', '--sort', 'due', '--json']);
     expect(exitCode).toBe(0);
@@ -719,7 +719,7 @@ describe('taskdn list --sort flag', () => {
   });
 });
 
-describe('taskdn list --desc flag', () => {
+describe('tdn list --desc flag', () => {
   test('reverses sort order for title', async () => {
     const { stdout, exitCode } = await runCli(['list', '--sort', 'title', '--desc', '--json']);
     expect(exitCode).toBe(0);
@@ -756,7 +756,7 @@ describe('taskdn list --desc flag', () => {
   });
 });
 
-describe('taskdn list --limit flag', () => {
+describe('tdn list --limit flag', () => {
   test('limits number of results', async () => {
     const { stdout, exitCode } = await runCli(['list', '--limit', '2', '--json']);
     expect(exitCode).toBe(0);
@@ -832,7 +832,7 @@ describe('taskdn list --limit flag', () => {
 // Phase 8: Inclusion Flags
 // ============================================================================
 
-describe('taskdn list --include-done flag', () => {
+describe('tdn list --include-done flag', () => {
   test('includes done tasks when flag is set', async () => {
     const { stdout, exitCode } = await runCli(['list', '--include-done', '--json']);
     expect(exitCode).toBe(0);
@@ -847,7 +847,7 @@ describe('taskdn list --include-done flag', () => {
   });
 });
 
-describe('taskdn list --include-dropped flag', () => {
+describe('tdn list --include-dropped flag', () => {
   test('includes dropped tasks when flag is set', async () => {
     const { stdout, exitCode } = await runCli(['list', '--include-dropped', '--json']);
     expect(exitCode).toBe(0);
@@ -856,7 +856,7 @@ describe('taskdn list --include-dropped flag', () => {
   });
 });
 
-describe('taskdn list --include-closed flag', () => {
+describe('tdn list --include-closed flag', () => {
   test('includes both done and dropped tasks', async () => {
     const { stdout, exitCode } = await runCli(['list', '--include-closed', '--json']);
     expect(exitCode).toBe(0);
@@ -867,7 +867,7 @@ describe('taskdn list --include-closed flag', () => {
   });
 });
 
-describe('taskdn list --include-icebox flag', () => {
+describe('tdn list --include-icebox flag', () => {
   test('includes icebox tasks when flag is set', async () => {
     const { stdout, exitCode } = await runCli(['list', '--include-icebox', '--json']);
     expect(exitCode).toBe(0);
@@ -876,7 +876,7 @@ describe('taskdn list --include-icebox flag', () => {
   });
 });
 
-describe('taskdn list --include-deferred flag', () => {
+describe('tdn list --include-deferred flag', () => {
   test('includes deferred tasks when flag is set', async () => {
     const { stdout, exitCode } = await runCli(['list', '--include-deferred', '--json']);
     expect(exitCode).toBe(0);
@@ -896,7 +896,7 @@ describe('taskdn list --include-deferred flag', () => {
   });
 });
 
-describe('taskdn list --include-archived flag', () => {
+describe('tdn list --include-archived flag', () => {
   test('includes archived tasks when flag is set', async () => {
     const { stdout, exitCode } = await runCli(['list', '--include-archived', '--json']);
     expect(exitCode).toBe(0);
@@ -911,7 +911,7 @@ describe('taskdn list --include-archived flag', () => {
   });
 });
 
-describe('taskdn list --only-archived flag', () => {
+describe('tdn list --only-archived flag', () => {
   test('returns only archived tasks', async () => {
     const { stdout, exitCode } = await runCli(['list', '--only-archived', '--json']);
     expect(exitCode).toBe(0);
@@ -925,7 +925,7 @@ describe('taskdn list --only-archived flag', () => {
 // Phase 9: Text Search
 // ============================================================================
 
-describe('taskdn list --query filter', () => {
+describe('tdn list --query filter', () => {
   test('searches in task title', async () => {
     const { stdout, exitCode } = await runCli(['list', '--query', 'Metadata', '--json']);
     expect(exitCode).toBe(0);

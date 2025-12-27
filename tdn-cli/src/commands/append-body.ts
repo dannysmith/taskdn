@@ -29,9 +29,9 @@ import { getVaultConfig } from '@/config/index.ts';
  * Append-body command - add text to the end of an entity's body
  *
  * Usage:
- *   taskdn append-body ~/tasks/foo.md "Added a new note"
- *   taskdn append-body "project plan" "Multi-line note text here"  # Fuzzy matching
- *   taskdn append-body ~/projects/bar.md "Multi-line
+ *   tdn append-body ~/tasks/foo.md "Added a new note"
+ *   tdn append-body "project plan" "Multi-line note text here"  # Fuzzy matching
+ *   tdn append-body ~/projects/bar.md "Multi-line
  *   note text here"
  *
  * Appends the provided text to the file body with a newline before

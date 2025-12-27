@@ -22,9 +22,9 @@ import {
  * - In progress
  *
  * Usage:
- *   taskdn today           # Human-readable output
- *   taskdn today --ai      # AI-friendly markdown
- *   taskdn today --json    # JSON output
+ *   tdn today           # Human-readable output
+ *   tdn today --ai      # AI-friendly markdown
+ *   tdn today --json    # JSON output
  */
 export const todayCommand = new Command('today')
   .description(

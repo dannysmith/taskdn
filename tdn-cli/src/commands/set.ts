@@ -24,9 +24,9 @@ import { getVaultConfig } from '@/config/index.ts';
  * complete, drop, and status commands.
  *
  * Usage:
- *   taskdn set status ~/tasks/foo.md done
- *   taskdn set status ~/tasks/foo.md ready
- *   taskdn set status ~/tasks/a.md ~/tasks/b.md blocked    # Batch
+ *   tdn set status ~/tasks/foo.md done
+ *   tdn set status ~/tasks/foo.md ready
+ *   tdn set status ~/tasks/a.md ~/tasks/b.md blocked    # Batch
  */
 
 /**

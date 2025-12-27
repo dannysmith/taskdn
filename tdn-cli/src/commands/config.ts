@@ -8,7 +8,7 @@ import { homedir } from 'os';
  * Config command - view current configuration
  *
  * Usage:
- *   taskdn config     # Show effective configuration
+ *   tdn config     # Show effective configuration
  */
 
 /**

@@ -5,10 +5,10 @@
   "type": "module",
   "main": "src/index.ts",
   "bin": {
-    "taskdn": "src/index.ts"
+    "tdn": "src/index.ts"
   },
   "scripts": {
-    "taskdn": "bun run src/index.ts",
+    "tdn": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
     "build": "napi build --release --platform --package tdn-core -o bindings",
     "build:dev": "napi build --platform --package tdn-core -o bindings",
