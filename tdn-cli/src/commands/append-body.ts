@@ -3,7 +3,13 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions, BodyAppendedResult, OutputMode } from '@/output/types.ts';
-import { parseTaskFile, parseProjectFile, parseAreaFile, createVaultSession, type VaultSession } from '@bindings';
+import {
+  parseTaskFile,
+  parseProjectFile,
+  parseAreaFile,
+  createVaultSession,
+  type VaultSession,
+} from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import {
   detectEntityType,

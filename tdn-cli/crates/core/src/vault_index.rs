@@ -99,6 +99,12 @@ pub(crate) struct VaultIndex {
     area_by_name: HashMap<String, usize>,
     /// Map from lowercase project name to index in `projects`
     project_by_name: HashMap<String, usize>,
+    /// Map from lowercase task title (exact match) to indices in `tasks` (Vec because titles may not be unique)
+    task_by_exact_title: HashMap<String, Vec<usize>>,
+    /// Map from lowercase project title (exact match) to indices in `projects` (Vec for consistency)
+    project_by_exact_title: HashMap<String, Vec<usize>>,
+    /// Map from lowercase area title (exact match) to indices in `areas` (Vec for consistency)
+    area_by_exact_title: HashMap<String, Vec<usize>>,
     /// Map from task path to index in `tasks` (for O(1) path lookups)
     task_by_path: HashMap<String, usize>,
     /// Map from project index to list of task indices
@@ -159,6 +165,31 @@ impl VaultIndex {
             }
         }
 
+        // Build exact title lookups (for O(1) exact match, before falling back to substring)
+        let mut task_by_exact_title: HashMap<String, Vec<usize>> = HashMap::new();
+        for (task_idx, task) in tasks.iter().enumerate() {
+            task_by_exact_title
+                .entry(task.title.to_lowercase())
+                .or_default()
+                .push(task_idx);
+        }
+
+        let mut project_by_exact_title: HashMap<String, Vec<usize>> = HashMap::new();
+        for (project_idx, project) in projects.iter().enumerate() {
+            project_by_exact_title
+                .entry(project.title.to_lowercase())
+                .or_default()
+                .push(project_idx);
+        }
+
+        let mut area_by_exact_title: HashMap<String, Vec<usize>> = HashMap::new();
+        for (area_idx, area) in areas.iter().enumerate() {
+            area_by_exact_title
+                .entry(area.title.to_lowercase())
+                .or_default()
+                .push(area_idx);
+        }
+
         // Build task path lookup (for O(1) path lookups)
         let task_by_path: HashMap<String, usize> = tasks
             .iter()
@@ -197,6 +228,9 @@ impl VaultIndex {
             areas,
             area_by_name,
             project_by_name,
+            task_by_exact_title,
+            project_by_exact_title,
+            area_by_exact_title,
             task_by_path,
             tasks_by_project,
             tasks_by_area,
@@ -228,13 +262,66 @@ impl VaultIndex {
             .map(|&idx| &self.projects[idx])
     }
 
-    /// Find tasks by title (case-insensitive substring matching).
-    /// Returns all tasks with titles containing the query string.
+    /// Find tasks by title with hybrid matching strategy:
+    /// 1. Try exact match via HashMap (O(1)) - fast path for exact queries
+    /// 2. Fall back to substring matching (O(n)) - supports partial matches
+    ///
+    /// This provides O(1) performance for exact matches while maintaining
+    /// substring search capability required by the spec.
+    ///
+    /// Returns all tasks with titles matching the query (case-insensitive).
     pub(crate) fn find_tasks_by_title(&self, query: &str) -> Vec<&Task> {
         let query_lower = query.to_lowercase();
+
+        // Fast path: exact title match via HashMap
+        if let Some(indices) = self.task_by_exact_title.get(&query_lower) {
+            return indices.iter().map(|&i| &self.tasks[i]).collect();
+        }
+
+        // Slow path: substring matching (required by spec for fuzzy search)
         self.tasks
             .iter()
             .filter(|task| task.title.to_lowercase().contains(&query_lower))
+            .collect()
+    }
+
+    /// Find projects by title with hybrid matching strategy:
+    /// 1. Try exact match via HashMap (O(1)) - fast path for exact queries
+    /// 2. Fall back to substring matching (O(n)) - supports partial matches
+    ///
+    /// Returns all projects with titles matching the query (case-insensitive).
+    pub(crate) fn find_projects_by_title(&self, query: &str) -> Vec<&Project> {
+        let query_lower = query.to_lowercase();
+
+        // Fast path: exact title match via HashMap
+        if let Some(indices) = self.project_by_exact_title.get(&query_lower) {
+            return indices.iter().map(|&i| &self.projects[i]).collect();
+        }
+
+        // Slow path: substring matching (required by spec for fuzzy search)
+        self.projects
+            .iter()
+            .filter(|project| project.title.to_lowercase().contains(&query_lower))
+            .collect()
+    }
+
+    /// Find areas by title with hybrid matching strategy:
+    /// 1. Try exact match via HashMap (O(1)) - fast path for exact queries
+    /// 2. Fall back to substring matching (O(n)) - supports partial matches
+    ///
+    /// Returns all areas with titles matching the query (case-insensitive).
+    pub(crate) fn find_areas_by_title(&self, query: &str) -> Vec<&Area> {
+        let query_lower = query.to_lowercase();
+
+        // Fast path: exact title match via HashMap
+        if let Some(indices) = self.area_by_exact_title.get(&query_lower) {
+            return indices.iter().map(|&i| &self.areas[i]).collect();
+        }
+
+        // Slow path: substring matching (required by spec for fuzzy search)
+        self.areas
+            .iter()
+            .filter(|area| area.title.to_lowercase().contains(&query_lower))
             .collect()
     }
 
@@ -563,7 +650,10 @@ fn is_path_identifier(identifier: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::vault_session::{create_vault_session, get_tasks_in_area, get_projects_in_area, get_area_context, get_project_context, get_task_context};
+    use crate::vault_session::{
+        create_vault_session, get_area_context, get_project_context, get_projects_in_area,
+        get_task_context, get_tasks_in_area,
+    };
     use std::fs::{self, File};
     use std::io::Write;
     use std::path::Path;
