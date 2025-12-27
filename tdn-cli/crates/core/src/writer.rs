@@ -224,7 +224,7 @@ struct MinimalFrontmatter {
 }
 
 /// Parse file content into (raw YAML mapping, body content).
-fn parse_file_parts(content: &str) -> Result<(serde_yaml::Mapping, String)> {
+fn parse_file_parts(content: &str) -> Result<(serde_norway::Mapping, String)> {
     let matter = Matter::<YAML>::new();
     // Parse with a minimal struct - we only need access to .matter and .content
     let parsed = matter
@@ -235,10 +235,10 @@ fn parse_file_parts(content: &str) -> Result<(serde_yaml::Mapping, String)> {
     let yaml_str = parsed.matter;
 
     // Parse as a generic mapping to preserve structure
-    let mapping: serde_yaml::Mapping = if yaml_str.is_empty() {
-        serde_yaml::Mapping::new()
+    let mapping: serde_norway::Mapping = if yaml_str.is_empty() {
+        serde_norway::Mapping::new()
     } else {
-        serde_yaml::from_str(&yaml_str).map_err(|e| {
+        serde_norway::from_str(&yaml_str).map_err(|e| {
             TdnError::parse_error("(content)", None, format!("Failed to parse YAML: {}", e))
         })?
     };
@@ -247,14 +247,14 @@ fn parse_file_parts(content: &str) -> Result<(serde_yaml::Mapping, String)> {
 }
 
 /// Set a field in a YAML mapping, preserving existing field order where possible.
-fn set_yaml_field(mapping: &mut serde_yaml::Mapping, key: &str, value: serde_yaml::Value) {
-    let yaml_key = serde_yaml::Value::String(key.to_string());
+fn set_yaml_field(mapping: &mut serde_norway::Mapping, key: &str, value: serde_norway::Value) {
+    let yaml_key = serde_norway::Value::String(key.to_string());
     mapping.insert(yaml_key, value);
 }
 
 /// Remove a field from a YAML mapping.
-fn remove_yaml_field(mapping: &mut serde_yaml::Mapping, key: &str) {
-    let yaml_key = serde_yaml::Value::String(key.to_string());
+fn remove_yaml_field(mapping: &mut serde_norway::Mapping, key: &str) {
+    let yaml_key = serde_norway::Value::String(key.to_string());
     mapping.remove(&yaml_key);
 }
 
@@ -270,14 +270,14 @@ fn ensure_wikilink(value: &str) -> String {
 
 /// Set a wikilink field in a YAML mapping.
 /// Automatically wraps the value in [[...]] if not already wrapped.
-fn set_wikilink_field(mapping: &mut serde_yaml::Mapping, key: &str, value: &str) {
+fn set_wikilink_field(mapping: &mut serde_norway::Mapping, key: &str, value: &str) {
     let wikilink = ensure_wikilink(value);
-    set_yaml_field(mapping, key, serde_yaml::Value::String(wikilink));
+    set_yaml_field(mapping, key, serde_norway::Value::String(wikilink));
 }
 
 /// Serialize a YAML mapping to string with proper formatting.
-fn serialize_yaml(mapping: &serde_yaml::Mapping) -> Result<String> {
-    serde_yaml::to_string(mapping).map_err(|e| {
+fn serialize_yaml(mapping: &serde_norway::Mapping) -> Result<String> {
+    serde_norway::to_string(mapping).map_err(|e| {
         TdnError::write_error("(content)", format!("Failed to serialize YAML: {}", e)).into()
     })
 }
@@ -312,13 +312,13 @@ pub fn create_task_file(
     let file_path = dir.join(&filename);
 
     // Build frontmatter
-    let mut mapping = serde_yaml::Mapping::new();
+    let mut mapping = serde_norway::Mapping::new();
 
     // Required fields
     set_yaml_field(
         &mut mapping,
         "title",
-        serde_yaml::Value::String(title.clone()),
+        serde_norway::Value::String(title.clone()),
     );
 
     // Status (default to inbox)
@@ -326,7 +326,7 @@ pub fn create_task_file(
     set_yaml_field(
         &mut mapping,
         "status",
-        serde_yaml::Value::String(status.to_string()),
+        serde_norway::Value::String(status.to_string()),
     );
 
     // Timestamps
@@ -334,15 +334,15 @@ pub fn create_task_file(
     set_yaml_field(
         &mut mapping,
         "created-at",
-        serde_yaml::Value::String(now.clone()),
+        serde_norway::Value::String(now.clone()),
     );
-    set_yaml_field(&mut mapping, "updated-at", serde_yaml::Value::String(now));
+    set_yaml_field(&mut mapping, "updated-at", serde_norway::Value::String(now));
 
     // Optional fields
     if let Some(project) = &fields.project {
         // Store as projects array with wikilink format
         let wikilink = ensure_wikilink(project);
-        let projects_array = serde_yaml::Value::Sequence(vec![serde_yaml::Value::String(wikilink)]);
+        let projects_array = serde_norway::Value::Sequence(vec![serde_norway::Value::String(wikilink)]);
         set_yaml_field(&mut mapping, "projects", projects_array);
     }
 
@@ -351,14 +351,14 @@ pub fn create_task_file(
     }
 
     if let Some(due) = &fields.due {
-        set_yaml_field(&mut mapping, "due", serde_yaml::Value::String(due.clone()));
+        set_yaml_field(&mut mapping, "due", serde_norway::Value::String(due.clone()));
     }
 
     if let Some(scheduled) = &fields.scheduled {
         set_yaml_field(
             &mut mapping,
             "scheduled",
-            serde_yaml::Value::String(scheduled.clone()),
+            serde_norway::Value::String(scheduled.clone()),
         );
     }
 
@@ -366,7 +366,7 @@ pub fn create_task_file(
         set_yaml_field(
             &mut mapping,
             "defer-until",
-            serde_yaml::Value::String(defer_until.clone()),
+            serde_norway::Value::String(defer_until.clone()),
         );
     }
 
@@ -404,13 +404,13 @@ pub fn create_project_file(
     let file_path = dir.join(&filename);
 
     // Build frontmatter
-    let mut mapping = serde_yaml::Mapping::new();
+    let mut mapping = serde_norway::Mapping::new();
 
     // Required fields
     set_yaml_field(
         &mut mapping,
         "title",
-        serde_yaml::Value::String(title.clone()),
+        serde_norway::Value::String(title.clone()),
     );
 
     // Optional status
@@ -418,7 +418,7 @@ pub fn create_project_file(
         set_yaml_field(
             &mut mapping,
             "status",
-            serde_yaml::Value::String(status.clone()),
+            serde_norway::Value::String(status.clone()),
         );
     }
 
@@ -432,7 +432,7 @@ pub fn create_project_file(
         set_yaml_field(
             &mut mapping,
             "description",
-            serde_yaml::Value::String(description.clone()),
+            serde_norway::Value::String(description.clone()),
         );
     }
 
@@ -441,7 +441,7 @@ pub fn create_project_file(
         set_yaml_field(
             &mut mapping,
             "start-date",
-            serde_yaml::Value::String(start_date.clone()),
+            serde_norway::Value::String(start_date.clone()),
         );
     }
 
@@ -449,7 +449,7 @@ pub fn create_project_file(
         set_yaml_field(
             &mut mapping,
             "end-date",
-            serde_yaml::Value::String(end_date.clone()),
+            serde_norway::Value::String(end_date.clone()),
         );
     }
 
@@ -487,13 +487,13 @@ pub fn create_area_file(
     let file_path = dir.join(&filename);
 
     // Build frontmatter
-    let mut mapping = serde_yaml::Mapping::new();
+    let mut mapping = serde_norway::Mapping::new();
 
     // Required fields
     set_yaml_field(
         &mut mapping,
         "title",
-        serde_yaml::Value::String(title.clone()),
+        serde_norway::Value::String(title.clone()),
     );
 
     // Status (default to active for areas)
@@ -501,7 +501,7 @@ pub fn create_area_file(
     set_yaml_field(
         &mut mapping,
         "status",
-        serde_yaml::Value::String(status.to_string()),
+        serde_norway::Value::String(status.to_string()),
     );
 
     // Optional type
@@ -509,7 +509,7 @@ pub fn create_area_file(
         set_yaml_field(
             &mut mapping,
             "type",
-            serde_yaml::Value::String(area_type.clone()),
+            serde_norway::Value::String(area_type.clone()),
         );
     }
 
@@ -518,7 +518,7 @@ pub fn create_area_file(
         set_yaml_field(
             &mut mapping,
             "description",
-            serde_yaml::Value::String(description.clone()),
+            serde_norway::Value::String(description.clone()),
         );
     }
 
@@ -578,7 +578,7 @@ pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()>
                     // Convert project to projects array with wikilink
                     let wikilink = ensure_wikilink(&value);
                     let projects_array =
-                        serde_yaml::Value::Sequence(vec![serde_yaml::Value::String(wikilink)]);
+                        serde_norway::Value::Sequence(vec![serde_norway::Value::String(wikilink)]);
                     set_yaml_field(&mut mapping, "projects", projects_array);
                 } else if update.field == "area" {
                     // Wrap area in wikilink
@@ -587,7 +587,7 @@ pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()>
                     set_yaml_field(
                         &mut mapping,
                         &update.field,
-                        serde_yaml::Value::String(value),
+                        serde_norway::Value::String(value),
                     );
                 }
             }
@@ -606,20 +606,20 @@ pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()>
     set_yaml_field(
         &mut mapping,
         "updated-at",
-        serde_yaml::Value::String(now_iso8601()),
+        serde_norway::Value::String(now_iso8601()),
     );
 
     // Handle completed-at for status changes to done/dropped
-    let status_key = serde_yaml::Value::String("status".to_string());
-    if let Some(serde_yaml::Value::String(status)) = mapping.get(&status_key)
+    let status_key = serde_norway::Value::String("status".to_string());
+    if let Some(serde_norway::Value::String(status)) = mapping.get(&status_key)
         && (status == "done" || status == "dropped")
     {
-        let completed_key = serde_yaml::Value::String("completed-at".to_string());
+        let completed_key = serde_norway::Value::String("completed-at".to_string());
         if !mapping.contains_key(&completed_key) {
             set_yaml_field(
                 &mut mapping,
                 "completed-at",
-                serde_yaml::Value::String(now_iso8601()),
+                serde_norway::Value::String(now_iso8601()),
             );
         }
     }
