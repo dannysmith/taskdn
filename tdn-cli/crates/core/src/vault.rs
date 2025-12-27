@@ -134,13 +134,13 @@ where
             .par_iter()
             .filter_map(|entry| {
                 let file_path = entry.path().to_string_lossy().to_string();
-                match parse_fn(file_path.clone()) {
+                match parse_fn(file_path) {
                     Ok(entity) => {
-                        debug!("Successfully parsed: {}", file_path);
+                        debug!("Successfully parsed: {}", entry.path().display());
                         Some(entity)
                     }
                     Err(e) => {
-                        warn!("Failed to parse file {}: {}", file_path, e);
+                        warn!("Failed to parse file {}: {}", entry.path().display(), e);
                         None
                     }
                 }
