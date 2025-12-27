@@ -18,7 +18,10 @@
 /// - `[[Name#Heading|Alias]]` → Some("Name")
 /// - `./relative/path.md` → None
 /// - `path.md` → None
-#[allow(dead_code)] // Used by vault_index in Phase 3.2
+///
+/// Marked as dead_code because it's pub(crate) and only used by vault_index module.
+/// The Rust compiler doesn't always detect cross-module usage within the same crate.
+#[allow(dead_code)]
 pub(crate) fn extract_wikilink_name(reference: &str) -> Option<&str> {
     // Must start with [[ and end with ]]
     let trimmed = reference.trim();

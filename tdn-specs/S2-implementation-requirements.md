@@ -73,9 +73,9 @@ If a file contains multiple projects, use the first one. Validation commands SHO
 
 All dates MUST use ISO 8601 format when stored or output:
 
-| Field Type | Format | Example |
-|------------|--------|---------|
-| Date fields (due, scheduled, defer-until) | `YYYY-MM-DD` | `2025-12-20` |
+| Field Type                                              | Format                | Example               |
+| ------------------------------------------------------- | --------------------- | --------------------- |
+| Date fields (due, scheduled, defer-until)               | `YYYY-MM-DD`          | `2025-12-20`          |
 | Timestamp fields (created-at, updated-at, completed-at) | `YYYY-MM-DDTHH:MM:SS` | `2025-12-15T14:30:00` |
 
 ### 4.2 Input Formats
@@ -103,6 +103,7 @@ Implementations SHOULD NOT crash or halt entirely when encountering individual m
 Implementations MUST ignore unknown frontmatter fields during processing. This allows users to add custom metadata without breaking compatibility.
 
 For example, if a user adds a `priority: high` field (not defined in S1), implementations MUST:
+
 - Read the file successfully
 - Ignore the unknown field during processing
 - Preserve the field when writing (see Section 6.2)
@@ -115,10 +116,10 @@ For example, if a user adds a `priority: high` field (not defined in S1), implem
 
 Implementations SHOULD automatically manage timestamp fields:
 
-| Event | Field | Action |
-|-------|-------|--------|
-| Task created | `created-at` | Set to current datetime |
-| Task modified | `updated-at` | Set to current datetime |
+| Event                                 | Field          | Action                  |
+| ------------------------------------- | -------------- | ----------------------- |
+| Task created                          | `created-at`   | Set to current datetime |
+| Task modified                         | `updated-at`   | Set to current datetime |
 | Status changed to `done` or `dropped` | `completed-at` | Set to current datetime |
 
 "Modified" includes any frontmatter change or body edit. Timestamps SHOULD use ISO 8601 format as specified in S1.
@@ -127,10 +128,10 @@ Implementations SHOULD automatically manage timestamp fields:
 
 When modifying files, implementations MUST preserve data they don't explicitly change:
 
-| Data | Requirement |
-|------|-------------|
-| Unknown frontmatter fields | MUST preserve |
-| Markdown body | MUST preserve |
+| Data                                 | Requirement                    |
+| ------------------------------------ | ------------------------------ |
+| Unknown frontmatter fields           | MUST preserve                  |
+| Markdown body                        | MUST preserve                  |
 | YAML formatting (comments, ordering) | SHOULD preserve where possible |
 
 **Rationale:** Users may add custom fields, and other tools may add metadata. Implementations that strip unknown data break interoperability.
@@ -177,14 +178,17 @@ For long-running processes (TUI interfaces, desktop applications):
 By default, queries should return "active" items. The definition of "active" varies by entity type:
 
 **Active tasks:**
+
 - Status NOT IN (`done`, `dropped`, `icebox`)
 - `defer-until` is unset or <= today
 - File is not in the archive subdirectory
 
 **Active projects:**
+
 - Status is unset OR status NOT IN (`done`)
 
 **Active areas:**
+
 - Status is unset OR status = `active`
 
 Items excluded by default should be includable via explicit parameters or options.
@@ -200,9 +204,11 @@ For implementations that support querying and filtering:
 When multiple filters are applied:
 
 - **Same filter with multiple values:** OR logic
+
   - Example: `status=ready,in-progress` matches ready OR in-progress
 
 - **Different filter types:** AND logic
+
   - Example: `project=Q1 AND status=ready` requires both conditions
 
 - **Contradictory filters:** Empty result (not an error)
@@ -222,18 +228,18 @@ Common sort fields: `created`, `updated`, `due`, `title`.
 
 For programmatic interfaces (CLIs, SDKs, APIs), implementations SHOULD use standard error codes:
 
-| Code | When | Contextual Info |
-|------|------|-----------------|
-| `NOT_FOUND` | Entity doesn't exist | Suggestions for similar items |
-| `AMBIGUOUS` | Fuzzy search matched multiple | List of matches |
-| `INVALID_STATUS` | Bad status value | List of valid statuses |
-| `INVALID_DATE` | Unparseable date | Expected formats |
-| `INVALID_PATH` | Path outside configured dirs | Configured paths |
-| `PARSE_ERROR` | YAML malformed | Line number, specific issue |
-| `MISSING_FIELD` | Required field absent | Which field |
-| `REFERENCE_ERROR` | Broken project/area reference | The broken reference |
-| `PERMISSION_ERROR` | Can't read/write file | File path |
-| `CONFIG_ERROR` | Config missing/invalid | How to fix |
+| Code               | When                          | Contextual Info               |
+| ------------------ | ----------------------------- | ----------------------------- |
+| `NOT_FOUND`        | Entity doesn't exist          | Suggestions for similar items |
+| `AMBIGUOUS`        | Fuzzy search matched multiple | List of matches               |
+| `INVALID_STATUS`   | Bad status value              | List of valid statuses        |
+| `INVALID_DATE`     | Unparseable date              | Expected formats              |
+| `INVALID_PATH`     | Path outside configured dirs  | Configured paths              |
+| `PARSE_ERROR`      | YAML malformed                | Line number, specific issue   |
+| `MISSING_FIELD`    | Required field absent         | Which field                   |
+| `REFERENCE_ERROR`  | Broken project/area reference | The broken reference          |
+| `PERMISSION_ERROR` | Can't read/write file         | File path                     |
+| `CONFIG_ERROR`     | Config missing/invalid        | How to fix                    |
 
 Graphical interfaces may present errors differently (dialogs, inline messages) but the error code catalog remains useful for logging and debugging.
 

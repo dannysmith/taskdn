@@ -9,6 +9,15 @@ use crate::project::{Project, parse_project_file};
 use crate::task::{Task, parse_task_file};
 
 // SECURITY: Resource limits to prevent DoS via large vaults (HIGH-6)
+//
+// These limits ensure the CLI remains responsive even with maliciously large vaults:
+// - MAX_FILES_PER_SCAN: Prevents scanning directories with >10k files (DoS attack)
+// - MAX_PARALLEL_THREADS: Prevents CPU exhaustion from unlimited parallelization
+//
+// **For AI Agents:** If these limits are hit:
+// - Check if the vault is genuinely that large (may need architectural changes)
+// - Consider if the user is pointing to a system directory (should be blocked by config.ts)
+// - These are silent truncations - the CLI will warn but continue processing
 const MAX_FILES_PER_SCAN: usize = 10_000;
 const MAX_PARALLEL_THREADS: usize = 8;
 
@@ -66,7 +75,19 @@ pub(crate) fn scan_areas_impl(config: &VaultConfig) -> Vec<Area> {
 
 /// Generic directory scanner that applies a parse function to each .md file.
 /// Returns successfully parsed entities, skipping failures.
-/// Uses parallel processing via rayon for improved performance on large vaults.
+///
+/// **Performance Pattern:** Uses rayon for parallel processing with bounded resources.
+///
+/// Why parallel processing is safe here:
+/// - Each file is parsed independently (no shared state)
+/// - Parse failures are isolated (one bad file doesn't break the scan)
+/// - ThreadPool is bounded to MAX_PARALLEL_THREADS (prevents resource exhaustion)
+/// - Results are collected into a Vec (deterministic despite parallel processing)
+///
+/// **For AI Agents:** This is a performance-critical hot path. Don't add:
+/// - Async/await (adds overhead, rayon is faster for CPU-bound parsing)
+/// - Shared mutable state (breaks parallelization safety)
+/// - Unbounded operations (violates DoS protection requirements)
 fn scan_directory<T, F>(dir_path: &str, parse_fn: F) -> Vec<T>
 where
     F: Fn(String) -> napi::Result<T> + Sync,

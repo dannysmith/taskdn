@@ -6,7 +6,7 @@ This document describes the technical architecture for the Taskdn CLI tool.
 >
 > - [CLI Requirements](./cli-requirements.md) - Functional requirements and interface design
 > - [S1: Core Specification](../../../tdn-specs/S1-core.md) - File format specification
-> - [S2: Interface Design](../../../tdn-specs/S2-interface-design.md) - General interface patterns
+> - [S2: Interface Design](../../../tdn-specs/S2-implementation-requirements.md) - General interface patterns
 
 ---
 
@@ -46,8 +46,8 @@ taskdn-cli/
 
 ### Why Not Other Approaches
 
-| Approach              | Why Not                                                                                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Approach              | Why Not                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Pure TypeScript**   | Too slow for large vaults. Bun improves I/O but parsing remains CPU-bound in JS.                                                                             |
 | **Pure Rust CLI**     | Slower iteration on CLI surface. TypeScript is faster for output formatting, TUI, etc.                                                                       |
 | **Separate packages** | Premature extraction. The original plan (Rust crate → npm package → CLI) created too much friction during early development when the interface was evolving. |
@@ -187,12 +187,14 @@ Status enums should be marked non-exhaustive to allow adding new statuses withou
 The Rust core maintains separate approaches for reading and writing files. This separation emerged from the Task 4 architecture review.
 
 **Read operations** use typed "parsed view" structs:
+
 - `Task`, `Project`, `Area` are optimized for querying and display
 - Fields are typed (enums, Options) for easy filtering
 - Shape may differ from storage (e.g., `projects: [...]` → `project: Option<String>`)
 - Unknown frontmatter fields are discarded (not needed for reads)
 
 **Write operations** manipulate raw YAML to preserve round-trip fidelity:
+
 - Read original file content
 - Parse frontmatter as `serde_yaml::Value` (preserves structure)
 - Apply typed updates to specific fields
@@ -201,17 +203,18 @@ The Rust core maintains separate approaches for reading and writing files. This 
 
 **Why this separation:**
 
-| Concern | Read Approach | Write Approach |
-|---------|---------------|----------------|
-| Unknown fields | Discard (not needed) | Must preserve (S3 requirement) |
-| Date format | Parse to string | Must preserve original format |
-| Reference format | Store as string | Must preserve wikilink vs path |
-| Type safety | Full types for filtering | Minimal—just field updates |
-| Performance | Fast, typed access | Slightly slower (raw YAML manipulation) |
+| Concern          | Read Approach            | Write Approach                          |
+| ---------------- | ------------------------ | --------------------------------------- |
+| Unknown fields   | Discard (not needed)     | Must preserve (S3 requirement)          |
+| Date format      | Parse to string          | Must preserve original format           |
+| Reference format | Store as string          | Must preserve wikilink vs path          |
+| Type safety      | Full types for filtering | Minimal—just field updates              |
+| Performance      | Fast, typed access       | Slightly slower (raw YAML manipulation) |
 
 **Key insight:** Don't try to make one struct serve both purposes. The `Task` struct is a "read view" that loses information. That's fine—it serves reads well. Write operations work with the raw file and apply targeted changes.
 
 **Implementation pattern for writes:**
+
 ```rust
 pub fn update_task_file(path: String, updates: Vec<FieldUpdate>) -> Result<Task> {
     // 1. Read original file
@@ -319,12 +322,12 @@ Snapshot the generated TypeScript bindings to catch unintentional API changes.
 
 ## Performance Targets
 
-| Operation                         | Target  |
-| --------------------------------- | ------- |
-| Single file parse                 | <1ms    |
-| 5000 file vault scan (parallel)   | <500ms  |
-| In-memory filter (1000 tasks)     | <5ms    |
-| CLI startup to first output       | <100ms  |
+| Operation                       | Target |
+| ------------------------------- | ------ |
+| Single file parse               | <1ms   |
+| 5000 file vault scan (parallel) | <500ms |
+| In-memory filter (1000 tasks)   | <5ms   |
+| CLI startup to first output     | <100ms |
 
 These are goals, not hard requirements. The key constraint is that the CLI should feel responsive for typical use (vaults up to a few thousand files).
 
@@ -334,15 +337,15 @@ These are goals, not hard requirements. The key constraint is that the CLI shoul
 
 The `archived-projects/` directory contains prior work that informed these decisions. Useful references when implementing:
 
-| Path                                              | What to Reference                          |
-| ------------------------------------------------- | ------------------------------------------ |
-| `taskdn-rust/src/types/`                          | Type definitions (Task, Project, Area)     |
-| `taskdn-rust/src/parser.rs`                       | Frontmatter parsing approach               |
-| `taskdn-rust/src/writer.rs`                       | Round-trip writing with format preservation|
-| `taskdn-rust/src/filter.rs`                       | Filter implementation and semantics        |
-| `taskdn-rust/docs/developer/architecture-guide.md`| Detailed architectural decisions           |
-| `taskdn-ts/src/lib.rs`                            | NAPI-RS binding patterns                   |
-| `taskdn-ts/package.json`                          | Multi-platform npm publishing setup        |
+| Path                                               | What to Reference                           |
+| -------------------------------------------------- | ------------------------------------------- |
+| `taskdn-rust/src/types/`                           | Type definitions (Task, Project, Area)      |
+| `taskdn-rust/src/parser.rs`                        | Frontmatter parsing approach                |
+| `taskdn-rust/src/writer.rs`                        | Round-trip writing with format preservation |
+| `taskdn-rust/src/filter.rs`                        | Filter implementation and semantics         |
+| `taskdn-rust/docs/developer/architecture-guide.md` | Detailed architectural decisions            |
+| `taskdn-ts/src/lib.rs`                             | NAPI-RS binding patterns                    |
+| `taskdn-ts/package.json`                           | Multi-platform npm publishing setup         |
 
 **Do not copy wholesale.** The archived code predates the current specifications. Use it as reference for patterns and solutions to specific problems, but implement fresh against the current specs.
 
@@ -388,7 +391,7 @@ Decisions made during Phase 1 research (2025-12-22):
 
 ## Revision History
 
-| Date       | Change                                                          |
-| ---------- | --------------------------------------------------------------- |
-| 2025-12-22 | Initial version based on Phase 2 research                       |
+| Date       | Change                                                           |
+| ---------- | ---------------------------------------------------------------- |
+| 2025-12-22 | Initial version based on Phase 2 research                        |
 | 2025-12-22 | Updated with resolved technology decisions from Phase 1 research |
