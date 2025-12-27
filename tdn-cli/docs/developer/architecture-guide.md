@@ -2,6 +2,16 @@
 
 This document explains the high-level architecture and key patterns in tdn-cli. It's intended as a reference for developers (including AI coding agents) to ensure consistency across the codebase.
 
+## Related Documentation
+
+For detailed information on specific patterns and systems:
+
+- **[VaultSession Pattern](./vault-session-pattern.md)** - Index caching and performance optimization
+- **[CLI Interface Guide](./cli-interface-guide.md)** - Command patterns, entity lookup, filtering
+- **[AI Context Output](./ai-context.md)** - AI mode output format specification
+- **[Output Format Spec](./output-format-spec.md)** - Human/AI/JSON formatting patterns
+- **[Testing Guide](./testing.md)** - Testing strategy and patterns
+
 ## Overview
 
 tdn-cli is a hybrid TypeScript + Rust project:
@@ -69,42 +79,87 @@ See [testing.md](./testing.md) for our testing strategy. Key points:
 
 ## Key Patterns
 
-### Output Modes
+### VaultSession Pattern (Performance)
 
-The CLI supports three output modes controlled by global flags:
-
-- **Human mode** (default): Colored, formatted for terminal reading
-- **AI mode** (`--ai`): Structured Markdown for LLM consumption
-- **JSON mode** (`--json`): Machine-readable JSON with `summary` field
-
-Commands use the formatter system rather than formatting output directly:
+For commands that perform multiple queries or relationship traversal, use VaultSession to cache the vault index:
 
 ```typescript
-import { formatOutput } from "@/output/index.ts";
-import type { GlobalOptions, TaskResult } from "@/output/index.ts";
+const session = createVaultSession(config); // Create once per command
+const tasks = findTasksByTitle(session, "foo"); // Reuses index
+const area = getAreaContext(session, "Work"); // Reuses same index
+```
 
-// In command action:
+**Key benefits:**
+- Index built once, reused for all queries in a command
+- 3× faster for commands with multiple lookups
+- Lazy building - only if query functions are called
+
+See [vault-session-pattern.md](./vault-session-pattern.md) for detailed explanation and when to use sessions vs. simple functions.
+
+### Round-Trip File Writing (Writer Pattern)
+
+File updates preserve unknown frontmatter fields and user formatting by manipulating raw YAML instead of round-tripping through typed structs:
+
+```rust
+// ❌ Don't: Loses unknown fields
+let yaml = serde_yaml::to_string(&task)?;
+
+// ✅ Do: Preserves everything
+let parsed = parse_file_parts(&content)?; // Returns (Mapping, body)
+set_yaml_field(&mut mapping, "status", "done");
+```
+
+This is critical for user trust - we never discard fields we don't understand.
+
+See: `crates/core/src/writer.rs` comments for implementation details.
+
+### Security & Performance Patterns
+
+**Vault Path Validation** (`src/config/index.ts`):
+- Blocks system directories (`/etc`, `/usr`, `/bin`)
+- Warns if outside home directory
+- All paths resolved to absolute form
+
+**DoS Protection** (`crates/core/src/vault.rs`):
+- MAX_FILES_PER_SCAN: 10,000 files (prevents directory scanning attacks)
+- MAX_PARALLEL_THREADS: 8 threads (prevents CPU exhaustion)
+- Silent truncation with warnings
+
+**Parallel Vault Scanning** (`scan_directory`):
+- Uses rayon for parallel file parsing
+- 3× faster on large vaults (2500ms → 750ms for 5000 files)
+- Safe: each file parsed independently, bounded thread pool
+
+### Output Modes
+
+Commands dispatch to formatters rather than formatting directly:
+
+```typescript
 const result: TaskResult = { type: "task", task };
 console.log(formatOutput(result, globalOpts));
 ```
 
-Each formatter (`human.ts`, `ai.ts`, `json.ts`) implements the `Formatter` interface and handles all result types.
+Modes:
+- **Human** (default): Colored terminal output
+- **AI** (`--ai`): Structured Markdown for LLMs
+- **JSON** (`--json`): Machine-readable with `summary` field
+- **AI-JSON** (`--ai --json`): Markdown in JSON envelope
+
+See [output-format-spec.md](./output-format-spec.md) and [ai-context.md](./ai-context.md) for detailed specifications.
 
 ### Command Structure
 
 Commands are defined in `src/commands/` and registered in `src/index.ts`:
 
 ```typescript
-// src/commands/example.ts
-import { Command } from "@commander-js/extra-typings";
-
 export const exampleCommand = new Command("example")
   .description("Brief description")
   .argument("<required>", "Argument description")
   .option("--flag", "Option description")
   .action((arg, options, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;
-    // Implementation
+    const result = { type: "task", task }; // Build result
+    console.log(formatOutput(result, globalOpts)); // Dispatch to formatter
   });
 ```
 
@@ -115,21 +170,23 @@ Access global options (`--ai`, `--json`) via `command.optsWithGlobals()`.
 Rust functions are exposed via the `#[napi]` macro:
 
 ```rust
-// crates/core/src/task.rs
 #[napi]
-pub fn parse_task_file(file_path: String) -> Result<Task> {
-    // Implementation
-}
+pub fn parse_task_file(file_path: String) -> Result<Task> { /* ... */ }
 ```
 
-NAPI-RS generates TypeScript types in `bindings/index.d.ts`. Import from `@bindings`:
+TypeScript imports from auto-generated bindings:
 
 ```typescript
 import { parseTaskFile } from "@bindings";
 import type { Task } from "@bindings";
 ```
 
-After changing Rust code, run `bun run build` to regenerate bindings.
+**Important:** Run `bun run build` after changing `#[napi]` exports to regenerate bindings.
+
+**Error Handling Across Boundary:**
+Rust `TdnError` → NAPI serializes to JSON → TypeScript catches as Error.
+
+See detailed explanation in `crates/core/src/lib.rs` (module docs) and `crates/core/src/error.rs`.
 
 ### Terminal Styling with ansis
 
@@ -138,19 +195,11 @@ Use `ansis` for terminal colors and formatting:
 ```typescript
 import { bold, dim, red, green } from "ansis";
 
-// Chained syntax
 console.log(red.bold("Error message"));
-
-// Individual functions
 console.log(bold(title) + "  " + dim(subtitle));
 ```
 
-Prefer named imports for tree-shaking. Common patterns:
-
-- `bold` for emphasis (titles, important values)
-- `dim` for secondary information (paths, labels)
-- `red` for errors
-- `green`, `blue`, `yellow` for status indicators
+Common patterns: `bold` for emphasis, `dim` for secondary info, `red` for errors, `green`/`blue`/`yellow` for status.
 
 ### Interactive Prompts with @clack/prompts
 
@@ -159,42 +208,20 @@ Use `@clack/prompts` for user interaction in human mode only:
 ```typescript
 import * as p from "@clack/prompts";
 
-// Always check for cancellation
 const value = await p.text({ message: "Enter value:" });
 if (p.isCancel(value)) {
   p.cancel("Operation cancelled");
   process.exit(0);
 }
-
-// Spinner for long operations
-const s = p.spinner();
-s.start("Loading...");
-// ... work
-s.stop("Done");
 ```
 
 Skip prompts in AI/JSON mode - these modes should be non-interactive.
 
 ### Error Handling
 
-Errors should be formatted appropriately for each output mode:
+Errors should be formatted appropriately for each output mode. Commands typically use the formatter system for error results.
 
-```typescript
-if (mode === "json") {
-  console.log(JSON.stringify({ error: true, message }, null, 2));
-} else if (mode === "ai") {
-  console.log(`## Error\n\n- **message:** ${message}`);
-} else {
-  console.error(red(`Error: ${message}`));
-}
-process.exit(1);
-```
-
-In Rust, use `napi::Result` and `napi::Error` for errors that cross the boundary:
-
-```rust
-Err(Error::new(Status::GenericFailure, "Error message"))
-```
+In Rust, use `TdnError` for structured errors that cross the NAPI boundary (see `error.rs` for details).
 
 ## Path Aliases
 
