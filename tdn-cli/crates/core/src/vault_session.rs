@@ -14,12 +14,12 @@ use std::sync::OnceLock;
 
 use crate::area::Area;
 use crate::project::Project;
-use crate::task::Task;
-use crate::vault::VaultConfig;
 use crate::query_results::{
     AreaContextResult, ProjectContextResult, ProjectsInAreaResult, TaskContextResult,
     TasksInAreaResult,
 };
+use crate::task::Task;
+use crate::vault::VaultConfig;
 use crate::vault_index::VaultIndex;
 
 /// Session for vault operations.
