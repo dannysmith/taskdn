@@ -1,0 +1,40 @@
+[package]
+name = "tdn-core"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+description = "Core library for Taskdn CLI"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# NAPI-RS bindings
+napi = { version = "3", features = ["napi9"] }
+napi-derive = "3"
+
+# Error handling
+thiserror = "2"
+
+# Logging
+log = "0.4"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_norway = "0.9"  # Maintained fork of serde_yaml with security patches
+
+# Frontmatter parsing
+gray_matter = "0.3"
+
+# Parallelization
+rayon = "1"
+
+# Date/time handling
+chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
+
+[build-dependencies]
+napi-build = "2"
+
+[dev-dependencies]
+tempfile = "3"

@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "tasks/review-pr-47.md",
+                "file": "README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "review-pr-47"
+              "title": "README"
             }
           }
         ]
@@ -185,6 +185,8 @@
   },
   "active": "8eb1c8157520658d",
   "lastOpenFiles": [
+    "obsidian-dashboard.md",
+    "areas/acme-corp.md",
     "tasks/review-client-proposal.md",
     "tasks/call-insurance.md",
     "tasks/build-custom-cms.md",
@@ -207,11 +209,9 @@
     "areas/home.md",
     "areas/health.md",
     "areas/finances.md",
-    "areas/acme-corp.md",
     "tasks/archive/setup-ci-pipeline.md",
     "tasks/archive/setup-ci-pipeline.md.tmp.80319.1765502857170",
     "tasks/archive/review-api-docs.md",
-    "tasks/archive/file-quarterly-taxes.md",
     "tasks/review-quarterly-report.md.tmp.80319.1765502837462",
     "projects/home-office-setup.md.tmp.80319.1765502760868",
     "projects/api-migration-techstart.md.tmp.80319.1765502760676",

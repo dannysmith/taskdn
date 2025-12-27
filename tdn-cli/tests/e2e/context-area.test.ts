@@ -1,0 +1,319 @@
+import { describe, test, expect } from 'bun:test';
+import { runCli } from '../helpers/cli';
+
+describe('context area', () => {
+  describe('with Work area', () => {
+    test('returns area details', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Work');
+    });
+
+    test('includes projects in area', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Test Project');
+    });
+
+    test('includes tasks via projects', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work']);
+      expect(exitCode).toBe(0);
+      // Tasks in Test Project
+      expect(stdout).toContain('Full Metadata Task');
+      expect(stdout).toContain('Test Project Task');
+    });
+
+    test('includes tasks directly in area', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('Direct Work Task');
+    });
+  });
+
+  describe('with --ai flag (Section 5 format)', () => {
+    test('outputs structured markdown with area header', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('# Area: Work');
+    });
+
+    test('includes stats header', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('**Stats:**');
+      expect(stdout).toMatch(/\d+ project/);
+      expect(stdout).toMatch(/\d+ active task/);
+    });
+
+    test('includes area details section with metadata table', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Area Details');
+      expect(stdout).toContain('| Field | Value |');
+      expect(stdout).toContain('| path |');
+    });
+
+    test('includes body for primary entity', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('### Body');
+      expect(stdout).toContain('Work-related tasks and projects');
+    });
+
+    test('shows projects section grouped by status', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toMatch(/## Projects in Work \(\d+\)/);
+      // Should have status groups
+      expect(stdout).toContain('### In-Progress');
+      expect(stdout).toContain('### Ready');
+      expect(stdout).toContain('### Planning');
+    });
+
+    test('shows projects with task counts and shorthand', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      // Projects show format: emoji title [status] — N tasks (shorthand)
+      expect(stdout).toMatch(/task/);
+    });
+
+    test('includes timeline section', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Timeline');
+      expect(stdout).toContain('_Scoped to tasks in Work area_');
+      expect(stdout).toContain('### Overdue');
+      expect(stdout).toContain('### Due Today');
+      expect(stdout).toContain('### Blocked');
+    });
+
+    test('includes reference table', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Reference');
+      expect(stdout).toContain('| Entity |');
+      expect(stdout).toContain('| Type |');
+      expect(stdout).toContain('| Path |');
+    });
+  });
+
+  describe('with --json flag', () => {
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('includes summary field', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toContain('Work area');
+    });
+
+    test('includes area object', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.area.title).toBe('Work');
+      expect(output.area.status).toBe('active');
+    });
+
+    test('includes projects array with nested tasks', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.projects)).toBe(true);
+      expect(output.projects.length).toBeGreaterThan(0);
+
+      const testProject = output.projects.find(
+        (p: { title: string }) => p.title === 'Test Project'
+      );
+      expect(testProject).toBeDefined();
+      expect(Array.isArray(testProject.tasks)).toBe(true);
+    });
+
+    test('includes directTasks array', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.directTasks)).toBe(true);
+      expect(output.directTasks.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('with --ai --json flags (Section 8 envelope)', () => {
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['context', 'area', 'Work', '--ai', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('has contextType field set to area', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.contextType).toBe('area');
+    });
+
+    test('has entity field with area title', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.entity).toBe('Work');
+    });
+
+    test('has summary field describing area context', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toContain("Context for area 'Work'");
+      expect(output.summary).toMatch(/\d+ projects/);
+      expect(output.summary).toMatch(/\d+ active tasks/);
+    });
+
+    test('has content field with AI-formatted markdown', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.content).toContain('# Area: Work');
+      expect(output.content).toContain('## Area Details');
+      expect(output.content).toContain('## Projects in Work');
+      expect(output.content).toContain('## Timeline');
+    });
+
+    test('has references array with area, projects, and tasks', async () => {
+      const { stdout } = await runCli(['context', 'area', 'Work', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.references)).toBe(true);
+
+      const areaRef = output.references.find(
+        (r: { type: string; name: string }) => r.type === 'area'
+      );
+      expect(areaRef).toBeDefined();
+      expect(areaRef.name).toBe('Work');
+
+      const projectRefs = output.references.filter(
+        (r: { type: string }) => r.type === 'project'
+      );
+      expect(projectRefs.length).toBeGreaterThan(0);
+
+      const taskRefs = output.references.filter(
+        (r: { type: string }) => r.type === 'task'
+      );
+      expect(taskRefs.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('area not found', () => {
+    test('exits with code 1', async () => {
+      const { exitCode } = await runCli(['context', 'area', 'NonExistent']);
+      expect(exitCode).toBe(1);
+    });
+
+    test('shows NOT_FOUND error in human mode', async () => {
+      const { stderr } = await runCli(['context', 'area', 'NonExistent']);
+      expect(stderr).toContain('NOT_FOUND');
+    });
+
+    test('shows structured error in AI mode', async () => {
+      const { stdout, exitCode } = await runCli([
+        'context',
+        'area',
+        'NonExistent',
+        '--ai',
+      ]);
+      expect(exitCode).toBe(1);
+      expect(stdout).toContain('## Error: NOT_FOUND');
+      expect(stdout).toContain('- **message:**');
+    });
+
+    test('shows error in JSON mode', async () => {
+      const { stdout, exitCode } = await runCli([
+        'context',
+        'area',
+        'NonExistent',
+        '--json',
+      ]);
+      expect(exitCode).toBe(1);
+      const output = JSON.parse(stdout);
+      expect(output.error).toBe(true);
+      expect(output.code).toBe('NOT_FOUND');
+    });
+  });
+
+  describe('missing target', () => {
+    test('shows helpful error when target is missing', async () => {
+      const { stderr, exitCode } = await runCli(['context', 'area']);
+      expect(exitCode).toBe(2);
+      expect(stderr).toContain('Please specify an area name');
+    });
+  });
+
+  describe('no args behavior', () => {
+    test('human mode shows error', async () => {
+      const { stderr, exitCode } = await runCli(['context']);
+      expect(exitCode).toBe(2);
+      expect(stderr).toContain('Please specify an entity');
+    });
+
+    test('AI mode returns vault overview', async () => {
+      const { stdout, exitCode } = await runCli(['context', '--ai']);
+      expect(exitCode).toBe(0);
+      // Per ai-context.md Section 4, the overview starts with "# Overview"
+      expect(stdout).toContain('# Overview');
+      expect(stdout).toContain('**Stats:**');
+      expect(stdout).toContain('## Structure');
+    });
+  });
+
+  describe('vault overview with --ai --json flags (Section 8 envelope)', () => {
+    test('outputs valid JSON', async () => {
+      const { stdout, exitCode } = await runCli(['context', '--ai', '--json']);
+      expect(exitCode).toBe(0);
+      expect(() => JSON.parse(stdout)).not.toThrow();
+    });
+
+    test('has contextType field set to overview', async () => {
+      const { stdout } = await runCli(['context', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.contextType).toBe('overview');
+    });
+
+    test('has entity field set to null for overview', async () => {
+      const { stdout } = await runCli(['context', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.entity).toBeNull();
+    });
+
+    test('has summary field describing vault overview', async () => {
+      const { stdout } = await runCli(['context', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.summary).toContain('Overview of all active work');
+      expect(output.summary).toMatch(/\d+ areas/);
+      expect(output.summary).toMatch(/\d+ projects/);
+      expect(output.summary).toMatch(/\d+ tasks/);
+    });
+
+    test('has content field with AI-formatted markdown', async () => {
+      const { stdout } = await runCli(['context', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(output.content).toContain('# Overview');
+      expect(output.content).toContain('**Stats:**');
+      expect(output.content).toContain('## Structure');
+    });
+
+    test('has references array with areas, projects, and tasks', async () => {
+      const { stdout } = await runCli(['context', '--ai', '--json']);
+      const output = JSON.parse(stdout);
+      expect(Array.isArray(output.references)).toBe(true);
+
+      const areaRefs = output.references.filter(
+        (r: { type: string }) => r.type === 'area'
+      );
+      expect(areaRefs.length).toBeGreaterThan(0);
+
+      const projectRefs = output.references.filter(
+        (r: { type: string }) => r.type === 'project'
+      );
+      expect(projectRefs.length).toBeGreaterThan(0);
+
+      const taskRefs = output.references.filter(
+        (r: { type: string }) => r.type === 'task'
+      );
+      expect(taskRefs.length).toBeGreaterThan(0);
+    });
+  });
+});

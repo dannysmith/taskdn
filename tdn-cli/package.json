@@ -1,0 +1,54 @@
+{
+  "name": "tdn-cli",
+  "version": "0.1.0",
+  "description": "Task management CLI for humans and AI agents",
+  "type": "module",
+  "main": "src/index.ts",
+  "bin": {
+    "tdn": "src/index.ts"
+  },
+  "scripts": {
+    "tdn": "bun run src/index.ts",
+    "dev": "bun run --watch src/index.ts",
+    "build": "napi build --release --platform --package tdn-core -o bindings",
+    "build:dev": "napi build --platform --package tdn-core -o bindings",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"*.config.js\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"*.config.js\"",
+    "check": "bun run format:check && bun run lint && bunx tsc --noEmit && cargo clippy --manifest-path crates/core/Cargo.toml -- -D warnings && cargo test --manifest-path crates/core/Cargo.toml",
+    "check:ts": "bun run format:check && bun run lint && bunx tsc --noEmit",
+    "check:rust": "cargo clippy --manifest-path crates/core/Cargo.toml -- -D warnings && cargo test --manifest-path crates/core/Cargo.toml",
+    "fix": "bun run format && bun run lint:fix && cargo fmt --manifest-path crates/core/Cargo.toml",
+    "test": "bun run test:ts && bun run test:rust",
+    "test:ts": "bun test",
+    "test:rust": "cargo test --manifest-path crates/core/Cargo.toml"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@napi-rs/cli": "^3.5.0",
+    "@types/bun": "latest",
+    "@types/node": "^22",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.7.4",
+    "typescript-eslint": "^8.50.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.11.0",
+    "@commander-js/extra-typings": "^14.0.0",
+    "ansis": "^4.2.0",
+    "boxen": "^8.0.1",
+    "commander": "^14.0.2",
+    "marked": "^17.0.1",
+    "marked-terminal": "^7.3.0"
+  },
+  "napi": {
+    "binaryName": "tdn-core",
+    "packageName": "tdn-core",
+    "targets": []
+  }
+}

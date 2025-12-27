@@ -1,0 +1,183 @@
+# CLI Implementation Progress
+
+Checklist tracking implementation of all CLI commands and features.
+
+**Task documents:** See `docs/tasks-todo/task-{1-8}-cli-*.md`
+
+---
+
+## Commands
+
+### Read Commands
+
+- [x] `show <path>` - Show task by path
+- [x] `show <path>` - Show project by path (auto-detected)
+- [x] `show <path>` - Show area by path (auto-detected)
+- [x] `show` fuzzy matching (human mode)
+- [x] `list` - List active tasks
+- [x] `list projects` - List projects
+- [x] `list areas` - List areas
+- [x] `list --status <status>` - Filter by status
+- [x] `list --status <s1>,<s2>` - Multiple statuses (OR)
+- [x] `list --project <name>` - Filter by project
+- [x] `list --area <name>` - Filter by area
+- [x] `list --due today/tomorrow/this-week` - Due date filter
+- [x] `list --overdue` - Overdue tasks
+- [x] `list --scheduled today` - Scheduled filter
+- [x] `list --sort <field>` - Sort results
+- [x] `list --desc` - Descending sort
+- [x] `list --limit <n>` - Limit results
+- [x] `list --include-done` - Include completed
+- [x] `list --include-dropped` - Include dropped
+- [x] `list --include-closed` - Include done + dropped
+- [x] `list --include-icebox` - Include icebox
+- [x] `list --include-deferred` - Include deferred
+- [x] `list --include-archived` - Include archived
+- [x] `list --only-archived` - Archived only
+- [x] `list --completed-after <date>` - Completion date filter
+- [x] `list --completed-before <date>` - Completion date filter
+- [x] `list --completed-today` - Completed today
+- [x] `list --completed-this-week` - Completed this week
+- [x] `list --query <text>` - Text search
+- [x] `context area <name>` - Area with projects and tasks
+- [x] `context project <name>` - Project with tasks and parent
+- [x] `context task <path>` - Task with parents
+- [x] `context --ai` (no args) - Vault overview
+
+### Convenience Commands
+
+- [x] `today` - Due/scheduled today + overdue
+
+### Write Commands
+
+- [x] `new <title>` - Quick add task (renamed from `add`)
+- [x] `new <title> --status <s>` - With status
+- [x] `new <title> --project <p>` - With project
+- [x] `new <title> --area <a>` - With area
+- [x] `new <title> --due <date>` - With due date (natural language supported)
+- [x] `new <title> --scheduled <date>` - With scheduled
+- [x] `new <title> --defer-until <date>` - With defer
+- [x] `new` (no args, human mode) - Interactive add
+- [x] `new project <name>` - Add project
+- [x] `new project <name> --area <a> --status <s>` - With options
+- [x] `new area <name>` - Add area
+- [x] `new area <name> --type <t>` - With type
+- [x] `set status <path> <status>` - Change status (replaces `complete`, `drop`, `status`)
+- [x] Auto-manages `completed-at` field on status transitions
+- [x] `update <path> --set <field>=<value>` - Update field
+- [x] `update <path> --unset <field>` - Clear field
+- [x] `archive <path>` - Move to archive
+- [x] `open <path>` - Open in $EDITOR (renamed from `edit`)
+- [x] Batch operations (multiple paths)
+- [x] `--dry-run` - Preview changes
+
+### System Commands
+
+- [x] `init` - Interactive setup
+- [x] `init --tasks-dir ... --projects-dir ... --areas-dir ...` - Non-interactive
+- [x] `config` - Show config
+- [x] `doctor` - Health check
+
+---
+
+## Output Modes
+
+- [x] Human mode (default) - Colors, formatting
+- [x] `--ai` mode - Structured Markdown
+- [x] `--json` mode - JSON with summary
+- [x] Errors in human mode (stderr)
+- [x] Errors in AI mode (stdout, structured)
+- [x] Errors in JSON mode (stdout, JSON)
+
+### Output Standardization (Task 1)
+
+- [x] Spec-compliant field inclusion (S1 core spec)
+- [x] Tasks always show `created-at` and `updated-at` (required fields)
+- [x] Projects/areas never show `created-at`/`updated-at` (not in spec)
+- [x] Canonical field ordering across all formatters
+- [x] Output format specification documented (`docs/developer/output-format-spec.md`)
+
+---
+
+## Error Codes
+
+- [x] `NOT_FOUND` - File/entity doesn't exist
+- [x] `AMBIGUOUS` - Multiple matches
+- [x] `INVALID_STATUS` - Bad status value
+- [x] `INVALID_DATE` - Unparseable date
+- [ ] `INVALID_PATH` - Path outside directories
+- [x] `PARSE_ERROR` - YAML malformed
+- [x] `MISSING_FIELD` - Required field absent
+- [x] `NOT_SUPPORTED` - Operation not supported in current mode
+- [ ] `REFERENCE_ERROR` - Reference doesn't exist
+- [ ] `PERMISSION_ERROR` - Can't read/write
+- [ ] `CONFIG_ERROR` - Config missing/invalid
+
+---
+
+## Features
+
+### Short Flags
+
+- [ ] `-s` for `--status`
+- [ ] `-p` for `--project`
+- [ ] `-a` for `--area`
+- [ ] `-d` for `--due`
+- [ ] `-q` for `--query`
+- [ ] `-l` for `--limit`
+
+### Interactive Features (Human Mode)
+
+- [ ] Fuzzy match disambiguation prompt
+- [x] Interactive `new` (no args)
+- [ ] Confirmation prompts
+
+### Other Features
+
+- [ ] `--stdin` - Pipe input
+- [ ] Shell completions (bash)
+- [ ] Shell completions (zsh)
+- [ ] Shell completions (fish)
+
+---
+
+## Infrastructure
+
+### Rust Core
+
+- [x] Task parsing (`parseTaskFile`)
+- [x] Project parsing (`parseProjectFile`)
+- [x] Area parsing (`parseAreaFile`)
+- [x] Vault scanning (`scanTasks`, `scanProjects`, `scanAreas`)
+- [x] Fuzzy entity lookup (`findTasksByTitle`, `findProjectsByTitle`, `findAreasByTitle`)
+- [x] Wikilink parsing utility (`extractWikilinkName`)
+- [x] Vault index & relationship queries (`getTasksInArea`, `getProjectsInArea`, `getAreaContext`, `getProjectContext`, `getTaskContext`)
+- [x] File writing with round-trip fidelity (`createTaskFile`, `createProjectFile`, `createAreaFile`, `updateFileFields`)
+- [ ] Batch operations
+- [ ] `taskdn-type` field support for mixed-content directories (S1 4.4, 5.4)
+
+### TypeScript Layer
+
+- [x] Output formatters (human, AI, JSON)
+- [x] Global options (--ai, --json)
+- [x] CLI framework (Commander.js)
+- [x] Entity lookup wrapper (`lookupTask`, `lookupProject`, `lookupArea`)
+- [x] Error handling with codes
+- [x] Interactive prompts (@clack/prompts)
+- [x] Natural language date parsing
+
+---
+
+## Exit Codes
+
+- [x] `0` - Success (including empty results)
+- [x] `1` - Runtime error
+- [x] `2` - Usage error
+
+---
+
+## Notes
+
+Items marked [x] are implemented. Items marked [ ] are pending.
+
+Update this file as features are completed.
