@@ -97,7 +97,21 @@ impl TdnError {
     }
 }
 
-/// Convert TdnError into a NAPI Error for Result returns
+/// Convert TdnError into a NAPI Error for Result returns.
+///
+/// **NAPI Boundary Pattern:** This is how structured errors cross from Rust to TypeScript.
+///
+/// The flow is:
+/// 1. Rust code returns `Err(TdnError::file_not_found(path))`
+/// 2. This `From` impl converts it to a NAPI `Error` with JSON-serialized details
+/// 3. NAPI-RS automatically propagates this to TypeScript as a thrown Error
+/// 4. TypeScript can parse the JSON message to access structured error fields
+///
+/// **For AI Agents:** When adding new error types:
+/// - Add a variant to `TdnErrorKind`
+/// - Add a constructor method on `TdnError` (like `file_not_found`)
+/// - This `From` impl handles the NAPI conversion automatically
+/// - TypeScript receives the full error structure in the Error message
 impl From<TdnError> for Error {
     fn from(err: TdnError) -> Self {
         // NAPI requires us to return Error, but we'll serialize TdnError as JSON

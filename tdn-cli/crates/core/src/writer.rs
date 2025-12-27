@@ -215,7 +215,10 @@ pub fn atomic_write(path: &Path, content: &str) -> Result<()> {
 // YAML Manipulation Helpers
 // ============================================================================
 
-/// Minimal struct for gray_matter parsing - we just need the raw matter string
+/// Minimal struct for gray_matter parsing - we just need the raw matter string.
+/// We only parse this to access the `matter` field (raw YAML string) from gray_matter.
+/// The field appears unused because we immediately discard the parsed struct,
+/// but it's required by gray_matter's parse API.
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
 struct MinimalFrontmatter {
@@ -224,6 +227,10 @@ struct MinimalFrontmatter {
 }
 
 /// Parse file content into (raw YAML mapping, body content).
+///
+/// Uses serde_norway (a serde_yaml fork) instead of serde_yaml because it provides
+/// better control over YAML formatting and field ordering, which is critical for
+/// round-trip fidelity (preserving unknown fields and maintaining user formatting).
 fn parse_file_parts(content: &str) -> Result<(serde_norway::Mapping, String)> {
     let matter = Matter::<YAML>::new();
     // Parse with a minimal struct - we only need access to .matter and .content
@@ -235,6 +242,7 @@ fn parse_file_parts(content: &str) -> Result<(serde_norway::Mapping, String)> {
     let yaml_str = parsed.matter;
 
     // Parse as a generic mapping to preserve structure
+    // Using Mapping instead of a typed struct ensures we preserve unknown fields
     let mapping: serde_norway::Mapping = if yaml_str.is_empty() {
         serde_norway::Mapping::new()
     } else {

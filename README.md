@@ -5,13 +5,13 @@
 
 ## Status
 
-| Component          | Status              |
-| ------------------ | ------------------- |
-| **Spec**           | ✅ Unstable          |
-| **CLI**            | ⌛ In Progress       |
-| **Desktop App**    | ❌ Not Started       |
-| **Obsidian Plugin**| ❌ Not Started       |
-| **Extras**         | ❌ Not Started       |
+| Component           | Status         |
+| ------------------- | -------------- |
+| **Spec**            | ✅ Stable      |
+| **CLI**             | ✅ Stable      |
+| **Desktop App**     | ⌛ In Progress |
+| **Obsidian Plugin** | ❌ Not Started |
+| **Extras**          | ❌ Not Started |
 
 ---
 
@@ -26,11 +26,11 @@ A task-management system for **individuals** that feels as slick as [Things](htt
 
 ## The Suite of Tools
 
-| Tool            | Description                                       | Directory      |
-| --------------- | ------------------------------------------------- | -------------- |
-| **Specs**       | Formal specifications for the protocol            | `tdn-specs/`   |
-| **CLI**         | Command-line interface for humans and AI agents   | `tdn-cli/`     |
-| **Desktop App** | Cross-platform Tauri app for day-to-day use       | `tdn-desktop/` |
+| Tool            | Description                                     | Directory      |
+| --------------- | ----------------------------------------------- | -------------- |
+| **Specs**       | Formal specifications for the protocol          | `tdn-specs/`   |
+| **CLI**         | Command-line interface for humans and AI agents | `tdn-cli/`     |
+| **Desktop App** | Cross-platform Tauri app for day-to-day use     | `tdn-desktop/` |
 
 The CLI contains an embedded Rust core library that handles parsing, validation, and file operations. When the desktop app is ready, this core will be extracted to a shared workspace crate.
 
@@ -51,7 +51,6 @@ taskdn/
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)
 ├── tdn-desktop/         # Desktop app (Tauri v2)
 └── tdn-specs/           # Protocol specifications
-    └── json-schemas/    # JSON schemas for validation
 ```
 
 ## Development
