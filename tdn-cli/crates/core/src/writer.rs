@@ -161,71 +161,8 @@ fn uuid_simple() -> String {
 
 /// Get current timestamp in ISO 8601 format (UTC).
 /// Format: YYYY-MM-DDTHH:MM:SSZ
-/// TODO: Consider using chrono for production if more timezone flexibility is needed.
 pub fn now_iso8601() -> String {
-    use std::time::{SystemTime, UNIX_EPOCH};
-
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default();
-
-    let secs = now.as_secs();
-
-    // Calculate UTC components
-    let days = secs / 86400;
-    let remaining = secs % 86400;
-    let hours = remaining / 3600;
-    let minutes = (remaining % 3600) / 60;
-    let seconds = remaining % 60;
-
-    // Calculate date from days since epoch (1970-01-01)
-    let (year, month, day) = days_to_ymd(days);
-
-    format!(
-        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}Z",
-        year, month, day, hours, minutes, seconds
-    )
-}
-
-/// Convert days since Unix epoch to (year, month, day).
-fn days_to_ymd(days: u64) -> (i32, u32, u32) {
-    // Simplified algorithm - days since 1970-01-01
-    let mut remaining_days = days as i64;
-    let mut year = 1970i32;
-
-    // Find the year
-    loop {
-        let days_in_year = if is_leap_year(year) { 366 } else { 365 };
-        if remaining_days < days_in_year {
-            break;
-        }
-        remaining_days -= days_in_year;
-        year += 1;
-    }
-
-    // Find the month and day
-    let days_in_months: [i64; 12] = if is_leap_year(year) {
-        [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    } else {
-        [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
-    };
-
-    let mut month = 1u32;
-    for &days_in_month in &days_in_months {
-        if remaining_days < days_in_month {
-            break;
-        }
-        remaining_days -= days_in_month;
-        month += 1;
-    }
-
-    let day = (remaining_days + 1) as u32;
-
-    (year, month, day)
-}
-
-fn is_leap_year(year: i32) -> bool {
-    (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0)
+    chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
 }
 
 /// Atomically write content to a file.
@@ -321,6 +258,23 @@ fn remove_yaml_field(mapping: &mut serde_yaml::Mapping, key: &str) {
     mapping.remove(&yaml_key);
 }
 
+/// Ensure a value is wrapped in wikilink format [[...]].
+/// If already wrapped, returns the value unchanged.
+fn ensure_wikilink(value: &str) -> String {
+    if value.starts_with("[[") && value.ends_with("]]") {
+        value.to_string()
+    } else {
+        format!("[[{}]]", value)
+    }
+}
+
+/// Set a wikilink field in a YAML mapping.
+/// Automatically wraps the value in [[...]] if not already wrapped.
+fn set_wikilink_field(mapping: &mut serde_yaml::Mapping, key: &str, value: &str) {
+    let wikilink = ensure_wikilink(value);
+    set_yaml_field(mapping, key, serde_yaml::Value::String(wikilink));
+}
+
 /// Serialize a YAML mapping to string with proper formatting.
 fn serialize_yaml(mapping: &serde_yaml::Mapping) -> Result<String> {
     serde_yaml::to_string(mapping).map_err(|e| {
@@ -387,22 +341,13 @@ pub fn create_task_file(
     // Optional fields
     if let Some(project) = &fields.project {
         // Store as projects array with wikilink format
-        let wikilink = if project.starts_with("[[") {
-            project.clone()
-        } else {
-            format!("[[{}]]", project)
-        };
+        let wikilink = ensure_wikilink(project);
         let projects_array = serde_yaml::Value::Sequence(vec![serde_yaml::Value::String(wikilink)]);
         set_yaml_field(&mut mapping, "projects", projects_array);
     }
 
     if let Some(area) = &fields.area {
-        let wikilink = if area.starts_with("[[") {
-            area.clone()
-        } else {
-            format!("[[{}]]", area)
-        };
-        set_yaml_field(&mut mapping, "area", serde_yaml::Value::String(wikilink));
+        set_wikilink_field(&mut mapping, "area", area);
     }
 
     if let Some(due) = &fields.due {
@@ -479,12 +424,7 @@ pub fn create_project_file(
 
     // Optional area
     if let Some(area) = &fields.area {
-        let wikilink = if area.starts_with("[[") {
-            area.clone()
-        } else {
-            format!("[[{}]]", area)
-        };
-        set_yaml_field(&mut mapping, "area", serde_yaml::Value::String(wikilink));
+        set_wikilink_field(&mut mapping, "area", area);
     }
 
     // Optional description
@@ -636,22 +576,13 @@ pub fn update_file_fields(path: String, updates: Vec<FieldUpdate>) -> Result<()>
                 // Handle special cases for array fields
                 if update.field == "projects" || update.field == "project" {
                     // Convert project to projects array with wikilink
-                    let wikilink = if value.starts_with("[[") {
-                        value
-                    } else {
-                        format!("[[{}]]", value)
-                    };
+                    let wikilink = ensure_wikilink(&value);
                     let projects_array =
                         serde_yaml::Value::Sequence(vec![serde_yaml::Value::String(wikilink)]);
                     set_yaml_field(&mut mapping, "projects", projects_array);
-                } else if update.field == "area" && !value.starts_with("[[") {
-                    // Wrap area in wikilink if needed
-                    let wikilink = format!("[[{}]]", value);
-                    set_yaml_field(
-                        &mut mapping,
-                        &update.field,
-                        serde_yaml::Value::String(wikilink),
-                    );
+                } else if update.field == "area" {
+                    // Wrap area in wikilink
+                    set_wikilink_field(&mut mapping, &update.field, &value);
                 } else {
                     set_yaml_field(
                         &mut mapping,

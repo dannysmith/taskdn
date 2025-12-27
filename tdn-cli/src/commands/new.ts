@@ -20,6 +20,7 @@ import {
 } from '@bindings';
 import { parseNaturalDate } from '@/output/helpers/index.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
+import { normalizeEntityType } from '@/lib/entity-type.ts';
 
 /**
  * New command - create new entities
@@ -33,24 +34,6 @@ import { createError, formatError, isCliError } from '@/errors/index.ts';
  *   taskdn new area "Work"                            # New area
  *   taskdn new areas "Work"                           # Plural form also supported
  */
-
-/**
- * Normalize entity type to singular form for creation.
- * Accepts both singular and plural forms.
- */
-function normalizeEntityType(type: string): string {
-  const normalized = type.toLowerCase();
-  if (normalized === 'task' || normalized === 'tasks') {
-    return 'task';
-  }
-  if (normalized === 'project' || normalized === 'projects') {
-    return 'project';
-  }
-  if (normalized === 'area' || normalized === 'areas') {
-    return 'area';
-  }
-  return normalized; // Pass through unknown values
-}
 
 interface AddOptions {
   project?: string;
@@ -610,7 +593,7 @@ export const newCommand = new Command('new')
       let result: TaskCreatedResult | ProjectCreatedResult | AreaCreatedResult;
 
       // Normalize entity type to support both singular and plural forms
-      const normalizedType = normalizeEntityType(entityOrTitle);
+      const normalizedType = normalizeEntityType(entityOrTitle, 'singular');
 
       if (normalizedType === 'project') {
         // Creating a project

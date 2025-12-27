@@ -12,24 +12,7 @@ import type {
 import { getVaultConfig } from '@/config/index.ts';
 import { getToday, getTomorrow, getEndOfWeek, getStartOfWeek } from '@/output/helpers/index.ts';
 import { filterByStatus, sortEntities, filterByQuery, limitResults } from '@/lib/filtering.ts';
-
-/**
- * Normalize entity type to plural form.
- * Accepts both singular and plural forms.
- */
-function normalizeEntityType(type: string): string {
-  const normalized = type.toLowerCase();
-  if (normalized === 'task' || normalized === 'tasks') {
-    return 'tasks';
-  }
-  if (normalized === 'project' || normalized === 'projects') {
-    return 'projects';
-  }
-  if (normalized === 'area' || normalized === 'areas') {
-    return 'areas';
-  }
-  return normalized; // Pass through unknown values
-}
+import { normalizeEntityType } from '@/lib/entity-type.ts';
 
 /**
  * Check if a project is "active" per CLI spec:
@@ -128,7 +111,7 @@ export const listCommand = new Command('list')
     const today = getToday();
 
     // Normalize entity type to support both singular and plural forms
-    const normalizedType = normalizeEntityType(entityType);
+    const normalizedType = normalizeEntityType(entityType, 'plural');
 
     // Handle projects
     if (normalizedType === 'projects') {

@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use log::{debug, warn};
 use rayon::prelude::*;
 
 use crate::area::{Area, parse_area_file};
@@ -21,7 +22,7 @@ pub struct VaultConfig {
 /// Skips files that fail to parse.
 #[napi]
 pub fn scan_tasks(config: VaultConfig) -> Vec<Task> {
-    scan_directory(&config.tasks_dir, parse_task_file)
+    scan_tasks_impl(&config)
 }
 
 /// Scan projects directory and return all parseable projects.
@@ -29,7 +30,7 @@ pub fn scan_tasks(config: VaultConfig) -> Vec<Task> {
 /// Skips files that fail to parse.
 #[napi]
 pub fn scan_projects(config: VaultConfig) -> Vec<Project> {
-    scan_directory(&config.projects_dir, parse_project_file)
+    scan_projects_impl(&config)
 }
 
 /// Scan areas directory and return all parseable areas.
@@ -37,6 +38,21 @@ pub fn scan_projects(config: VaultConfig) -> Vec<Project> {
 /// Skips files that fail to parse.
 #[napi]
 pub fn scan_areas(config: VaultConfig) -> Vec<Area> {
+    scan_areas_impl(&config)
+}
+
+/// Internal implementation that takes a reference to avoid cloning.
+pub(crate) fn scan_tasks_impl(config: &VaultConfig) -> Vec<Task> {
+    scan_directory(&config.tasks_dir, parse_task_file)
+}
+
+/// Internal implementation that takes a reference to avoid cloning.
+pub(crate) fn scan_projects_impl(config: &VaultConfig) -> Vec<Project> {
+    scan_directory(&config.projects_dir, parse_project_file)
+}
+
+/// Internal implementation that takes a reference to avoid cloning.
+pub(crate) fn scan_areas_impl(config: &VaultConfig) -> Vec<Area> {
     scan_directory(&config.areas_dir, parse_area_file)
 }
 
@@ -54,14 +70,20 @@ where
 {
     let path = Path::new(dir_path);
 
+    debug!("Scanning directory: {}", dir_path);
+
     // Return empty if directory doesn't exist
     if !path.exists() || !path.is_dir() {
+        debug!("Directory does not exist or is not a directory: {}", dir_path);
         return Vec::new();
     }
 
     let entries = match fs::read_dir(path) {
         Ok(entries) => entries,
-        Err(_) => return Vec::new(),
+        Err(e) => {
+            warn!("Failed to read directory {}: {}", dir_path, e);
+            return Vec::new();
+        }
     };
 
     // Collect entries into a Vec for parallel processing
@@ -81,15 +103,29 @@ where
         })
         .collect();
 
+    debug!("Found {} .md files to process in {}", entries.len(), dir_path);
+
     // Process files in parallel
-    entries
+    let results: Vec<T> = entries
         .par_iter()
         .filter_map(|entry| {
             let file_path = entry.path().to_string_lossy().to_string();
-            // Skip files that fail to parse (log would go here in production)
-            parse_fn(file_path).ok()
+            match parse_fn(file_path.clone()) {
+                Ok(entity) => {
+                    debug!("Successfully parsed: {}", file_path);
+                    Some(entity)
+                }
+                Err(e) => {
+                    warn!("Failed to parse file {}: {}", file_path, e);
+                    None
+                }
+            }
         })
-        .collect()
+        .collect();
+
+    debug!("Successfully parsed {} entities from {}", results.len(), dir_path);
+
+    results
 }
 
 #[cfg(test)]
