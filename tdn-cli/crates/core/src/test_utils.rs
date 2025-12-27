@@ -1,7 +1,6 @@
 /// Shared test utilities for parser modules
 ///
 /// This module provides common helpers used across task, project, and area tests.
-
 #[cfg(test)]
 pub mod helpers {
     use std::io::Write;

@@ -5,6 +5,8 @@ import type { GlobalOptions } from '@/output/types.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 import { disambiguateTasks } from '@/lib/disambiguation.ts';
+import { getVaultConfig } from '@/config/index.ts';
+import { createVaultSession } from '@bindings';
 
 /**
  * Open command - open file in $EDITOR
@@ -44,7 +46,9 @@ export const openCommand = new Command('open')
 
     try {
       // Look up the task first to get its title
-      const lookupResult = lookupTask(query);
+      const config = getVaultConfig();
+      const session = createVaultSession(config);
+      const lookupResult = lookupTask(session, query, config);
       if (lookupResult.type === 'none') {
         throw createError.notFound('task', query);
       }

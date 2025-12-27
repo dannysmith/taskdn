@@ -84,7 +84,7 @@ async function resolveEntityQuery(
   const session = createVaultSession(config);
 
   // Try each entity type in order of likelihood
-  const taskResult = lookupTask(query, config, session);
+  const taskResult = lookupTask(session, query, config);
   if (taskResult.type === 'exact' || taskResult.type === 'single') {
     return { path: taskResult.matches[0]!.path, entityType: 'task' };
   }
@@ -98,7 +98,7 @@ async function resolveEntityQuery(
     return { error: `Multiple tasks match "${query}"`, matches: matchTitles };
   }
 
-  const projectResult = lookupProject(query, config, session);
+  const projectResult = lookupProject(session, query, config);
   if (projectResult.type === 'exact' || projectResult.type === 'single') {
     return { path: projectResult.matches[0]!.path, entityType: 'project' };
   }
@@ -112,7 +112,7 @@ async function resolveEntityQuery(
     return { error: `Multiple projects match "${query}"`, matches: matchTitles };
   }
 
-  const areaResult = lookupArea(query, config, session);
+  const areaResult = lookupArea(session, query, config);
   if (areaResult.type === 'exact' || areaResult.type === 'single') {
     return { path: areaResult.matches[0]!.path, entityType: 'area' };
   }

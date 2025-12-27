@@ -99,8 +99,6 @@ pub(crate) struct VaultIndex {
     area_by_name: HashMap<String, usize>,
     /// Map from lowercase project name to index in `projects`
     project_by_name: HashMap<String, usize>,
-    /// Map from lowercase task title to indices in `tasks` (Vec because titles may not be unique)
-    task_by_title: HashMap<String, Vec<usize>>,
     /// Map from task path to index in `tasks` (for O(1) path lookups)
     task_by_path: HashMap<String, usize>,
     /// Map from project index to list of task indices
@@ -161,15 +159,6 @@ impl VaultIndex {
             }
         }
 
-        // Build task title lookup (case-insensitive, allows multiple tasks with same title)
-        let mut task_by_title: HashMap<String, Vec<usize>> = HashMap::new();
-        for (task_idx, task) in tasks.iter().enumerate() {
-            task_by_title
-                .entry(task.title.to_lowercase())
-                .or_default()
-                .push(task_idx);
-        }
-
         // Build task path lookup (for O(1) path lookups)
         let task_by_path: HashMap<String, usize> = tasks
             .iter()
@@ -208,7 +197,6 @@ impl VaultIndex {
             areas,
             area_by_name,
             project_by_name,
-            task_by_title,
             task_by_path,
             tasks_by_project,
             tasks_by_area,
@@ -240,13 +228,14 @@ impl VaultIndex {
             .map(|&idx| &self.projects[idx])
     }
 
-    /// Find tasks by title (case-insensitive).
-    /// Returns all tasks with matching title (may be empty, one, or multiple).
-    pub(crate) fn find_tasks_by_title(&self, title: &str) -> Vec<&Task> {
-        self.task_by_title
-            .get(&title.to_lowercase())
-            .map(|indices| indices.iter().map(|&i| &self.tasks[i]).collect())
-            .unwrap_or_default()
+    /// Find tasks by title (case-insensitive substring matching).
+    /// Returns all tasks with titles containing the query string.
+    pub(crate) fn find_tasks_by_title(&self, query: &str) -> Vec<&Task> {
+        let query_lower = query.to_lowercase();
+        self.tasks
+            .iter()
+            .filter(|task| task.title.to_lowercase().contains(&query_lower))
+            .collect()
     }
 
     /// Get projects in an area.
@@ -557,20 +546,15 @@ fn is_path_identifier(identifier: &str) -> bool {
 }
 
 // =============================================================================
-// NOTE: NAPI-exported Query Functions Moved to vault_session.rs
+// NOTE: Context and relationship query functions
 // =============================================================================
 //
-// The following functions have been moved to vault_session.rs for better
-// performance through index reuse:
-// - get_tasks_in_area
-// - get_projects_in_area
-// - get_area_context
-// - get_project_context
-// - get_task_context
+// These functions are implemented as internal methods on VaultIndex.
+// The NAPI exports for TypeScript live in vault_session.rs, which creates
+// a VaultSession to cache the index across multiple queries.
 //
-// Use create_vault_session() and the session-based functions instead.
-// The session pattern eliminates redundant vault scans when performing
-// multiple queries within a command.
+// For TypeScript usage, use createVaultSession() and session-based functions:
+// getTasksInArea, getProjectsInArea, getAreaContext, getProjectContext, getTaskContext
 
 // =============================================================================
 // Tests

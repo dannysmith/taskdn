@@ -3,7 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions, BodyAppendedResult, OutputMode } from '@/output/types.ts';
-import { parseTaskFile, parseProjectFile, parseAreaFile } from '@bindings';
+import { parseTaskFile, parseProjectFile, parseAreaFile, createVaultSession, type VaultSession } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import {
   detectEntityType,
@@ -17,6 +17,7 @@ import {
   disambiguateProjects,
   disambiguateAreas,
 } from '@/lib/disambiguation.ts';
+import { getVaultConfig } from '@/config/index.ts';
 
 /**
  * Append-body command - add text to the end of an entity's body
@@ -68,7 +69,8 @@ function formatAppendText(text: string): string {
  */
 async function resolveEntityQuery(
   query: string,
-  mode: OutputMode
+  mode: OutputMode,
+  session: VaultSession
 ): Promise<{ path: string; entityType: EntityType } | { error: string; matches?: string[] }> {
   // Check if it looks like a path
   const looksLikePath =
@@ -86,7 +88,8 @@ async function resolveEntityQuery(
   }
 
   // Try fuzzy matching - tasks first, then projects, then areas
-  const taskResult = lookupTask(query);
+  const config = getVaultConfig();
+  const taskResult = lookupTask(session, query, config);
   if (taskResult.type === 'exact' || taskResult.type === 'single') {
     return { path: taskResult.matches[0]!.path, entityType: 'task' };
   }
@@ -100,7 +103,7 @@ async function resolveEntityQuery(
     return { error: `Multiple tasks match "${query}"`, matches: matchTitles };
   }
 
-  const projectResult = lookupProject(query);
+  const projectResult = lookupProject(session, query, config);
   if (projectResult.type === 'exact' || projectResult.type === 'single') {
     return { path: projectResult.matches[0]!.path, entityType: 'project' };
   }
@@ -114,7 +117,7 @@ async function resolveEntityQuery(
     return { error: `Multiple projects match "${query}"`, matches: matchTitles };
   }
 
-  const areaResult = lookupArea(query);
+  const areaResult = lookupArea(session, query, config);
   if (areaResult.type === 'exact' || areaResult.type === 'single') {
     return { path: areaResult.matches[0]!.path, entityType: 'area' };
   }
@@ -239,9 +242,13 @@ export const appendBodyCommand = new Command('append-body')
     const mode = getOutputMode(globalOpts);
     const dryRun = options.dryRun ?? false;
 
+    // Create session for index-based lookups
+    const config = getVaultConfig();
+    const session = createVaultSession(config);
+
     try {
       // Resolve the entity query (supports both paths and fuzzy matching)
-      const resolution = await resolveEntityQuery(query, mode);
+      const resolution = await resolveEntityQuery(query, mode, session);
 
       if ('error' in resolution) {
         if (resolution.matches) {
