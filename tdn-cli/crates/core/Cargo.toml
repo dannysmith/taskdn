@@ -24,6 +24,9 @@ serde_yaml = "0.9"
 # Frontmatter parsing
 gray_matter = "0.3"
 
+# Parallelization
+rayon = "1"
+
 [build-dependencies]
 napi-build = "2"
 

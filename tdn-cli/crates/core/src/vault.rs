@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::Path;
 
+use rayon::prelude::*;
+
 use crate::area::{Area, parse_area_file};
 use crate::project::{Project, parse_project_file};
 use crate::task::{Task, parse_task_file};
@@ -73,9 +75,11 @@ pub fn find_areas_by_title(config: VaultConfig, query: String) -> Vec<Area> {
 
 /// Generic directory scanner that applies a parse function to each .md file.
 /// Returns successfully parsed entities, skipping failures.
+/// Uses parallel processing via rayon for improved performance on large vaults.
 fn scan_directory<T, F>(dir_path: &str, parse_fn: F) -> Vec<T>
 where
-    F: Fn(String) -> napi::Result<T>,
+    F: Fn(String) -> napi::Result<T> + Sync,
+    T: Send,
 {
     let path = Path::new(dir_path);
 
@@ -89,7 +93,8 @@ where
         Err(_) => return Vec::new(),
     };
 
-    entries
+    // Collect entries into a Vec for parallel processing
+    let entries: Vec<_> = entries
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
             // Only process files (not subdirectories)
@@ -103,6 +108,11 @@ where
                 .map(|ext| ext == "md")
                 .unwrap_or(false)
         })
+        .collect();
+
+    // Process files in parallel
+    entries
+        .par_iter()
         .filter_map(|entry| {
             let file_path = entry.path().to_string_lossy().to_string();
             // Skip files that fail to parse (log would go here in production)
