@@ -1,7 +1,14 @@
 import { Command } from '@commander-js/extra-typings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions, TaskStatusChangedResult, OutputMode } from '@/output/types.ts';
-import { updateFileFields, parseTaskFile, type FieldUpdate, type Task, createVaultSession, type VaultSession } from '@bindings';
+import {
+  updateFileFields,
+  parseTaskFile,
+  type FieldUpdate,
+  type Task,
+  createVaultSession,
+  type VaultSession,
+} from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
@@ -201,7 +208,12 @@ const setStatusCommand = new Command('status')
           const result = await previewStatusChange(singlePath, newStatus, mode, session);
           console.log(formatOutput(result, globalOpts));
         } else {
-          const { task, previousStatus } = await changeTaskStatus(singlePath, newStatus, mode, session);
+          const { task, previousStatus } = await changeTaskStatus(
+            singlePath,
+            newStatus,
+            mode,
+            session
+          );
           const result: TaskStatusChangedResult = {
             type: 'task-status-changed',
             task,

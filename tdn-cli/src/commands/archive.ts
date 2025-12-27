@@ -134,7 +134,11 @@ async function archiveFile(
  * Preview archiving a file (for dry-run mode).
  * Supports both path-based and fuzzy title-based lookup.
  */
-async function previewArchive(taskQuery: string, mode: OutputMode, session: VaultSession): Promise<ArchivedResult> {
+async function previewArchive(
+  taskQuery: string,
+  mode: OutputMode,
+  session: VaultSession
+): Promise<ArchivedResult> {
   // Look up the task (supports both paths and fuzzy matching)
   const config = getVaultConfig();
   const lookupResult = lookupTask(session, taskQuery, config);

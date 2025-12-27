@@ -17,8 +17,8 @@ use crate::project::Project;
 use crate::task::Task;
 use crate::vault::VaultConfig;
 use crate::vault_index::{
-    VaultIndex, AreaContextResult, ProjectContextResult, TaskContextResult,
-    TasksInAreaResult, ProjectsInAreaResult,
+    AreaContextResult, ProjectContextResult, ProjectsInAreaResult, TaskContextResult,
+    TasksInAreaResult, VaultIndex,
 };
 
 /// Session for vault operations.
@@ -59,31 +59,29 @@ pub struct EntitySearchResult {
 }
 
 /// Find all entities matching a query (case-insensitive substring on title).
-/// Searches tasks, projects, and areas in a single index scan.
+/// Searches tasks, projects, and areas using the cached index.
+/// Uses hybrid matching (O(1) for exact, O(n) for substring) for each entity type.
 /// Returns all matches - disambiguation is handled at the command layer.
 #[napi]
 pub fn find_entity_by_title(session: &VaultSession, query: String) -> EntitySearchResult {
     let index = session.get_or_build_index();
-    let query_lower = query.to_lowercase();
 
-    // Search all entity types with the cached index
+    // Search all entity types with the cached index (hybrid matching for each)
     let tasks = index
         .find_tasks_by_title(&query)
         .into_iter()
         .cloned()
         .collect();
 
-    let projects: Vec<Project> = index
-        .projects()
-        .iter()
-        .filter(|p| p.title.to_lowercase().contains(&query_lower))
+    let projects = index
+        .find_projects_by_title(&query)
+        .into_iter()
         .cloned()
         .collect();
 
-    let areas: Vec<Area> = index
-        .areas()
-        .iter()
-        .filter(|a| a.title.to_lowercase().contains(&query_lower))
+    let areas = index
+        .find_areas_by_title(&query)
+        .into_iter()
         .cloned()
         .collect();
 
@@ -95,39 +93,43 @@ pub fn find_entity_by_title(session: &VaultSession, query: String) -> EntitySear
 }
 
 /// Find tasks matching a query (case-insensitive substring on title).
-/// Uses the session's cached index for O(1) lookup after first query.
+/// Uses the session's cached index with hybrid matching:
+/// - O(1) for exact title matches (HashMap lookup)
+/// - O(n) for substring matches (linear scan)
 #[napi]
 pub fn find_tasks_by_title(session: &VaultSession, query: String) -> Vec<Task> {
     let index = session.get_or_build_index();
-    index.find_tasks_by_title(&query).into_iter().cloned().collect()
+    index
+        .find_tasks_by_title(&query)
+        .into_iter()
+        .cloned()
+        .collect()
 }
 
 /// Find projects matching a query (case-insensitive substring on title).
-/// Uses the session's cached index for O(1) lookup after first query.
+/// Uses the session's cached index with hybrid matching:
+/// - O(1) for exact title matches (HashMap lookup)
+/// - O(n) for substring matches (linear scan)
 #[napi]
 pub fn find_projects_by_title(session: &VaultSession, query: String) -> Vec<Project> {
     let index = session.get_or_build_index();
-    let query_lower = query.to_lowercase();
-
     index
-        .projects()
-        .iter()
-        .filter(|p| p.title.to_lowercase().contains(&query_lower))
+        .find_projects_by_title(&query)
+        .into_iter()
         .cloned()
         .collect()
 }
 
 /// Find areas matching a query (case-insensitive substring on title).
-/// Uses the session's cached index for O(1) lookup after first query.
+/// Uses the session's cached index with hybrid matching:
+/// - O(1) for exact title matches (HashMap lookup)
+/// - O(n) for substring matches (linear scan)
 #[napi]
 pub fn find_areas_by_title(session: &VaultSession, query: String) -> Vec<Area> {
     let index = session.get_or_build_index();
-    let query_lower = query.to_lowercase();
-
     index
-        .areas()
-        .iter()
-        .filter(|a| a.title.to_lowercase().contains(&query_lower))
+        .find_areas_by_title(&query)
+        .into_iter()
         .cloned()
         .collect()
 }
