@@ -91,7 +91,7 @@ pub struct TaskContextResult {
 
 /// Internal index for resolving relationships between entities.
 /// Not exposed via NAPI - used internally by query functions.
-struct VaultIndex {
+pub(crate) struct VaultIndex {
     tasks: Vec<Task>,
     projects: Vec<Project>,
     areas: Vec<Area>,
@@ -113,7 +113,7 @@ struct VaultIndex {
 
 impl VaultIndex {
     /// Build a full index (reads all entity types).
-    fn build(config: &VaultConfig) -> Self {
+    pub(crate) fn build(config: &VaultConfig) -> Self {
         let tasks = scan_tasks(config.clone());
         let projects = scan_projects(config.clone());
         let areas = scan_areas(config.clone());
@@ -123,6 +123,7 @@ impl VaultIndex {
 
     /// Build an index without tasks (for projects-only queries).
     /// This is an optimization - skips reading task files.
+    #[allow(dead_code)]
     fn build_without_tasks(config: &VaultConfig) -> Self {
         let projects = scan_projects(config.clone());
         let areas = scan_areas(config.clone());
@@ -215,6 +216,16 @@ impl VaultIndex {
         }
     }
 
+    /// Get all projects in the index.
+    pub(crate) fn projects(&self) -> &[Project] {
+        &self.projects
+    }
+
+    /// Get all areas in the index.
+    pub(crate) fn areas(&self) -> &[Area] {
+        &self.areas
+    }
+
     /// Find area by name (case-insensitive).
     fn find_area(&self, name: &str) -> Option<&Area> {
         self.area_by_name
@@ -231,7 +242,7 @@ impl VaultIndex {
 
     /// Find tasks by title (case-insensitive).
     /// Returns all tasks with matching title (may be empty, one, or multiple).
-    fn find_tasks_by_title(&self, title: &str) -> Vec<&Task> {
+    pub(crate) fn find_tasks_by_title(&self, title: &str) -> Vec<&Task> {
         self.task_by_title
             .get(&title.to_lowercase())
             .map(|indices| indices.iter().map(|&i| &self.tasks[i]).collect())
@@ -372,99 +383,170 @@ impl VaultIndex {
     fn find_task_by_path(&self, path: &str) -> Option<&Task> {
         self.task_by_path.get(path).map(|&idx| &self.tasks[idx])
     }
+
+    // =========================================================================
+    // Public(crate) methods for VaultSession
+    // =========================================================================
+
+    /// Get tasks in an area result (for session API).
+    pub(crate) fn get_tasks_in_area_result(&self, area_name: &str) -> TasksInAreaResult {
+        let (tasks, warnings) = self.get_tasks_in_area(area_name);
+
+        TasksInAreaResult {
+            tasks: tasks.into_iter().cloned().collect(),
+            warnings,
+        }
+    }
+
+    /// Get projects in an area result (for session API).
+    pub(crate) fn get_projects_in_area_result(&self, area_name: &str) -> ProjectsInAreaResult {
+        let (projects, warnings) = self.get_projects_in_area(area_name);
+
+        ProjectsInAreaResult {
+            projects: projects.into_iter().cloned().collect(),
+            warnings,
+        }
+    }
+
+    /// Get area context result (for session API).
+    pub(crate) fn get_area_context_result(&self, area_name: &str) -> AreaContextResult {
+        let area = self.find_area(area_name).cloned();
+        let (projects, project_warnings) = self.get_projects_in_area(area_name);
+        let (tasks, task_warnings) = self.get_tasks_in_area(area_name);
+
+        // Combine warnings from both projects and tasks
+        let mut warnings = project_warnings;
+        warnings.extend(task_warnings);
+
+        AreaContextResult {
+            area,
+            projects: projects.into_iter().cloned().collect(),
+            tasks: tasks.into_iter().cloned().collect(),
+            warnings,
+        }
+    }
+
+    /// Get project context result (for session API).
+    pub(crate) fn get_project_context_result(&self, project_name: &str) -> ProjectContextResult {
+        let mut warnings = Vec::new();
+
+        let project = self.find_project(project_name).cloned();
+
+        // Get parent area if project exists and has area reference
+        let area = project
+            .as_ref()
+            .and_then(|p| self.get_area_for_project(p))
+            .cloned();
+
+        // Warn if project has area reference but area not found
+        if let Some(ref p) = project
+            && let Some(area_ref) = &p.area
+            && let Some(area_name) = crate::wikilink::extract_wikilink_name(area_ref)
+            && self.find_area(area_name).is_none()
+        {
+            warnings.push(format!(
+                "Project '{}' references unknown area '{}'",
+                p.title, area_name
+            ));
+        }
+
+        let tasks: Vec<Task> = self
+            .get_tasks_in_project(project_name)
+            .into_iter()
+            .cloned()
+            .collect();
+
+        ProjectContextResult {
+            project,
+            area,
+            tasks,
+            warnings,
+        }
+    }
+
+    /// Get task context result (for session API).
+    pub(crate) fn get_task_context_result(&self, path_or_title: &str) -> TaskContextResult {
+        let mut warnings = Vec::new();
+
+        // Determine if this is a path or title lookup
+        let (task, ambiguous_matches) = if is_path_identifier(path_or_title) {
+            // Path lookup - find by exact path
+            let task = self.find_task_by_path(path_or_title).cloned();
+            (task, Vec::new())
+        } else {
+            // Title lookup - case-insensitive, may have multiple matches
+            let matches = self.find_tasks_by_title(path_or_title);
+            match matches.len() {
+                0 => (None, Vec::new()),
+                1 => (Some(matches[0].clone()), Vec::new()),
+                _ => {
+                    // Multiple matches - return them as ambiguous
+                    let ambiguous: Vec<Task> = matches.into_iter().cloned().collect();
+                    (None, ambiguous)
+                }
+            }
+        };
+
+        // If ambiguous, return early with just the matches
+        if !ambiguous_matches.is_empty() {
+            return TaskContextResult {
+                task: None,
+                project: None,
+                area: None,
+                warnings: Vec::new(),
+                ambiguous_matches,
+            };
+        }
+
+        // Get parent project if task exists and has project reference
+        let project = task
+            .as_ref()
+            .and_then(|t| self.get_project_for_task(t))
+            .cloned();
+
+        // Warn if task has project reference but project not found
+        if let Some(ref t) = task
+            && let Some(project_ref) = &t.project
+            && let Some(project_name) = crate::wikilink::extract_wikilink_name(project_ref)
+            && self.find_project(project_name).is_none()
+        {
+            warnings.push(format!(
+                "Task '{}' references unknown project '{}'",
+                t.title, project_name
+            ));
+        }
+
+        // Get parent area (direct or via project)
+        let area = task
+            .as_ref()
+            .and_then(|t| self.get_area_for_task(t))
+            .cloned();
+
+        // Warn if task has direct area reference but area not found
+        if let Some(ref t) = task
+            && let Some(area_ref) = &t.area
+            && let Some(area_name) = crate::wikilink::extract_wikilink_name(area_ref)
+            && self.find_area(area_name).is_none()
+        {
+            warnings.push(format!(
+                "Task '{}' references unknown area '{}'",
+                t.title, area_name
+            ));
+        }
+
+        TaskContextResult {
+            task,
+            project,
+            area,
+            warnings,
+            ambiguous_matches: Vec::new(),
+        }
+    }
 }
 
 // =============================================================================
-// NAPI-exported Query Functions
+// Helper Functions
 // =============================================================================
-
-/// Get tasks in an area (direct + via projects).
-/// Reads: areas, projects, tasks. Builds index internally.
-#[napi]
-pub fn get_tasks_in_area(config: VaultConfig, area_name: String) -> TasksInAreaResult {
-    let index = VaultIndex::build(&config);
-    let (tasks, warnings) = index.get_tasks_in_area(&area_name);
-
-    TasksInAreaResult {
-        tasks: tasks.into_iter().cloned().collect(),
-        warnings,
-    }
-}
-
-/// Get projects in an area. Does NOT read task files.
-/// Reads: areas, projects only.
-/// Returns projects and warnings about broken area references.
-#[napi]
-pub fn get_projects_in_area(config: VaultConfig, area_name: String) -> ProjectsInAreaResult {
-    let index = VaultIndex::build_without_tasks(&config);
-    let (projects, warnings) = index.get_projects_in_area(&area_name);
-
-    ProjectsInAreaResult {
-        projects: projects.into_iter().cloned().collect(),
-        warnings,
-    }
-}
-
-/// Get full context for an area (for context command).
-#[napi]
-pub fn get_area_context(config: VaultConfig, area_name: String) -> AreaContextResult {
-    let index = VaultIndex::build(&config);
-
-    let area = index.find_area(&area_name).cloned();
-    let (projects, project_warnings) = index.get_projects_in_area(&area_name);
-    let (tasks, task_warnings) = index.get_tasks_in_area(&area_name);
-
-    // Combine warnings from both projects and tasks
-    let mut warnings = project_warnings;
-    warnings.extend(task_warnings);
-
-    AreaContextResult {
-        area,
-        projects: projects.into_iter().cloned().collect(),
-        tasks: tasks.into_iter().cloned().collect(),
-        warnings,
-    }
-}
-
-/// Get full context for a project (for context command).
-#[napi]
-pub fn get_project_context(config: VaultConfig, project_name: String) -> ProjectContextResult {
-    let index = VaultIndex::build(&config);
-    let mut warnings = Vec::new();
-
-    let project = index.find_project(&project_name).cloned();
-
-    // Get parent area if project exists and has area reference
-    let area = project
-        .as_ref()
-        .and_then(|p| index.get_area_for_project(p))
-        .cloned();
-
-    // Warn if project has area reference but area not found
-    if let Some(ref p) = project
-        && let Some(area_ref) = &p.area
-        && let Some(area_name) = extract_wikilink_name(area_ref)
-        && index.find_area(area_name).is_none()
-    {
-        warnings.push(format!(
-            "Project '{}' references unknown area '{}'",
-            p.title, area_name
-        ));
-    }
-
-    let tasks: Vec<Task> = index
-        .get_tasks_in_project(&project_name)
-        .into_iter()
-        .cloned()
-        .collect();
-
-    ProjectContextResult {
-        project,
-        area,
-        tasks,
-        warnings,
-    }
-}
 
 /// Check if a string looks like a file path (vs a title).
 /// Returns true if the identifier is an absolute path.
@@ -474,92 +556,21 @@ fn is_path_identifier(identifier: &str) -> bool {
     Path::new(identifier).is_absolute()
 }
 
-/// Get full context for a task (for context command).
-///
-/// Accepts either an absolute file path or a task title:
-/// - **Path lookup** (starts with `/`): Returns task at exact path, or None if not found
-/// - **Title lookup** (doesn't start with `/`): Case-insensitive search by title
-///   - Returns single match if unique
-///   - Returns multiple matches in `ambiguous_matches` if title matches multiple tasks
-#[napi]
-pub fn get_task_context(config: VaultConfig, path_or_title: String) -> TaskContextResult {
-    let index = VaultIndex::build(&config);
-    let mut warnings = Vec::new();
-
-    // Determine if this is a path or title lookup
-    let (task, ambiguous_matches) = if is_path_identifier(&path_or_title) {
-        // Path lookup - find by exact path
-        let task = index.find_task_by_path(&path_or_title).cloned();
-        (task, Vec::new())
-    } else {
-        // Title lookup - case-insensitive, may have multiple matches
-        let matches = index.find_tasks_by_title(&path_or_title);
-        match matches.len() {
-            0 => (None, Vec::new()),
-            1 => (Some(matches[0].clone()), Vec::new()),
-            _ => {
-                // Multiple matches - return them as ambiguous
-                let ambiguous: Vec<Task> = matches.into_iter().cloned().collect();
-                (None, ambiguous)
-            }
-        }
-    };
-
-    // If ambiguous, return early with just the matches
-    if !ambiguous_matches.is_empty() {
-        return TaskContextResult {
-            task: None,
-            project: None,
-            area: None,
-            warnings: Vec::new(),
-            ambiguous_matches,
-        };
-    }
-
-    // Get parent project if task exists and has project reference
-    let project = task
-        .as_ref()
-        .and_then(|t| index.get_project_for_task(t))
-        .cloned();
-
-    // Warn if task has project reference but project not found
-    if let Some(ref t) = task
-        && let Some(project_ref) = &t.project
-        && let Some(project_name) = extract_wikilink_name(project_ref)
-        && index.find_project(project_name).is_none()
-    {
-        warnings.push(format!(
-            "Task '{}' references unknown project '{}'",
-            t.title, project_name
-        ));
-    }
-
-    // Get parent area (direct or via project)
-    let area = task
-        .as_ref()
-        .and_then(|t| index.get_area_for_task(t))
-        .cloned();
-
-    // Warn if task has direct area reference but area not found
-    if let Some(ref t) = task
-        && let Some(area_ref) = &t.area
-        && let Some(area_name) = extract_wikilink_name(area_ref)
-        && index.find_area(area_name).is_none()
-    {
-        warnings.push(format!(
-            "Task '{}' references unknown area '{}'",
-            t.title, area_name
-        ));
-    }
-
-    TaskContextResult {
-        task,
-        project,
-        area,
-        warnings,
-        ambiguous_matches: Vec::new(),
-    }
-}
+// =============================================================================
+// NOTE: NAPI-exported Query Functions Moved to vault_session.rs
+// =============================================================================
+//
+// The following functions have been moved to vault_session.rs for better
+// performance through index reuse:
+// - get_tasks_in_area
+// - get_projects_in_area
+// - get_area_context
+// - get_project_context
+// - get_task_context
+//
+// Use create_vault_session() and the session-based functions instead.
+// The session pattern eliminates redundant vault scans when performing
+// multiple queries within a command.
 
 // =============================================================================
 // Tests
@@ -568,6 +579,7 @@ pub fn get_task_context(config: VaultConfig, path_or_title: String) -> TaskConte
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::vault_session::{create_vault_session, get_tasks_in_area, get_projects_in_area, get_area_context, get_project_context, get_task_context};
     use std::fs::{self, File};
     use std::io::Write;
     use std::path::Path;
@@ -698,7 +710,8 @@ mod tests {
             "---\ntitle: Direct Task\nstatus: ready\narea: \"[[Work]]\"\n---\n",
         );
 
-        let result = get_tasks_in_area(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_tasks_in_area(&session, "Work".to_string());
 
         assert_eq!(result.tasks.len(), 1);
         assert_eq!(result.tasks[0].title, "Direct Task");
@@ -726,7 +739,8 @@ mod tests {
             "---\ntitle: Project Task\nstatus: ready\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_tasks_in_area(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_tasks_in_area(&session, "Work".to_string());
 
         assert_eq!(result.tasks.len(), 1);
         assert_eq!(result.tasks[0].title, "Project Task");
@@ -758,7 +772,8 @@ mod tests {
             "---\ntitle: Project Task\nstatus: ready\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_tasks_in_area(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_tasks_in_area(&session, "Work".to_string());
 
         assert_eq!(result.tasks.len(), 2);
         let titles: Vec<&str> = result.tasks.iter().map(|t| t.title.as_str()).collect();
@@ -788,7 +803,8 @@ mod tests {
             "---\ntitle: Both Ways\nstatus: ready\narea: \"[[Work]]\"\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_tasks_in_area(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_tasks_in_area(&session, "Work".to_string());
 
         // Should only appear once, not twice
         assert_eq!(result.tasks.len(), 1);
@@ -812,7 +828,8 @@ mod tests {
         );
 
         // Query with different case
-        let result = get_tasks_in_area(config, "WORK".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_tasks_in_area(&session, "WORK".to_string());
 
         assert_eq!(result.tasks.len(), 1);
     }
@@ -828,7 +845,8 @@ mod tests {
             "---\ntitle: Task\nstatus: ready\narea: \"[[Work]]\"\n---\n",
         );
 
-        let result = get_tasks_in_area(config, "Nonexistent".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_tasks_in_area(&session, "Nonexistent".to_string());
 
         assert!(result.tasks.is_empty());
     }
@@ -863,7 +881,8 @@ mod tests {
             "---\ntitle: Personal Project\narea: \"[[Personal]]\"\n---\n",
         );
 
-        let result = get_projects_in_area(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_projects_in_area(&session, "Work".to_string());
 
         assert_eq!(result.projects.len(), 2);
         let titles: Vec<&str> = result.projects.iter().map(|p| p.title.as_str()).collect();
@@ -883,7 +902,8 @@ mod tests {
             "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
         );
 
-        let result = get_projects_in_area(config, "Nonexistent".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_projects_in_area(&session, "Nonexistent".to_string());
 
         assert!(result.projects.is_empty());
         assert!(result.warnings.is_empty());
@@ -915,7 +935,8 @@ mod tests {
             "---\ntitle: Orphan Project\narea: \"[[NonexistentArea]]\"\n---\n",
         );
 
-        let result = get_projects_in_area(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_projects_in_area(&session, "Work".to_string());
 
         assert_eq!(result.projects.len(), 1);
         assert_eq!(result.projects[0].title, "Q1");
@@ -949,7 +970,8 @@ mod tests {
             "---\ntitle: Task One\nstatus: ready\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_area_context(config, "Work".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_area_context(&session, "Work".to_string());
 
         assert!(result.area.is_some());
         assert_eq!(result.area.unwrap().title, "Work");
@@ -964,7 +986,8 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let result = get_area_context(config, "Nonexistent".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_area_context(&session, "Nonexistent".to_string());
 
         assert!(result.area.is_none());
         assert!(result.projects.is_empty());
@@ -1001,7 +1024,8 @@ mod tests {
             "---\ntitle: Task Two\nstatus: ready\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_project_context(config, "Q1".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_project_context(&session, "Q1".to_string());
 
         assert!(result.project.is_some());
         assert_eq!(result.project.unwrap().title, "Q1");
@@ -1015,7 +1039,8 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let result = get_project_context(config, "Nonexistent".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_project_context(&session, "Nonexistent".to_string());
 
         assert!(result.project.is_none());
         assert!(result.area.is_none());
@@ -1033,7 +1058,8 @@ mod tests {
             "---\ntitle: Orphan Project\narea: \"[[Nonexistent Area]]\"\n---\n",
         );
 
-        let result = get_project_context(config, "Orphan Project".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_project_context(&session, "Orphan Project".to_string());
 
         assert!(result.project.is_some());
         assert!(result.area.is_none());
@@ -1052,7 +1078,8 @@ mod tests {
             "---\ntitle: Standalone\n---\n",
         );
 
-        let result = get_project_context(config, "Standalone".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_project_context(&session, "Standalone".to_string());
 
         assert!(result.project.is_some());
         assert!(result.area.is_none());
@@ -1085,7 +1112,8 @@ mod tests {
             "---\ntitle: Task One\nstatus: ready\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert_eq!(result.task.unwrap().title, "Task One");
@@ -1101,7 +1129,8 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let result = get_task_context(config, "/nonexistent/task.md".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, "/nonexistent/task.md".to_string());
 
         assert!(result.task.is_none());
         assert!(result.project.is_none());
@@ -1125,7 +1154,8 @@ mod tests {
             "---\ntitle: Direct Area Task\nstatus: ready\narea: \"[[Work]]\"\n---\n",
         );
 
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert!(result.project.is_none()); // No project reference
@@ -1145,7 +1175,8 @@ mod tests {
             "---\ntitle: Orphan Task\nstatus: ready\n---\n",
         );
 
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert!(result.project.is_none());
@@ -1165,7 +1196,8 @@ mod tests {
             "---\ntitle: Broken Project Task\nstatus: ready\nprojects:\n  - \"[[Nonexistent Project]]\"\n---\n",
         );
 
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert!(result.project.is_none());
@@ -1185,7 +1217,8 @@ mod tests {
             "---\ntitle: Broken Area Task\nstatus: ready\narea: \"[[Nonexistent Area]]\"\n---\n",
         );
 
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert!(result.area.is_none());
@@ -1221,7 +1254,8 @@ mod tests {
             "---\ntitle: Mixed Task\nstatus: ready\narea: \"[[Personal]]\"\nprojects:\n  - \"[[Q1]]\"\n---\n",
         );
 
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert!(result.project.is_some());
@@ -1246,7 +1280,8 @@ mod tests {
         );
 
         // Look up by title (not path)
-        let result = get_task_context(config, "My Unique Task".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, "My Unique Task".to_string());
 
         assert!(result.task.is_some());
         assert_eq!(result.task.unwrap().title, "My Unique Task");
@@ -1265,7 +1300,8 @@ mod tests {
         );
 
         // Look up by lowercase title
-        let result = get_task_context(config, "my unique task".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, "my unique task".to_string());
 
         assert!(result.task.is_some());
         assert_eq!(result.task.unwrap().title, "My Unique Task");
@@ -1287,7 +1323,8 @@ mod tests {
             "---\ntitle: Duplicate Title\nstatus: in-progress\n---\n",
         );
 
-        let result = get_task_context(config, "Duplicate Title".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, "Duplicate Title".to_string());
 
         // task should be None when ambiguous
         assert!(result.task.is_none());
@@ -1308,7 +1345,8 @@ mod tests {
         );
 
         // Look up by absolute path (starts with /)
-        let result = get_task_context(config, task_path);
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, task_path);
 
         assert!(result.task.is_some());
         assert_eq!(result.task.unwrap().title, "My Task");
@@ -1321,7 +1359,8 @@ mod tests {
         let config = create_vault_config(&temp_dir);
 
         // Look up by absolute path that doesn't exist
-        let result = get_task_context(config, "/nonexistent/task.md".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, "/nonexistent/task.md".to_string());
 
         assert!(result.task.is_none());
         assert!(result.ambiguous_matches.is_empty());
@@ -1333,7 +1372,8 @@ mod tests {
         let config = create_vault_config(&temp_dir);
 
         // Look up by title that doesn't exist
-        let result = get_task_context(config, "Nonexistent Task Title".to_string());
+        let session = create_vault_session(config.clone());
+        let result = get_task_context(&session, "Nonexistent Task Title".to_string());
 
         assert!(result.task.is_none());
         assert!(result.ambiguous_matches.is_empty());

@@ -11,6 +11,7 @@ import type {
   OutputMode,
 } from '@/output/types.ts';
 import {
+  createVaultSession,
   updateFileFields,
   parseTaskFile,
   parseProjectFile,
@@ -20,6 +21,7 @@ import {
   type Project,
   type Area,
 } from '@bindings';
+import { getVaultConfig } from '@/config/index.ts';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
 import {
@@ -77,8 +79,12 @@ async function resolveEntityQuery(
     return { path: fullPath, entityType };
   }
 
-  // Fuzzy lookup - try each entity type in order of likelihood
-  const taskResult = lookupTask(query);
+  // Fuzzy lookup - create session once and reuse for all lookups (performance optimization)
+  const config = getVaultConfig();
+  const session = createVaultSession(config);
+
+  // Try each entity type in order of likelihood
+  const taskResult = lookupTask(query, config, session);
   if (taskResult.type === 'exact' || taskResult.type === 'single') {
     return { path: taskResult.matches[0]!.path, entityType: 'task' };
   }
@@ -92,7 +98,7 @@ async function resolveEntityQuery(
     return { error: `Multiple tasks match "${query}"`, matches: matchTitles };
   }
 
-  const projectResult = lookupProject(query);
+  const projectResult = lookupProject(query, config, session);
   if (projectResult.type === 'exact' || projectResult.type === 'single') {
     return { path: projectResult.matches[0]!.path, entityType: 'project' };
   }
@@ -106,7 +112,7 @@ async function resolveEntityQuery(
     return { error: `Multiple projects match "${query}"`, matches: matchTitles };
   }
 
-  const areaResult = lookupArea(query);
+  const areaResult = lookupArea(query, config, session);
   if (areaResult.type === 'exact' || areaResult.type === 'single') {
     return { path: areaResult.matches[0]!.path, entityType: 'area' };
   }
