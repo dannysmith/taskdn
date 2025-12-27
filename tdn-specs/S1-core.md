@@ -263,7 +263,7 @@ Key contacts, agreements, and background information...
 
 This section defines conformance requirements for software implementing this specification.
 
-For guidance on reading, writing, and mutating files—including error handling, timestamp management, data preservation, and file safety—see **[S3: Data Read/Write Guidance](./S3-data-read-write.md)**.
+For guidance on reading, writing, and mutating files—including error handling, timestamp management, data preservation, and file safety—see **[S2: Implementation Requirements](./S2-interface-design.md)**.
 
 ### 6.1 Conformance Levels
 
@@ -313,9 +313,9 @@ This specification is designed to be broadly compatible with:
 
 Machine-readable JSON Schema files are available for validation:
 
-- [task.schema.json](./schemas/task.schema.json) - Task frontmatter validation
-- [project.schema.json](./schemas/project.schema.json) - Project frontmatter validation
-- [area.schema.json](./schemas/area.schema.json) - Area frontmatter validation
+- [task.schema.json](./json-schemas/task.schema.json) - Task frontmatter validation
+- [project.schema.json](./json-schemas/project.schema.json) - Project frontmatter validation
+- [area.schema.json](./json-schemas/area.schema.json) - Area frontmatter validation
 
 These schemas can be used by editors (e.g., VS Code) for autocomplete and inline validation, or by implementations for programmatic validation.
 
