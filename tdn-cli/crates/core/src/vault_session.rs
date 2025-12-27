@@ -16,10 +16,11 @@ use crate::area::Area;
 use crate::project::Project;
 use crate::task::Task;
 use crate::vault::VaultConfig;
-use crate::vault_index::{
+use crate::query_results::{
     AreaContextResult, ProjectContextResult, ProjectsInAreaResult, TaskContextResult,
-    TasksInAreaResult, VaultIndex,
+    TasksInAreaResult,
 };
+use crate::vault_index::VaultIndex;
 
 /// Session for vault operations.
 /// Builds index lazily on first query and caches it for subsequent operations.

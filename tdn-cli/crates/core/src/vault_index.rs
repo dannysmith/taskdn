@@ -14,76 +14,10 @@ use std::collections::{HashMap, HashSet};
 
 use crate::area::Area;
 use crate::project::Project;
+use crate::query_results::*;
 use crate::task::Task;
-use crate::vault::{VaultConfig, scan_areas, scan_projects, scan_tasks};
+use crate::vault::{VaultConfig, scan_areas_impl, scan_projects_impl, scan_tasks_impl};
 use crate::wikilink::extract_wikilink_name;
-
-// =============================================================================
-// NAPI Result Types
-// =============================================================================
-
-/// Result for tasks-in-area query
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct TasksInAreaResult {
-    pub tasks: Vec<Task>,
-    /// Warnings about broken references (e.g., "Task 'X' references unknown project 'Y'")
-    pub warnings: Vec<String>,
-}
-
-/// Result for projects-in-area query
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct ProjectsInAreaResult {
-    pub projects: Vec<Project>,
-    /// Warnings about broken references (e.g., "Project 'X' references unknown area 'Y'")
-    pub warnings: Vec<String>,
-}
-
-/// Full context for an area (for context command)
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct AreaContextResult {
-    /// The area, or None if not found
-    pub area: Option<Area>,
-    /// Projects in this area
-    pub projects: Vec<Project>,
-    /// Tasks via projects + direct area assignment
-    pub tasks: Vec<Task>,
-    /// Warnings about broken references
-    pub warnings: Vec<String>,
-}
-
-/// Full context for a project (for context command)
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct ProjectContextResult {
-    /// The project, or None if not found
-    pub project: Option<Project>,
-    /// Parent area if any
-    pub area: Option<Area>,
-    /// Tasks in this project
-    pub tasks: Vec<Task>,
-    /// Warnings about broken references
-    pub warnings: Vec<String>,
-}
-
-/// Full context for a task (for context command)
-#[derive(Debug, Clone)]
-#[napi(object)]
-pub struct TaskContextResult {
-    /// The task, or None if not found or ambiguous
-    pub task: Option<Task>,
-    /// Parent project if any
-    pub project: Option<Project>,
-    /// Parent area (direct or via project)
-    pub area: Option<Area>,
-    /// Warnings about broken references
-    pub warnings: Vec<String>,
-    /// Multiple tasks matched the identifier (ambiguous lookup)
-    /// Only populated when lookup by title matches multiple tasks
-    pub ambiguous_matches: Vec<Task>,
-}
 
 // =============================================================================
 // Internal VaultIndex (not NAPI-exported)
@@ -118,9 +52,9 @@ pub(crate) struct VaultIndex {
 impl VaultIndex {
     /// Build a full index (reads all entity types).
     pub(crate) fn build(config: &VaultConfig) -> Self {
-        let tasks = scan_tasks(config.clone());
-        let projects = scan_projects(config.clone());
-        let areas = scan_areas(config.clone());
+        let tasks = scan_tasks_impl(config);
+        let projects = scan_projects_impl(config);
+        let areas = scan_areas_impl(config);
 
         Self::build_from_entities(tasks, projects, areas)
     }
@@ -129,8 +63,8 @@ impl VaultIndex {
     /// This is an optimization - skips reading task files.
     #[allow(dead_code)]
     fn build_without_tasks(config: &VaultConfig) -> Self {
-        let projects = scan_projects(config.clone());
-        let areas = scan_areas(config.clone());
+        let projects = scan_projects_impl(config);
+        let areas = scan_areas_impl(config);
 
         Self::build_from_entities(Vec::new(), projects, areas)
     }
