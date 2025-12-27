@@ -107,8 +107,8 @@ describe('config security', () => {
         );
       });
 
-      test('blocks the attack scenario from security review', () => {
-        // From CRIT-2: malicious config pointing to sensitive locations
+      test('blocks malicious config paths to sensitive system locations', () => {
+        // Malicious .taskdn.json could try to point to /etc or /var/log
         expect(() => validateVaultPath('/etc', 'tasksDir')).toThrow(
           'system directory'
         );

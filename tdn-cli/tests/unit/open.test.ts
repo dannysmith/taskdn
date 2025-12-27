@@ -94,8 +94,8 @@ describe('open command security', () => {
       expect(() => validateEditor('(vim)')).toThrow('dangerous shell metacharacters');
     });
 
-    test('rejects the specific attack vector from security review', () => {
-      // From CRIT-1: export EDITOR='vim"; rm -rf ~/*; echo "'
+    test('rejects command injection via EDITOR with semicolon and quotes', () => {
+      // Example: export EDITOR='vim"; rm -rf ~/*; echo "'
       expect(() => validateEditor('vim"; rm -rf ~/*; echo "')).toThrow(
         'dangerous shell metacharacters'
       );
