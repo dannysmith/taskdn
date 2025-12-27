@@ -342,7 +342,8 @@ pub fn create_task_file(
     if let Some(project) = &fields.project {
         // Store as projects array with wikilink format
         let wikilink = ensure_wikilink(project);
-        let projects_array = serde_norway::Value::Sequence(vec![serde_norway::Value::String(wikilink)]);
+        let projects_array =
+            serde_norway::Value::Sequence(vec![serde_norway::Value::String(wikilink)]);
         set_yaml_field(&mut mapping, "projects", projects_array);
     }
 
@@ -351,7 +352,11 @@ pub fn create_task_file(
     }
 
     if let Some(due) = &fields.due {
-        set_yaml_field(&mut mapping, "due", serde_norway::Value::String(due.clone()));
+        set_yaml_field(
+            &mut mapping,
+            "due",
+            serde_norway::Value::String(due.clone()),
+        );
     }
 
     if let Some(scheduled) = &fields.scheduled {
