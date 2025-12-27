@@ -13,8 +13,8 @@ import { createVaultSession } from '@bindings';
  * Open command - open file in $EDITOR
  *
  * Usage:
- *   taskdn open ~/tasks/foo.md
- *   taskdn open "project plan"      # Fuzzy title matching
+ *   tdn open ~/tasks/foo.md
+ *   tdn open "project plan"      # Fuzzy title matching
  *
  * Only works in interactive (human) mode.
  * Returns error in AI mode since it requires user interaction.

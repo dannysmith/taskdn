@@ -16,8 +16,8 @@ import type { VaultSession } from '@bindings';
  * Archive command - move file(s) to archive subdirectory
  *
  * Usage:
- *   taskdn archive ~/tasks/foo.md
- *   taskdn archive ~/tasks/foo.md ~/tasks/bar.md   # Multiple files
+ *   tdn archive ~/tasks/foo.md
+ *   tdn archive ~/tasks/foo.md ~/tasks/bar.md   # Multiple files
  */
 
 /**

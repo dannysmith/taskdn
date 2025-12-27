@@ -29,16 +29,16 @@ The CLI provides these primary commands:
 
 | Command       | Purpose                            | Typical Usage                                  |
 | ------------- | ---------------------------------- | ---------------------------------------------- |
-| `list`        | Query and filter entities          | `taskdn list --status inbox --due today`       |
-| `show`        | Display full entity details        | `taskdn show "Fix bug"`                        |
-| `new`         | Create entities                    | `taskdn new "Write docs" --due tomorrow`       |
-| `context`     | Show everything incl relationships | `taskdn context area "Work"`                   |
-| `today`       | Show today's actionable tasks      | `taskdn today`                                 |
-| `set status`  | Change task/project status         | `taskdn set status "Fix bug" done`             |
-| `update`      | Modify entity fields               | `taskdn update "Fix bug" --set area="Work"`    |
-| `archive`     | Move to archive subdirectory       | `taskdn archive "Old task"`                    |
-| `open`        | Open in $EDITOR                    | `taskdn open "Fix bug"`                        |
-| `append-body` | Add content to body                | `taskdn append-body "Fix bug" "Progress note"` |
+| `list`        | Query and filter entities          | `tdnlist --status inbox --due today`       |
+| `show`        | Display full entity details        | `tdnshow "Fix bug"`                        |
+| `new`         | Create entities                    | `tdnnew "Write docs" --due tomorrow`       |
+| `context`     | Show everything incl relationships | `tdncontext area "Work"`                   |
+| `today`       | Show today's actionable tasks      | `tdntoday`                                 |
+| `set status`  | Change task/project status         | `tdnset status "Fix bug" done`             |
+| `update`      | Modify entity fields               | `tdnupdate "Fix bug" --set area="Work"`    |
+| `archive`     | Move to archive subdirectory       | `tdnarchive "Old task"`                    |
+| `open`        | Open in $EDITOR                    | `tdnopen "Fix bug"`                        |
+| `append-body` | Add content to body                | `tdnappend-body "Fix bug" "Progress note"` |
 
 **Entity Type Support:**
 
@@ -169,7 +169,7 @@ Sorting is controlled by two flags:
 
 Mutation commands supporting multiple targets (`set status`, `archive`, `update`):
 
-- Accept variadic arguments: `taskdn set status task1 task2 task3 done`
+- Accept variadic arguments: `tdnset status task1 task2 task3 done`
 - Each target processed independently
 - Return `BatchResult` with separate `successes` and `failures` arrays
 - Failures include path, error code, and message

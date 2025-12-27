@@ -110,7 +110,7 @@ Test the CLI as users would use it. These are the most important tests.
 import { describe, test, expect } from "bun:test";
 import { runCli } from "../helpers/cli";
 
-describe("taskdn show", () => {
+describe("tdnshow", () => {
   describe("with valid task path", () => {
     test("outputs task title", async () => {
       const { stdout, exitCode } = await runCli(["show", "tests/fixtures/vault/tasks/minimal.md"]);

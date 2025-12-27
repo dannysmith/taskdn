@@ -1,7 +1,7 @@
 /**
  * Entity listing utilities for tasks, projects, and areas.
  *
- * This module provides the core listing logic for the `taskdn list` command,
+ * This module provides the core listing logic for the `tdn list` command,
  * handling filtering, sorting, and pagination of entities.
  *
  * ## Key Responsibilities

@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'bun:test';
 import { runCli, fixturePath } from '../helpers/cli';
 
-describe('taskdn show', () => {
+describe('tdn show', () => {
   describe('with minimal task', () => {
     const taskPath = fixturePath('vault/tasks/minimal.md');
 

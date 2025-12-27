@@ -7,11 +7,11 @@ import { getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions, OutputMode } from '@/output/types.ts';
 
 /**
- * Init command - initialize taskdn configuration
+ * Init command - initialize tdn configuration
  *
  * Usage:
- *   taskdn init                                  # Interactive setup
- *   taskdn init --tasks-dir ~/tasks --projects-dir ~/projects --areas-dir ~/areas
+ *   tdn init                                  # Interactive setup
+ *   tdn init --tasks-dir ~/tasks --projects-dir ~/projects --areas-dir ~/areas
  */
 
 interface InitOptions {
@@ -35,7 +35,7 @@ function expandTilde(path: string): string {
  * Interactive mode for init command
  */
 async function interactiveInit(configPath: string, configExists: boolean): Promise<boolean> {
-  p.intro('Initialize taskdn configuration');
+  p.intro('Initialize tdn configuration');
 
   if (configExists) {
     const overwrite = await p.confirm({
@@ -123,7 +123,7 @@ function nonInteractiveInit(
     if (mode === 'human') {
       console.error('Error: All directory options are required in non-interactive mode.');
       console.error(
-        '\nExample: taskdn init --tasks-dir ~/tasks --projects-dir ~/projects --areas-dir ~/areas'
+        '\nExample: tdn init --tasks-dir ~/tasks --projects-dir ~/projects --areas-dir ~/areas'
       );
     } else {
       console.error(
@@ -184,7 +184,7 @@ function nonInteractiveInit(
 }
 
 export const initCommand = new Command('init')
-  .description('Initialize taskdn configuration')
+  .description('Initialize tdn configuration')
   .option('--tasks-dir <path>', 'Tasks directory path')
   .option('--projects-dir <path>', 'Projects directory path')
   .option('--areas-dir <path>', 'Areas directory path')
