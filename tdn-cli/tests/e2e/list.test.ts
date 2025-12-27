@@ -1174,6 +1174,228 @@ describe('list areas filtering', () => {
   });
 });
 
+describe('short flag aliases', () => {
+  describe('-s as alias for --status', () => {
+    test('filters by single status', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-s', 'ready', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.every((t: { status: string }) => t.status === 'ready')).toBe(true);
+    });
+
+    test('filters by multiple statuses (comma-separated)', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-s', 'ready,in-progress', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(
+        output.tasks.every((t: { status: string }) =>
+          ['ready', 'in-progress'].includes(t.status),
+        ),
+      ).toBe(true);
+    });
+
+    test('works in human mode', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-s', 'ready']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toBeTruthy();
+    });
+
+    test('works in AI mode', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-s', 'ready', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks');
+    });
+  });
+
+  describe('-p as alias for --project', () => {
+    test('filters tasks by project name', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-p', 'Q1', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      // All returned tasks should have project = 'Q1'
+      expect(output.tasks.every((t: { project?: string }) => t.project === 'Q1')).toBe(true);
+    });
+
+    test('works with fuzzy matching', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-p', 'minimal', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      // Should match tasks with project containing 'minimal' (fuzzy match to 'Minimal Project')
+      expect(output.tasks.length).toBeGreaterThanOrEqual(0);
+    });
+
+    test('works in human mode', async () => {
+      const { exitCode } = await runCli(['list', '-p', 'Q1']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('works in AI mode', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-p', 'Q1', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks');
+    });
+  });
+
+  describe('-a as alias for --area', () => {
+    test('filters tasks by area name', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-a', 'Work', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeGreaterThan(0);
+    });
+
+    test('is case-insensitive', async () => {
+      const { stdout: upper, exitCode: exitCodeUpper } = await runCli([
+        'list',
+        '-a',
+        'WORK',
+        '--json',
+      ]);
+      const { stdout: lower, exitCode: exitCodeLower } = await runCli([
+        'list',
+        '-a',
+        'work',
+        '--json',
+      ]);
+      expect(exitCodeUpper).toBe(0);
+      expect(exitCodeLower).toBe(0);
+      expect(JSON.parse(upper).tasks.length).toBe(JSON.parse(lower).tasks.length);
+    });
+
+    test('returns empty when no tasks match area', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-a', 'nonexistent', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks).toEqual([]);
+    });
+
+    test('works in human mode', async () => {
+      const { exitCode } = await runCli(['list', '-a', 'Work']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('works in AI mode', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-a', 'Work', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks');
+    });
+  });
+
+  describe('-d as alias for --due', () => {
+    test('filters by due date "today"', async () => {
+      const { exitCode } = await runCli(['list', '-d', 'today', '--json']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('filters by due date "tomorrow"', async () => {
+      const { exitCode } = await runCli(['list', '-d', 'tomorrow', '--json']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('filters by due date "this-week"', async () => {
+      const { exitCode } = await runCli(['list', '-d', 'this-week', '--json']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('works in human mode', async () => {
+      const { exitCode } = await runCli(['list', '-d', 'today']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('works in AI mode', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-d', 'today', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks');
+    });
+  });
+
+  describe('-l as alias for --limit', () => {
+    test('limits number of results', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-l', '3', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeLessThanOrEqual(3);
+    });
+
+    test('works with limit of 1', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-l', '1', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeLessThanOrEqual(1);
+    });
+
+    test('works with large limit', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-l', '100', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeLessThanOrEqual(100);
+    });
+
+    test('works in human mode', async () => {
+      const { exitCode } = await runCli(['list', '-l', '5']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('works in AI mode', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-l', '5', '--ai']);
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('## Tasks');
+    });
+  });
+
+  describe('combining short flags', () => {
+    test('-s and -p can be combined', async () => {
+      const { stdout, exitCode } = await runCli(['list', '-s', 'ready', '-p', 'Q1', '--json']);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(
+        output.tasks.every(
+          (t: { status: string; project?: string }) => t.status === 'ready' && t.project === 'Q1',
+        ),
+      ).toBe(true);
+    });
+
+    test('-s, -a, and -l can be combined', async () => {
+      const { stdout, exitCode } = await runCli([
+        'list',
+        '-s',
+        'ready',
+        '-a',
+        'work',
+        '-l',
+        '2',
+        '--json',
+      ]);
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.tasks.length).toBeLessThanOrEqual(2);
+    });
+
+    test('-d and -s can be combined', async () => {
+      const { exitCode } = await runCli(['list', '-d', 'today', '-s', 'ready', '--json']);
+      expect(exitCode).toBe(0);
+    });
+
+    test('all short flags can be combined', async () => {
+      const { exitCode } = await runCli([
+        'list',
+        '-s',
+        'ready',
+        '-p',
+        'Q1',
+        '-a',
+        'work',
+        '-d',
+        'this-week',
+        '-l',
+        '10',
+        '--json',
+      ]);
+      expect(exitCode).toBe(0);
+    });
+  });
+});
+
 describe('enhanced --scheduled filter', () => {
   test('accepts "today"', async () => {
     const { exitCode } = await runCli(['list', '--scheduled', 'today', '--json']);

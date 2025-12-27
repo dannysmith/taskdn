@@ -1,3 +1,44 @@
+/**
+ * Human-readable output formatter (router).
+ *
+ * This module provides the main entry point for human-readable CLI output formatting.
+ * It routes result types to specialized formatter modules based on entity and operation type.
+ *
+ * ## Architecture
+ * The human formatter uses a modular architecture to keep formatting logic maintainable:
+ * - `task.ts` - Single task display
+ * - `project.ts` - Single project display
+ * - `area.ts` - Single area display
+ * - `list.ts` - List views for all entity types
+ * - `context.ts` - Context views (relationships, overview)
+ * - `modify.ts` - Write operation results (create, update, archive, batch)
+ * - `shared.ts` - Shared formatting utilities (colors, truncation, etc.)
+ *
+ * ## Design Decisions
+ * - Uses ansis for terminal colors and styling
+ * - Optimized for readability on dark and light terminal backgrounds
+ * - Handles missing/optional fields gracefully
+ * - Includes visual separators and consistent indentation
+ * - Uses discriminated unions for type-safe routing
+ *
+ * ## Output Format
+ * Human mode output includes:
+ * - Colors and emoji for visual hierarchy
+ * - Truncated content for readability
+ * - Relative dates (e.g., "Due in 2 days")
+ * - Task/project counts and summaries
+ * - Reference tables for relationships
+ *
+ * ## Usage
+ * The formatter is typically used via the main formatOutput function:
+ * ```typescript
+ * import { formatOutput } from '@/output';
+ *
+ * const result = { type: 'task-list', tasks };
+ * console.log(formatOutput(result, { ai: false, json: false }));
+ * ```
+ */
+
 import { dim } from 'ansis';
 import type {
   Formatter,
