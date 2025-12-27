@@ -13,7 +13,7 @@ Checklist tracking implementation of all CLI commands and features.
 - [x] `show <path>` - Show task by path
 - [x] `show <path>` - Show project by path (auto-detected)
 - [x] `show <path>` - Show area by path (auto-detected)
-- [ ] `show` fuzzy matching (human mode)
+- [x] `show` fuzzy matching (human mode)
 - [x] `list` - List active tasks
 - [x] `list projects` - List projects
 - [x] `list areas` - List areas
@@ -47,7 +47,6 @@ Checklist tracking implementation of all CLI commands and features.
 ### Convenience Commands
 
 - [x] `today` - Due/scheduled today + overdue
-- [x] ~~`inbox` - Inbox tasks~~ (removed: use `list --status inbox`)
 
 ### Write Commands
 
@@ -74,11 +73,10 @@ Checklist tracking implementation of all CLI commands and features.
 
 ### System Commands
 
-- [ ] `init` - Interactive setup
-- [ ] `init --tasks-dir ... --projects-dir ... --areas-dir ...` - Non-interactive
-- [ ] `config` - Show config
-- [ ] `config --set <key>=<value>` - Set config
-- [ ] `doctor` - Health check
+- [x] `init` - Interactive setup
+- [x] `init --tasks-dir ... --projects-dir ... --areas-dir ...` - Non-interactive
+- [x] `config` - Show config
+- [x] `doctor` - Health check
 
 ---
 
@@ -104,7 +102,7 @@ Checklist tracking implementation of all CLI commands and features.
 ## Error Codes
 
 - [x] `NOT_FOUND` - File/entity doesn't exist
-- [ ] `AMBIGUOUS` - Multiple matches
+- [x] `AMBIGUOUS` - Multiple matches
 - [x] `INVALID_STATUS` - Bad status value
 - [x] `INVALID_DATE` - Unparseable date
 - [ ] `INVALID_PATH` - Path outside directories
