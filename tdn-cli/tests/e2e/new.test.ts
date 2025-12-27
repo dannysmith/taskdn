@@ -226,7 +226,9 @@ describe('taskdn new', () => {
       });
 
       expect(exitCode).toBe(2);
-      expect(stderr).toContain('Title is required');
+      const error = JSON.parse(stderr);
+      expect(error.error).toBe('MISSING_ARGUMENT');
+      expect(error.message).toContain('Title or entity type is required');
     });
 
     test('writes valid frontmatter to file', async () => {
