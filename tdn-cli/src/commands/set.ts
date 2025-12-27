@@ -1,13 +1,14 @@
 import { Command } from '@commander-js/extra-typings';
 import { formatOutput, getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions, TaskStatusChangedResult, OutputMode } from '@/output/types.ts';
-import { updateFileFields, parseTaskFile, type FieldUpdate, type Task } from '@bindings';
+import { updateFileFields, parseTaskFile, type FieldUpdate, type Task, createVaultSession, type VaultSession } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
 import { toKebabCase } from '@/output/helpers/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 import { processBatch } from '@/lib/batch.ts';
 import { disambiguateTasks } from '@/lib/disambiguation.ts';
 import { VALID_TASK_STATUSES, COMPLETION_STATUSES } from '@/lib/constants.ts';
+import { getVaultConfig } from '@/config/index.ts';
 
 /**
  * Set command - parent command for setting entity fields
@@ -42,10 +43,12 @@ function validateStatus(status: string): void {
 async function changeTaskStatus(
   taskQuery: string,
   newStatus: string,
-  mode: OutputMode
+  mode: OutputMode,
+  session: VaultSession
 ): Promise<{ task: Task; previousStatus: string }> {
   // Look up the task (supports both paths and fuzzy matching)
-  const lookupResult = lookupTask(taskQuery);
+  const config = getVaultConfig();
+  const lookupResult = lookupTask(session, taskQuery, config);
 
   // Handle lookup results
   if (lookupResult.type === 'none') {
@@ -103,10 +106,12 @@ async function changeTaskStatus(
 async function previewStatusChange(
   taskQuery: string,
   newStatus: string,
-  mode: OutputMode
+  mode: OutputMode,
+  session: VaultSession
 ): Promise<TaskStatusChangedResult> {
   // Look up the task (supports both paths and fuzzy matching)
-  const lookupResult = lookupTask(taskQuery);
+  const config = getVaultConfig();
+  const lookupResult = lookupTask(session, taskQuery, config);
 
   // Handle lookup results
   if (lookupResult.type === 'none') {
@@ -184,15 +189,19 @@ const setStatusCommand = new Command('status')
       process.exit(1);
     }
 
+    // Create session once for reuse across all lookups
+    const config = getVaultConfig();
+    const session = createVaultSession(config);
+
     // Single path case
     if (paths.length === 1) {
       const singlePath = paths[0]!;
       try {
         if (dryRun) {
-          const result = await previewStatusChange(singlePath, newStatus, mode);
+          const result = await previewStatusChange(singlePath, newStatus, mode, session);
           console.log(formatOutput(result, globalOpts));
         } else {
-          const { task, previousStatus } = await changeTaskStatus(singlePath, newStatus, mode);
+          const { task, previousStatus } = await changeTaskStatus(singlePath, newStatus, mode, session);
           const result: TaskStatusChangedResult = {
             type: 'task-status-changed',
             task,
@@ -216,7 +225,7 @@ const setStatusCommand = new Command('status')
     if (dryRun) {
       for (const taskPath of paths) {
         try {
-          const result = await previewStatusChange(taskPath, newStatus, mode);
+          const result = await previewStatusChange(taskPath, newStatus, mode, session);
           console.log(formatOutput(result, globalOpts));
         } catch (error) {
           if (isCliError(error)) {
@@ -232,7 +241,7 @@ const setStatusCommand = new Command('status')
       paths,
       'status-changed',
       async (taskPath) => {
-        const { task } = await changeTaskStatus(taskPath, newStatus, mode);
+        const { task } = await changeTaskStatus(taskPath, newStatus, mode, session);
         return {
           path: task.path,
           title: task.title,

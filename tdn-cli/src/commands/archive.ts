@@ -8,6 +8,9 @@ import { lookupTask } from '@/lib/entity-lookup.ts';
 import { processBatch } from '@/lib/batch.ts';
 import { disambiguateTasks } from '@/lib/disambiguation.ts';
 import type { OutputMode } from '@/output/types.ts';
+import { getVaultConfig } from '@/config/index.ts';
+import { createVaultSession } from '@bindings';
+import type { VaultSession } from '@bindings';
 
 /**
  * Archive command - move file(s) to archive subdirectory
@@ -49,10 +52,12 @@ function getUniqueArchivePath(archiveDir: string, filename: string): string {
  */
 async function archiveFile(
   taskQuery: string,
-  mode: OutputMode
+  mode: OutputMode,
+  session: VaultSession
 ): Promise<{ title: string; fromPath: string; toPath: string }> {
   // Look up the task (supports both paths and fuzzy matching)
-  const lookupResult = lookupTask(taskQuery);
+  const config = getVaultConfig();
+  const lookupResult = lookupTask(session, taskQuery, config);
 
   // Handle lookup results
   if (lookupResult.type === 'none') {
@@ -129,9 +134,10 @@ async function archiveFile(
  * Preview archiving a file (for dry-run mode).
  * Supports both path-based and fuzzy title-based lookup.
  */
-async function previewArchive(taskQuery: string, mode: OutputMode): Promise<ArchivedResult> {
+async function previewArchive(taskQuery: string, mode: OutputMode, session: VaultSession): Promise<ArchivedResult> {
   // Look up the task (supports both paths and fuzzy matching)
-  const lookupResult = lookupTask(taskQuery);
+  const config = getVaultConfig();
+  const lookupResult = lookupTask(session, taskQuery, config);
 
   // Handle lookup results
   if (lookupResult.type === 'none') {
@@ -192,15 +198,19 @@ export const archiveCommand = new Command('archive')
     const mode = getOutputMode(globalOpts);
     const dryRun = options.dryRun ?? false;
 
+    // Create session once for reuse across all lookups
+    const config = getVaultConfig();
+    const session = createVaultSession(config);
+
     // Single path case
     if (paths.length === 1) {
       const singlePath = paths[0]!;
       try {
         if (dryRun) {
-          const result = await previewArchive(singlePath, mode);
+          const result = await previewArchive(singlePath, mode, session);
           console.log(formatOutput(result, globalOpts));
         } else {
-          const { title, fromPath, toPath } = await archiveFile(singlePath, mode);
+          const { title, fromPath, toPath } = await archiveFile(singlePath, mode, session);
           const result: ArchivedResult = {
             type: 'archived',
             title,
@@ -225,7 +235,7 @@ export const archiveCommand = new Command('archive')
     if (dryRun) {
       for (const filePath of paths) {
         try {
-          const result = await previewArchive(filePath, mode);
+          const result = await previewArchive(filePath, mode, session);
           console.log(formatOutput(result, globalOpts));
         } catch (error) {
           if (isCliError(error)) {
@@ -250,7 +260,7 @@ export const archiveCommand = new Command('archive')
       paths,
       'archived',
       (filePath) => {
-        const lookupResult = lookupTask(filePath);
+        const lookupResult = lookupTask(session, filePath, config);
         if (lookupResult.type === 'none') {
           throw createError.notFound('task', filePath);
         }

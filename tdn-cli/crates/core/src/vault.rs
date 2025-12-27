@@ -40,9 +40,9 @@ pub fn scan_areas(config: VaultConfig) -> Vec<Area> {
     scan_directory(&config.areas_dir, parse_area_file)
 }
 
-// NOTE: find_tasks_by_title, find_projects_by_title, and find_areas_by_title
-// have been moved to vault_session.rs for better performance.
-// Use create_vault_session() and the session-based functions instead.
+// NOTE: Fuzzy lookup functions (findTasksByTitle, findProjectsByTitle, findAreasByTitle)
+// now require a VaultSession for better performance through index reuse.
+// Use createVaultSession() from vault_session.rs to create a session.
 
 /// Generic directory scanner that applies a parse function to each .md file.
 /// Returns successfully parsed entities, skipping failures.

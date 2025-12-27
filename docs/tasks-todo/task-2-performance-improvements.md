@@ -188,11 +188,11 @@ export const showCommand = new Command('show')
 
 **Complexity:** Medium-High
 - Need careful NAPI type handling for session with internal state
-- `OnceCell` for lazy initialization
+- `OnceLock` for lazy initialization
 - Update multiple TypeScript commands to use session pattern
 
 **Potential gotchas (all addressable):**
-- **Lazy index building**: Use `OnceCell<VaultIndex>` - standard Rust pattern
+- **Lazy index building**: Use `OnceLock<VaultIndex>` - standard Rust pattern
 - **NAPI lifetime with references**: Session owns everything, methods clone results
 - **Memory usage**: 5000 files ≈ 5-10MB - acceptable for CLI
 - **Error handling**: Same as current - skip unparseable files, log warnings
