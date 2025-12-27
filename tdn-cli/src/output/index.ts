@@ -22,8 +22,8 @@ import type {
   ProjectStats,
 } from './types.ts';
 import { getOutputMode } from './types.ts';
-import { humanFormatter } from './human.ts';
-import { aiFormatter } from './ai.ts';
+import { humanFormatter } from './human/index.ts';
+import { aiFormatter } from './ai/index.ts';
 import { jsonFormatter } from './json.ts';
 import { aiJsonFormatter } from './ai-json.ts';
 

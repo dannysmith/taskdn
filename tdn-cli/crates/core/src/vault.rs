@@ -74,7 +74,10 @@ where
 
     // Return empty if directory doesn't exist
     if !path.exists() || !path.is_dir() {
-        debug!("Directory does not exist or is not a directory: {}", dir_path);
+        debug!(
+            "Directory does not exist or is not a directory: {}",
+            dir_path
+        );
         return Vec::new();
     }
 
@@ -103,7 +106,11 @@ where
         })
         .collect();
 
-    debug!("Found {} .md files to process in {}", entries.len(), dir_path);
+    debug!(
+        "Found {} .md files to process in {}",
+        entries.len(),
+        dir_path
+    );
 
     // Process files in parallel
     let results: Vec<T> = entries
@@ -123,7 +130,11 @@ where
         })
         .collect();
 
-    debug!("Successfully parsed {} entities from {}", results.len(), dir_path);
+    debug!(
+        "Successfully parsed {} entities from {}",
+        results.len(),
+        dir_path
+    );
 
     results
 }
