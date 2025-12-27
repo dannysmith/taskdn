@@ -35,8 +35,11 @@ export function filterByStatus<T extends { status?: string }>(
 /**
  * Sort entities by a given field.
  *
- * - Undefined values are placed last regardless of sort direction
+ * - Undefined and null values are placed last regardless of sort direction
+ * - Empty strings are also treated as absent (placed last)
  * - String comparisons are case-insensitive
+ *
+ * Per S1 spec: "Empty or null field values SHOULD be treated as if the field were absent"
  *
  * @example
  * sortEntities(tasks, "due", false)  // ascending
@@ -47,17 +50,20 @@ export function sortEntities<T>(entities: T[], field: keyof T, descending: boole
     const aVal = a[field];
     const bVal = b[field];
 
-    // Items without the sort field go last, regardless of direction
-    if (aVal === undefined && bVal === undefined) return 0;
-    if (aVal === undefined) return 1;
-    if (bVal === undefined) return -1;
+    // Treat undefined, null, and empty strings as absent - they go last regardless of direction
+    const aIsAbsent = aVal === undefined || aVal === null || aVal === '';
+    const bIsAbsent = bVal === undefined || bVal === null || bVal === '';
+
+    if (aIsAbsent && bIsAbsent) return 0;
+    if (aIsAbsent) return 1;
+    if (bIsAbsent) return -1;
 
     // Compare values
     let comparison = 0;
     if (typeof aVal === 'string' && typeof bVal === 'string') {
       // Case-insensitive comparison for strings
       comparison = aVal.toLowerCase().localeCompare(bVal.toLowerCase());
-    } else if (aVal !== null && bVal !== null) {
+    } else {
       comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
     }
 
