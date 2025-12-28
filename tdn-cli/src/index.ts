@@ -46,45 +46,24 @@ program.addCommand(completionCommand);
 // @ts-expect-error - tab library types don't fully match Commander extra-typings
 const completion = tab(program);
 
+// IMPORTANT: The @bomb.sh/tab Commander adapter doesn't extract arguments from
+// Commander's .argument() definitions. We need to manually register them.
+
 // Add static completions for known values
 
-// Status completions for 'set status' command
-const setCompletion = completion.commands.get('set');
-if (setCompletion) {
-  // @ts-expect-error - completion API has commands property
-  const setStatusSubcommand = setCompletion.commands?.get('status');
-  if (setStatusSubcommand) {
-    // The last argument is the status value
-    const statusArg = setStatusSubcommand.arguments.get(setStatusSubcommand.arguments.size - 1);
-    if (statusArg) {
-      statusArg.handler = (complete: (value: string, description: string) => void) => {
-        complete('inbox', 'Newly captured, not yet processed');
-        complete('ready', 'Processed and ready to work on');
-        complete('in-progress', 'Currently being worked on');
-        complete('blocked', 'Waiting on external dependency');
-        complete('icebox', 'Deferred indefinitely');
-        complete('done', 'Completed');
-        complete('dropped', 'No longer needed');
-      };
-    }
-  }
-}
-
-// Entity type completions for 'list' command
+// Register and configure 'list' command argument
 const listCompletion = completion.commands.get('list');
 if (listCompletion) {
-  // First argument is entity type
-  const entityArg = listCompletion.arguments.get('0');
-  if (entityArg) {
-    entityArg.handler = (complete: (value: string, description: string) => void) => {
+  // Manually register the entity-type argument that Commander defines
+  listCompletion.argument(
+    'entity-type',
+    (complete: (value: string, description: string) => void) => {
       complete('tasks', 'List tasks');
-      complete('task', 'List tasks (singular)');
       complete('projects', 'List projects');
-      complete('project', 'List projects (singular)');
       complete('areas', 'List areas');
-      complete('area', 'List areas (singular)');
-    };
-  }
+    },
+    false
+  ); // false = optional argument
 
   // Status option for filtering
   const statusOption = listCompletion.options.get('status');
@@ -101,20 +80,19 @@ if (listCompletion) {
   }
 }
 
-// Entity type completions for 'new' command
+// Register and configure 'new' command arguments
 const newCompletion = completion.commands.get('new');
 if (newCompletion) {
-  // First argument can be entity type
-  const entityOrTitleArg = newCompletion.arguments.get('0');
-  if (entityOrTitleArg) {
-    entityOrTitleArg.handler = (complete: (value: string, description: string) => void) => {
+  // First argument: entity-or-title
+  newCompletion.argument(
+    'entity-or-title',
+    (complete: (value: string, description: string) => void) => {
       complete('task', 'Create a new task');
       complete('project', 'Create a new project');
-      complete('projects', 'Create a new project (plural)');
       complete('area', 'Create a new area');
-      complete('areas', 'Create a new area (plural)');
-    };
-  }
+    },
+    false
+  ); // false = optional
 
   // Status option
   const statusOption = newCompletion.options.get('status');
@@ -131,6 +109,25 @@ if (newCompletion) {
       complete('archived', 'Area: hidden from normal views');
     };
   }
+}
+
+// Register and configure 'set status' command argument
+const setStatusCompletion = completion.commands.get('set status');
+if (setStatusCompletion) {
+  // The status value argument
+  setStatusCompletion.argument(
+    'status-value',
+    (complete: (value: string, description: string) => void) => {
+      complete('inbox', 'Newly captured, not yet processed');
+      complete('ready', 'Processed and ready to work on');
+      complete('in-progress', 'Currently being worked on');
+      complete('blocked', 'Waiting on external dependency');
+      complete('icebox', 'Deferred indefinitely');
+      complete('done', 'Completed');
+      complete('dropped', 'No longer needed');
+    },
+    true
+  ); // true = required argument
 }
 
 // Parse and execute
