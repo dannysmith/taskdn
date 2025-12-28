@@ -2,11 +2,11 @@ name: 'Release Taskdn Desktop'
 
 on:
   push:
-    tags: ['v*']
+    tags: ['desktop-v*']
   workflow_dispatch:
     inputs:
       version:
-        description: 'Release version (e.g., v1.0.0)'
+        description: 'Release version (e.g., 1.0.0)'
         required: true
         type: string
 
@@ -30,14 +30,37 @@ jobs:
             args: '--bundles appimage'
 
     runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        working-directory: tdn-desktop
+
     steps:
       - uses: actions/checkout@v4
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            # workflow_dispatch: use input directly
+            echo "clean=${{ inputs.version }}" >> $GITHUB_OUTPUT
+            echo "tag=desktop-v${{ inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            # push trigger: extract from tag (desktop-v1.0.0 -> 1.0.0)
+            TAG="${{ github.ref_name }}"
+            CLEAN="${TAG#desktop-v}"
+            echo "clean=$CLEAN" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+          fi
+        working-directory: .
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 'lts/*'
-          cache: 'npm'
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
 
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
@@ -45,7 +68,7 @@ jobs:
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
-          workspaces: './src-tauri -> target'
+          workspaces: './tdn-desktop/src-tauri -> target'
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -54,19 +77,20 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
       - name: Install frontend dependencies
-        run: npm ci
+        run: bun install --frozen-lockfile
 
       - name: Build and release
-        uses: tauri-apps/tauri-action@dev
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
-          tagName: ${{ github.ref_name || inputs.version }}
-          releaseName: 'Taskdn Desktop ${{ github.ref_name || inputs.version }}'
+          projectPath: tdn-desktop
+          tagName: ${{ steps.version.outputs.tag }}
+          releaseName: 'Taskdn Desktop v${{ steps.version.outputs.clean }}'
           releaseBody: |
-            ## Taskdn Desktop ${{ github.ref_name || inputs.version }}
+            ## Taskdn Desktop v${{ steps.version.outputs.clean }}
 
             ### Installation Instructions
             - **macOS**: Download the `.dmg` file and drag to Applications folder
@@ -76,7 +100,7 @@ jobs:
             ### Auto-Updates
             Existing users will receive automatic update notifications.
 
-            **Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ github.ref_name || inputs.version }}
+            **Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }}
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true

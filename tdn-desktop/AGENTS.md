@@ -1,13 +1,33 @@
 # AI Agent Instructions
 
+## Monorepo Context
+
+This is part of the [Taskdn monorepo](../docs/overview.md). See the parent `../CLAUDE.md` for general project instructions.
+
+High-level documentation (requirements, technical overview) lives in `../docs/product-overviews/desktop/`.
+
 ## Overview
 
-Taskdn Desktop is a desktop application for managing tasks, built with Tauri and React.
+Taskdn Desktop is a desktop application for managing [S1-compliant](../tdn-specs/S1-core.md) task systems, built with Tauri v2 and React 19.
+
+- **Frontend**: React 19, TypeScript, Vite 7, shadcn/ui v4, Tailwind v4
+- **Backend**: Tauri v2, Rust
+- **State**: Zustand v5 (global UI), TanStack Query v5 (persistent data)
+
+## Key Commands
+
+```bash
+bun install              # Install dependencies
+bun run tauri:dev        # Run development build
+bun run check:all        # Run all checks (TS, ESLint, Prettier, ast-grep, clippy, tests)
+bun run test             # Run Vitest tests
+```
 
 ## Core Rules
 
 ### New Sessions
 
+- Read the parent `../CLAUDE.md` for monorepo context
 - Read @docs/tasks.md for task management
 - Review `docs/developer/architecture-guide.md` for high-level patterns
 - Check `docs/developer/README.md` for the full documentation index

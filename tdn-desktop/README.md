@@ -1,6 +1,8 @@
 # Taskdn Desktop
 
-A desktop application for managing tasks.
+A cross-platform desktop application for managing [S1-compliant](../tdn-specs/S1-core.md) task systems. Part of the [Taskdn monorepo](../docs/overview.md).
+
+For product requirements and goals, see [Desktop Requirements](../docs/product-overviews/desktop/desktop-requirements.md). For technical architecture overview, see [Desktop Tech](../docs/product-overviews/desktop/desktop-tech.md).
 
 ## Stack
 
@@ -13,9 +15,9 @@ A desktop application for managing tasks.
 | Testing  | Vitest v4, Testing Library                      |
 | Quality  | ESLint, Prettier, ast-grep, knip, jscpd, clippy |
 
-## What's Already Built
+## Foundation
 
-The template includes a working application with these features implemented:
+The app includes this foundational infrastructure:
 
 ### Core Features
 
@@ -71,13 +73,16 @@ Platform detection utilities, platform-specific UI strings ("Reveal in Finder" v
 
 ## AI-Ready Development
 
-This template is designed to work well with AI coding agents like Claude Code:
+This project is designed to work well with AI coding agents:
 
-- **Comprehensive documentation** in `docs/developer/` covering all patterns. Human readable but really designed to explain the "why" of certain patterns to AI agents. Not slop.
-- **Claude Code integration** - Custom commands (`/check`, `/cleanup`) and a couple of specialized agents
-- **Sensible file organization** - React code in `src/` with clear separation (components, hooks, stores, services), Rust in `src-tauri/src/` with modular command organization. Predictable structure for both humans and AI.
+- **Comprehensive documentation** in `docs/developer/` covering all patterns
+- **Claude Code integration** - Custom commands (`/check`, `/cleanup`) and specialized agents
+- **Sensible file organization** - React code in `src/` with clear separation (components, hooks, stores, services), Rust in `src-tauri/src/` with modular command organization
 
 ## Documentation
 
 - **[Developer Docs](docs/developer/)** - Architecture, patterns, and detailed guides
-- **[User Guide](docs/userguide/)** - End-user documentation template
+- **[User Guide](docs/userguide/)** - End-user documentation
+- **[Desktop Requirements](../docs/product-overviews/desktop/desktop-requirements.md)** - Product requirements (monorepo)
+- **[Desktop Tech](../docs/product-overviews/desktop/desktop-tech.md)** - Technical overview (monorepo)
+- **[Taskdn Specs](../tdn-specs/)** - S1/S2 specifications for task file format
