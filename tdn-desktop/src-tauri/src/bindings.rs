@@ -18,6 +18,7 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         quick_pane::update_quick_pane_shortcut,
         config::read_cli_config,
         config::get_app_data_dir,
+        config::open_app_data_dir,
         config::is_dev_mode,
         config::get_dummy_vault_paths,
     ])

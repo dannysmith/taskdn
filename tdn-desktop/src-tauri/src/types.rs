@@ -139,8 +139,9 @@ pub fn validate_theme(theme: &str) -> Result<(), String> {
 // ============================================================================
 
 /// Config read from CLI's ~/.taskdn.json
+/// Note: CLI uses camelCase field names (tasksDir, areasDir, projectsDir)
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
-#[serde(default)]
+#[serde(default, rename_all = "camelCase")]
 pub struct CliConfig {
     pub tasks_dir: Option<String>,
     pub areas_dir: Option<String>,

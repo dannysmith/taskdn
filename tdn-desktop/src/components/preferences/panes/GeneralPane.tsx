@@ -117,9 +117,9 @@ export function GeneralPane() {
     const cliConfig = result.data
     savePreferences.mutate({
       ...preferences,
-      tasks_dir: cliConfig.tasks_dir ?? preferences.tasks_dir,
-      areas_dir: cliConfig.areas_dir ?? preferences.areas_dir,
-      projects_dir: cliConfig.projects_dir ?? preferences.projects_dir,
+      tasks_dir: cliConfig.tasksDir ?? preferences.tasks_dir,
+      areas_dir: cliConfig.areasDir ?? preferences.areas_dir,
+      projects_dir: cliConfig.projectsDir ?? preferences.projects_dir,
       ignore: cliConfig.ignore ?? preferences.ignore,
     })
 

@@ -166,6 +166,17 @@ async getAppDataDir() : Promise<Result<string, string>> {
 }
 },
 /**
+ * Open the app's data directory in the system file manager
+ */
+async openAppDataDir() : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("open_app_data_dir") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
  * Check if running in development mode
  */
 async isDevMode() : Promise<boolean> {
@@ -222,8 +233,9 @@ projects_dir: string | null;
 ignore: string[] | null }
 /**
  * Config read from CLI's ~/.taskdn.json
+ * Note: CLI uses camelCase field names (tasksDir, areasDir, projectsDir)
  */
-export type CliConfig = { tasks_dir: string | null; areas_dir: string | null; projects_dir: string | null; ignore: string[] | null }
+export type CliConfig = { tasksDir: string | null; areasDir: string | null; projectsDir: string | null; ignore: string[] | null }
 /**
  * Error types for CLI config operations (typed for frontend matching)
  */
