@@ -9,6 +9,7 @@ export interface VaultConfig {
   tasksDir: string;
   projectsDir: string;
   areasDir: string;
+  ignore?: string[];
 }
 
 /**
@@ -18,6 +19,7 @@ interface ConfigFile {
   tasksDir?: string;
   projectsDir?: string;
   areasDir?: string;
+  ignore?: string[];
 }
 
 /**
@@ -110,6 +112,48 @@ function validateConfigFile(parsed: unknown): ConfigFile {
     }
   }
 
+  // Validate ignore field
+  if ('ignore' in obj && obj.ignore !== undefined) {
+    if (!Array.isArray(obj.ignore)) {
+      throw new Error('Config validation failed: "ignore" must be an array');
+    }
+
+    for (let i = 0; i < obj.ignore.length; i++) {
+      const pattern = obj.ignore[i];
+
+      if (typeof pattern !== 'string') {
+        throw new Error(`Config validation failed: ignore[${i}] must be a string`);
+      }
+
+      if (pattern.trim() === '') {
+        throw new Error(`Config validation failed: ignore[${i}] cannot be empty`);
+      }
+
+      // Security: Block absolute paths
+      if (pattern.startsWith('/')) {
+        throw new Error(
+          `Config validation failed: ignore[${i}] cannot be an absolute path. ` +
+            `Patterns must be filenames (e.g., "*.bak", not "/tmp/*.bak")`
+        );
+      }
+
+      // Security: Block path traversal
+      if (pattern.includes('../') || pattern.includes('..\\')) {
+        throw new Error(
+          `Config validation failed: ignore[${i}] cannot contain path traversal (../)`
+        );
+      }
+
+      // Security: Block path separators (filename matching only)
+      if (pattern.includes('/') || pattern.includes('\\')) {
+        throw new Error(
+          `Config validation failed: ignore[${i}] cannot contain path separators. ` +
+            `Patterns match filenames only (e.g., "*.bak" not "temp/*.bak")`
+        );
+      }
+    }
+  }
+
   return obj as ConfigFile;
 }
 
@@ -190,10 +234,14 @@ export function getVaultConfig(): VaultConfig {
     areasDir = validateVaultPath(resolve(process.env.TASKDN_AREAS_DIR), 'areasDir');
   }
 
+  // Simple override: local config replaces user config (no merging)
+  const ignore = localConfig?.ignore ?? userConfig?.ignore;
+
   return {
     tasksDir,
     projectsDir,
     areasDir,
+    ignore,
   };
 }
 

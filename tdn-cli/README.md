@@ -142,6 +142,34 @@ Available commands (run with `--ai` or `--json` flags for different output modes
 
 See [CLI Interface Guide](docs/developer/cli-interface-guide.md) for detailed usage.
 
+## Configuration
+
+Configure vault directories and ignore patterns in `~/.taskdn.json` or `./.taskdn.json`:
+
+```json
+{
+  "tasksDir": "~/notes/tasks",
+  "projectsDir": "~/notes/projects",
+  "areasDir": "~/notes/areas",
+  "ignore": [
+    "*.bak",
+    "*.tmp",
+    "README.md"
+  ]
+}
+```
+
+### Ignoring Files
+
+To exclude specific files from all Taskdn operations, use the `ignore` field with filename patterns:
+
+- Patterns use `.gitignore`-style glob syntax (`*.bak`, `temp?.md`)
+- Patterns match **filenames only** (not paths)
+- Ignored files excluded from `list`, `show`, `doctor`, and all other commands
+- Platform-aware case sensitivity (macOS/Windows: insensitive)
+
+See [Configuration Guide](docs/developer/configuration.md#ignore-patterns) for details.
+
 ## Documentation
 
 ### Developer Docs

@@ -585,6 +585,7 @@ mod tests {
             tasks_dir: tasks_dir.to_string_lossy().to_string(),
             projects_dir: projects_dir.to_string_lossy().to_string(),
             areas_dir: areas_dir.to_string_lossy().to_string(),
+            ignore: None,
         }
     }
 

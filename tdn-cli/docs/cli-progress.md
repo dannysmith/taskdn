@@ -168,6 +168,20 @@ Checklist tracking implementation of all CLI commands and features.
 
 ---
 
+## Configuration
+
+- [x] Load config from ~/.taskdn.json
+- [x] Load config from ./.taskdn.json
+- [x] Environment variable overrides
+- [x] Path validation and security checks
+- [x] **Ignore patterns support**
+  - [x] Glob pattern matching on filenames
+  - [x] Platform-aware case sensitivity
+  - [x] Config validation with security checks
+  - [x] Invalid pattern handling (warn and skip)
+
+---
+
 ## Exit Codes
 
 - [x] `0` - Success (including empty results)

@@ -273,6 +273,7 @@ mod tests {
             tasks_dir: tasks_dir.to_string_lossy().to_string(),
             projects_dir: projects_dir.to_string_lossy().to_string(),
             areas_dir: areas_dir.to_string_lossy().to_string(),
+            ignore: None,
         }
     }
 
@@ -377,6 +378,7 @@ mod tests {
             tasks_dir: "/nonexistent/path/tasks".to_string(),
             projects_dir: "/nonexistent/path/projects".to_string(),
             areas_dir: "/nonexistent/path/areas".to_string(),
+            ignore: None,
         };
 
         let tasks = scan_tasks(config);
@@ -425,4 +427,231 @@ mod tests {
 
     // NOTE: Fuzzy entity lookup tests have been moved to vault_session.rs
     // since those functions now use the session API for better performance.
+
+    // ==================== Ignore Patterns Tests ====================
+
+    #[test]
+    fn ignore_exact_filename() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-2.md",
+            "---\ntitle: Task 2\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "cover.md",
+            "---\ntitle: Cover\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = Some(vec!["cover.md".to_string()]);
+
+        let tasks = scan_tasks(config);
+        assert_eq!(tasks.len(), 2);
+        assert!(tasks.iter().any(|t| t.title == "Task 1"));
+        assert!(tasks.iter().any(|t| t.title == "Task 2"));
+        assert!(!tasks.iter().any(|t| t.title == "Cover"));
+    }
+
+    #[test]
+    fn ignore_wildcard_pattern() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "backup.bak.md",
+            "---\ntitle: Backup\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "temp.tmp.md",
+            "---\ntitle: Temp\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = Some(vec!["*.bak.md".to_string(), "*.tmp.md".to_string()]);
+
+        let tasks = scan_tasks(config);
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].title, "Task 1");
+    }
+
+    #[test]
+    fn ignore_multiple_patterns() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "cover.md",
+            "---\ntitle: Cover\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "README.md",
+            "---\ntitle: README\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "temp.md",
+            "---\ntitle: Temp\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = Some(vec![
+            "cover.md".to_string(),
+            "README.md".to_string(),
+            "temp.md".to_string(),
+        ]);
+
+        let tasks = scan_tasks(config);
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].title, "Task 1");
+    }
+
+    #[test]
+    fn ignore_none() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-2.md",
+            "---\ntitle: Task 2\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = None;
+
+        let tasks = scan_tasks(config);
+        assert_eq!(tasks.len(), 2);
+    }
+
+    #[test]
+    fn ignore_empty_array() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = Some(vec![]);
+
+        let tasks = scan_tasks(config);
+        assert_eq!(tasks.len(), 1);
+    }
+
+    #[test]
+    fn ignore_invalid_pattern() {
+        // Invalid glob pattern should be skipped with warning
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = Some(vec!["[invalid".to_string()]); // Invalid glob
+
+        // Should still work, invalid pattern just skipped
+        let tasks = scan_tasks(config);
+        assert_eq!(tasks.len(), 1);
+    }
+
+    #[test]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
+    fn ignore_case_insensitive_on_macos_windows() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.tasks_dir),
+            "Cover.md",
+            "---\ntitle: Cover\nstatus: inbox\n---\n",
+        );
+        write_file(
+            Path::new(&config.tasks_dir),
+            "task-1.md",
+            "---\ntitle: Task 1\nstatus: inbox\n---\n",
+        );
+
+        config.ignore = Some(vec!["cover.md".to_string()]); // lowercase pattern
+
+        let tasks = scan_tasks(config);
+
+        // Should match Cover.md (case-insensitive)
+        assert_eq!(tasks.len(), 1);
+        assert_eq!(tasks[0].title, "Task 1");
+    }
+
+    #[test]
+    fn ignore_works_for_projects() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.projects_dir),
+            "project-1.md",
+            "---\ntitle: Project 1\nstatus: planning\n---\n",
+        );
+        write_file(
+            Path::new(&config.projects_dir),
+            "4-projects.md",
+            "---\ntitle: Cover\nstatus: planning\n---\n",
+        );
+
+        config.ignore = Some(vec!["4-projects.md".to_string()]);
+
+        let projects = scan_projects(config);
+        assert_eq!(projects.len(), 1);
+        assert_eq!(projects[0].title, "Project 1");
+    }
+
+    #[test]
+    fn ignore_works_for_areas() {
+        let temp_dir = create_temp_vault();
+        let mut config = create_vault_config(&temp_dir);
+
+        write_file(
+            Path::new(&config.areas_dir),
+            "area-1.md",
+            "---\ntitle: Area 1\nstatus: active\n---\n",
+        );
+        write_file(
+            Path::new(&config.areas_dir),
+            "3-areas.md",
+            "---\ntitle: Cover\nstatus: active\n---\n",
+        );
+
+        config.ignore = Some(vec!["3-areas.md".to_string()]);
+
+        let areas = scan_areas(config);
+        assert_eq!(areas.len(), 1);
+        assert_eq!(areas[0].title, "Area 1");
+    }
 }
