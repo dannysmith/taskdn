@@ -1,16 +1,6 @@
-# Tauri React Template
+# Taskdn Desktop
 
-A "batteries-included" template for building production-ready desktop applications with **Tauri v2**, **React**, and **TypeScript**. Designed with opinionated patterns that help both human developers and AI coding agents build well-architected apps from the start.
-
-## Why This Template?
-
-Most Tauri starters give you a blank canvas. This template gives you a **working application** with patterns already established:
-
-- **Type-safe Rust-TypeScript bridge** via tauri-specta.
-- **Performance patterns enforced by tooling** - all the usual linting plus ast-grep for common anti-patterns
-- **Multi-window architecture** already working (quick pane with global shortcut as a demo)
-- **Cross-platform ready** with platform-specific title bars, window controls, and native menu integration
-- **i18n built-in** with RTL support
+A desktop application for managing tasks.
 
 ## Stack
 
@@ -87,32 +77,7 @@ This template is designed to work well with AI coding agents like Claude Code:
 - **Claude Code integration** - Custom commands (`/check`, `/cleanup`) and a couple of specialized agents
 - **Sensible file organization** - React code in `src/` with clear separation (components, hooks, stores, services), Rust in `src-tauri/src/` with modular command organization. Predictable structure for both humans and AI.
 
-## Getting Started
-
-See **[Using This Template](docs/USING_THIS_TEMPLATE.md)** for setup instructions and workflow guidance.
-
-### Quick Start
-
-```bash
-# Prerequisites: Node.js 18+, Rust (latest stable)
-# See https://tauri.app/start/prerequisites/ for platform-specific deps
-
-git clone <your-repo>
-cd your-app
-npm install
-npm run dev
-```
-
 ## Documentation
 
 - **[Developer Docs](docs/developer/)** - Architecture, patterns, and detailed guides
 - **[User Guide](docs/userguide/)** - End-user documentation template
-- **[Using This Template](docs/USING_THIS_TEMPLATE.md)** - Setup and workflow guide
-
-## License
-
-[MIT](LICENSE.md)
-
----
-
-Built with [Tauri](https://tauri.app) | [shadcn/ui](https://ui.shadcn.com) | [React](https://react.dev)

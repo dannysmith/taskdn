@@ -1,5 +1,6 @@
 {
-  "name": "tauri-app",
+  "name": "taskdn-desktop",
+  "description": "A desktop application for managing tasks",
   "private": true,
   "version": "0.1.0",
   "type": "module",

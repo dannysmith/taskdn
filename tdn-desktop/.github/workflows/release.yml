@@ -1,4 +1,4 @@
-name: 'Release Tauri Template App'
+name: 'Release Taskdn Desktop'
 
 on:
   push:
@@ -64,9 +64,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name || inputs.version }}
-          releaseName: 'Tauri Template App ${{ github.ref_name || inputs.version }}'
+          releaseName: 'Taskdn Desktop ${{ github.ref_name || inputs.version }}'
           releaseBody: |
-            ## Tauri Template App ${{ github.ref_name || inputs.version }}
+            ## Taskdn Desktop ${{ github.ref_name || inputs.version }}
 
             ### Installation Instructions
             - **macOS**: Download the `.dmg` file and drag to Applications folder
