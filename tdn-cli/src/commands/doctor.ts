@@ -56,13 +56,13 @@ function normalizeWikilink(ref: string | undefined): string | undefined {
 
   // If it's a WikiLink with display text: [[target|display]]
   const displayMatch = ref.match(/^\[\[([^\]]+)\|([^\]]+)\]\]$/);
-  if (displayMatch) {
+  if (displayMatch && displayMatch[2]) {
     return displayMatch[2].trim();
   }
 
   // If it's a simple WikiLink: [[target]]
   const simpleMatch = ref.match(/^\[\[([^\]]+)\]\]$/);
-  if (simpleMatch) {
+  if (simpleMatch && simpleMatch[1]) {
     // Extract just the filename if it's a path
     const target = simpleMatch[1];
     const lastSlash = target.lastIndexOf('/');
@@ -181,7 +181,7 @@ function validateTask(task: Task, projectTitles: Set<string>): string[] {
     issues.push('Missing required field: status');
   } else {
     const validStatuses = RUST_TASK_STATUSES as readonly string[];
-    if (!validStatuses.includes(task.status as any)) {
+    if (!validStatuses.includes(task.status as string)) {
       issues.push(`Invalid status "${task.status}" (valid: ${RUST_TASK_STATUSES.join(', ')})`);
     }
   }
@@ -226,7 +226,7 @@ function validateProject(project: Project, areaTitles: Set<string>): string[] {
   // Status is optional for projects, but if present must be valid
   if (project.status) {
     const validStatuses = RUST_PROJECT_STATUSES as readonly string[];
-    if (!validStatuses.includes(project.status as any)) {
+    if (!validStatuses.includes(project.status as string)) {
       issues.push(
         `Invalid status "${project.status}" (valid: ${RUST_PROJECT_STATUSES.join(', ')})`
       );
@@ -266,7 +266,7 @@ function validateArea(area: Area): string[] {
   // Status is optional for areas, but if present must be valid
   if (area.status) {
     const validStatuses = RUST_AREA_STATUSES as readonly string[];
-    if (!validStatuses.includes(area.status as any)) {
+    if (!validStatuses.includes(area.status as string)) {
       issues.push(`Invalid status "${area.status}" (valid: ${RUST_AREA_STATUSES.join(', ')})`);
     }
   }
