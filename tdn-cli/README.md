@@ -174,6 +174,17 @@ See [Configuration Guide](docs/developer/configuration.md#ignore-patterns) for d
 
 Tab completions work for all commands, options, statuses, and entity types.
 
+### Usage
+
+Tab completions work for commands, arguments, and option values:
+
+```bash
+tdn <TAB>                      # Commands: list, show, new, set, etc.
+tdn list <TAB>                 # Arguments: tasks, projects, areas
+tdn set status <TAB>           # Status values: inbox, ready, in-progress, etc.
+tdn list --status=<TAB>        # Option values (use equals syntax)
+```
+
 ### Automatic Installation (Recommended)
 
 Run the installation command and follow the prompts:
