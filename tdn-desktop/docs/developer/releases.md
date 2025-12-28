@@ -11,13 +11,14 @@ The release system provides:
 - Auto-updater for seamless user updates
 - Cross-platform builds (macOS, Windows, Linux)
 
+**Workflow location:** `/.github/workflows/release-desktop.yml` (in monorepo root)
+
 ## Initial Setup
 
 ### 1. Generate Signing Keys
 
 ```bash
-bun add -g @tauri-apps/cli
-tauri signer generate -w ~/.tauri/myapp.key
+bunx @tauri-apps/cli signer generate -w ~/.tauri/taskdn-desktop.key
 # Outputs private key (saved) and public key (displayed)
 ```
 
@@ -57,7 +58,7 @@ Add these secrets (Settings → Secrets and variables → Actions):
 ### Simple Method
 
 ```bash
-bun run release:prepare v1.0.0
+bun run release:prepare 1.0.0
 ```
 
 This will:
@@ -82,10 +83,12 @@ Finally, manually publish the draft release on GitHub.
 # Update versions in package.json, Cargo.toml, tauri.conf.json
 bun run check:all
 git add .
-git commit -m "chore: release v1.0.0"
-git tag v1.0.0
-git push origin main --tags
+git commit -m "chore(desktop): release desktop-v1.0.0"
+git tag desktop-v1.0.0
+git push && git push origin desktop-v1.0.0
 ```
+
+**Note:** Desktop releases use `desktop-v*` tags to differentiate from CLI releases (`cli-v*`).
 
 ## Version Strategy
 
@@ -173,9 +176,9 @@ All updates are cryptographically signed:
 
 ## Troubleshooting
 
-| Issue                    | Solution                                              |
-| ------------------------ | ----------------------------------------------------- |
-| Workflow doesn't trigger | Ensure tag starts with `v` and is pushed              |
-| Build fails              | Check GitHub secrets, run `bun run check:all` locally |
-| Updates not detected     | Verify endpoint URL and public key match              |
-| Download fails           | Check signatures, file permissions, disk space        |
+| Issue                    | Solution                                                   |
+| ------------------------ | ---------------------------------------------------------- |
+| Workflow doesn't trigger | Ensure tag starts with `desktop-v` and is pushed           |
+| Build fails              | Check GitHub secrets, run `bun run check:all` locally      |
+| Updates not detected     | Verify endpoint URL and public key match                   |
+| Download fails           | Check signatures, file permissions, disk space             |
