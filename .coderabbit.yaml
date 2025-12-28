@@ -1,0 +1,6 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/reference/configuration
+
+reviews:
+  path_filters:
+    - "!**/*.md"  # Exclude all markdown files from review

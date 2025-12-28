@@ -12,3 +12,6 @@ dummy-demo-vault/
 .env.development
 .env.test
 .env.production
+
+# Local taskdn config (points to test fixtures during development)
+.taskdn.json

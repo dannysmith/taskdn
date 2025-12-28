@@ -1,0 +1,6 @@
+node_modules
+target
+bindings
+dist
+*.node
+bun.lock

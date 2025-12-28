@@ -1,9 +1,8 @@
 # The taskdn Protocol Specifications
 
-A set of unambiguous formal specifications describing the protocol and core APIs of the system. Tools which implement these will be compatible with each other.
+A set of formal specifications describing the protocol and core behaviors of the system. Tools which implement these will be compatible with each other.
 
-1. **S1: Core (Data Storage)** - A formal specification for the data files on disk (naming, frontmatter, location, data types) etc. Includes JSON schemas for these.
-2. **S2: Interface Design** - A formal specification for the design of interfaces which interact with S1-compliant data. Includes guidance on types, data structures, commands language (eg. "verb first"), workflows, input & output formats, query & filter language, sorting, interface modes, error handling etc.
-3. **S3: Guidance for Reading & Writing Data** - Guidance for implementations when reading, writing & mutating S1-compliant data on disk.
+1. **[S1: Core (Data Storage)](./S1-core.md)** - The file format specification for tasks, projects, and areas on disk (naming, frontmatter, location, data types). Includes JSON schemas.
+2. **[S2: Implementation Requirements](./S2-implementation-requirements.md)** - Requirements and guidance for implementations: field conventions, timestamp management, data preservation, file safety, query semantics, and error handling.
 
-**All software which implements S1 will be mutually compatible when reading/writing task files on disk.** Implementing S2 will ensure a consistent & predictable external interface.
+**Implement S1 and your files are compatible with other S1-compliant tools. Implement S2 and your implementation behaves predictably and preserves user data.**
