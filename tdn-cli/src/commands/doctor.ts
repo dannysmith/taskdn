@@ -16,9 +16,9 @@ import {
   type Area,
 } from '@bindings';
 import {
-  VALID_TASK_STATUSES,
-  VALID_PROJECT_STATUSES,
-  VALID_AREA_STATUSES,
+  RUST_TASK_STATUSES,
+  RUST_PROJECT_STATUSES,
+  RUST_AREA_STATUSES,
 } from '@/lib/constants.ts';
 
 /**
@@ -42,6 +42,38 @@ function formatPath(path: string): string {
     return '~' + path.slice(home.length);
   }
   return path;
+}
+
+/**
+ * Normalize a WikiLink reference for comparison
+ * [[Project Name]] -> Project Name
+ * [[path/to/Project Name|Display]] -> Display
+ * [[Project Name|Display]] -> Display
+ * Project Name -> Project Name
+ *
+ * When a WikiLink has display text (after |), we use that for matching
+ * because it typically corresponds to the entity title.
+ */
+function normalizeWikilink(ref: string | undefined): string | undefined {
+  if (!ref) return undefined;
+
+  // If it's a WikiLink with display text: [[target|display]]
+  const displayMatch = ref.match(/^\[\[([^\]]+)\|([^\]]+)\]\]$/);
+  if (displayMatch) {
+    return displayMatch[2].trim();
+  }
+
+  // If it's a simple WikiLink: [[target]]
+  const simpleMatch = ref.match(/^\[\[([^\]]+)\]\]$/);
+  if (simpleMatch) {
+    // Extract just the filename if it's a path
+    const target = simpleMatch[1];
+    const lastSlash = target.lastIndexOf('/');
+    return (lastSlash >= 0 ? target.slice(lastSlash + 1) : target).trim();
+  }
+
+  // Plain text reference
+  return ref.trim();
 }
 
 /**
@@ -137,10 +169,9 @@ function validateTask(task: Task, projectTitles: Set<string>): string[] {
   if (!task.status) {
     issues.push('Missing required field: status');
   } else {
-    const statusLower = task.status.toLowerCase();
-    const validStatuses = VALID_TASK_STATUSES as readonly string[];
-    if (!validStatuses.includes(statusLower)) {
-      issues.push(`Invalid status "${task.status}" (valid: ${VALID_TASK_STATUSES.join(', ')})`);
+    const validStatuses = RUST_TASK_STATUSES as readonly string[];
+    if (!validStatuses.includes(task.status as any)) {
+      issues.push(`Invalid status "${task.status}" (valid: ${RUST_TASK_STATUSES.join(', ')})`);
     }
   }
 
@@ -155,9 +186,12 @@ function validateTask(task: Task, projectTitles: Set<string>): string[] {
     issues.push(`Invalid defer-until date "${task.deferUntil}" (must be ISO 8601: YYYY-MM-DD)`);
   }
 
-  // Check project reference exists
-  if (task.project && !projectTitles.has(task.project)) {
-    issues.push(`References non-existent project "${task.project}"`);
+  // Check project reference exists (normalize WikiLinks)
+  if (task.project) {
+    const normalizedProject = normalizeWikilink(task.project);
+    if (normalizedProject && !projectTitles.has(normalizedProject)) {
+      issues.push(`References non-existent project "${task.project}"`);
+    }
   }
 
   // Note: Multi-project validation would require checking raw YAML before parsing,
@@ -180,11 +214,10 @@ function validateProject(project: Project, areaTitles: Set<string>): string[] {
 
   // Status is optional for projects, but if present must be valid
   if (project.status) {
-    const statusLower = project.status.toLowerCase();
-    const validStatuses = VALID_PROJECT_STATUSES as readonly string[];
-    if (!validStatuses.includes(statusLower)) {
+    const validStatuses = RUST_PROJECT_STATUSES as readonly string[];
+    if (!validStatuses.includes(project.status as any)) {
       issues.push(
-        `Invalid status "${project.status}" (valid: ${VALID_PROJECT_STATUSES.join(', ')})`
+        `Invalid status "${project.status}" (valid: ${RUST_PROJECT_STATUSES.join(', ')})`
       );
     }
   }
@@ -197,9 +230,12 @@ function validateProject(project: Project, areaTitles: Set<string>): string[] {
     issues.push(`Invalid end-date "${project.endDate}" (must be ISO 8601: YYYY-MM-DD)`);
   }
 
-  // Check area reference exists
-  if (project.area && !areaTitles.has(project.area)) {
-    issues.push(`References non-existent area "${project.area}"`);
+  // Check area reference exists (normalize WikiLinks)
+  if (project.area) {
+    const normalizedArea = normalizeWikilink(project.area);
+    if (normalizedArea && !areaTitles.has(normalizedArea)) {
+      issues.push(`References non-existent area "${project.area}"`);
+    }
   }
 
   return issues;
@@ -218,10 +254,9 @@ function validateArea(area: Area): string[] {
 
   // Status is optional for areas, but if present must be valid
   if (area.status) {
-    const statusLower = area.status.toLowerCase();
-    const validStatuses = VALID_AREA_STATUSES as readonly string[];
-    if (!validStatuses.includes(statusLower)) {
-      issues.push(`Invalid status "${area.status}" (valid: ${VALID_AREA_STATUSES.join(', ')})`);
+    const validStatuses = RUST_AREA_STATUSES as readonly string[];
+    if (!validStatuses.includes(area.status as any)) {
+      issues.push(`Invalid status "${area.status}" (valid: ${RUST_AREA_STATUSES.join(', ')})`);
     }
   }
 
