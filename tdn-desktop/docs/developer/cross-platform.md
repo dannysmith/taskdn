@@ -275,7 +275,7 @@ JSON Merge Patch **replaces arrays entirely**, not element-by-element. Each plat
 
 ```bash
 # Runs on current platform
-npm run dev
+bun run dev
 ```
 
 ### Production Builds
@@ -284,7 +284,7 @@ Builds are platform-specific. You can only build for your current OS (cross-comp
 
 ```bash
 # Build for current platform
-npm run build
+bun run build
 ```
 
 ### CI/CD Builds

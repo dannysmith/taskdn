@@ -59,7 +59,7 @@ std::fs::write(user_input, data)
 ### Dependency Audits
 
 ```bash
-npm audit
+bun pm audit
 cargo audit
 ```
 

@@ -138,7 +138,7 @@ Follow the pattern in `src-tauri/src/commands/preferences.rs`:
 Add to `src-tauri/src/bindings.rs` and regenerate bindings:
 
 ```bash
-npm run rust:bindings
+bun run rust:bindings
 ```
 
 ### 4. Create React hooks

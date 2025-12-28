@@ -22,9 +22,9 @@ None required. The agent runs the tools itself.
 ### 1. Run Analysis Tools
 
 ```bash
-npm run knip
-npm run jscpd
-npm run check:all
+bun run knip
+bun run jscpd
+bun run check:all
 ```
 
 Capture and parse all output.

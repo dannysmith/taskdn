@@ -60,7 +60,7 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
 ### 4. Regenerate TypeScript bindings
 
 ```bash
-npm run rust:bindings
+bun run rust:bindings
 ```
 
 ## Type Patterns
