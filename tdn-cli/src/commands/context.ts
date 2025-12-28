@@ -1,0 +1,527 @@
+import { resolve, isAbsolute, join } from 'path';
+import { homedir } from 'os';
+import { Command } from '@commander-js/extra-typings';
+import { createVaultSession, getAreaContext, getProjectContext, getTaskContext } from '@bindings';
+import type { Task, Project } from '@bindings';
+import { formatOutput, getOutputMode } from '@/output/index.ts';
+import type {
+  GlobalOptions,
+  AreaContextResultOutput,
+  ProjectContextResultOutput,
+  TaskContextResultOutput,
+  ProjectsByStatus,
+  AreaStats,
+  TimelineData,
+  TasksByStatus,
+  ProjectStats,
+} from '@/output/index.ts';
+import { buildVaultOverview } from '@/output/vault-overview.ts';
+import { getVaultConfig } from '@/config/index.ts';
+import { createError } from '@/errors/types.ts';
+import { formatError } from '@/errors/format.ts';
+import {
+  getToday,
+  isOverdue,
+  isDueToday,
+  isScheduledToday,
+  isNewlyActionable,
+  isScheduledThisWeek,
+  isActiveTask,
+  isBlocked,
+  isInProgress,
+} from '@/output/helpers/index.ts';
+
+/**
+ * Check if an identifier looks like a file path vs a title.
+ * Returns true if the identifier appears to be a path.
+ */
+function isPathLike(identifier: string): boolean {
+  return (
+    identifier.startsWith('/') ||
+    identifier.startsWith('~') ||
+    identifier.startsWith('./') ||
+    identifier.startsWith('../') ||
+    identifier.includes('/') ||
+    identifier.includes('\\') || // Windows backslash
+    /^[a-zA-Z]:\\/.test(identifier) || // Windows drive letter (C:\)
+    identifier.endsWith('.md')
+  );
+}
+
+/**
+ * Resolve a path-like identifier to an absolute path.
+ * - Expands ~ to home directory
+ * - Resolves relative paths (with /) against CWD
+ * - Resolves bare filenames (.md) against tasks directory
+ */
+function resolveTaskPath(identifier: string, tasksDir: string): string {
+  if (identifier.startsWith('~')) {
+    return identifier.replace(/^~/, homedir());
+  }
+  if (isAbsolute(identifier)) {
+    return identifier;
+  }
+  // If it contains a path separator, resolve relative to CWD
+  if (identifier.includes('/') || identifier.includes('\\')) {
+    return resolve(identifier);
+  }
+  // Bare filename (e.g., "my-task.md") - resolve relative to tasks dir
+  return join(tasksDir, identifier);
+}
+
+/**
+ * Group tasks by their project path
+ */
+function groupTasksByProject(tasks: Task[], projects: Project[]): Map<string, Task[]> {
+  const grouped = new Map<string, Task[]>();
+
+  // Initialize empty arrays for each project
+  for (const project of projects) {
+    grouped.set(project.path, []);
+  }
+
+  for (const task of tasks) {
+    if (task.project) {
+      // Task has a project reference - find the matching project by title
+      // The task.project is a wikilink like "[[Test Project]]" or just the name
+      // Strip wikilink brackets if present
+      const projectName = task.project.replace(/^\[\[(.*)\]\]$/, '$1');
+
+      // Find project with matching title (case-insensitive exact match)
+      const matchingProject = projects.find(
+        (p) => p.title.toLowerCase() === projectName.toLowerCase()
+      );
+
+      if (matchingProject) {
+        const arr = grouped.get(matchingProject.path) ?? [];
+        arr.push(task);
+        grouped.set(matchingProject.path, arr);
+      }
+    }
+  }
+
+  return grouped;
+}
+
+/**
+ * Get tasks that are directly in the area (not via a project)
+ */
+function getDirectAreaTasks(tasks: Task[], projectTasks: Map<string, Task[]>): Task[] {
+  // Create a set of all task paths that are in projects
+  const tasksInProjects = new Set<string>();
+  for (const projectTaskList of projectTasks.values()) {
+    for (const task of projectTaskList) {
+      tasksInProjects.add(task.path);
+    }
+  }
+
+  // Return tasks that have an area but are not in the projectTasks
+  return tasks.filter((task) => task.area && !tasksInProjects.has(task.path));
+}
+
+/**
+ * Group projects by their status
+ * Per ai-context.md Section 5
+ */
+function groupProjectsByStatus(projects: Project[]): ProjectsByStatus {
+  const result: ProjectsByStatus = {
+    inProgress: [],
+    ready: [],
+    planning: [],
+    blocked: [],
+    paused: [],
+    done: [],
+  };
+
+  for (const project of projects) {
+    const status = project.status?.toLowerCase() ?? '';
+
+    switch (status) {
+      case 'in-progress':
+      case 'inprogress':
+        result.inProgress.push(project);
+        break;
+      case 'ready':
+        result.ready.push(project);
+        break;
+      case 'planning':
+        result.planning.push(project);
+        break;
+      case 'blocked':
+        result.blocked.push(project);
+        break;
+      case 'paused':
+        result.paused.push(project);
+        break;
+      case 'done':
+        result.done.push(project);
+        break;
+      default:
+        // Projects without status default to planning
+        result.planning.push(project);
+        break;
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Build timeline categorization for a set of tasks
+ * Scoped version of the vault-overview timeline builder
+ */
+function buildAreaTimeline(tasks: Task[], today: string): TimelineData {
+  const overdue: Task[] = [];
+  const dueToday: Task[] = [];
+  const scheduledToday: Task[] = [];
+  const newlyActionable: Task[] = [];
+  const blocked: Task[] = [];
+  const scheduledThisWeek = new Map<string, Task[]>();
+
+  // Set for tracking tasks that appear in timeline sections
+  const inTimeline = new Set<string>();
+
+  for (const task of tasks) {
+    // Check overdue
+    if (isOverdue(task, today)) {
+      overdue.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check due today
+    if (isDueToday(task, today)) {
+      dueToday.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check scheduled today
+    if (isScheduledToday(task, today)) {
+      scheduledToday.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check newly actionable
+    if (isNewlyActionable(task, today)) {
+      newlyActionable.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check blocked
+    if (isBlocked(task)) {
+      blocked.push(task);
+      inTimeline.add(task.path);
+      continue;
+    }
+
+    // Check scheduled this week (but not today)
+    if (isScheduledThisWeek(task, today)) {
+      const date = task.scheduled!;
+      const arr = scheduledThisWeek.get(date) ?? [];
+      arr.push(task);
+      scheduledThisWeek.set(date, arr);
+      inTimeline.add(task.path);
+    }
+  }
+
+  // Note: recentlyModified is only shown in vault overview, not in area/project context
+  // Per ai-context.md Section 2.6
+  return {
+    overdue,
+    dueToday,
+    scheduledToday,
+    newlyActionable,
+    blocked,
+    scheduledThisWeek,
+    recentlyModified: [],
+  };
+}
+
+/**
+ * Calculate area statistics
+ */
+function calculateAreaStats(projects: Project[], tasks: Task[], timeline: TimelineData): AreaStats {
+  // Count active projects (exclude done)
+  const activeProjects = projects.filter((p) => p.status?.toLowerCase() !== 'done');
+
+  return {
+    projectCount: activeProjects.length,
+    activeTaskCount: tasks.length,
+    overdueCount: timeline.overdue.length,
+    dueTodayCount: timeline.dueToday.length,
+    inProgressCount: tasks.filter(isInProgress).length,
+  };
+}
+
+// ============================================================================
+// Project Context Helpers
+// ============================================================================
+
+/**
+ * Group tasks by their status
+ * Per ai-context.md Section 6
+ */
+function groupTasksByStatus(tasks: Task[]): TasksByStatus {
+  const result: TasksByStatus = {
+    inProgress: [],
+    blocked: [],
+    ready: [],
+    inbox: [],
+  };
+
+  for (const task of tasks) {
+    const status = task.status.toLowerCase();
+
+    switch (status) {
+      case 'in-progress':
+      case 'inprogress':
+        result.inProgress.push(task);
+        break;
+      case 'blocked':
+        result.blocked.push(task);
+        break;
+      case 'ready':
+        result.ready.push(task);
+        break;
+      case 'inbox':
+        result.inbox.push(task);
+        break;
+      // done, dropped, icebox are filtered out upstream
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Build timeline for project tasks (reuses area timeline logic)
+ */
+function buildProjectTimeline(tasks: Task[], today: string): TimelineData {
+  // Same logic as area timeline
+  return buildAreaTimeline(tasks, today);
+}
+
+/**
+ * Calculate project statistics
+ */
+function calculateProjectStats(tasks: Task[], timeline: TimelineData): ProjectStats {
+  return {
+    activeTaskCount: tasks.length,
+    overdueCount: timeline.overdue.length,
+    dueTodayCount: timeline.dueToday.length,
+    inProgressCount: tasks.filter(isInProgress).length,
+    blockedCount: tasks.filter(isBlocked).length,
+  };
+}
+
+/**
+ * Context command - get expanded context for an entity
+ *
+ * Usage:
+ *   tdn context area "Work"            # Area + projects + tasks
+ *   tdn context project "Q1"           # Project + tasks + parent area
+ *   tdn context task ~/tasks/foo.md    # Task + parent project + area
+ *   tdn context --ai                   # Vault overview (AI only)
+ */
+export const contextCommand = new Command('context')
+  .description('Get expanded context for an entity')
+  .argument('[entity-type]', 'Entity type: area, project, or task')
+  .argument('[target]', 'Name or path of the entity')
+  .action((entityType, target, _options, command) => {
+    const globalOpts = command.optsWithGlobals() as GlobalOptions;
+    const mode = getOutputMode(globalOpts);
+
+    // No args behavior differs by mode
+    if (!entityType && !target) {
+      if (mode === 'human') {
+        console.error(
+          'Error: Please specify an entity (area, project, or task) or use --ai for vault overview.'
+        );
+        console.error('\nExamples:');
+        console.error('  taskdn context area "Work"');
+        console.error('  taskdn context project "Q1 Planning"');
+        console.error('  taskdn context --ai');
+        process.exit(2);
+      }
+
+      // AI mode: return vault overview
+      const config = getVaultConfig();
+      const result = buildVaultOverview(config);
+      console.log(formatOutput(result, globalOpts));
+      return;
+    }
+
+    // Handle area context
+    if (entityType === 'area') {
+      if (!target) {
+        console.error('Error: Please specify an area name.');
+        console.error('\nExample: taskdn context area "Work"');
+        process.exit(2);
+      }
+
+      const config = getVaultConfig();
+      const session = createVaultSession(config);
+      const result = getAreaContext(session, target);
+
+      if (!result.area) {
+        // Area not found
+        const error = createError.notFound('area', target);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      const today = getToday();
+
+      // Filter to active tasks (per ai-context.md Section 2.2)
+      const activeTasks = result.tasks.filter(isActiveTask);
+
+      // Group projects by status (ALL projects including done per Section 5)
+      const projectsByStatus = groupProjectsByStatus(result.projects);
+
+      // Group tasks by project
+      const projectTasks = groupTasksByProject(activeTasks, result.projects);
+      const directTasks = getDirectAreaTasks(activeTasks, projectTasks);
+
+      // Build timeline scoped to this area's tasks
+      const timeline = buildAreaTimeline(activeTasks, today);
+
+      // Calculate area stats
+      const stats = calculateAreaStats(result.projects, activeTasks, timeline);
+
+      const output: AreaContextResultOutput = {
+        type: 'area-context',
+        area: result.area,
+        projectsByStatus,
+        projects: result.projects,
+        projectTasks,
+        directTasks,
+        timeline,
+        stats,
+        warnings: result.warnings,
+      };
+
+      console.log(formatOutput(output, globalOpts));
+      return;
+    }
+
+    // Handle project context
+    if (entityType === 'project') {
+      if (!target) {
+        console.error('Error: Please specify a project name.');
+        console.error('\nExample: taskdn context project "Q1 Planning"');
+        process.exit(2);
+      }
+
+      const config = getVaultConfig();
+      const session = createVaultSession(config);
+      const result = getProjectContext(session, target);
+
+      if (!result.project) {
+        // Project not found
+        const error = createError.notFound('project', target);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      const today = getToday();
+
+      // Filter to active tasks (per ai-context.md Section 2.2)
+      const activeTasks = result.tasks.filter(isActiveTask);
+
+      // Group tasks by status
+      const tasksByStatus = groupTasksByStatus(activeTasks);
+
+      // Build timeline scoped to this project's tasks
+      const timeline = buildProjectTimeline(activeTasks, today);
+
+      // Calculate project stats
+      const stats = calculateProjectStats(activeTasks, timeline);
+
+      const output: ProjectContextResultOutput = {
+        type: 'project-context',
+        project: result.project,
+        area: result.area ?? null,
+        tasksByStatus,
+        tasks: activeTasks,
+        timeline,
+        stats,
+        warnings: result.warnings,
+      };
+
+      console.log(formatOutput(output, globalOpts));
+      return;
+    }
+
+    // Handle task context
+    if (entityType === 'task') {
+      if (!target) {
+        console.error('Error: Please specify a task title or path.');
+        console.error('\nExamples:');
+        console.error('  taskdn context task "Fix login bug"');
+        console.error('  taskdn context task ~/tasks/fix-login-bug.md');
+        process.exit(2);
+      }
+
+      const config = getVaultConfig();
+      const session = createVaultSession(config);
+
+      // Determine if target is a path or title, and resolve if path-like
+      const identifier = isPathLike(target) ? resolveTaskPath(target, config.tasksDir) : target;
+
+      const result = getTaskContext(session, identifier);
+
+      // Check for ambiguous matches
+      if (result.ambiguousMatches.length > 0) {
+        const matchPaths = result.ambiguousMatches.map((t) => t.path);
+        const error = createError.ambiguous(target, matchPaths);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      if (!result.task) {
+        // Task not found
+        const error = createError.notFound('task', target);
+        const output = formatError(error, mode);
+        if (mode === 'human') {
+          console.error(output);
+        } else {
+          console.log(output);
+        }
+        process.exit(1);
+      }
+
+      const output: TaskContextResultOutput = {
+        type: 'task-context',
+        task: result.task,
+        project: result.project ?? null,
+        area: result.area ?? null,
+        warnings: result.warnings,
+      };
+
+      console.log(formatOutput(output, globalOpts));
+      return;
+    }
+
+    // Unknown entity type
+    console.error(`Error: Unknown entity type '${entityType}'.`);
+    console.error('\nSupported types: area, project, task');
+    process.exit(2);
+  });

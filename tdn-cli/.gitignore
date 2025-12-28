@@ -1,0 +1,58 @@
+
+# dependencies
+node_modules
+
+# output
+out
+dist
+*.tgz
+
+# code coverage
+coverage
+*.lcov
+
+# logs
+logs
+*.log
+
+# Locals
+.local
+*.local.*
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# caches
+.eslintcache
+.cache
+*.tsbuildinfo
+
+# Cargo build output
+target/
+
+# Cargo.lock for libraries (we keep it for the CLI binary)
+# Cargo.lock
+
+# NAPI-RS generated files
+*.node
+bindings/*.js
+bindings/*.d.ts
+
+# IntelliJ based IDEs
+.idea
+
+# VSCode (keep .vscode for shared settings if desired)
+# .vscode
+
+# Cursor
+.cursor
+
+# Finder (MacOS)
+.DS_Store
+
+# Windows
+Thumbs.db

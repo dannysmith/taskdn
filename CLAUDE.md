@@ -9,7 +9,6 @@ This is a **monorepo root**. After initial work on a new product, most work sess
 All top level documentation lives in `docs/`.
 
 - `docs/overview.md` - General Overview of the Project, Goals, Products, Principles etc.
-- `docs/roadmap-and-approach.md` - Approach to development & Eng principles, high-level roadmap.
 - `docs/tasks-todo` - See @docs/tasks.md.
 - `docs/developer` - Technical documentation common to all products.
 
@@ -31,16 +30,16 @@ Most of the product sub-directories will have their own `tdn-<name>/docs/` with 
 
 ## Product Sub-directories
 
-| Directory       | What it is  | Language/Stack       | High-level docs                  |
-| --------------- | ----------- | -------------------- | -------------------------------- |
-| `tdn-cli/`      | CLI tool    | TypeScript/Bun + Rust | `docs/product-overviews/cli`     |
-| `tdn-desktop/`  | Desktop app | Tauri v2 & React     | `docs/product-overviews/desktop` |
+| Directory      | What it is  | Language/Stack        | High-level docs                  |
+| -------------- | ----------- | --------------------- | -------------------------------- |
+| `tdn-cli/`     | CLI tool    | TypeScript/Bun + Rust | `docs/product-overviews/cli`     |
+| `tdn-desktop/` | Desktop app | Tauri v2 & React      | `docs/product-overviews/desktop` |
 
-**Note:** The CLI contains an embedded Rust core library (via NAPI-RS). When the desktop app is ready, this core will be extracted to a shared workspace crate. See `docs/product-overviews/cli/cli-tech.md` for details.
+**Note:** The CLI contains an embedded Rust core library (via NAPI-RS). When the desktop app is ready, this core MAY be extracted to a shared workspace crate. See `docs/product-overviews/cli/cli-tech.md` for details.
 
 ## Archived Projects
 
-`archived-projects` contains code which was developed during a research spike. never look in this directory unless the user expressly asks you to.
+`archived-projects` contains code which was developed during a research spike. Never look in this directory unless the user expressly asks you to.
 
 ## Important: "Tasks" in This Project
 

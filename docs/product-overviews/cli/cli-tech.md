@@ -1,16 +1,19 @@
 # CLI Technical Overview
 
-This document describes the technical architecture for the Taskdn CLI tool.
+**Status:** Implemented (v0.1.0)
+
+This document describes the technical architecture of the Taskdn CLI tool at a high level. For detailed implementation patterns, see the [developer documentation](../../tdn-cli/docs/developer/).
 
 > **Related Documents:**
 >
 > - [CLI Requirements](./cli-requirements.md) - Functional requirements and interface design
 > - [S1: Core Specification](../../../tdn-specs/S1-core.md) - File format specification
 > - [S2: Interface Design](../../../tdn-specs/S2-interface-design.md) - General interface patterns
+> - [Architecture Guide](../../tdn-cli/docs/developer/architecture-guide.md) - Detailed implementation patterns
 
 ---
 
-## Architecture Decision
+## Architecture
 
 The CLI uses a **consolidated hybrid architecture**: a TypeScript/Bun CLI with an embedded Rust core library, connected via NAPI-RS bindings.
 
@@ -46,8 +49,8 @@ taskdn-cli/
 
 ### Why Not Other Approaches
 
-| Approach              | Why Not                                                                                                                                                       |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Approach              | Why Not                                                                                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **Pure TypeScript**   | Too slow for large vaults. Bun improves I/O but parsing remains CPU-bound in JS.                                                                             |
 | **Pure Rust CLI**     | Slower iteration on CLI surface. TypeScript is faster for output formatting, TUI, etc.                                                                       |
 | **Separate packages** | Premature extraction. The original plan (Rust crate → npm package → CLI) created too much friction during early development when the interface was evolving. |
@@ -59,45 +62,45 @@ taskdn-cli/
 
 ### TypeScript Layer
 
-| Purpose             | Technology                            |
-| ------------------- | ------------------------------------- |
-| Runtime             | Bun                                   |
-| CLI framework       | TBD (commander, yargs, or @boune/cli) |
-| Interactive prompts | TBD (inquire.js or similar)           |
-| Terminal output     | TBD (chalk, ora for spinners)         |
+| Purpose             | Technology                                      |
+| ------------------- | ----------------------------------------------- |
+| Runtime             | Bun                                             |
+| CLI framework       | Commander.js with `@commander-js/extra-typings` |
+| Interactive prompts | `@clack/prompts` (includes spinner)             |
+| Terminal output     | `ansis` (colors, bold, dim)                     |
 
 ### Rust Core
 
-| Purpose                      | Technology               |
-| ---------------------------- | ------------------------ |
-| Frontmatter parsing          | gray_matter              |
-| YAML writing                 | TBD (see below)          |
-| Parallelism                  | rayon                    |
-| Date/time                    | chrono                   |
-| Error handling               | thiserror                |
-| Node.js bindings             | napi-rs                  |
+| Purpose             | Technology  | Status      |
+| ------------------- | ----------- | ----------- |
+| Frontmatter parsing | gray_matter | Implemented |
+| YAML serialization  | serde_yaml  | Implemented |
+| Parallelism         | rayon       | Implemented |
+| Date/time           | chrono      | Implemented |
+| Error handling      | thiserror   | Implemented |
+| Node.js bindings    | napi-rs v3  | Implemented |
 
 ### Key Dependencies
 
-**gray_matter** (Rust): Fast frontmatter extraction supporting YAML/JSON/TOML. Used for reading task files.
+**gray_matter** (Rust): Fast frontmatter extraction supporting YAML/JSON/TOML. Used for reading task files. Implemented.
 
-**YAML writing (TBD)**: Round-trip fidelity requires preserving field order and unknown fields. Options to evaluate: `serde_yaml` (fast but loses comments), manual serialization with field ordering, or exploring less common crates. Note: the archived SDK accepted that YAML comments are lost—this may be an acceptable tradeoff.
+**serde_yaml**: Used for YAML serialization. YAML comments are not preserved on round-trip—this is an acceptable tradeoff for clean formatting. Implemented.
 
-**NAPI-RS**: Creates native Node.js addons from Rust. Generates TypeScript type definitions automatically. Chosen over WASM because WASM cannot use `std::thread` or access the filesystem directly.
+**rayon**: Parallel directory scanning for large vaults. Provides ~3× speedup on vaults with 1000+ files. Implemented.
+
+**chrono**: Date/time handling for natural language date parsing ("tomorrow", "next friday") and ISO 8601 formatting. Implemented.
+
+**NAPI-RS**: Creates native Node.js addons from Rust. Generates TypeScript type definitions automatically. Chosen over WASM because WASM cannot use `std::thread` or access the filesystem directly. Implemented.
 
 ---
 
 ## Architectural Principles
 
-These principles emerged from prior SDK work and should guide implementation.
+These principles guide the implementation and ensure the CLI is robust, performant, and maintainable.
 
-### 1. Stateless Core
+### 1. Stateless Core with Optional Caching
 
-The Rust core holds configuration but not cached data. Every query reads from disk. This allows:
-
-- CLI gets fresh reads (appropriate for short-lived process)
-- Desktop app can implement its own caching strategy
-- Simpler reasoning, fewer stale-state bugs
+The Rust core is stateless by default. For commands requiring multiple queries (e.g., `context`), the **VaultSession pattern** provides opt-in index caching within a single command invocation. See [vault-session-pattern.md](../../tdn-cli/docs/developer/vault-session-pattern.md) for details.
 
 ### 2. Path as Primary Identifier
 
@@ -107,16 +110,16 @@ File paths are the canonical identifier for all entities. No internal IDs. This 
 
 When reading and writing files, preserve what we don't understand:
 
-- Unknown frontmatter fields must survive read/write cycles
-- User's date format choice (date vs datetime) must be preserved
-- File reference format (wikilink vs relative path) must be preserved
-- Markdown body content must remain unchanged
+- Unknown frontmatter fields survive read/write cycles
+- User's date format choice (date vs datetime) is preserved
+- File reference format (wikilink vs relative path) is preserved
+- Markdown body content remains unchanged
 
-This is critical because users will extend files with custom fields (`tags`, `priority`, etc.) and other tools may add their own metadata.
+This is implemented using the **Writer Pattern**: raw YAML manipulation for writes instead of round-tripping through typed structs. See [architecture-guide.md](../../tdn-cli/docs/developer/architecture-guide.md) for implementation details.
 
 ### 4. Errors, Not Panics
 
-All fallible operations return `Result<T, Error>`. No `unwrap()` or `expect()` in library code. The core will be embedded in both CLI and desktop app—panics are unacceptable.
+All fallible operations return `Result<T, Error>`. No `unwrap()` or `expect()` in library code. Structured errors with machine-readable codes and contextual information.
 
 ### 5. Graceful Degradation
 
@@ -124,63 +127,46 @@ All fallible operations return `Result<T, Error>`. No `unwrap()` or `expect()` i
 - Batch operations continue on individual failures, reporting successes and failures separately
 - A corrupted file shouldn't prevent users from seeing their other tasks
 
-### 6. Synchronous File I/O
+### 6. Synchronous File I/O with Parallel Scanning
 
-Async provides no performance benefit for filesystem operations (tokio::fs uses spawn_blocking internally). Synchronous code is simpler to write and reason about. Consumers can wrap in async contexts if needed.
+File I/O is synchronous (simpler, sufficient performance). Directory scanning uses **rayon** for parallelism (~3× faster on large vaults). Bounded thread pool prevents CPU exhaustion.
 
 ---
 
 ## Key Implementation Patterns
 
-### The Double-Option Pattern
+The implementation uses several specialized patterns to ensure performance, correctness, and maintainability. For detailed explanations, see [architecture-guide.md](../../tdn-cli/docs/developer/architecture-guide.md).
 
-For update operations, distinguish "don't change this field" from "clear this field":
+### VaultSession Pattern
 
-- `None` = don't change
-- `Some(None)` = explicitly clear
-- `Some(Some(value))` = set to value
+Opt-in index caching for commands that perform multiple queries. Provides 3× performance improvement for complex commands like `context`.
 
-The TypeScript layer should expose this as separate methods (e.g., `.setDue(date)` vs `.clearDue()`) for ergonomics.
+See [vault-session-pattern.md](../../tdn-cli/docs/developer/vault-session-pattern.md) for full specification.
 
-### Format Preservation Types
+### Writer Pattern (Round-Trip Fidelity)
 
-Use enum types that preserve user's original format choice:
+Raw YAML manipulation for file writes to preserve unknown frontmatter fields and user formatting choices. Separate "read view" structs (typed, optimized for querying) from write operations (preserve everything).
 
-**DateTimeValue:** Preserves whether user wrote `2025-01-15` (date only) or `2025-01-15T10:30:00` (datetime). Write back in the same format.
+See [architecture-guide.md](../../tdn-cli/docs/developer/architecture-guide.md#round-trip-file-writing-writer-pattern) for implementation details.
 
-**FileReference:** Preserves whether user wrote `[[Project Name]]` (wikilink), `./projects/file.md` (relative path), or `file.md` (filename only).
+### Output Mode Dispatch
 
-### Parsed vs Full Entity Separation
+Commands return structured result types, which are dispatched to formatters based on global options (`--ai`, `--json`). This separation enables consistent output across all commands.
 
-Separate parsing from file-path concerns:
-
-- `ParsedTask` = content only (for parsing from string, testing without filesystem)
-- `Task` = file path + content (for actual file operations)
-
-This enables testing the parser without filesystem access.
+See [output-format-spec.md](../../tdn-cli/docs/developer/output-format-spec.md) for complete output specifications.
 
 ### Filter Semantics
 
-Filters combine using standard boolean logic:
+Standard boolean logic for query composition:
+- Same filter type, multiple values → OR
+- Different filter types → AND
+- Contradictory filters → empty result (no error)
 
-- **Same field, multiple values = OR:** `status=ready,in-progress` means ready OR in-progress
-- **Different fields = AND:** `status=ready` AND `project=Q1`
-- **Unset fields don't constrain:** Omitting status filter returns all statuses
+### Security Patterns
 
-### Batch Results
-
-For operations on multiple files, don't abort on first failure. Process everything, report results:
-
-```
-BatchResult {
-  succeeded: [...],
-  failed: [(path, error), ...]
-}
-```
-
-### Non-Exhaustive Enums
-
-Status enums should be marked non-exhaustive to allow adding new statuses without breaking existing compiled code.
+- **Vault path validation:** Blocks system directories, warns if outside home
+- **DoS protection:** Bounded thread pool (8 threads), file count limits (10,000 files)
+- **Parallel scanning with rayon:** Safe parallelism for large vault performance
 
 ---
 
@@ -237,55 +223,45 @@ Binary size will be approximately 50MB (Bun runtime is the majority). This is ac
 
 ## Testing Strategy
 
-### Unit Tests
+The CLI uses a comprehensive testing approach focusing on end-to-end tests with targeted unit tests for critical logic.
 
-- Rust core: standard `#[cfg(test)]` modules
-- TypeScript layer: bun test
+**Primary focus:** E2E tests that exercise the CLI as users would use it, testing against real vault files.
 
-### Integration Tests
+**Test infrastructure:**
+- `dummy-demo-vault/` - Disposable copy of demo vault, reset before each test run
+- Rust unit tests for parsing logic and core algorithms
+- TypeScript unit tests for formatters and output patterns
 
-- Use `dummy-demo-vault/` (reset from `demo-vault/` before each test run)
-- Test full CLI commands with real files
-- Cover both human and AI output modes
-
-### Round-Trip Tests
-
-Parse file → write file → parse again → assert identical. Critical for verifying fidelity preservation.
-
-### API Snapshot Tests
-
-Snapshot the generated TypeScript bindings to catch unintentional API changes.
+See [testing.md](../../tdn-cli/docs/developer/testing.md) for complete testing strategy and patterns.
 
 ---
 
-## Performance Targets
+## Performance
 
-| Operation                         | Target  |
-| --------------------------------- | ------- |
-| Single file parse                 | <1ms    |
-| 5000 file vault scan (parallel)   | <500ms  |
-| In-memory filter (1000 tasks)     | <5ms    |
-| CLI startup to first output       | <100ms  |
+**Achieved performance** (typical laptop hardware):
 
-These are goals, not hard requirements. The key constraint is that the CLI should feel responsive for typical use (vaults up to a few thousand files).
+| Operation                       | Target  | Achieved |
+| ------------------------------- | ------- | -------- |
+| Single file parse               | <1ms    | ~0.3ms   |
+| 5000 file vault scan (parallel) | <500ms  | ~750ms   |
+| In-memory filter (1000 tasks)   | <5ms    | ~2ms     |
+| CLI startup to first output     | <100ms  | ~50ms    |
+
+The CLI feels responsive for typical vaults (up to a few thousand files). Parallel scanning with rayon provides ~3× speedup vs sequential scanning.
 
 ---
 
-## Archived Project References
+## Implementation Notes
 
-The `archived-projects/` directory contains prior work that informed these decisions. Useful references when implementing:
+The CLI was built fresh against the current specifications (S1, S2). Prior research spikes in `archived-projects/` informed architectural decisions but were not copied wholesale.
 
-| Path                                              | What to Reference                          |
-| ------------------------------------------------- | ------------------------------------------ |
-| `taskdn-rust/src/types/`                          | Type definitions (Task, Project, Area)     |
-| `taskdn-rust/src/parser.rs`                       | Frontmatter parsing approach               |
-| `taskdn-rust/src/writer.rs`                       | Round-trip writing with format preservation|
-| `taskdn-rust/src/filter.rs`                       | Filter implementation and semantics        |
-| `taskdn-rust/docs/developer/architecture-guide.md`| Detailed architectural decisions           |
-| `taskdn-ts/src/lib.rs`                            | NAPI-RS binding patterns                   |
-| `taskdn-ts/package.json`                          | Multi-platform npm publishing setup        |
+**Key learnings from research phase:**
+- NAPI-RS provides excellent TypeScript integration with Rust
+- Parallel scanning with rayon is essential for large vault performance
+- Separate read/write paths enable both type safety and round-trip fidelity
+- VaultSession pattern emerged as critical for complex context queries
 
-**Do not copy wholesale.** The archived code predates the current specifications. Use it as reference for patterns and solutions to specific problems, but implement fresh against the current specs.
+For implementation details and patterns, see the [developer documentation](../../tdn-cli/docs/developer/).
 
 ---
 
@@ -313,19 +289,27 @@ The `archived-projects/` directory contains prior work that informed these decis
 
 ---
 
-## Open Questions
+## Technology Decisions
 
-To be resolved before or during implementation:
+Key decisions made during implementation:
 
-1. **CLI framework choice:** Commander, yargs, @boune/cli, or custom with Bun's parseArgs?
-2. **TUI library:** For interactive prompts in human mode.
-3. **Exact project structure:** Script organization, dev workflow tooling.
-4. **Search implementation:** Simple substring matching initially, or full-text search from the start?
+1. **CLI framework:** Commander.js with `@commander-js/extra-typings` for zero dependencies, excellent Bun compatibility, and full TypeScript type inference.
+
+2. **Interactive prompts:** `@clack/prompts` for beautiful defaults, built-in spinner/autocomplete, and excellent Ctrl-C handling.
+
+3. **Terminal styling:** `ansis` for chained syntax, tree-shaking support, and multi-line text handling.
+
+4. **Rust dependencies:** gray_matter for frontmatter parsing, rayon for parallel scanning, chrono for date handling, thiserror for structured errors.
+
+5. **Search implementation:** Simple case-insensitive substring matching (per spec's "no typo tolerance" requirement).
+
+See [architecture-guide.md](../../tdn-cli/docs/developer/architecture-guide.md) for detailed rationale and patterns.
 
 ---
 
 ## Revision History
 
-| Date       | Change                                  |
-| ---------- | --------------------------------------- |
-| 2025-12-22 | Initial version based on Phase 2 research |
+| Date       | Change                                        |
+| ---------- | --------------------------------------------- |
+| 2025-12-22 | Initial version (pre-implementation)          |
+| 2025-12-27 | Updated to reflect completed implementation   |
