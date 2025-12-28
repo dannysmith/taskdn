@@ -26,25 +26,27 @@ You need the `tdn` CLI installed and configured:
 
 ## Installation
 
-### Option 1: Link Locally
+### Development / Local Use
 
-If you have this repo cloned:
-
-```bash
-claude plugin link /path/to/tdn-claude-plugin
-```
-
-### Option 2: Install from Marketplace (Future)
-
-Once published to a marketplace:
+Load the plugin when starting Claude Code using the `--plugin-dir` flag:
 
 ```bash
-claude plugin install tdn-claude-plugin
+claude --plugin-dir /path/to/tdn-claude-plugin
 ```
+
+From the monorepo root:
+
+```bash
+claude --plugin-dir ./tdn-claude-plugin
+```
+
+### Future: Marketplace
+
+Once published to a marketplace, installation will be simpler. For now, use the `--plugin-dir` approach.
 
 ## Usage
 
-Once installed, Claude automatically has access to:
+With the plugin loaded, Claude automatically has access to:
 
 ### Slash Commands
 

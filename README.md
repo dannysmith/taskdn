@@ -9,6 +9,7 @@
 | ------------------- | -------------- |
 | **Spec**            | ✅ Stable      |
 | **CLI**             | ✅ Stable      |
+| **Claude Plugin**   | ✅ Stable      |
 | **Desktop App**     | ⌛ In Progress |
 | **Obsidian Plugin** | ❌ Not Started |
 | **Extras**          | ❌ Not Started |
@@ -26,13 +27,22 @@ A task-management system for **individuals** that feels as slick as [Things](htt
 
 ## The Suite of Tools
 
-| Tool            | Description                                     | Directory      |
-| --------------- | ----------------------------------------------- | -------------- |
-| **Specs**       | Formal specifications for the protocol          | `tdn-specs/`   |
-| **CLI**         | Command-line interface for humans and AI agents | `tdn-cli/`     |
-| **Desktop App** | Cross-platform Tauri app for day-to-day use     | `tdn-desktop/` |
+| Tool              | Description                                     | Directory            |
+| ----------------- | ----------------------------------------------- | -------------------- |
+| **Specs**         | Formal specifications for the protocol          | `tdn-specs/`         |
+| **CLI**           | Command-line interface for humans and AI agents | `tdn-cli/`           |
+| **Claude Plugin** | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/` |
+| **Desktop App**   | Cross-platform Tauri app for day-to-day use     | `tdn-desktop/`       |
 
 The CLI contains an embedded Rust core library that handles parsing, validation, and file operations. When the desktop app is ready, this core will be extracted to a shared workspace crate.
+
+### Claude Plugin
+
+The [Claude Code plugin](tdn-claude-plugin/README.md) teaches Claude to work as a productivity assistant, using the `tdn` CLI to help manage tasks. To use it during development:
+
+```bash
+claude --plugin-dir ./tdn-claude-plugin
+```
 
 ## Project Structure
 
@@ -49,6 +59,7 @@ taskdn/
 │   ├── tasks-done/      # Completed development tasks
 │   └── tasks-todo/      # Active development tasks
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)
+├── tdn-claude-plugin/   # Claude Code plugin
 ├── tdn-desktop/         # Desktop app (Tauri v2)
 └── tdn-specs/           # Protocol specifications
 ```
