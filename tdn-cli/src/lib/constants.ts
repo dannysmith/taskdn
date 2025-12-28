@@ -6,7 +6,7 @@
  */
 
 /**
- * Valid task statuses per S1 spec Section 3.3
+ * Valid task statuses per S1 spec Section 3.3 (kebab-case for YAML/output)
  */
 export const VALID_TASK_STATUSES = [
   'inbox',
@@ -19,7 +19,7 @@ export const VALID_TASK_STATUSES = [
 ] as const;
 
 /**
- * Valid project statuses per S1 spec Section 4.4
+ * Valid project statuses per S1 spec Section 4.4 (kebab-case for YAML/output)
  */
 export const VALID_PROJECT_STATUSES = [
   'planning',
@@ -27,13 +27,46 @@ export const VALID_PROJECT_STATUSES = [
   'in-progress',
   'blocked',
   'paused',
-  'completed',
+  'done',
 ] as const;
 
 /**
- * Valid area statuses per S1 spec Section 5.4
+ * Valid area statuses per S1 spec Section 5.4 (kebab-case for YAML/output)
  */
 export const VALID_AREA_STATUSES = ['active', 'archived'] as const;
+
+/**
+ * Task statuses as returned by Rust (PascalCase for validation)
+ * These match the Rust enum variant names after NAPI conversion
+ */
+export const RUST_TASK_STATUSES = [
+  'Inbox',
+  'Ready',
+  'InProgress',
+  'Blocked',
+  'Icebox',
+  'Done',
+  'Dropped',
+] as const;
+
+/**
+ * Project statuses as returned by Rust (PascalCase for validation)
+ * These match the Rust enum variant names after NAPI conversion
+ */
+export const RUST_PROJECT_STATUSES = [
+  'Planning',
+  'Ready',
+  'Blocked',
+  'InProgress',
+  'Paused',
+  'Done',
+] as const;
+
+/**
+ * Area statuses as returned by Rust (PascalCase for validation)
+ * These match the Rust enum variant names after NAPI conversion
+ */
+export const RUST_AREA_STATUSES = ['Active', 'Archived'] as const;
 
 /**
  * Task statuses that represent completion (require completed-at field)
