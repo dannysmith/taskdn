@@ -263,11 +263,25 @@ For complete date parsing rules, see [CLI Interface Guide - Date Handling](../..
 {
   "tasksDir": "/path/to/tasks",
   "projectsDir": "/path/to/projects",
-  "areasDir": "/path/to/areas"
+  "areasDir": "/path/to/areas",
+  "ignore": ["*.bak", "*.tmp", "cover.md"]
 }
 ```
 
 **Interactive setup:** `taskdn init` creates `.taskdn.json` with prompted directory paths.
+
+### File Filtering (Ignore Patterns)
+
+The CLI supports ignore patterns in config files to exclude specific files from all scanning and validation:
+
+- Patterns use `.gitignore`-style glob syntax
+- Patterns match filenames only (not paths)
+- Ignored files excluded from all commands (`list`, `show`, `doctor`, etc.)
+- Invalid patterns logged as warnings but don't break functionality
+- Local config ignore field replaces user config (no merging)
+- Platform-aware case sensitivity (macOS/Windows: insensitive, Linux: sensitive)
+
+For detailed pattern syntax and examples, see [Configuration Guide](../../tdn-cli/docs/developer/configuration.md#ignore-patterns).
 
 ---
 

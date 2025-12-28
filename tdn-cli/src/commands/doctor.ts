@@ -3,8 +3,9 @@ import { getVaultConfig } from '@/config/index.ts';
 import { getOutputMode } from '@/output/index.ts';
 import type { GlobalOptions } from '@/output/types.ts';
 import { existsSync, readdirSync, statSync, readFileSync } from 'fs';
-import { join } from 'path';
+import { join, basename } from 'path';
 import { homedir } from 'os';
+import { minimatch } from 'minimatch';
 import {
   parseTaskFile,
   parseProjectFile,
@@ -15,11 +16,7 @@ import {
   type Project,
   type Area,
 } from '@bindings';
-import {
-  RUST_TASK_STATUSES,
-  RUST_PROJECT_STATUSES,
-  RUST_AREA_STATUSES,
-} from '@/lib/constants.ts';
+import { RUST_TASK_STATUSES, RUST_PROJECT_STATUSES, RUST_AREA_STATUSES } from '@/lib/constants.ts';
 
 /**
  * Doctor command - comprehensive health check for the vault
@@ -79,7 +76,7 @@ function normalizeWikilink(ref: string | undefined): string | undefined {
 /**
  * Find all markdown files in a directory (excluding archive subdirectories)
  */
-function findMarkdownFiles(dir: string): string[] {
+function findMarkdownFiles(dir: string, ignorePatterns: string[] = []): string[] {
   if (!existsSync(dir)) {
     return [];
   }
@@ -100,6 +97,20 @@ function findMarkdownFiles(dir: string): string[] {
         if (entry === 'archive') continue;
         walk(fullPath, depth + 1);
       } else if (stat.isFile() && entry.endsWith('.md')) {
+        // Check ignore patterns on FILENAME ONLY
+        const filename = basename(fullPath);
+        const ignored = ignorePatterns.some((pattern) =>
+          minimatch(filename, pattern, {
+            dot: true, // Match dotfiles
+            nocase: process.platform === 'darwin' || process.platform === 'win32',
+          })
+        );
+
+        if (ignored) {
+          // Skip ignored files silently
+          continue;
+        }
+
         files.push(fullPath);
       }
     }
@@ -272,6 +283,7 @@ export const doctorCommand = new Command('doctor')
     try {
       const config = getVaultConfig();
       const issues: DoctorIssue[] = [];
+      const ignorePatterns = config.ignore || [];
 
       // System checks
       const tasksExists = existsSync(config.tasksDir);
@@ -300,9 +312,9 @@ export const doctorCommand = new Command('doctor')
       }
 
       // Find all markdown files
-      const taskFiles = findMarkdownFiles(config.tasksDir);
-      const projectFiles = findMarkdownFiles(config.projectsDir);
-      const areaFiles = findMarkdownFiles(config.areasDir);
+      const taskFiles = findMarkdownFiles(config.tasksDir, ignorePatterns);
+      const projectFiles = findMarkdownFiles(config.projectsDir, ignorePatterns);
+      const areaFiles = findMarkdownFiles(config.areasDir, ignorePatterns);
 
       const totalFiles = taskFiles.length + projectFiles.length + areaFiles.length;
 
