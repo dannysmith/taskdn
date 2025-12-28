@@ -58,11 +58,7 @@ pub fn scan_areas(config: VaultConfig) -> Vec<Area> {
 
 /// Internal implementation that takes a reference to avoid cloning.
 pub(crate) fn scan_tasks_impl(config: &VaultConfig) -> Vec<Task> {
-    scan_directory(
-        &config.tasks_dir,
-        config.ignore.as_ref(),
-        parse_task_file,
-    )
+    scan_directory(&config.tasks_dir, config.ignore.as_ref(), parse_task_file)
 }
 
 /// Internal implementation that takes a reference to avoid cloning.
@@ -76,11 +72,7 @@ pub(crate) fn scan_projects_impl(config: &VaultConfig) -> Vec<Project> {
 
 /// Internal implementation that takes a reference to avoid cloning.
 pub(crate) fn scan_areas_impl(config: &VaultConfig) -> Vec<Area> {
-    scan_directory(
-        &config.areas_dir,
-        config.ignore.as_ref(),
-        parse_area_file,
-    )
+    scan_directory(&config.areas_dir, config.ignore.as_ref(), parse_area_file)
 }
 
 // NOTE: Fuzzy lookup functions (findTasksByTitle, findProjectsByTitle, findAreasByTitle)
@@ -179,7 +171,10 @@ where
             if let Some(ref ignore_set) = ignore_set {
                 if let Some(filename) = entry.path().file_name() {
                     if ignore_set.is_match(filename) {
-                        debug!("Ignoring file (matched pattern): {}", entry.path().display());
+                        debug!(
+                            "Ignoring file (matched pattern): {}",
+                            entry.path().display()
+                        );
                         return false;
                     }
                 }
