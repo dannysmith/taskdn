@@ -30,6 +30,9 @@ gray_matter = "0.3"
 # Parallelization
 rayon = "1"
 
+# Glob pattern matching
+globset = "0.4"
+
 # Date/time handling
 chrono = { version = "0.4", default-features = false, features = ["clock", "std"] }
 
