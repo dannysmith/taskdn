@@ -106,6 +106,54 @@ async function interactiveInit(configPath: string, configExists: boolean): Promi
   writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n', 'utf-8');
 
   p.outro(`Configuration saved to ${configPath}`);
+
+  // Offer to install shell completions
+  console.log();
+
+  const installCompletion = await p.confirm({
+    message: 'Install shell completions for tdn?',
+    initialValue: true,
+  });
+
+  if (p.isCancel(installCompletion)) {
+    return true;
+  }
+
+  if (installCompletion) {
+    // Import completion install logic
+    const {
+      detectShell,
+      getShellConfig,
+      isAlreadyInstalled,
+      generateCompletionScript,
+      addToShellConfig,
+    } = await import('@/lib/shell-completion.ts');
+
+    const shell = detectShell();
+    if (!shell) {
+      p.log.warn('Could not detect shell. Run `tdn completion install` manually.');
+    } else {
+      const { configPath: shellConfigPath, sourceLine } = getShellConfig(shell);
+
+      if (isAlreadyInstalled(shellConfigPath, sourceLine)) {
+        p.log.info('Completions already installed');
+      } else {
+        try {
+          generateCompletionScript(shell);
+          addToShellConfig(shellConfigPath, sourceLine);
+
+          p.log.success('Shell completions installed!');
+          p.log.info(`Restart your terminal or run: source ${shellConfigPath}`);
+        } catch (error) {
+          p.log.error(
+            `Failed to install completions: ${error instanceof Error ? error.message : String(error)}`
+          );
+          p.log.info('You can install them manually with: tdn completion install');
+        }
+      }
+    }
+  }
+
   return true;
 }
 

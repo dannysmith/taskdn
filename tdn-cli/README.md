@@ -170,6 +170,62 @@ To exclude specific files from all Taskdn operations, use the `ignore` field wit
 
 See [Configuration Guide](docs/developer/configuration.md#ignore-patterns) for details.
 
+## Shell Completions
+
+Tab completions work for all commands, options, statuses, and entity types.
+
+### Automatic Installation (Recommended)
+
+Run the installation command and follow the prompts:
+
+```bash
+tdn completion install
+```
+
+This will add completions to your shell configuration file (~/.zshrc, ~/.bashrc, etc.). For zsh users, the installer automatically ensures `compinit` (the completion system) is initialized.
+
+### Manual Installation
+
+If you prefer to install manually:
+
+#### Zsh
+
+```bash
+tdn complete zsh > ~/.tdn-completion.zsh
+
+# Add to .zshrc
+cat >> ~/.zshrc << 'EOF'
+# tdn completions
+# Ensure completion system is initialized
+autoload -Uz compinit && compinit
+[[ -f ~/.tdn-completion.zsh ]] && source ~/.tdn-completion.zsh
+EOF
+
+source ~/.zshrc
+```
+
+#### Bash
+
+```bash
+tdn complete bash > ~/.tdn-completion.bash
+
+# Add to .bashrc
+cat >> ~/.bashrc << 'EOF'
+# tdn completions
+if [ -f ~/.tdn-completion.bash ]; then
+  source ~/.tdn-completion.bash
+fi
+EOF
+
+source ~/.bashrc
+```
+
+#### Fish
+
+```bash
+tdn complete fish > ~/.config/fish/completions/tdn.fish
+```
+
 ## Documentation
 
 ### Developer Docs

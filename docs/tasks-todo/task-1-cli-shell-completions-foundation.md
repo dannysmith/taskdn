@@ -175,7 +175,7 @@ Create `src/commands/completion.ts`:
 import { Command } from '@commander-js/extra-typings'
 import { intro, outro, confirm, log, spinner } from '@clack/prompts'
 import { homedir } from 'os'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, unlinkSync } from 'fs'
 import { execSync } from 'child_process'
 
 const completionCommand = new Command('completion').description(
@@ -325,7 +325,8 @@ Create `src/lib/shell-completion.ts`:
 ```typescript
 import { homedir } from 'os'
 import { execSync } from 'child_process'
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, copyFileSync, unlinkSync, mkdirSync } from 'fs'
+import { dirname } from 'path'
 
 export type Shell = 'zsh' | 'bash' | 'fish' | 'pwsh'
 
@@ -376,7 +377,10 @@ export function getShellConfig(shell: Shell): {
       }
 
     case 'pwsh':
-      // Windows PowerShell profile
+      // Windows PowerShell profile (Windows only)
+      if (process.platform !== 'win32') {
+        throw new Error('PowerShell completion is only supported on Windows')
+      }
       const profilePath = execSync('powershell -Command "$PROFILE"', {
         encoding: 'utf8',
       }).trim()
@@ -393,6 +397,12 @@ export function getShellConfig(shell: Shell): {
 
 export function generateCompletionScript(shell: Shell): string {
   const { scriptPath } = getShellConfig(shell)
+
+  // Ensure directory exists (especially for fish completions dir)
+  const scriptDir = dirname(scriptPath)
+  if (!existsSync(scriptDir)) {
+    mkdirSync(scriptDir, { recursive: true })
+  }
 
   // Run: tdn complete <shell> > scriptPath
   const completionScript = execSync(`bun run tdn complete ${shell}`, {
@@ -483,7 +493,9 @@ program.addCommand(completionCommand)
 
 ### Phase 3: Enhance init Command
 
-Add optional completion installation to the `init` command.
+Add optional completion installation to the `init` command in **interactive mode only**.
+
+**Note:** This enhancement only applies when `tdn init` is run without options (interactive mode). Non-interactive init (with `--tasks-dir` etc.) should not prompt for completion installation.
 
 **3.1: Update init.ts**
 
@@ -584,6 +596,13 @@ Create `tests/lib/shell-completion.test.ts` for utility functions:
 - [ ] All commands have basic tab completion working
 
 ## Notes
+
+**Critical implementation fixes:**
+
+- All required imports must be included (existsSync, copyFileSync, unlinkSync, mkdirSync, dirname)
+- Fish completions directory must be created before writing completion file
+- PowerShell support requires platform check (Windows only)
+- Phase 3 completions prompt only applies in interactive mode
 
 **Performance considerations:**
 
