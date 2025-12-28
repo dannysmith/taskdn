@@ -8,6 +8,7 @@ For detailed information on specific patterns and systems:
 
 - **[VaultSession Pattern](./vault-session-pattern.md)** - Index caching and performance optimization
 - **[CLI Interface Guide](./cli-interface-guide.md)** - Command patterns, entity lookup, filtering
+- **[Shell Completions](./shell-completions.md)** - Adding tab completions for commands and options
 - **[AI Context Output](./ai-context.md)** - AI mode output format specification
 - **[Output Format Spec](./output-format-spec.md)** - Human/AI/JSON formatting patterns
 - **[Testing Guide](./testing.md)** - Testing strategy and patterns
@@ -61,12 +62,13 @@ See [testing.md](./testing.md) for our testing strategy. Key points:
 
 ### TypeScript Dependencies
 
-| Package                       | Purpose             | When to use                           |
-| ----------------------------- | ------------------- | ------------------------------------- |
-| `commander`                   | CLI framework       | Defining commands, arguments, options |
-| `@commander-js/extra-typings` | Type inference      | Always use with commander             |
-| `@clack/prompts`              | Interactive prompts | User input, spinners                  |
-| `ansis`                       | Terminal styling    | Colors, bold, dim text                |
+| Package                       | Purpose              | When to use                           |
+| ----------------------------- | -------------------- | ------------------------------------- |
+| `commander`                   | CLI framework        | Defining commands, arguments, options |
+| `@commander-js/extra-typings` | Type inference       | Always use with commander             |
+| `@bomb.sh/tab`                | Shell completions    | See [shell-completions.md](./shell-completions.md) |
+| `@clack/prompts`              | Interactive prompts  | User input, spinners                  |
+| `ansis`                       | Terminal styling     | Colors, bold, dim text                |
 
 ### Rust Dependencies
 
