@@ -1,5 +1,7 @@
 # Task: Preferences Pane - Path Settings & Cleanup
 
+Working dir: `tdn-desktop/`
+
 ## Summary
 
 Implement vault directory settings (tasks_dir, areas_dir, projects_dir) in the Preferences pane using native folder pickers, remove boilerplate examples, and add app version/settings directory access to the Advanced pane.
@@ -9,6 +11,7 @@ Implement vault directory settings (tasks_dir, areas_dir, projects_dir) in the P
 ### Current State Analysis
 
 **Preferences System Architecture:**
+
 - **Rust Backend**: `src-tauri/src/commands/preferences.rs` with `load_preferences()` and `save_preferences()` commands
 - **Type Definition**: `src-tauri/src/types.rs` - `AppPreferences` struct with theme, quick_pane_shortcut, language
 - **Persistence**: Atomic write to `~/Library/Application Support/is.danny.taskdn-desktop/preferences.json`
@@ -16,15 +19,18 @@ Implement vault directory settings (tasks_dir, areas_dir, projects_dir) in the P
 - **UI Components**: Three panes in `src/components/preferences/panes/`
 
 **Existing Patterns:**
+
 - tauri-specta generates TypeScript bindings from Rust commands
 - `usePreferences()` and `useSavePreferences()` hooks for data access
 - Result type pattern for error handling: `{ status: 'ok', data } | { status: 'error', error }`
 
 **Dev Mode Detection:**
+
 - Frontend: `import.meta.env.DEV`
 - Rust: `cfg!(debug_assertions)`
 
 **Key Tauri Insight:**
+
 - `@tauri-apps/plugin-dialog` folder picker automatically grants scope access to selected paths
 - Rust commands have full filesystem access regardless of scope (scope only restricts JS plugin APIs)
 - Vault file operations will use Rust commands, so scope isn't a concern for CLI-imported paths
@@ -36,6 +42,7 @@ Implement vault directory settings (tasks_dir, areas_dir, projects_dir) in the P
 **1.1 Update Rust Types (`src-tauri/src/types.rs`)**
 
 Add new optional fields to `AppPreferences`:
+
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(default)]  // Good practice for future schema changes
@@ -172,6 +179,7 @@ pub struct DummyVaultPaths {
 **2.3 Register Commands (`src-tauri/src/bindings.rs`)**
 
 Add new commands to the `collect_commands!` macro:
+
 ```rust
 config::read_cli_config,
 config::get_app_data_dir,
@@ -229,6 +237,7 @@ Directory containing your project files
 ```
 
 **Key UI decisions:**
+
 - Path display is **read-only** (disabled input or styled text)
 - "Choose..." opens native `open({ directory: true })` dialog
 - [×] button clears the path (only shown when path is set)
@@ -238,6 +247,7 @@ Directory containing your project files
 **3.2 Create FolderPicker Component (`src/components/preferences/shared/FolderPicker.tsx`)**
 
 Reusable component for directory selection:
+
 ```typescript
 import { open } from '@tauri-apps/plugin-dialog'
 import { X, Folder } from 'lucide-react'
@@ -251,7 +261,12 @@ interface FolderPickerProps {
   disabled?: boolean
 }
 
-export function FolderPicker({ value, onChange, placeholder = 'Not configured', disabled }: FolderPickerProps) {
+export function FolderPicker({
+  value,
+  onChange,
+  placeholder = 'Not configured',
+  disabled,
+}: FolderPickerProps) {
   const handleChoose = async () => {
     const selected = await open({
       directory: true,
@@ -273,12 +288,22 @@ export function FolderPicker({ value, onChange, placeholder = 'Not configured', 
         disabled
         className="flex-1 font-mono text-sm"
       />
-      <Button variant="outline" size="sm" onClick={handleChoose} disabled={disabled}>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleChoose}
+        disabled={disabled}
+      >
         <Folder className="h-4 w-4 mr-1" />
         {t('preferences.general.choose')}
       </Button>
       {value && (
-        <Button variant="ghost" size="sm" onClick={handleClear} disabled={disabled}>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleClear}
+          disabled={disabled}
+        >
           <X className="h-4 w-4" />
         </Button>
       )}
@@ -369,7 +394,8 @@ const handleReadFromCli = async () => {
       toast.info(t('preferences.general.cliNotConfigured'))
     } else {
       toast.error(t('toast.error.cliConfigRead'), {
-        description: 'message' in result.error ? result.error.message : undefined
+        description:
+          'message' in result.error ? result.error.message : undefined,
       })
     }
     return
@@ -405,6 +431,7 @@ const handleUseDummyVault = async () => {
 **4.2 Dev Mode Check**
 
 Query dev mode once at component mount:
+
 ```typescript
 const { data: isDevMode } = useQuery({
   queryKey: ['is-dev-mode'],
@@ -413,11 +440,13 @@ const { data: isDevMode } = useQuery({
 })
 
 // In JSX:
-{isDevMode && (
-  <Button variant="outline" onClick={handleUseDummyVault}>
-    {t('preferences.general.useDummyVault')}
-  </Button>
-)}
+{
+  isDevMode && (
+    <Button variant="outline" onClick={handleUseDummyVault}>
+      {t('preferences.general.useDummyVault')}
+    </Button>
+  )
+}
 ```
 
 ### Phase 5: Internationalization
@@ -425,6 +454,7 @@ const { data: isDevMode } = useQuery({
 **5.1 Update Locale Files (`locales/*.json`)**
 
 Add new strings:
+
 ```json
 {
   "preferences.general.vaultDirectories": "Vault Directories",
@@ -475,26 +505,28 @@ Add new strings:
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src-tauri/Cargo.toml` | Add `dirs = "6"` dependency |
-| `src-tauri/src/types.rs` | Add path fields to AppPreferences, add CliConfig/CliConfigError/DummyVaultPaths types |
-| `src-tauri/src/commands/config.rs` | NEW: CLI config, dev mode, app data dir commands |
-| `src-tauri/src/commands/mod.rs` | Export config module |
-| `src-tauri/src/bindings.rs` | Register new commands |
-| `src/components/preferences/panes/GeneralPane.tsx` | Add vault directories section, remove boilerplate |
-| `src/components/preferences/panes/AdvancedPane.tsx` | Replace with version + settings dir |
-| `src/components/preferences/shared/FolderPicker.tsx` | NEW: Reusable folder picker component |
-| `locales/en.json` | Add new strings |
-| `locales/fr.json` | Add new strings (translate) |
-| `locales/ar.json` | Add new strings (translate) |
+| File                                                 | Changes                                                                               |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `src-tauri/Cargo.toml`                               | Add `dirs = "6"` dependency                                                           |
+| `src-tauri/src/types.rs`                             | Add path fields to AppPreferences, add CliConfig/CliConfigError/DummyVaultPaths types |
+| `src-tauri/src/commands/config.rs`                   | NEW: CLI config, dev mode, app data dir commands                                      |
+| `src-tauri/src/commands/mod.rs`                      | Export config module                                                                  |
+| `src-tauri/src/bindings.rs`                          | Register new commands                                                                 |
+| `src/components/preferences/panes/GeneralPane.tsx`   | Add vault directories section, remove boilerplate                                     |
+| `src/components/preferences/panes/AdvancedPane.tsx`  | Replace with version + settings dir                                                   |
+| `src/components/preferences/shared/FolderPicker.tsx` | NEW: Reusable folder picker component                                                 |
+| `locales/en.json`                                    | Add new strings                                                                       |
+| `locales/fr.json`                                    | Add new strings (translate)                                                           |
+| `locales/ar.json`                                    | Add new strings (translate)                                                           |
 
 ## Dependencies
 
 **New Rust dependency:**
+
 - `dirs = "6"` - Cross-platform home directory detection
 
 **Existing (no changes):**
+
 - `@tauri-apps/plugin-dialog` - Native folder picker dialogs
 - `@tauri-apps/plugin-opener` - Open settings directory in Finder
 - `@tauri-apps/api/app` - Get app version
