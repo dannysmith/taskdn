@@ -432,6 +432,8 @@ console.log(tasks2.length); // Should still be 1 (cover.md has no frontmatter so
 - ✅ Bindings regenerated
 - ✅ Basic manual test passed
 
+**Commit hash:** `a708add`
+
 **Commit message:**
 ```
 feat(cli): Add ignore patterns to Rust vault scanners
@@ -441,7 +443,85 @@ feat(cli): Add ignore patterns to Rust vault scanners
 - Match patterns on filename only (root-level scanning)
 - Platform-aware case sensitivity
 - Invalid patterns logged as warnings
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>
 ```
+
+---
+
+## 🎯 SESSION 1 COMPLETE - Context for Session 2
+
+**Branch:** `cli-initialisation`
+
+**What was built in Session 1:**
+
+1. **Rust Core Changes:**
+   - Added `globset = "0.4"` to `tdn-cli/crates/core/Cargo.toml`
+   - Updated `VaultConfig` struct in `vault.rs` line 27-32:
+     ```rust
+     pub struct VaultConfig {
+         pub tasks_dir: String,
+         pub projects_dir: String,
+         pub areas_dir: String,
+         pub ignore: Option<Vec<String>>,  // NEW
+     }
+     ```
+   - Rewrote `scan_directory()` function (lines 93-220):
+     - Takes `ignore_patterns: Option<&Vec<String>>` parameter
+     - Builds `GlobSet` with platform-aware case sensitivity
+     - Matches patterns on **filename only** using `entry.path().file_name()`
+     - Warns on invalid patterns but continues
+   - Updated all scan implementations (`scan_tasks_impl`, `scan_projects_impl`, `scan_areas_impl`) to pass `config.ignore.as_ref()`
+
+2. **Generated TypeScript Bindings:**
+   - `bindings/index.d.ts` now has:
+     ```typescript
+     export interface VaultConfig {
+       tasksDir: string
+       projectsDir: string
+       areasDir: string
+       ignore?: Array<string>  // NEW
+     }
+     ```
+   - All Rust scanners (`scanTasks`, `scanProjects`, `scanAreas`) now accept `ignore` field
+
+3. **Key Implementation Details:**
+   - Patterns match **filename only** (not paths) - simple!
+   - Case insensitive on macOS/Windows, sensitive on Linux
+   - Invalid glob patterns logged as warnings, don't break execution
+   - Pattern check happens BEFORE `.md` extension check (efficiency)
+
+**Files Modified:**
+- `tdn-cli/Cargo.lock` (auto-generated)
+- `tdn-cli/crates/core/Cargo.toml` (added globset)
+- `tdn-cli/crates/core/src/vault.rs` (main implementation)
+- `tdn-cli/bindings/index.d.ts` (auto-generated)
+- `tdn-cli/bindings/index.js` (auto-generated)
+- `tdn-cli/bindings/tdn-core.darwin-arm64.node` (auto-generated)
+
+**Verification:**
+- `cargo check` passes ✅
+- `bun run build` successful ✅
+- TypeScript bindings show `ignore?: Array<string>` ✅
+
+**What Session 2 Needs to Do:**
+
+Session 2 will wire up the TypeScript config layer to actually USE these Rust scanners with ignore patterns:
+
+1. Update TypeScript config interfaces to add `ignore?: string[]`
+2. Add config validation (security checks for paths/traversal)
+3. Implement simple override: `localConfig?.ignore ?? userConfig?.ignore`
+4. Add `minimatch` dependency for doctor command
+5. Update doctor's `findMarkdownFiles()` to match on filename
+6. Test with user's real vault (`3-areas.md`, `4-projects.md`)
+
+**Important Notes for Session 2:**
+- The Rust layer is COMPLETE and working
+- No need to rebuild Rust bindings in Session 2 (unless we find bugs)
+- Focus is purely on TypeScript config loading and doctor command
+- Doctor currently has a spec violation (recursive scanning) - we're NOT fixing that in this task
 
 ---
 
