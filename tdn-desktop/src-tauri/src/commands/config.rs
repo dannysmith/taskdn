@@ -1,6 +1,7 @@
 //! Configuration-related commands for reading CLI config and app info.
 
 use tauri::{AppHandle, Manager};
+use tauri_plugin_opener::OpenerExt;
 
 use crate::types::{CliConfig, CliConfigError, DummyVaultPaths};
 
@@ -32,6 +33,22 @@ pub fn get_app_data_dir(app: AppHandle) -> Result<String, String> {
     app.path()
         .app_data_dir()
         .map(|p| p.to_string_lossy().to_string())
+        .map_err(|e| e.to_string())
+}
+
+/// Open the app's data directory in the system file manager
+#[tauri::command]
+#[specta::specta]
+pub fn open_app_data_dir(app: AppHandle) -> Result<(), String> {
+    let path = app.path().app_data_dir().map_err(|e| e.to_string())?;
+
+    // Ensure directory exists
+    if !path.exists() {
+        std::fs::create_dir_all(&path).map_err(|e| e.to_string())?;
+    }
+
+    app.opener()
+        .open_path(path.to_string_lossy(), None::<&str>)
         .map_err(|e| e.to_string())
 }
 

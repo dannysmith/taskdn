@@ -1,10 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { getVersion } from '@tauri-apps/api/app'
-import { revealItemInDir } from '@tauri-apps/plugin-opener'
 import { Button } from '@/components/ui/button'
 import { SettingsField, SettingsSection } from '../shared/SettingsComponents'
 import { commands } from '@/lib/tauri-bindings'
+import { logger } from '@/lib/logger'
 
 export function AdvancedPane() {
   const { t } = useTranslation()
@@ -16,9 +17,10 @@ export function AdvancedPane() {
   })
 
   const handleOpenSettingsDir = async () => {
-    const result = await commands.getAppDataDir()
-    if (result.status === 'ok') {
-      await revealItemInDir(result.data)
+    const result = await commands.openAppDataDir()
+    if (result.status === 'error') {
+      logger.error('Failed to open settings directory', { error: result.error })
+      toast.error(t('toast.error.generic'))
     }
   }
 
