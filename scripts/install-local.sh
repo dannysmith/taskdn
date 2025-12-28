@@ -45,7 +45,18 @@ bun run build
 
 # Make the entry point executable
 echo -e "\n${BLUE}Making entry point executable...${NC}"
-chmod +x src/index.ts
+ENTRY_FILE="src/index.ts"
+if [ ! -f "$ENTRY_FILE" ]; then
+    echo -e "${RED}Error: Entry point file not found: $ENTRY_FILE${NC}"
+    exit 1
+fi
+
+if ! head -n 1 "$ENTRY_FILE" | grep -q '^#!'; then
+    echo -e "${RED}Error: Entry point file missing shebang: $ENTRY_FILE${NC}"
+    exit 1
+fi
+
+chmod +x "$ENTRY_FILE"
 
 # Create symlink
 SYMLINK_PATH="$INSTALL_DIR/tdn"
@@ -82,8 +93,7 @@ fi
 
 # Test the command
 echo -e "\n${BLUE}Testing installation...${NC}"
-if "$SYMLINK_PATH" --version &> /dev/null; then
-    VERSION=$("$SYMLINK_PATH" --version)
+if VERSION=$("$SYMLINK_PATH" --version 2>&1); then
     echo -e "${GREEN}✓${NC} tdn installed successfully!"
     echo -e "${GREEN}✓${NC} Version: $VERSION"
 else
