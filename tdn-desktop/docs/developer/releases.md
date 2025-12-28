@@ -176,9 +176,9 @@ All updates are cryptographically signed:
 
 ## Troubleshooting
 
-| Issue                    | Solution                                                   |
-| ------------------------ | ---------------------------------------------------------- |
-| Workflow doesn't trigger | Ensure tag starts with `desktop-v` and is pushed           |
-| Build fails              | Check GitHub secrets, run `bun run check:all` locally      |
-| Updates not detected     | Verify endpoint URL and public key match                   |
-| Download fails           | Check signatures, file permissions, disk space             |
+| Issue                    | Solution                                              |
+| ------------------------ | ----------------------------------------------------- |
+| Workflow doesn't trigger | Ensure tag starts with `desktop-v` and is pushed      |
+| Build fails              | Check GitHub secrets, run `bun run check:all` locally |
+| Updates not detected     | Verify endpoint URL and public key match              |
+| Download fails           | Check signatures, file permissions, disk space        |
