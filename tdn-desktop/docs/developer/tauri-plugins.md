@@ -200,7 +200,7 @@ These plugins aren't included by default but are commonly needed:
 1. **Install via CLI**:
 
    ```bash
-   npm run tauri add PLUGIN_NAME
+   bun run tauri add PLUGIN_NAME
    ```
 
 2. **Check placement** in `lib.rs`:

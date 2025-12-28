@@ -36,10 +36,10 @@ Removes Tauri commands not called from your frontend.
 ## Analyzing Bundle Size
 
 ```bash
-npm run build:analyze   # Build and analyze
+bun run build:analyze   # Build and analyze
 
 # Manual analysis
-npm run build
+bun run build
 du -sh dist/*           # Check output sizes
 ls -lah dist/assets/    # Examine chunks
 ```
@@ -134,7 +134,7 @@ Only include permissions you use in `src-tauri/capabilities/desktop.json`.
 | Issue                    | Solution                                          |
 | ------------------------ | ------------------------------------------------- |
 | Large initial bundle     | Implement code splitting                          |
-| Duplicate dependencies   | `npm ls react` then `npm dedupe`                  |
+| Duplicate dependencies   | `bun pm ls react` then check for duplicates       |
 | Unused shadcn components | Remove from `src/components/ui/`                  |
 | Heavy date library       | Use `date-fns` with tree shaking or native `Intl` |
 
@@ -146,7 +146,7 @@ cd src-tauri && cargo build --release
 ls -lah target/release/tauri-app
 
 # Frontend bundle
-npm run build && du -sh dist/
+bun run build && du -sh dist/
 ```
 
 **Remember**: Measure before optimizing. Don't over-optimize prematurely.
