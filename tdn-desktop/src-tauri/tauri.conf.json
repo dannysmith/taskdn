@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "tauri-app",
+  "productName": "Taskdn Desktop",
   "version": "0.1.0",
-  "identifier": "com.tauri-app.app",
+  "identifier": "is.danny.taskdn-desktop",
   "build": {
     "removeUnusedCommands": true,
     "beforeDevCommand": "npm run dev",
@@ -13,7 +13,7 @@
   "app": {
     "windows": [
       {
-        "title": "tauri-app",
+        "title": "Taskdn Desktop",
         "width": 1000,
         "height": 700,
         "minWidth": 1000,
@@ -45,11 +45,11 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "publisher": "Your Name",
-    "category": "DeveloperTool",
-    "shortDescription": "A Tauri React template application",
-    "longDescription": "A modern Tauri React template with comprehensive boilerplate code, TypeScript, Tailwind CSS, and shadcn/ui components.",
-    "copyright": "Copyright © 2025 Your Name. All rights reserved.",
+    "publisher": "Danny Smith",
+    "category": "Productivity",
+    "shortDescription": "A desktop application for managing tasks",
+    "longDescription": "Taskdn Desktop is a task management application that helps you organize and track your work efficiently.",
+    "copyright": "Copyright © 2025 Danny Smith. All rights reserved.",
     "macOS": {
       "frameworks": [],
       "minimumSystemVersion": "10.15",
@@ -63,7 +63,7 @@
     "updater": {
       "active": true,
       "endpoints": [
-        "https://github.com/YOUR_USERNAME/YOUR_REPO/releases/latest/download/latest.json"
+        "https://github.com/dannysmith/taskdn/releases/latest/download/latest.json"
       ],
       "dialog": true,
       "pubkey": "YOUR_UPDATER_PUBLIC_KEY_HERE"
