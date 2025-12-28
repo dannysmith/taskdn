@@ -2,7 +2,7 @@
 
 ## Overview
 
-This repository is a template with sensible defaults for building Tauri React apps.
+Taskdn Desktop is a desktop application for managing tasks, built with Tauri and React.
 
 ## Core Rules
 
