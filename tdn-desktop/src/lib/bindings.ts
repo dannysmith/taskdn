@@ -142,6 +142,40 @@ async updateQuickPaneShortcut(shortcut: string | null) : Promise<Result<null, st
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Read CLI config from ~/.taskdn.json
+ */
+async readCliConfig() : Promise<Result<CliConfig, CliConfigError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("read_cli_config") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get the app's data directory path
+ */
+async getAppDataDir() : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_app_data_dir") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Check if running in development mode
+ */
+async isDevMode() : Promise<boolean> {
+    return await TAURI_INVOKE("is_dev_mode");
+},
+/**
+ * Get dummy vault paths for development testing (only in debug builds)
+ */
+async getDummyVaultPaths() : Promise<DummyVaultPaths> {
+    return await TAURI_INVOKE("get_dummy_vault_paths");
 }
 }
 
@@ -169,7 +203,51 @@ quick_pane_shortcut: string | null;
  * User's preferred language (e.g., "en", "es", "de")
  * If None, uses system locale detection
  */
-language: string | null }
+language: string | null; 
+/**
+ * Directory containing task files
+ */
+tasks_dir: string | null; 
+/**
+ * Directory containing area files
+ */
+areas_dir: string | null; 
+/**
+ * Directory containing project files
+ */
+projects_dir: string | null; 
+/**
+ * Filenames to ignore when scanning directories
+ */
+ignore: string[] | null }
+/**
+ * Config read from CLI's ~/.taskdn.json
+ */
+export type CliConfig = { tasks_dir: string | null; areas_dir: string | null; projects_dir: string | null; ignore: string[] | null }
+/**
+ * Error types for CLI config operations (typed for frontend matching)
+ */
+export type CliConfigError = 
+/**
+ * Home directory could not be determined
+ */
+{ type: "HomeNotFound" } | 
+/**
+ * ~/.taskdn.json does not exist (CLI not configured - not a real error)
+ */
+{ type: "FileNotFound" } | 
+/**
+ * Failed to read the file
+ */
+{ type: "ReadError"; message: string } | 
+/**
+ * Failed to parse JSON
+ */
+{ type: "ParseError"; message: string }
+/**
+ * Paths to dummy vault for development testing
+ */
+export type DummyVaultPaths = { tasks_dir: string; areas_dir: string; projects_dir: string }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Error types for recovery operations (typed for frontend matching)
