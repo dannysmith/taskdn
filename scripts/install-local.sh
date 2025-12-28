@@ -51,8 +51,8 @@ chmod +x src/index.ts
 SYMLINK_PATH="$INSTALL_DIR/tdn"
 ENTRY_POINT="$CLI_DIR/src/index.ts"
 
-if [ -L "$SYMLINK_PATH" ]; then
-    echo -e "${YELLOW}Removing existing symlink at $SYMLINK_PATH${NC}"
+if [ -e "$SYMLINK_PATH" ]; then
+    echo -e "${YELLOW}Removing existing file/symlink at $SYMLINK_PATH${NC}"
     rm -f "$SYMLINK_PATH"
 fi
 
@@ -94,4 +94,4 @@ fi
 echo -e "\n${GREEN}=== Installation complete! ===${NC}"
 echo -e "\nYou can now run: ${BLUE}tdn --help${NC}"
 echo -e "\nTo update tdn in the future, run:"
-echo -e "  ${BLUE}cd $PROJECT_ROOT && git pull && bun run build${NC}"
+echo -e "  ${BLUE}cd $CLI_DIR && git pull && bun run build${NC}"
