@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 
+use globset::{GlobBuilder, GlobSetBuilder};
 use log::{debug, warn};
 use rayon::prelude::*;
 
@@ -28,6 +29,7 @@ pub struct VaultConfig {
     pub tasks_dir: String,
     pub projects_dir: String,
     pub areas_dir: String,
+    pub ignore: Option<Vec<String>>,
 }
 
 /// Scan tasks directory and return all parseable tasks.
@@ -56,17 +58,29 @@ pub fn scan_areas(config: VaultConfig) -> Vec<Area> {
 
 /// Internal implementation that takes a reference to avoid cloning.
 pub(crate) fn scan_tasks_impl(config: &VaultConfig) -> Vec<Task> {
-    scan_directory(&config.tasks_dir, parse_task_file)
+    scan_directory(
+        &config.tasks_dir,
+        config.ignore.as_ref(),
+        parse_task_file,
+    )
 }
 
 /// Internal implementation that takes a reference to avoid cloning.
 pub(crate) fn scan_projects_impl(config: &VaultConfig) -> Vec<Project> {
-    scan_directory(&config.projects_dir, parse_project_file)
+    scan_directory(
+        &config.projects_dir,
+        config.ignore.as_ref(),
+        parse_project_file,
+    )
 }
 
 /// Internal implementation that takes a reference to avoid cloning.
 pub(crate) fn scan_areas_impl(config: &VaultConfig) -> Vec<Area> {
-    scan_directory(&config.areas_dir, parse_area_file)
+    scan_directory(
+        &config.areas_dir,
+        config.ignore.as_ref(),
+        parse_area_file,
+    )
 }
 
 // NOTE: Fuzzy lookup functions (findTasksByTitle, findProjectsByTitle, findAreasByTitle)
@@ -88,7 +102,11 @@ pub(crate) fn scan_areas_impl(config: &VaultConfig) -> Vec<Area> {
 /// - Async/await (adds overhead, rayon is faster for CPU-bound parsing)
 /// - Shared mutable state (breaks parallelization safety)
 /// - Unbounded operations (violates DoS protection requirements)
-fn scan_directory<T, F>(dir_path: &str, parse_fn: F) -> Vec<T>
+fn scan_directory<T, F>(
+    dir_path: &str,
+    ignore_patterns: Option<&Vec<String>>,
+    parse_fn: F,
+) -> Vec<T>
 where
     F: Fn(String) -> napi::Result<T> + Sync,
     T: Send,
@@ -96,6 +114,41 @@ where
     let path = Path::new(dir_path);
 
     debug!("Scanning directory: {}", dir_path);
+
+    // Build ignore matcher if patterns provided
+    let ignore_set = if let Some(patterns) = ignore_patterns {
+        let mut builder = GlobSetBuilder::new();
+
+        // Determine case sensitivity based on platform
+        let case_insensitive = cfg!(any(target_os = "macos", target_os = "windows"));
+
+        for pattern in patterns {
+            match GlobBuilder::new(pattern)
+                .case_insensitive(case_insensitive)
+                .build()
+            {
+                Ok(glob) => {
+                    builder.add(glob);
+                }
+                Err(e) => {
+                    warn!("Invalid ignore pattern '{}': {} (skipping)", pattern, e);
+                }
+            }
+        }
+
+        match builder.build() {
+            Ok(set) => {
+                debug!("Built ignore set with {} patterns", patterns.len());
+                Some(set)
+            }
+            Err(e) => {
+                warn!("Failed to build ignore pattern set: {}", e);
+                None
+            }
+        }
+    } else {
+        None
+    };
 
     // Return empty if directory doesn't exist
     if !path.exists() || !path.is_dir() {
@@ -120,6 +173,18 @@ where
         .filter(|entry| {
             // Only process files (not subdirectories)
             entry.file_type().map(|ft| ft.is_file()).unwrap_or(false)
+        })
+        .filter(|entry| {
+            // Check ignore patterns on FILENAME ONLY
+            if let Some(ref ignore_set) = ignore_set {
+                if let Some(filename) = entry.path().file_name() {
+                    if ignore_set.is_match(filename) {
+                        debug!("Ignoring file (matched pattern): {}", entry.path().display());
+                        return false;
+                    }
+                }
+            }
+            true
         })
         .filter(|entry| {
             // Only process .md files
