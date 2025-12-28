@@ -25,6 +25,7 @@ pub static FILENAME_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
 /// Application preferences that persist to disk.
 /// Only contains settings that should be saved between sessions.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(default)]
 pub struct AppPreferences {
     pub theme: String,
     /// Global shortcut for quick pane (e.g., "CommandOrControl+Shift+.")
@@ -33,6 +34,14 @@ pub struct AppPreferences {
     /// User's preferred language (e.g., "en", "es", "de")
     /// If None, uses system locale detection
     pub language: Option<String>,
+    /// Directory containing task files
+    pub tasks_dir: Option<String>,
+    /// Directory containing area files
+    pub areas_dir: Option<String>,
+    /// Directory containing project files
+    pub projects_dir: Option<String>,
+    /// Filenames to ignore when scanning directories
+    pub ignore: Option<Vec<String>>,
 }
 
 impl Default for AppPreferences {
@@ -41,6 +50,10 @@ impl Default for AppPreferences {
             theme: "system".to_string(),
             quick_pane_shortcut: None, // None means use default
             language: None,            // None means use system locale
+            tasks_dir: None,
+            areas_dir: None,
+            projects_dir: None,
+            ignore: None,
         }
     }
 }
@@ -119,4 +132,51 @@ pub fn validate_theme(theme: &str) -> Result<(), String> {
         "light" | "dark" | "system" => Ok(()),
         _ => Err("Invalid theme: must be 'light', 'dark', or 'system'".to_string()),
     }
+}
+
+// ============================================================================
+// CLI Config Types
+// ============================================================================
+
+/// Config read from CLI's ~/.taskdn.json
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(default)]
+pub struct CliConfig {
+    pub tasks_dir: Option<String>,
+    pub areas_dir: Option<String>,
+    pub projects_dir: Option<String>,
+    pub ignore: Option<Vec<String>>,
+}
+
+/// Error types for CLI config operations (typed for frontend matching)
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "type")]
+pub enum CliConfigError {
+    /// Home directory could not be determined
+    HomeNotFound,
+    /// ~/.taskdn.json does not exist (CLI not configured - not a real error)
+    FileNotFound,
+    /// Failed to read the file
+    ReadError { message: String },
+    /// Failed to parse JSON
+    ParseError { message: String },
+}
+
+impl std::fmt::Display for CliConfigError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            CliConfigError::HomeNotFound => write!(f, "Home directory not found"),
+            CliConfigError::FileNotFound => write!(f, "CLI config file not found"),
+            CliConfigError::ReadError { message } => write!(f, "Read error: {message}"),
+            CliConfigError::ParseError { message } => write!(f, "Parse error: {message}"),
+        }
+    }
+}
+
+/// Paths to dummy vault for development testing
+#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+pub struct DummyVaultPaths {
+    pub tasks_dir: String,
+    pub areas_dir: String,
+    pub projects_dir: String,
 }

@@ -1,26 +1,18 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
-import { Switch } from '@/components/ui/switch'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
 import { ShortcutPicker } from '../ShortcutPicker'
 import { SettingsField, SettingsSection } from '../shared/SettingsComponents'
+import { FolderPicker } from '../shared/FolderPicker'
 import { usePreferences, useSavePreferences } from '@/services/preferences'
 import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
 
 export function GeneralPane() {
   const { t } = useTranslation()
-  // Example local state - these are NOT persisted to disk
-  // To add persistent preferences:
-  // 1. Add the field to AppPreferences in both Rust and TypeScript
-  // 2. Use usePreferencesManager() and updatePreferences()
-  const [exampleText, setExampleText] = useState('Example value')
-  const [exampleToggle, setExampleToggle] = useState(true)
 
-  // Load preferences for keyboard shortcuts
+  // Load preferences for keyboard shortcuts and vault directories
   const { data: preferences } = usePreferences()
   const savePreferences = useSavePreferences()
 
@@ -30,18 +22,23 @@ export function GeneralPane() {
     queryFn: async () => {
       return await commands.getDefaultQuickPaneShortcut()
     },
-    staleTime: Infinity, // Never refetch - this is a constant
+    staleTime: Infinity,
+  })
+
+  // Check if running in dev mode
+  const { data: isDevMode } = useQuery({
+    queryKey: ['is-dev-mode'],
+    queryFn: () => commands.isDevMode(),
+    staleTime: Infinity,
   })
 
   const handleShortcutChange = async (newShortcut: string | null) => {
     if (!preferences) return
 
-    // Capture old shortcut for rollback if save fails
     const oldShortcut = preferences.quick_pane_shortcut
 
     logger.info('Updating quick pane shortcut', { oldShortcut, newShortcut })
 
-    // First, try to register the new shortcut
     const result = await commands.updateQuickPaneShortcut(newShortcut)
 
     if (result.status === 'error') {
@@ -52,14 +49,12 @@ export function GeneralPane() {
       return
     }
 
-    // If registration succeeded, try to save the preference
     try {
       await savePreferences.mutateAsync({
         ...preferences,
         quick_pane_shortcut: newShortcut,
       })
     } catch {
-      // Save failed - roll back the backend registration
       logger.warn('Save failed, rolling back shortcut registration', {
         oldShortcut,
         newShortcut,
@@ -85,6 +80,67 @@ export function GeneralPane() {
     }
   }
 
+  // Directory path handlers
+  const handleTasksDirChange = (path: string | null) => {
+    if (!preferences) return
+    savePreferences.mutate({ ...preferences, tasks_dir: path })
+  }
+
+  const handleAreasDirChange = (path: string | null) => {
+    if (!preferences) return
+    savePreferences.mutate({ ...preferences, areas_dir: path })
+  }
+
+  const handleProjectsDirChange = (path: string | null) => {
+    if (!preferences) return
+    savePreferences.mutate({ ...preferences, projects_dir: path })
+  }
+
+  // Read from CLI config
+  const handleReadFromCli = async () => {
+    if (!preferences) return
+
+    const result = await commands.readCliConfig()
+
+    if (result.status === 'error') {
+      if (result.error.type === 'FileNotFound') {
+        toast.info(t('preferences.general.cliNotConfigured'))
+      } else {
+        toast.error(t('toast.error.cliConfigRead'), {
+          description:
+            'message' in result.error ? result.error.message : undefined,
+        })
+      }
+      return
+    }
+
+    const cliConfig = result.data
+    savePreferences.mutate({
+      ...preferences,
+      tasks_dir: cliConfig.tasks_dir ?? preferences.tasks_dir,
+      areas_dir: cliConfig.areas_dir ?? preferences.areas_dir,
+      projects_dir: cliConfig.projects_dir ?? preferences.projects_dir,
+      ignore: cliConfig.ignore ?? preferences.ignore,
+    })
+
+    toast.success(t('toast.success.pathsImported'))
+  }
+
+  // Use dummy vault (dev only)
+  const handleUseDummyVault = async () => {
+    if (!preferences) return
+
+    const result = await commands.getDummyVaultPaths()
+    savePreferences.mutate({
+      ...preferences,
+      tasks_dir: result.tasks_dir,
+      areas_dir: result.areas_dir,
+      projects_dir: result.projects_dir,
+    })
+
+    toast.success(t('toast.success.dummyVaultSet'))
+  }
+
   return (
     <div className="space-y-6">
       <SettingsSection title={t('preferences.general.keyboardShortcuts')}>
@@ -94,7 +150,6 @@ export function GeneralPane() {
         >
           <ShortcutPicker
             value={preferences?.quick_pane_shortcut ?? null}
-            // Fallback matches DEFAULT_QUICK_PANE_SHORTCUT in src-tauri/src/lib.rs
             defaultValue={defaultShortcut ?? 'CommandOrControl+Shift+.'}
             onChange={handleShortcutChange}
             disabled={!preferences || savePreferences.isPending}
@@ -102,33 +157,58 @@ export function GeneralPane() {
         </SettingsField>
       </SettingsSection>
 
-      <SettingsSection title={t('preferences.general.exampleSettings')}>
+      <SettingsSection title={t('preferences.general.vaultDirectories')}>
         <SettingsField
-          label={t('preferences.general.exampleText')}
-          description={t('preferences.general.exampleTextDescription')}
+          label={t('preferences.general.tasksDir')}
+          description={t('preferences.general.tasksDirDescription')}
         >
-          <Input
-            value={exampleText}
-            onChange={e => setExampleText(e.target.value)}
-            placeholder={t('preferences.general.exampleTextPlaceholder')}
+          <FolderPicker
+            value={preferences?.tasks_dir ?? null}
+            onChange={handleTasksDirChange}
+            disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
 
         <SettingsField
-          label={t('preferences.general.exampleToggle')}
-          description={t('preferences.general.exampleToggleDescription')}
+          label={t('preferences.general.areasDir')}
+          description={t('preferences.general.areasDirDescription')}
         >
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="example-toggle"
-              checked={exampleToggle}
-              onCheckedChange={setExampleToggle}
-            />
-            <Label htmlFor="example-toggle" className="text-sm">
-              {exampleToggle ? t('common.enabled') : t('common.disabled')}
-            </Label>
-          </div>
+          <FolderPicker
+            value={preferences?.areas_dir ?? null}
+            onChange={handleAreasDirChange}
+            disabled={!preferences || savePreferences.isPending}
+          />
         </SettingsField>
+
+        <SettingsField
+          label={t('preferences.general.projectsDir')}
+          description={t('preferences.general.projectsDirDescription')}
+        >
+          <FolderPicker
+            value={preferences?.projects_dir ?? null}
+            onChange={handleProjectsDirChange}
+            disabled={!preferences || savePreferences.isPending}
+          />
+        </SettingsField>
+
+        <div className="flex gap-2 pt-2">
+          <Button
+            variant="outline"
+            onClick={handleReadFromCli}
+            disabled={!preferences || savePreferences.isPending}
+          >
+            {t('preferences.general.readFromCli')}
+          </Button>
+          {isDevMode && (
+            <Button
+              variant="outline"
+              onClick={handleUseDummyVault}
+              disabled={!preferences || savePreferences.isPending}
+            >
+              {t('preferences.general.useDummyVault')}
+            </Button>
+          )}
+        </div>
       </SettingsSection>
     </div>
   )
