@@ -83,17 +83,26 @@ export function GeneralPane() {
   // Directory path handlers
   const handleTasksDirChange = (path: string | null) => {
     if (!preferences) return
-    savePreferences.mutate({ ...preferences, tasks_dir: path })
+    savePreferences.mutate(
+      { ...preferences, tasks_dir: path },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
   }
 
   const handleAreasDirChange = (path: string | null) => {
     if (!preferences) return
-    savePreferences.mutate({ ...preferences, areas_dir: path })
+    savePreferences.mutate(
+      { ...preferences, areas_dir: path },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
   }
 
   const handleProjectsDirChange = (path: string | null) => {
     if (!preferences) return
-    savePreferences.mutate({ ...preferences, projects_dir: path })
+    savePreferences.mutate(
+      { ...preferences, projects_dir: path },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
   }
 
   // Read from CLI config
