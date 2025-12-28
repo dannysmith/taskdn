@@ -11,3 +11,4 @@ export { appendBodyCommand } from './append-body.ts';
 export { initCommand } from './init.ts';
 export { configCommand } from './config.ts';
 export { doctorCommand } from './doctor.ts';
+export { completionCommand } from './completion.ts';
