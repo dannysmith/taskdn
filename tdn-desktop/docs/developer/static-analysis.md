@@ -6,23 +6,23 @@ All static analysis tools configured in this app and how to use them.
 
 | Tool           | Purpose                  | Command                  | In check:all |
 | -------------- | ------------------------ | ------------------------ | ------------ |
-| TypeScript     | Type checking            | `npm run typecheck`      | Yes          |
-| ESLint         | Syntax, style, TS rules  | `npm run lint`           | Yes          |
-| Prettier       | Code formatting          | `npm run format:check`   | Yes          |
-| ast-grep       | Architecture patterns    | `npm run ast:lint`       | Yes          |
+| TypeScript     | Type checking            | `bun run typecheck`      | Yes          |
+| ESLint         | Syntax, style, TS rules  | `bun run lint`           | Yes          |
+| Prettier       | Code formatting          | `bun run format:check`   | Yes          |
+| ast-grep       | Architecture patterns    | `bun run ast:lint`       | Yes          |
 | React Compiler | Automatic memoization    | Build-time               | Yes          |
-| cargo fmt      | Rust formatting          | `npm run rust:fmt:check` | Yes          |
-| clippy         | Rust linting             | `npm run rust:clippy`    | Yes          |
-| Vitest         | Frontend tests           | `npm run test:run`       | Yes          |
-| cargo test     | Rust tests               | `npm run rust:test`      | Yes          |
-| knip           | Unused code detection    | `npm run knip`           | No           |
-| jscpd          | Duplicate code detection | `npm run jscpd`          | No           |
+| cargo fmt      | Rust formatting          | `bun run rust:fmt:check` | Yes          |
+| clippy         | Rust linting             | `bun run rust:clippy`    | Yes          |
+| Vitest         | Frontend tests           | `bun run test:run`       | Yes          |
+| cargo test     | Rust tests               | `bun run rust:test`      | Yes          |
+| knip           | Unused code detection    | `bun run knip`           | No           |
+| jscpd          | Duplicate code detection | `bun run jscpd`          | No           |
 
 ## Running All Checks
 
 ```bash
-npm run check:all    # Must pass before commits
-npm run fix:all      # Auto-fix what can be fixed
+bun run check:all    # Must pass before commits
+bun run fix:all      # Auto-fix what can be fixed
 ```
 
 ## Tool Details
@@ -32,8 +32,8 @@ npm run fix:all      # Auto-fix what can be fixed
 Handles syntax, style, and TypeScript-specific rules.
 
 ```bash
-npm run lint        # Check for issues
-npm run lint:fix    # Auto-fix issues
+bun run lint        # Check for issues
+bun run lint:fix    # Auto-fix issues
 ```
 
 Configuration in `eslint.config.js`.
@@ -43,8 +43,8 @@ Configuration in `eslint.config.js`.
 Consistent code formatting.
 
 ```bash
-npm run format:check   # Check formatting
-npm run format         # Fix formatting
+bun run format:check   # Check formatting
+bun run format         # Fix formatting
 ```
 
 Configuration in `prettier.config.js`.
@@ -54,8 +54,8 @@ Configuration in `prettier.config.js`.
 Enforces architectural patterns ESLint can't detect. Catches violations like Zustand destructuring and hooks in wrong directories.
 
 ```bash
-npm run ast:lint    # Scan for violations
-npm run ast:fix     # Auto-fix where possible
+bun run ast:lint    # Scan for violations
+bun run ast:fix     # Auto-fix where possible
 ```
 
 **Key rules:**
@@ -81,11 +81,11 @@ The compiler analyzes code and adds memoization where beneficial.
 ### Rust Tooling
 
 ```bash
-npm run rust:fmt:check   # Check formatting
-npm run rust:fmt         # Fix formatting
-npm run rust:clippy      # Lint with clippy
-npm run rust:clippy:fix  # Auto-fix clippy warnings
-npm run rust:test        # Run Rust tests
+bun run rust:fmt:check   # Check formatting
+bun run rust:fmt         # Fix formatting
+bun run rust:clippy      # Lint with clippy
+bun run rust:clippy:fix  # Auto-fix clippy warnings
+bun run rust:test        # Run Rust tests
 ```
 
 ### knip (Periodic Cleanup)
@@ -93,7 +93,7 @@ npm run rust:test        # Run Rust tests
 Detects unused exports, dependencies, and files. Not in `check:all` - use periodically.
 
 ```bash
-npm run knip
+bun run knip
 ```
 
 ### jscpd (Periodic Cleanup)
@@ -101,7 +101,7 @@ npm run knip
 Detects duplicated code blocks. Not in `check:all` - use periodically.
 
 ```bash
-npm run jscpd
+bun run jscpd
 ```
 
 Use the `/cleanup` command for guided analysis and cleanup of both knip and jscpd findings.
@@ -111,7 +111,7 @@ Use the `/cleanup` command for guided analysis and cleanup of both knip and jscp
 `check:all` runs in CI. Ensure it passes locally before pushing:
 
 ```bash
-npm run check:all
+bun run check:all
 ```
 
 ## Adding New Rules

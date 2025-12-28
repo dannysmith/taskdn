@@ -16,7 +16,7 @@ The release system provides:
 ### 1. Generate Signing Keys
 
 ```bash
-npm install -g @tauri-apps/cli
+bun add -g @tauri-apps/cli
 tauri signer generate -w ~/.tauri/myapp.key
 # Outputs private key (saved) and public key (displayed)
 ```
@@ -57,13 +57,13 @@ Add these secrets (Settings → Secrets and variables → Actions):
 ### Simple Method
 
 ```bash
-npm run release:prepare v1.0.0
+bun run release:prepare v1.0.0
 ```
 
 This will:
 
 1. Check git status is clean
-2. Run all quality checks (`npm run check:all`)
+2. Run all quality checks (`bun run check:all`)
 3. Update versions in `package.json`, `Cargo.toml`, `tauri.conf.json`
 4. Ask if you want to commit and push
 
@@ -80,7 +80,7 @@ Finally, manually publish the draft release on GitHub.
 
 ```bash
 # Update versions in package.json, Cargo.toml, tauri.conf.json
-npm run check:all
+bun run check:all
 git add .
 git commit -m "chore: release v1.0.0"
 git tag v1.0.0
@@ -176,6 +176,6 @@ All updates are cryptographically signed:
 | Issue                    | Solution                                              |
 | ------------------------ | ----------------------------------------------------- |
 | Workflow doesn't trigger | Ensure tag starts with `v` and is pushed              |
-| Build fails              | Check GitHub secrets, run `npm run check:all` locally |
+| Build fails              | Check GitHub secrets, run `bun run check:all` locally |
 | Updates not detected     | Verify endpoint URL and public key match              |
 | Download fails           | Check signatures, file permissions, disk space        |

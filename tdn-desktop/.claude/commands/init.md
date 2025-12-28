@@ -41,8 +41,8 @@ After receiving their input:
 Run these commands:
 
 ```bash
-npm install
-npm run check:all
+bun install
+bun run check:all
 ```
 
 Fix any errors before proceeding.
@@ -51,7 +51,7 @@ Fix any errors before proceeding.
 
 Summarize what was updated, then guide the user:
 
-1. **Try the app**: Run `npm run tauri:dev` to verify everything works
+1. **Try the app**: Run `bun run tauri:dev` to verify everything works
 2. **Set up releases** (if using GitHub Actions): See `docs/developer/releases.md` for signing key generation and GitHub secrets
 3. **Explore the codebase**:
    - Read `docs/developer/architecture-guide.md` for patterns

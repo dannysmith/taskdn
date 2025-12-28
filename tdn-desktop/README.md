@@ -51,7 +51,7 @@ Platform detection utilities, platform-specific UI strings ("Reveal in Finder" v
 
 - **Type-safe Tauri commands** - tauri-specta generates TypeScript bindings from Rust, with full autocomplete and compile-time checking
 - **Static analysis** - ESLint, Prettier, ast-grep (architecture enforcement), knip (unused code), jscpd (duplication)
-- **Single quality gate** - `npm run check:all` runs TypeScript, ESLint, Prettier, ast-grep, clippy, and all tests
+- **Single quality gate** - `bun run check:all` runs TypeScript, ESLint, Prettier, ast-grep, clippy, and all tests
 - **Testing patterns** - Vitest setup with Tauri command mocking
 
 ## Tauri Plugins Included

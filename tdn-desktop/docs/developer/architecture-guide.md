@@ -251,7 +251,7 @@ See [tauri-commands.md](./tauri-commands.md) for adding new commands.
 Before any changes are committed:
 
 ```bash
-npm run check:all
+bun run check:all
 ```
 
 See [static-analysis.md](./static-analysis.md) for all tools included.
