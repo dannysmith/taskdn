@@ -1,6 +1,6 @@
 # Desktop App - Requirements & Overview
 
-A Tauri desktop application for managing S1-compliant task systems. Designed for macOS foremost, but with support fot cross-platform users. See [Desktop Tech](./desktop-tech.md) for technical overview and reqirements. Used by human users only.
+A Tauri desktop application for managing S1-compliant task systems. Designed for macOS foremost, but with support for cross-platform users. See [Desktop Tech](./desktop-tech.md) for technical overview and requirements. Used by human users only.
 
 See [Overview](../../overview.md) for an overview of the whole project.
 
@@ -32,53 +32,62 @@ The UI must:
 
 ### The Left Sidebar
 
-The the left sidebar should always show the currently active areas. And then underneath each area, the currently active projects that belong to them, with the status of each project clearly shown. Drilling down into any of these things should show me a suitable view in the main window. It should also show projects which don't belong to an area.
+The left sidebar should always show currently active areas, with active projects nested underneath each area. Project status should be clearly visible. Clicking any area or project opens a suitable view in the main window. Projects not belonging to an area should also be shown.
 
-The left sidebar should also be an easy way to get to certain views like "inbox", "this week", "today", "overdue" and the like. The exact details of this will be worked out later.
+The left sidebar should also provide quick access to views like "inbox", "this week", "today", "overdue", and similar. Exact details to be determined.
 
 ### The Task Card
 
-Tasks are a fundamental unit in this app. Whether I'm in grid view or Kanban view or potentially various other views, I want to be able to see tasks represented as a card, which in certain views will be draggable, and that card needs to have all the information I require in a certain context visible. It should be easy to change certain properties of a task by interacting with this card. This is one of the two fundamental representations of a task.
+Tasks are a fundamental unit in this app. Whether in grid view, Kanban view, or other views, tasks should be represented as cards that display all relevant information for the current context. In appropriate views, cards should be draggable. It should be easy to change task properties by interacting directly with the card. This is one of the two fundamental representations of a task (the other being the Task ListItem).
 
 ### The Project Card
 
-As per task cards, except I'm likely to interact with these less and the information shown on them will be different.
+Similar to task cards, but with different information displayed. Users will interact with these less frequently than task cards.
 
 ### The Area Card
 
-As per task cards, except I'm likely to interact with these less and the information shown on them will be different.
+Similar to task cards, but with different information displayed. Users will interact with these less frequently than task cards.
 
 ### The New/Edit Task Card
 
-Editing current tasks in place or adding new tasks is something that's likely to happen in any view where I can see task cards. So the interface for doing that should in one way or another be able to replace a task card in place whether I'm editing its properties or creating a new one.
+Editing tasks in place or adding new tasks can happen in any view showing task cards. The editing interface should be able to replace a task card in place, whether editing an existing task's properties or creating a new one.
 
 ### The Task ListItem
 
-The second major view I'm likely to have of tasks is when they are displayed in a list rather than a grid or Kanban board. And so much like a task card, I want to see a task list item which should generally appear in a similar way to checkbox tasks in normal task management apps. I should be able to rearrange these, drill down into them, edit their properties, add new ones, in a very similar interface as you would expect in an app like Things. I should also be able to change their status by checking them off.
+The second major representation of tasks, used when displaying tasks in a list rather than a grid or Kanban board. Task list items should appear similar to checkbox tasks in standard task management apps. Users should be able to:
+
+- Rearrange items by dragging
+- Seemalessly edit task title
+- Drill down into task details
+- Edit some task properties inline
+- Add new tasks
+- Change status by checking them off
+
+The interaction model should feel similar to apps like Things.
 
 ### The Project ListItem
 
-The equivalent of a task list item, but for projects. will be used a lot less than the task list items. Unlike task list items, these probably do not need to be interactive. It's unlikely that we will need to change any metadata about a project from a view that is showing them as list items. However, project list items are likely to be used as a kind of heading under which task list items are shown.
+The equivalent of a task list item, but for projects. Used less frequently than task list items. Unlike task list items, these probably don't need to be interactive—it's unlikely users will need to change project metadata from a list view. Project list items are primarily used as grouping headers under which task list items appear.
 
 ### The Area ListItem
 
-As for Project ListItems. No interaction Which changes their data expected with these.
+Similar to Project ListItems. No interaction that changes their data is expected.
 
 ### The List
 
-The list is a fundamental type of view. A list will contain task list items and allow new ones to be added or them to be reordered and edited in an extremely easy way. Much like in things. Lists may also support project list items or area list items either as grouping headings or simply on their own. This will depend on the view.
+A fundamental view type. Lists contain task list items and allow easy adding, reordering, and editing—much like in Things. Lists may also include project or area list items as grouping headers, depending on the view context.
 
 ### The Grid
 
-A simple grid which allows the display of cards where this is used will depend entirely on context.
+A simple grid layout for displaying cards. Usage depends entirely on context.
 
 ### The Kanban Board
 
-Similar to grid except a Kanban board must allow reordering within a column and must be able to display columns based on some property of the things it is displaying. The way Notion does this is an excellent model.
+Similar to a grid, but with columns based on a property of the displayed items. Must support reordering within columns. Notion's implementation is a good model.
 
 ### The Week View
 
-The simplest form of calendar view, showing tasks organized by one or many of their date properties. The most obvious use case for this is scheduling tasks for the forthcoming week by dragging them to the correct day.
+The simplest calendar view, showing tasks organized by their date properties (due, scheduled, etc.). The primary use case is scheduling tasks for the coming week by dragging them to the appropriate day.
 
 ## Task Ordering & Reordering
 
@@ -86,52 +95,68 @@ Planning views (today, project planning) need manual task reordering. This is a 
 
 ## Keyboard Navigation
 
-Keyboard navigation must work as expected. whatever view I am in, if I am in a Kanban view, a task list, or a grid view, it should be possible to move between different tasks or other items intuitively and natively using the keyboard. Keyboard shortcuts should work contextually, allowing me to edit and create new tasks as well as navigate the main interface of the application without needing to use my mouse. There is plenty of prior art here in the form of other similar applications like linear cello things, etcetera.
+Keyboard navigation must work intuitively across all views. Whether in a Kanban view, task list, or grid view, users should be able to move between items using the keyboard. Keyboard shortcuts should work contextually, allowing users to:
+
+- Navigate between items in any view
+- Edit and create tasks
+- Navigate the main app interface
+
+All of this should be possible without touching the mouse. There is plenty of prior art in apps like Linear, Cello, and Things.
 
 ## The Command Palette
 
-The command pallet should support general app-wide commands, as well as contextual ones. For example, if I currently have a task selected in the UI, Opening the command palette should surface operations I can conduct on that task at the top and fuzzy match for them.
+The command palette should support both app-wide and contextual commands. For example, if a task is currently selected, opening the command palette should surface relevant operations for that task at the top, with fuzzy matching for all commands.
 
 ## The Quick Search
 
-It must be possible to quickly search for and open any task area or project using a command palette-like Interface. This must support fuzzy matching. And ideally it would also give preference to the most recently opened items. The main purpose here is being able to hit a ke ke ke ke ke ke ke ke ke keyboard shortcut and very quickly find and open the area project or task we are looking for in the app.
+Users must be able to quickly search for and open any task, area, or project using a command palette-like interface. Requirements:
 
-## Item Contex Menus
+- Support fuzzy matching
+- Prioritize recently opened items
+- Accessible via a keyboard shortcut
 
-Right clicking on any task, project, or area anywhere in the app will present a context menu containing at least:
+The goal is to hit a shortcut and very quickly find and open any item in the app.
 
-- Reveal in Finder/Explorer/erx - Reveals the file on disk in the OS file manager.
-- Open in Default App - Opens the file on disk in the OS default application.
-- Open in Obsidian - Opens the file on disk in obsidian using the Obsidian URL Scheme. Only shown if the file is within an obsidian vault.
-- Copy Path - copies the full file path to the clipboard.
-- Copy local URL - copies the `taskdn://` URL to the clipboard.
-- Copy as Markdown - copies the full contents of the file on disk to the clipboard, direct from disk, appending the full file path at the end.
+## Item Context Menus
 
-In certain contexts, context menus may include additional items. But they must ALWAYS include these ones.
+Right-clicking on any task, project, or area anywhere in the app presents a context menu containing at least:
+
+- **Reveal in Finder/Explorer** – Reveals the file on disk in the OS file manager.
+- **Open in Default App** – Opens the file in the OS default application.
+- **Open in Obsidian** – Opens the file in Obsidian using its URL scheme. Only shown if the file is within an Obsidian vault.
+- **Copy Path** – Copies the full file path to the clipboard.
+- **Copy Local URL** – Copies the `taskdn://` URL to the clipboard.
+- **Copy as Markdown** – Copies the full contents of the file to the clipboard, with the file path appended at the end.
+
+Context menus may include additional items depending on context, but must always include the items above.
 
 ## Quick Capture Pane
 
-- A global keyboard shortcut opens a clean "new task" panel on the currently focussed screen. By default it's just a "Title" text area. Esc cancels, Cmd+Enter submits.
-- The user can type (or dictate with a third party tool) the title of their task and have it immediatly created with status "inbox".
-- Command + Shift + Enter opens a "body" textarea below the title. Text entered here will be added to the body of the task doc.
-- "Mentions"
-  - Typing `/` in either text area opens a completion dropdown which shows all active areas and projects with fuzzy matching, allowing the user to assign a projects and/or area to the task. Doing so inserts a "pill" which can be deleted like normal text.
-  - Typing `@` will open a similar dropdown which allows the user to select sates for scheduled, due and defer-until, using both natural language and a datepicker. These also appear as "pills" in the text.
-  - While these appear as "mentions" in the text, they are not. They are a keyboard-friendly way to assign a project, task, due, scheduled or defer-until. It is not possible to assign these more than once, so once the user has "mentioned" a project they will no longer appear in the dropdowns. Likewise for all the others.
-- When creating a task, these "pills" are removed from the text.
+- A global keyboard shortcut opens a clean "new task" panel on the currently focused screen. By default it shows just a "Title" text area. Esc cancels, Cmd+Enter submits.
+- The user can type (or dictate with a third-party tool) the title of their task and have it immediately created with status "inbox".
+- Cmd+Shift+Enter opens a "body" textarea below the title. Text entered here will be added to the body of the task doc.
+- **"Mentions"**
+  - Typing `/` in either text area opens a completion dropdown showing all active areas and projects with fuzzy matching, allowing the user to assign a project and/or area to the task. This inserts a "pill" which can be deleted like normal text.
+  - Typing `@` opens a similar dropdown for selecting dates for scheduled, due, and defer-until, using both natural language and a datepicker. These also appear as "pills".
+  - While these appear as "mentions" in the text, they are actually a keyboard-friendly way to assign metadata. Each can only be assigned once—once a project is "mentioned", it no longer appears in the dropdown. Same for dates.
+- When the task is created, these "pills" are stripped from the text.
 
 ## Quick Capture LLM Post-Processing
 
-Mainly intended for users who dictate new tasks into the quick capture box.
+Primarily intended for users who dictate new tasks into the quick capture box.
 
-- The contents of the inout field are sent to a local LLM with a short prompt. This returns a properly-structured task for creation in the app.
-- The prompt will include a list of the current areas and projects along with additional context about "now", along with instructions for lightly cleaning the user input, extracting frontmatter fields and (if long) generating a suitable title. The raw input text will always be incluede in the body of the task doc.
-- This prompt is not customizable by the user.
-- Only Apple Intelligence is supported for V1. Installed ollama models may also be supported.
-- There is NO INTENT to ship downloadable LLMs with this product, or provide an interface for managing them.
+- The contents of the input field are sent to a local LLM with a short prompt, which returns a properly-structured task for creation in the app.
+- The prompt includes:
+  - A list of current areas and projects
+  - Context about "now"
+  - Instructions for lightly cleaning user input, extracting frontmatter fields, and (if the input is long) generating a suitable title
+- The raw input text is always included in the body of the task doc.
+- The prompt is not user-customizable.
+- V1 supports only Apple Intelligence. Installed Ollama models may also be supported.
+- There is no intent to ship downloadable LLMs with this product or provide an interface for managing them.
 
 ## URL Scheme
 
-The app supports a `taskdn://` local URL scheme for opening tasks, projects and areas in the desktop app. The scheme should also include special URLs for commonly-accessed app-level views (eg. "today", "new task", "calendar" etc). These will be dictated by the eventual design of the app.
+The app supports a `taskdn://` local URL scheme for opening tasks, projects, and areas in the desktop app. The scheme should also include special URLs for commonly-accessed views (e.g., "today", "new task", "calendar"). Exact URLs to be determined by the final app design.
 
 ## Future Ideas
