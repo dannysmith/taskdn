@@ -2,5 +2,10 @@
 # https://docs.coderabbit.ai/reference/configuration
 
 reviews:
+  collapse_walkthrough: true
+  sequence_diagrams: false
   path_filters:
-    - "!**/*.md"  # Exclude all markdown files from review
+    - '!**/*.md' # Exclude all markdown files from review
+issue_enrichment:
+  auto_enrich:
+    enabled: false
