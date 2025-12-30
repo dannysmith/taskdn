@@ -25,7 +25,8 @@ export function AppearancePane() {
   const { data: preferences } = usePreferences()
   const savePreferences = useSavePreferences()
 
-  const handleThemeChange = (value: 'light' | 'dark' | 'system') => {
+  const handleThemeChange = (value: 'light' | 'dark' | 'system' | null) => {
+    if (!value) return
     // Update the theme provider immediately for instant UI feedback
     setTheme(value)
 
@@ -35,7 +36,8 @@ export function AppearancePane() {
     }
   }
 
-  const handleLanguageChange = async (value: string) => {
+  const handleLanguageChange = async (value: string | null) => {
+    if (!value) return
     const language = value === 'system' ? null : value
 
     try {
@@ -106,9 +108,7 @@ export function AppearancePane() {
             disabled={savePreferences.isPending}
           >
             <SelectTrigger>
-              <SelectValue
-                placeholder={t('preferences.appearance.selectTheme')}
-              />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="light">
