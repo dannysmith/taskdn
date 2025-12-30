@@ -1,5 +1,5 @@
 {
-  "name": "tdn-claude-plugin",
+  "name": "tdn",
   "version": "0.1.0",
   "description": "Task and project management with the tdn CLI. Helps Claude work as a productivity assistant, managing tasks, projects, and areas stored as markdown files on disk.",
   "author": {
