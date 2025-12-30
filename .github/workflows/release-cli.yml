@@ -122,6 +122,6 @@ jobs:
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          repository: taskdn/homebrew-tdn
-          event-type: update-formula
+          repository: dannysmith/homebrew-taproom
+          event-type: update-tdn-formula
           client-payload: '{"version": "${{ steps.version.outputs.version }}"}'

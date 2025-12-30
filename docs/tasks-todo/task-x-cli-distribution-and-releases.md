@@ -8,7 +8,7 @@ Set up a production-ready distribution system for `tdn-cli` using Bun's standalo
 
 ```bash
 # Homebrew (macOS/Linux)
-brew install taskdn/tdn/tdn
+brew install dannysmith/taproom/tdn
 
 # Direct download
 curl -fsSL https://github.com/taskdn/taskdn/releases/latest/download/install.sh | bash
@@ -39,7 +39,7 @@ We tested both approaches:
 
 Before starting:
 
-1. Create GitHub repository: `taskdn/homebrew-tdn` for Homebrew tap
+1. Create GitHub repository: `dannysmith/homebrew-taproom` for Homebrew tap
 2. Create GitHub PAT for Homebrew updates (see "GitHub Secrets Required" section)
 3. (Optional) Set up domain for install script hosting
 
@@ -374,9 +374,9 @@ jobs:
 
 Set up Homebrew distribution.
 
-**4.1: Create homebrew-tdn repository**
+**4.1: Create homebrew-taproom repository**
 
-Create `taskdn/homebrew-tdn` repository with:
+Create `dannysmith/homebrew-taproom` repository with:
 
 `Formula/tdn.rb`:
 ```ruby
@@ -418,15 +418,15 @@ class Tdn < Formula
 end
 ```
 
-**4.2: Create auto-update workflow in homebrew-tdn repo**
+**4.2: Create auto-update workflow in homebrew-taproom repo**
 
-`.github/workflows/update-formula.yml`:
+`.github/workflows/update-tdn-formula.yml`:
 ```yaml
 name: Update Formula
 
 on:
   repository_dispatch:
-    types: [update-formula]
+    types: [update-tdn-formula]
 
 permissions:
   contents: write
@@ -748,7 +748,7 @@ tdn --version
 - [ ] Homebrew update is triggered (for non-pre-release tags)
 
 ### Phase 4: Homebrew
-- [ ] `brew tap taskdn/tdn` works
+- [ ] `brew tap dannysmith/taproom` works
 - [ ] `brew install tdn` downloads correct binary for platform
 - [ ] `tdn --version` works after install
 - [ ] Formula auto-update PR is created on new releases
@@ -774,12 +774,12 @@ tdn --version
 
 | Secret | Purpose | How to Create |
 |--------|---------|---------------|
-| `HOMEBREW_TAP_TOKEN` | Trigger updates in homebrew-tdn repo | Create a fine-grained PAT with `repo` scope for `taskdn/homebrew-tdn` only |
+| `HOMEBREW_TAP_TOKEN` | Trigger updates in homebrew-taproom repo | Create a fine-grained PAT with `repo` scope for `dannysmith/homebrew-taproom` only |
 
 **Creating HOMEBREW_TAP_TOKEN:**
 1. Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
 2. Create new token with:
-   - Repository access: Only select repositories → `taskdn/homebrew-tdn`
+   - Repository access: Only select repositories → `dannysmith/homebrew-taproom`
    - Permissions: Contents (read/write), Pull requests (read/write)
 3. Add as secret in `taskdn/taskdn` repo: Settings → Secrets → Actions → New repository secret
 
