@@ -66,9 +66,12 @@ Create build scripts and verify binaries work on each platform.
 tdn-cli/
 ├── dist/           # Built binaries (gitignored)
 ├── scripts/
-│   ├── build-release.sh   # Script for local builds
-│   └── install.sh         # User install script
+│   ├── build-release.sh     # Script for local builds
+│   ├── install.sh           # User install script
+│   └── prepare-release.js   # Version bump + release prep (already created)
 ```
+
+**Note:** `prepare-release.js` already exists. Run with `bun run release:prepare 1.0.0`.
 
 **1.3: Create build-release.sh**
 
@@ -297,7 +300,12 @@ jobs:
         run: |
           cd dist
           tar -czvf tdn-${{ matrix.target }}.tar.gz tdn
-          sha256sum tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          # macOS uses shasum, Linux uses sha256sum
+          if command -v sha256sum &> /dev/null; then
+            sha256sum tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          else
+            shasum -a 256 tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          fi
           rm tdn
 
       - name: Create archive (Windows)
@@ -432,36 +440,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download archives and calculate checksums
+      - name: Download checksums and update formula
         run: |
           BASE_URL="https://github.com/taskdn/taskdn/releases/download/tdn-cli-v${VERSION}"
 
-          # Download each archive and get checksum
+          # Download checksums and export as env vars
           for target in darwin-arm64 darwin-x64 linux-arm64 linux-x64; do
-            echo "Downloading ${target}..."
-            curl -sL "${BASE_URL}/tdn-${target}.tar.gz.sha256" -o "${target}.sha256"
-            # Extract just the hash (first field)
-            HASH=$(cut -d' ' -f1 "${target}.sha256")
-            echo "${target}=${HASH}" >> checksums.env
+            echo "Fetching ${target} checksum..."
+            HASH=$(curl -sL "${BASE_URL}/tdn-${target}.tar.gz.sha256" | cut -d' ' -f1)
+            # Export with underscores (bash doesn't like hyphens in var names)
+            VAR_NAME=$(echo "$target" | tr '-' '_')
+            export "$VAR_NAME=$HASH"
             echo "  ${target}: ${HASH}"
           done
-
-      - name: Update formula
-        run: |
-          # Load checksums
-          source checksums.env
 
           # Update version
           sed -i "s/version \".*\"/version \"${VERSION}\"/" Formula/tdn.rb
 
-          # Update each sha256 placeholder
-          sed -i "s/PLACEHOLDER_DARWIN_ARM64/${darwin_arm64:-PLACEHOLDER_DARWIN_ARM64}/" Formula/tdn.rb
-          sed -i "s/PLACEHOLDER_DARWIN_X64/${darwin_x64:-PLACEHOLDER_DARWIN_X64}/" Formula/tdn.rb
-          sed -i "s/PLACEHOLDER_LINUX_ARM64/${linux_arm64:-PLACEHOLDER_LINUX_ARM64}/" Formula/tdn.rb
-          sed -i "s/PLACEHOLDER_LINUX_X64/${linux_x64:-PLACEHOLDER_LINUX_X64}/" Formula/tdn.rb
-
-          # For subsequent updates, replace existing hashes (64 hex chars)
-          sed -i "s/sha256 \"[a-f0-9]\{64\}\"/sha256 \"${darwin_arm64}\"/" Formula/tdn.rb || true
+          # Update checksums - use perl for multi-line regex (more reliable than sed)
+          # Each sha256 is updated based on its preceding url line
+          perl -i -0pe "s|(url.*tdn-darwin-arm64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$darwin_arm64\"|g" Formula/tdn.rb
+          perl -i -0pe "s|(url.*tdn-darwin-x64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$darwin_x64\"|g" Formula/tdn.rb
+          perl -i -0pe "s|(url.*tdn-linux-arm64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$linux_arm64\"|g" Formula/tdn.rb
+          perl -i -0pe "s|(url.*tdn-linux-x64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$linux_x64\"|g" Formula/tdn.rb
 
           echo "Updated Formula/tdn.rb:"
           cat Formula/tdn.rb
@@ -476,15 +477,9 @@ jobs:
             Automated update triggered by new release.
 
             **Version:** ${{ env.VERSION }}
-
-            **Checksums:**
-            - darwin-arm64: `${{ env.darwin_arm64 }}`
-            - darwin-x64: `${{ env.darwin_x64 }}`
-            - linux-arm64: `${{ env.linux_arm64 }}`
-            - linux-x64: `${{ env.linux_x64 }}`
 ```
 
-**Note:** The Homebrew formula update workflow above is simplified. For production, consider using a more robust approach like a dedicated script that properly parses and updates the Ruby formula.
+**Note:** The perl regex matches each sha256 line based on its preceding url line, so it works for both initial placeholders and subsequent hash updates. Test on first release.
 
 ### Phase 5: Install Script
 
@@ -636,9 +631,9 @@ echo ""
 info "Run 'tdn --help' to get started"
 ```
 
-### Phase 6: Release Automation (Optional)
+### Phase 6: Release Automation (Optional - Skip for Manual Releases)
 
-Set up release-please for automated versioning and changelogs.
+Set up release-please for automated versioning and changelogs. **Skip this phase if you prefer manual releases** — just use `bun run release:prepare VERSION` and push the tag yourself.
 
 **6.1: Create release-please configuration**
 
@@ -825,9 +820,9 @@ The project requires Rust 1.85+ (for edition 2024). The workflows pin to `dtolna
 
 NAPI-RS binaries cannot be cross-compiled. The Rust code must be compiled on the target platform. This is why we use platform-specific runners instead of cross-compiling from Linux.
 
-### Conventional Commits
+### Conventional Commits (Only if using Phase 6)
 
-For release-please to work, use conventional commit format:
+For release-please to work, use conventional commit format. **If doing manual releases, skip this.**
 
 ```
 feat(cli): add new filter option
@@ -840,10 +835,11 @@ chore(cli): update dependencies
 
 Version appears in multiple places:
 - `tdn-cli/package.json` — Source of truth
-- `.release-please-manifest.json` — Updated by release-please
-- Git tag — Created by release-please
+- `tdn-cli/crates/core/Cargo.toml` — Rust crate version
+- `.release-please-manifest.json` — Updated by release-please (if using)
+- Git tag — Created manually or by release-please
 
-release-please keeps these in sync automatically. For manual releases, update `package.json` first.
+**For manual releases:** Use `bun run release:prepare 1.0.0` which updates both `package.json` and `Cargo.toml`, runs checks, and optionally creates the git commit/tag.
 
 ### Future Enhancements
 
