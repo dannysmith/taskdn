@@ -26,6 +26,13 @@ You need the `tdn` CLI installed and configured:
 
 ## Installation
 
+### From Marketplace
+
+```
+/plugin marketplace add dannysmith/taskdn
+/plugin install tdn@tdn-marketplace
+```
+
 ### Development / Local Use
 
 Load the plugin when starting Claude Code using the `--plugin-dir` flag:
@@ -39,10 +46,6 @@ From the monorepo root:
 ```bash
 claude --plugin-dir ./tdn-claude-plugin
 ```
-
-### Future: Marketplace
-
-Once published to a marketplace, installation will be simpler. For now, use the `--plugin-dir` approach.
 
 ## Usage
 

@@ -38,7 +38,16 @@ The CLI contains an embedded Rust core library that handles parsing, validation,
 
 ### Claude Plugin
 
-The [Claude Code plugin](tdn-claude-plugin/README.md) teaches Claude to work as a productivity assistant, using the `tdn` CLI to help manage tasks. To use it during development:
+The [Claude Code plugin](tdn-claude-plugin/README.md) teaches Claude to work as a productivity assistant, using the `tdn` CLI to help manage tasks.
+
+**Install from marketplace:**
+
+```
+/plugin marketplace add dannysmith/taskdn
+/plugin install tdn@tdn-marketplace
+```
+
+**Or load locally during development:**
 
 ```bash
 claude --plugin-dir ./tdn-claude-plugin
