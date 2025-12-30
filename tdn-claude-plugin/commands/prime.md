@@ -1,6 +1,6 @@
 ---
-description: prime the current session with general context from taskdn
-allowed-tools: Bash(tdn:*)
+description: Prime the current session with general context from taskdn and load the task-management skill
+allowed-tools: Bash(tdn:*), Skill(tdn:task-management)
 ---
 
 This session is being primed with context on the user's personal task management system: tasks, projects and life areas. Do this:
