@@ -8,7 +8,7 @@
   },
   "plugins": [
     {
-      "name": "task-management",
+      "name": "tdn",
       "source": "./tdn-claude-plugin",
       "description": "Manage tasks, projects, and areas using the tdn CLI. Productivity assistant for life and work tasks."
     }
