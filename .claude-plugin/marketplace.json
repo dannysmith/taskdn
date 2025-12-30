@@ -1,0 +1,16 @@
+{
+  "name": "tdn-marketplace",
+  "owner": {
+    "name": "Danny Smith"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for the tdn task management system"
+  },
+  "plugins": [
+    {
+      "name": "task-management",
+      "source": "./tdn-claude-plugin",
+      "description": "Manage tasks, projects, and areas using the tdn CLI. Productivity assistant for life and work tasks."
+    }
+  ]
+}
