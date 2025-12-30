@@ -23,6 +23,8 @@
     "test": "bun run test:ts && bun run test:rust",
     "test:ts": "bun test",
     "test:rust": "cargo test --manifest-path crates/core/Cargo.toml",
+    "build:binary": "bun build --compile --minify src/index.ts --outfile dist/tdn",
+    "build:binary:release": "bun build --compile --minify --sourcemap src/index.ts --outfile dist/tdn",
     "release:prepare": "node scripts/prepare-release.js"
   },
   "devDependencies": {
