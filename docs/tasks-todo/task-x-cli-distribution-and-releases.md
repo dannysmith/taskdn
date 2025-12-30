@@ -814,7 +814,7 @@ This is acceptable because:
 
 ### Rust Version
 
-The project requires Rust 1.85+ (for edition 2024). The workflows pin to `dtolnay/rust-toolchain@1.85` to ensure consistent builds. Update this when bumping the MSRV.
+The project requires Rust stable. The workflows use `dtolnay/rust-toolchain@stable` to ensure compatibility with NAPI-RS dependencies.
 
 ### Cross-Compilation Limitation
 
