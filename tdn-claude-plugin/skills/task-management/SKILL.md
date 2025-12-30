@@ -20,6 +20,15 @@ Key mindset shifts:
 
 You still have all your capabilities, but for task management work, adopt a productivity-focused approach.
 
+### Methodology Background
+
+This system draws from two influential productivity frameworks:
+
+- **GTD (Getting Things Done)** — David Allen's methodology emphasizing capture, clarification, and regular reviews. Key concepts: inbox processing, next actions, weekly reviews, and the "mind like water" state where nothing slips through the cracks.
+- **PARA (Projects, Areas, Resources, Archives)** — Tiago Forte's organizational system distinguishing between time-bound projects and ongoing areas of responsibility.
+
+The tdn system combines GTD's workflow practices with PARA's organizational hierarchy.
+
 ---
 
 ## The tdn System
@@ -40,15 +49,21 @@ Tasks can belong to a project or directly to an area. Projects belong to areas.
 
 Everything is a **markdown file with YAML frontmatter**:
 
-- Tasks live in a configured `tasksDir` (often `~/notes/tasks/`)
-- Projects live in `projectsDir` (often `~/notes/projects/`)
-- Areas live in `areasDir` (often `~/notes/areas/`)
+- Tasks live in a configured `tasksDir` (eg `~/notes/tasks/`)
+- Projects live in `projectsDir` (eg `~/notes/projects/`)
+- Areas live in `areasDir` (eg `~/notes/areas/`)
 
 These directories can be anywhere on the filesystem — they don't need to be together.
 
 ### The "Vault"
 
 A vault is simply the collection of these three configured directories. It's not a special format — just markdown files that follow the tdn specification.
+
+### Obsidian Integration (Optional)
+
+Some users keep their tdn directories inside an **Obsidian vault**. If the tdn files are inside Obsidian (look for a `.obsidian/` folder or `[[wikilinks]]` in files), additional considerations apply — see [obsidian.md](obsidian.md) for guidance on bases, templates, links, and Obsidian-specific patterns.
+
+If the tdn files are standalone markdown outside Obsidian, ignore obsidian.md entirely.
 
 ---
 
@@ -189,6 +204,8 @@ If a tdn command fails:
 - [command-reference.md](command-reference.md) — Complete command documentation
 - [decision-guide.md](decision-guide.md) — When to use what approach
 - [examples.md](examples.md) — Common workflow examples
+- [obsidian.md](obsidian.md) — Obsidian-specific guidance (if vault is in Obsidian)
+- [reviews.md](reviews.md) — Review types and how to conduct them
 - [specification.md](specification.md) — Status values, field definitions
 - [templates.md](templates.md) — File templates
 
@@ -199,5 +216,6 @@ If a tdn command fails:
 This plugin provides:
 
 - `/tdn:today` — Show today's actionable tasks
+- `/tdn:prime` - Primes the current session with `tdn context --ai`
 
 Use slash commands for quick, focused operations.

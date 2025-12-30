@@ -128,7 +128,7 @@ Right-clicking on any task, project, or area anywhere in the app presents a cont
 - **Copy Local URL** – Copies the `taskdn://` URL to the clipboard.
 - **Copy as Markdown** – Copies the full contents of the file to the clipboard, with the file path appended at the end.
 
-Context menus may include additional items depending on context, but must always include the items above.
+Context menus may include additional items depending on context, but must always include the items above. Context menus should generally allow us to right click on any entity and edit the various fields By clicking.
 
 ## Quick Capture Pane
 
