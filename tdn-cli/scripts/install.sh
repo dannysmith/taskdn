@@ -91,18 +91,19 @@ if [ "$SKIP_VERIFY" != "1" ]; then
   info "Verifying checksum..."
   if curl -fsSL "$CHECKSUM_URL" -o "$TMPDIR/checksum.sha256" 2>/dev/null; then
     EXPECTED=$(cut -d' ' -f1 "$TMPDIR/checksum.sha256")
+    ACTUAL=""
     if command -v sha256sum >/dev/null 2>&1; then
       ACTUAL=$(sha256sum "$TMPDIR/$ARCHIVE" | cut -d' ' -f1)
     elif command -v shasum >/dev/null 2>&1; then
       ACTUAL=$(shasum -a 256 "$TMPDIR/$ARCHIVE" | cut -d' ' -f1)
-    else
-      warn "Neither sha256sum nor shasum found, skipping verification"
-      ACTUAL="$EXPECTED"
     fi
-    if [ "$EXPECTED" != "$ACTUAL" ]; then
+    if [ -z "$ACTUAL" ]; then
+      warn "No hash tool available (sha256sum or shasum), skipping verification"
+    elif [ "$EXPECTED" != "$ACTUAL" ]; then
       error "Checksum mismatch!\n  Expected: ${EXPECTED}\n  Actual:   ${ACTUAL}"
+    else
+      info "Checksum verified"
     fi
-    info "Checksum verified"
   else
     warn "Could not download checksum file, skipping verification"
   fi

@@ -74,13 +74,22 @@ jobs:
           sha256sum tdn-${{ matrix.target }}.zip > tdn-${{ matrix.target }}.zip.sha256
           rm tdn.exe
 
-      - name: Upload artifact
+      - name: Upload artifact (Unix)
+        if: matrix.target != 'windows-x64'
         uses: actions/upload-artifact@v4
         with:
           name: tdn-${{ matrix.target }}
           path: |
             tdn-cli/dist/tdn-${{ matrix.target }}.tar.gz
             tdn-cli/dist/tdn-${{ matrix.target }}.tar.gz.sha256
+          if-no-files-found: error
+
+      - name: Upload artifact (Windows)
+        if: matrix.target == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdn-${{ matrix.target }}
+          path: |
             tdn-cli/dist/tdn-${{ matrix.target }}.zip
             tdn-cli/dist/tdn-${{ matrix.target }}.zip.sha256
           if-no-files-found: error
@@ -99,14 +108,16 @@ jobs:
           merge-multiple: true
 
       - name: Copy install script
+        working-directory: .
         run: cp tdn-cli/scripts/install.sh artifacts/install.sh
 
       - name: List artifacts
+        working-directory: .
         run: ls -la artifacts/
 
       - name: Extract version
         id: version
-        run: echo "version=${GITHUB_REF#refs/tags/tdn-cli-v}" >> $GITHUB_OUTPUT
+        run: echo "version=\"${GITHUB_REF#refs/tags/tdn-cli-v}\"" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
