@@ -80,30 +80,16 @@ export function GeneralPane() {
     }
   }
 
-  // Directory path handlers
-  const handleTasksDirChange = (path: string | null) => {
-    if (!preferences) return
-    savePreferences.mutate(
-      { ...preferences, tasks_dir: path },
-      { onError: () => toast.error(t('toast.error.generic')) }
-    )
-  }
-
-  const handleAreasDirChange = (path: string | null) => {
-    if (!preferences) return
-    savePreferences.mutate(
-      { ...preferences, areas_dir: path },
-      { onError: () => toast.error(t('toast.error.generic')) }
-    )
-  }
-
-  const handleProjectsDirChange = (path: string | null) => {
-    if (!preferences) return
-    savePreferences.mutate(
-      { ...preferences, projects_dir: path },
-      { onError: () => toast.error(t('toast.error.generic')) }
-    )
-  }
+  // Directory path handler factory
+  const createDirChangeHandler =
+    (field: 'tasks_dir' | 'areas_dir' | 'projects_dir') =>
+    (path: string | null) => {
+      if (!preferences) return
+      savePreferences.mutate(
+        { ...preferences, [field]: path },
+        { onError: () => toast.error(t('toast.error.generic')) }
+      )
+    }
 
   // Read from CLI config
   const handleReadFromCli = async () => {
@@ -173,7 +159,7 @@ export function GeneralPane() {
         >
           <FolderPicker
             value={preferences?.tasks_dir ?? null}
-            onChange={handleTasksDirChange}
+            onChange={createDirChangeHandler('tasks_dir')}
             disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
@@ -184,7 +170,7 @@ export function GeneralPane() {
         >
           <FolderPicker
             value={preferences?.areas_dir ?? null}
-            onChange={handleAreasDirChange}
+            onChange={createDirChangeHandler('areas_dir')}
             disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
@@ -195,7 +181,7 @@ export function GeneralPane() {
         >
           <FolderPicker
             value={preferences?.projects_dir ?? null}
-            onChange={handleProjectsDirChange}
+            onChange={createDirChangeHandler('projects_dir')}
             disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
