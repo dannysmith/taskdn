@@ -1,6 +1,6 @@
 ---
-description: Show today's actionable tasks - what needs attention right now
-allowed-tools: Bash(tdn:*)
+description: Get a list of taskdn tasks which probably matter right now (in-progress, overdue, due today, scheduled today, newly become available today (defer-until = today)).
+allowed-tools: Bash(tdn:*), Skill(tdn:task-management)
 ---
 
 # Today's Tasks
