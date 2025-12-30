@@ -8,7 +8,7 @@ This document describes the technical architecture of the Taskdn CLI tool at a h
 >
 > - [CLI Requirements](./cli-requirements.md) - Functional requirements and interface design
 > - [S1: Core Specification](../../../tdn-specs/S1-core.md) - File format specification
-> - [S2: Interface Design](../../../tdn-specs/S2-interface-design.md) - General interface patterns
+> - [S2: Implementation Guidance](../../../tdn-specs/S2-implementation-requirements.md) - Implementation guidance and patterns
 > - [Architecture Guide](../../tdn-cli/docs/developer/architecture-guide.md) - Detailed implementation patterns
 
 ---

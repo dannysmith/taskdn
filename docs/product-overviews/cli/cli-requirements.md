@@ -10,7 +10,7 @@ Command-line interface for humans and AI agents.
 > - [AI Context Output](../../tdn-cli/docs/developer/ai-context.md) - AI mode output specification
 > - [Output Format Spec](../../tdn-cli/docs/developer/output-format-spec.md) - Output format details
 > - [S1: Core Specification](/tdn-specs/S1-core.md) - File format specification
-> - [S2: Interface Design](/tdn-specs/S2-interface-design.md) - General interface patterns
+> - [S2: Implementation Guidance](/tdn-specs/S2-implementation-requirements.md) - Implementation guidance and patterns
 
 ## Context & Purpose
 
@@ -26,7 +26,7 @@ Command-line interface for humans and AI agents.
 
 ## Two User Types, Two Modes
 
-> See also: [S2 §2 Design Philosophy](/tdn-specs/S2-interface-design.md#2-design-philosophy) and [S2 §3 Interface Modes](/tdn-specs/S2-interface-design.md#3-interface-modes)
+> See also: [S2 §2 Design Principles](/tdn-specs/S2-implementation-requirements.md#2-design-principles)
 
 The CLI serves two fundamentally different users with different needs:
 
