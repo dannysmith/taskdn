@@ -77,16 +77,16 @@ export function PreferencesDialog() {
                     {navigationItems.map(item => (
                       <SidebarMenuItem key={item.id}>
                         <SidebarMenuButton
-                          asChild
+                          render={
+                            <button
+                              onClick={() => setActivePane(item.id)}
+                              className="w-full"
+                            />
+                          }
                           isActive={activePane === item.id}
                         >
-                          <button
-                            onClick={() => setActivePane(item.id)}
-                            className="w-full"
-                          >
-                            <item.icon />
-                            <span>{t(item.labelKey)}</span>
-                          </button>
+                          <item.icon />
+                          <span>{t(item.labelKey)}</span>
                         </SidebarMenuButton>
                       </SidebarMenuItem>
                     ))}
@@ -102,8 +102,8 @@ export function PreferencesDialog() {
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem className="hidden md:block">
-                      <BreadcrumbLink asChild>
-                        <span>{t('preferences.title')}</span>
+                      <BreadcrumbLink render={<span />}>
+                        {t('preferences.title')}
                       </BreadcrumbLink>
                     </BreadcrumbItem>
                     <BreadcrumbSeparator className="hidden md:block" />
