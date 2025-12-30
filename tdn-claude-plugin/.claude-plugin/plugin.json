@@ -7,6 +7,6 @@
   },
   "license": "MIT",
   "keywords": ["tasks", "taskdn", "productivity", "gtd", "project-management"],
-  "commands": ["./commands/today.md"],
+  "commands": ["./commands/today.md", "./commands/prime.md"],
   "skills": "./skills/"
 }
