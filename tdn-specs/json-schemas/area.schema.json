@@ -14,8 +14,7 @@
     },
     "status": {
       "type": "string",
-      "enum": ["active", "archived"],
-      "description": "Visibility status of the area. Areas with 'active' or no status are displayed; areas with 'archived' (or other values) are hidden from default views. Values are case-sensitive and must be lowercase."
+      "description": "Visibility status of the area. Recommended values: 'active' or 'archived'. Areas with 'active' or no status are displayed; areas with other values are hidden from default views."
     },
     "type": {
       "type": "string",
@@ -26,11 +25,6 @@
       "type": "string",
       "maxLength": 500,
       "description": "A short description of the area. Should be under 500 characters."
-    },
-    "taskdn-type": {
-      "type": "string",
-      "const": "area",
-      "description": "Explicit type marker for mixed-content directories. If any area file has this field, files without it will be ignored."
     }
   }
 }

@@ -12,11 +12,6 @@
       "minLength": 1,
       "description": "The title of the project."
     },
-    "unique-id": {
-      "type": "string",
-      "minLength": 1,
-      "description": "A unique identifier for the project."
-    },
     "area": {
       "$ref": "#/$defs/fileReference",
       "description": "Reference to an Area file."
@@ -45,11 +40,6 @@
         "$ref": "#/$defs/fileReference"
       },
       "description": "Projects that must be completed before this one can start."
-    },
-    "taskdn-type": {
-      "type": "string",
-      "const": "project",
-      "description": "Explicit type marker for mixed-content directories. If any project file has this field, files without it will be ignored."
     }
   },
   "$defs": {

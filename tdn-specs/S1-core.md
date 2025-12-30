@@ -62,6 +62,11 @@ A reference to another file, expressed as one of:
 6. All date and datetime values MUST use ISO 8601 format.
 7. All enum values (such as `status`) are case-sensitive and MUST be lowercase.
 8. Empty or null field values SHOULD be treated as if the field were absent.
+9. Implementations MUST NOT reject files with unrecognized status values. Unknown statuses SHOULD be preserved and MAY be displayed or filtered as the implementation sees fit.
+10. When modifying files, implementations MUST preserve data they don't explicitly change:
+    - Unknown frontmatter fields MUST be preserved.
+    - The Markdown body MUST be preserved.
+    - YAML formatting (comments, field ordering) SHOULD be preserved where possible.
 
 ---
 
@@ -163,16 +168,12 @@ Any valid filename.
 
 | Field         | Type                     | Description                                                              |
 | ------------- | ------------------------ | ------------------------------------------------------------------------ |
-| `unique-id`   | string                   | A unique identifier for the project.                                     |
 | `area`        | file reference           | Reference to an Area file.                                               |
 | `status`      | enum                     | One of: `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`. |
 | `description` | string                   | A short description, SHOULD be under 500 characters.                     |
 | `start-date`  | date                     | When work on the project began or will begin.                            |
 | `end-date`    | date                     | When the project was completed or is expected to complete.               |
 | `blocked-by`  | array of file references | Projects that must be completed before this one can start.               |
-| `taskdn-type` | literal `project`        | See note below on mixed-content directories.                             |
-
-**Note on `taskdn-type`:** This field enables explicit opt-in for directories where Taskdn project files coexist with unrelated Markdown files. If ANY project file in a directory contains `taskdn-type: project`, implementations SHOULD ignore all files in that directory that lack this field. Use with caution: adding this field to a single file will cause all other files without it to be excluded.
 
 ### 4.5 Status Values
 
@@ -225,14 +226,11 @@ Any valid filename.
 
 ### 5.4 Optional Frontmatter Fields
 
-| Field         | Type           | Description                                                              |
-| ------------- | -------------- | ------------------------------------------------------------------------ |
-| `status`      | enum           | Recommended values: `active` or `archived`. See note below.              |
-| `type`        | string         | Allows differentiation between area types (e.g., "client", "life-area"). |
-| `description` | string         | A short description, SHOULD be under 500 characters.                     |
-| `taskdn-type` | literal `area` | See note below on mixed-content directories.                             |
-
-**Note on `taskdn-type`:** This field enables explicit opt-in for directories where Taskdn area files coexist with unrelated Markdown files. If ANY area file in a directory contains `taskdn-type: area`, implementations SHOULD ignore all files in that directory that lack this field. Use with caution: adding this field to a single file will cause all other files without it to be excluded.
+| Field         | Type   | Description                                                              |
+| ------------- | ------ | ------------------------------------------------------------------------ |
+| `status`      | string | Recommended values: `active` or `archived`. See note below.              |
+| `type`        | string | Allows differentiation between area types (e.g., "client", "life-area"). |
+| `description` | string | A short description, SHOULD be under 500 characters.                     |
 
 ### 5.5 Note on Area Status
 
@@ -263,7 +261,7 @@ Key contacts, agreements, and background information...
 
 This section defines conformance requirements for software implementing this specification.
 
-For guidance on reading, writing, and mutating files—including error handling, timestamp management, data preservation, and file safety—see **[S2: Implementation Requirements](./S2-interface-design.md)**.
+For guidance on reading, writing, and mutating files—including error handling, timestamp management, and file safety—see **[S2: Implementation Guidance](./S2-implementation-requirements.md)**.
 
 ### 6.1 Conformance Levels
 

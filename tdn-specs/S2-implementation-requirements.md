@@ -1,10 +1,12 @@
-# Specification S2: Implementation Requirements
+# Specification S2: Implementation Guidance
 
 **Version:** 1.0.0-draft
 
-This specification defines requirements and guidance for implementations that read, write, and present S1-compliant data. It covers field conventions, timestamp management, data preservation, file safety, and common semantics.
+This specification provides guidance for implementations that read, write, and present S1-compliant data. It covers field conventions, timestamp management, file safety, and common semantics.
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
+Unlike S1 (which defines compatibility requirements), this document contains recommendations and best practices. Implementations that follow this guidance will behave more consistently and predictably, but deviation is acceptable where it serves user needs.
+
+The key words "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [RFC 2119](https://www.ietf.org/rfc/rfc2119.txt).
 
 ---
 
@@ -12,7 +14,7 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "S
 
 ### 1.1 Purpose
 
-While S1 defines the file format, this specification addresses the operational concerns of working with those files: how to read them safely, how to write them without losing data, and how to present them consistently.
+While S1 defines the file format and compatibility requirements, this specification addresses operational concerns: how to read files gracefully, how to write them safely, and how to present data consistently.
 
 ### 1.2 Scope
 
@@ -21,14 +23,13 @@ This specification covers:
 - Field naming conventions
 - Date handling
 - Reading and parsing files
-- Writing files (timestamps, preservation, safety)
+- Writing files (timestamps, safety)
 - Default filter semantics
 - Query and filter patterns
-- Error codes
 
 ### 1.3 Relationship to S1
 
-S1 defines what files look like. This specification defines how implementations should behave when working with those files.
+S1 defines what files look like and what implementations must do for compatibility. This specification provides guidance on how implementations should behave for a good user experience.
 
 ---
 
@@ -46,13 +47,13 @@ S1 defines what files look like. This specification defines how implementations 
 
 ### 3.1 Canonical Field Names
 
-Field names MUST use kebab-case as defined in S1:
+Field names use kebab-case as defined in S1:
 
 - `created-at`, `updated-at`, `completed-at`
 - `defer-until`
 - `blocked-by`
 
-Implementations MAY use alternative display names in user interfaces (e.g., "Created" instead of "created-at"), but programmatic interfaces and file output MUST use canonical names.
+Implementations MAY use alternative display names in user interfaces (e.g., "Created" instead of "created-at"), but programmatic interfaces and file output SHOULD use canonical names.
 
 ### 3.2 The project/projects Convention
 
@@ -71,7 +72,7 @@ If a file contains multiple projects, use the first one. Validation commands SHO
 
 ### 4.1 Storage and Output Format
 
-All dates MUST use ISO 8601 format when stored or output:
+Dates SHOULD use ISO 8601 format when stored or output:
 
 | Field Type                                              | Format                | Example               |
 | ------------------------------------------------------- | --------------------- | --------------------- |
@@ -80,7 +81,7 @@ All dates MUST use ISO 8601 format when stored or output:
 
 ### 4.2 Input Formats
 
-Implementations MUST accept ISO 8601 format for input.
+Implementations SHOULD accept ISO 8601 format for input.
 
 Implementations MAY accept natural language for human convenience (e.g., `today`, `tomorrow`, `+3d`). Ambiguous formats like `12/1` or `1/12` SHOULD be rejected.
 
@@ -90,23 +91,17 @@ Implementations MAY accept natural language for human convenience (e.g., `today`
 
 ### 5.1 Parse Error Handling
 
-When reading files, implementations MUST handle malformed data gracefully:
+When reading files, implementations SHOULD handle malformed data gracefully:
 
 - If a file cannot be parsed as valid YAML, skip the file and MAY emit a warning.
 - If a required field is missing, treat the file as invalid and MAY emit a warning.
-- If a status value is not recognized, treat it as invalid.
+- If a status value is not recognized, preserve it (per S1) and MAY display it distinctively.
 
 Implementations SHOULD NOT crash or halt entirely when encountering individual malformed files. Partial results (valid files only) are preferable to complete failure.
 
 ### 5.2 Unknown Fields
 
-Implementations MUST ignore unknown frontmatter fields during processing. This allows users to add custom metadata without breaking compatibility.
-
-For example, if a user adds a `priority: high` field (not defined in S1), implementations MUST:
-
-- Read the file successfully
-- Ignore the unknown field during processing
-- Preserve the field when writing (see Section 6.2)
+Implementations SHOULD ignore unknown frontmatter fields during processing. This allows users to add custom metadata without breaking compatibility. S1 requires that unknown fields be preserved when writing.
 
 ---
 
@@ -124,25 +119,13 @@ Implementations SHOULD automatically manage timestamp fields:
 
 "Modified" includes any frontmatter change or body edit. Timestamps SHOULD use ISO 8601 format as specified in S1.
 
-### 6.2 Data Preservation
+### 6.2 Validation Before Write
 
-When modifying files, implementations MUST preserve data they don't explicitly change:
-
-| Data                                 | Requirement                    |
-| ------------------------------------ | ------------------------------ |
-| Unknown frontmatter fields           | MUST preserve                  |
-| Markdown body                        | MUST preserve                  |
-| YAML formatting (comments, ordering) | SHOULD preserve where possible |
-
-**Rationale:** Users may add custom fields, and other tools may add metadata. Implementations that strip unknown data break interoperability.
-
-### 6.3 Validation Before Write
-
-- Implementations MUST NOT modify files that fail validation without explicit user consent.
+- Implementations SHOULD NOT modify files that fail validation without explicit user consent.
 - After a write operation, the resulting file SHOULD be valid per S1.
 - If an operation would produce an invalid file (e.g., removing a required field), implementations SHOULD reject the operation or warn the user.
 
-### 6.4 Atomic Writes
+### 6.3 Atomic Writes
 
 To prevent file corruption from crashes or interrupts, implementations SHOULD use atomic write patterns:
 
@@ -152,7 +135,7 @@ To prevent file corruption from crashes or interrupts, implementations SHOULD us
 
 This pattern ensures the file is either fully written or not modified at all.
 
-### 6.5 Concurrent Access
+### 6.4 Concurrent Access
 
 This specification does not define file locking, as taskdn is designed for single-user scenarios.
 
@@ -162,9 +145,8 @@ For long-running processes (TUI interfaces, desktop applications):
 - Implementations MAY use file system notification APIs or polling
 - If a file is modified both externally and internally, implementations SHOULD warn the user or require intervention
 
-### 6.6 File Encoding and Formatting
+### 6.5 File Encoding and Formatting
 
-- Files MUST be UTF-8 encoded
 - Files SHOULD NOT include a byte order mark (BOM)
 - Line endings SHOULD be LF (`\n`); implementations SHOULD tolerate CRLF on read
 - Files SHOULD end with a single newline character
@@ -224,9 +206,28 @@ Common sort fields: `created`, `updated`, `due`, `title`.
 
 ## 9. Error Handling
 
-### 9.1 Error Codes
+### 9.1 Graceful Degradation
 
-For programmatic interfaces (CLIs, SDKs, APIs), implementations SHOULD use standard error codes:
+- **Partial results:** When reading multiple files, skip malformed files and return valid results. Emit warnings for skipped files.
+- **Batch operations:** Process all items; don't stop at first error. Report successes and failures separately.
+
+### 9.2 Error Codes
+
+For programmatic interfaces (CLIs, SDKs, APIs), implementations SHOULD use consistent error codes. See [Appendix A](#appendix-a-error-codes) for a suggested catalog.
+
+---
+
+## 10. Agent-Friendly Output
+
+For implementations that output to AI agents or LLM-based tools: agents receive output in their context window and pay per token. Output should be token-efficient, gracefully degradable (truncated output should still be useful), and readable without parsing. Structured Markdown is often preferable to JSON for agent-facing output because truncated JSON is invalid, while Markdown degrades gracefully. Include file paths in output so agents can perform follow-up operations.
+
+The specific output format is implementation-defined.
+
+---
+
+## Appendix A: Error Codes
+
+The following error codes are suggested for programmatic interfaces (CLIs, SDKs, APIs). Graphical interfaces may present errors differently (dialogs, inline messages) but this catalog remains useful for logging and debugging.
 
 | Code               | When                          | Contextual Info               |
 | ------------------ | ----------------------------- | ----------------------------- |
@@ -240,18 +241,3 @@ For programmatic interfaces (CLIs, SDKs, APIs), implementations SHOULD use stand
 | `REFERENCE_ERROR`  | Broken project/area reference | The broken reference          |
 | `PERMISSION_ERROR` | Can't read/write file         | File path                     |
 | `CONFIG_ERROR`     | Config missing/invalid        | How to fix                    |
-
-Graphical interfaces may present errors differently (dialogs, inline messages) but the error code catalog remains useful for logging and debugging.
-
-### 9.2 Graceful Degradation
-
-- **Partial results:** When reading multiple files, skip malformed files and return valid results. Emit warnings for skipped files.
-- **Batch operations:** Process all items; don't stop at first error. Report successes and failures separately.
-
----
-
-## 10. Agent-Friendly Output
-
-For implementations that output to AI agents or LLM-based tools: agents receive output in their context window and pay per token. Output should be token-efficient, gracefully degradable (truncated output should still be useful), and readable without parsing. Structured Markdown is often preferable to JSON for agent-facing output because truncated JSON is invalid, while Markdown degrades gracefully. Include file paths in output so agents can perform follow-up operations.
-
-The specific output format is implementation-defined.
