@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { validateVaultPath } from '@/config/index.ts';
-import { platform } from 'os';
+import { platform, homedir } from 'os';
+import { join, sep } from 'path';
 
 describe('config security', () => {
   describe('validateVaultPath', () => {
@@ -33,10 +34,10 @@ describe('config security', () => {
     });
 
     test('accepts absolute paths in home directory', () => {
-      const { homedir } = require('os');
       const home = homedir();
-      const result = validateVaultPath(`${home}/Documents/tasks`, 'tasksDir');
-      expect(result).toBe(`${home}/Documents/tasks`);
+      const testPath = join(home, 'Documents', 'tasks');
+      const result = validateVaultPath(testPath, 'tasksDir');
+      expect(result).toBe(testPath);
       expect(warnCalls).toHaveLength(0);
     });
 
@@ -140,7 +141,13 @@ describe('config security', () => {
 
     test('resolves relative paths to absolute', () => {
       const result = validateVaultPath('./tasks', 'tasksDir');
-      expect(result).toMatch(/^\/.*tasks$/);
+      // On Windows, absolute paths start with drive letter (e.g., C:\)
+      // On Unix, they start with /
+      if (platform() === 'win32') {
+        expect(result).toMatch(/^[A-Z]:\\.*tasks$/i);
+      } else {
+        expect(result).toMatch(/^\/.*tasks$/);
+      }
     });
 
     test('includes pathType in error messages', () => {
@@ -154,11 +161,12 @@ describe('config security', () => {
     });
 
     test('handles paths with .. in the middle correctly', () => {
-      const { homedir } = require('os');
       const home = homedir();
       // A path like ~/foo/../bar should resolve to ~/bar, which is safe
-      const result = validateVaultPath(`${home}/foo/../bar`, 'tasksDir');
-      expect(result).toBe(`${home}/bar`);
+      const testPath = join(home, 'foo', '..', 'bar');
+      const expectedPath = join(home, 'bar');
+      const result = validateVaultPath(testPath, 'tasksDir');
+      expect(result).toBe(expectedPath);
       expect(warnCalls).toHaveLength(0);
     });
   });
