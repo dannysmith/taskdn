@@ -27,6 +27,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tdn-cli/crates/core -> target'
       - run: bun install
       - run: bun run build  # Build NAPI bindings
       - run: bun run check
@@ -42,6 +45,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tdn-cli/crates/core -> target'
       - run: bun install
       - run: bun run build
       - run: bun run test
@@ -67,6 +73,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: oven-sh/setup-bun@v2
       - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tdn-cli/crates/core -> target'
 
       - name: Install dependencies
         run: bun install
@@ -82,13 +91,17 @@ jobs:
         if: matrix.target == 'windows-x64'
         run: bun build --compile --minify src/index.ts --outfile dist/tdn-${{ matrix.target }}.exe
 
-      - name: Test binary (Unix)
+      - name: Smoke test binary (Unix)
         if: matrix.target != 'windows-x64'
-        run: ./dist/tdn-${{ matrix.target }} --version
+        run: |
+          ./dist/tdn-${{ matrix.target }} --version
+          ./dist/tdn-${{ matrix.target }} --help
 
-      - name: Test binary (Windows)
+      - name: Smoke test binary (Windows)
         if: matrix.target == 'windows-x64'
-        run: .\dist\tdn-${{ matrix.target }}.exe --version
+        run: |
+          .\dist\tdn-${{ matrix.target }}.exe --version
+          .\dist\tdn-${{ matrix.target }}.exe --help
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
