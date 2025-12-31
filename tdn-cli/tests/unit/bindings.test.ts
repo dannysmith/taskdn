@@ -7,7 +7,7 @@ import {
   scanAreas,
 } from '@bindings';
 import type { VaultConfig } from '@bindings';
-import { fixturePath } from '../helpers/cli';
+import { fixturePath, isArchivePath } from '../helpers/cli';
 
 describe('NAPI bindings', () => {
   describe('parseTaskFile', () => {
@@ -138,7 +138,7 @@ describe('NAPI bindings', () => {
       test('does not include files from subdirectories', () => {
         // The archive/ subdirectory is not scanned
         const tasks = scanTasks(config);
-        const archiveTasks = tasks.filter((t) => t.path.includes('archive/'));
+        const archiveTasks = tasks.filter((t) => isArchivePath(t.path));
         expect(archiveTasks.length).toBe(0);
       });
     });

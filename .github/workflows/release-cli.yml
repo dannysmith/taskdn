@@ -1,0 +1,138 @@
+name: Release - CLI
+
+on:
+  push:
+    tags:
+      - 'tdn-cli-v*'
+
+defaults:
+  run:
+    working-directory: tdn-cli
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    name: Build - ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            runner: macos-latest
+          - target: darwin-x64
+            runner: macos-15-intel
+          - target: linux-x64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+          - target: windows-x64
+            runner: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build NAPI bindings
+        run: bun run build
+
+      - name: Build standalone binary (Unix)
+        if: matrix.target != 'windows-x64'
+        run: bun build --compile --minify src/index.ts --outfile dist/tdn
+
+      - name: Build standalone binary (Windows)
+        if: matrix.target == 'windows-x64'
+        run: bun build --compile --minify src/index.ts --outfile dist/tdn.exe
+
+      - name: Create archive (Unix)
+        if: matrix.target != 'windows-x64'
+        run: |
+          cd dist
+          tar -czvf tdn-${{ matrix.target }}.tar.gz tdn
+          # macOS uses shasum, Linux uses sha256sum
+          if command -v sha256sum &> /dev/null; then
+            sha256sum tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          else
+            shasum -a 256 tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          fi
+          rm tdn
+
+      - name: Create archive (Windows)
+        if: matrix.target == 'windows-x64'
+        shell: bash
+        run: |
+          cd dist
+          7z a -tzip tdn-${{ matrix.target }}.zip tdn.exe
+          sha256sum tdn-${{ matrix.target }}.zip > tdn-${{ matrix.target }}.zip.sha256
+          rm tdn.exe
+
+      - name: Upload artifact (Unix)
+        if: matrix.target != 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdn-${{ matrix.target }}
+          path: |
+            tdn-cli/dist/tdn-${{ matrix.target }}.tar.gz
+            tdn-cli/dist/tdn-${{ matrix.target }}.tar.gz.sha256
+          if-no-files-found: error
+
+      - name: Upload artifact (Windows)
+        if: matrix.target == 'windows-x64'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdn-${{ matrix.target }}
+          path: |
+            tdn-cli/dist/tdn-${{ matrix.target }}.zip
+            tdn-cli/dist/tdn-${{ matrix.target }}.zip.sha256
+          if-no-files-found: error
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: Copy install script
+        working-directory: .
+        run: cp tdn-cli/scripts/install.sh artifacts/install.sh
+
+      - name: List artifacts
+        working-directory: .
+        run: ls -la artifacts/
+
+      - name: Extract version
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/tdn-cli-v}" >> "$GITHUB_OUTPUT"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: tdn-cli v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          files: artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Homebrew update
+        if: ${{ !contains(github.ref, '-') }}  # Skip for pre-releases (e.g., v1.0.0-beta)
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          repository: dannysmith/homebrew-taproom
+          event-type: update-tdn-formula
+          client-payload: '{"version": "${{ steps.version.outputs.version }}"}'

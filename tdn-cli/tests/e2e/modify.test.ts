@@ -1,5 +1,5 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { runCli } from '../helpers/cli';
+import { runCli, isArchivePath } from '../helpers/cli';
 import { mkdtempSync, rmSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -382,7 +382,9 @@ describe('tdn archive', () => {
 
     expect(exitCode).toBe(0);
     const output = JSON.parse(stdout);
-    expect(output.to).toContain('archive/test-task.md');
+    // Check archive path in cross-platform way (Windows uses backslashes)
+    expect(isArchivePath(output.to)).toBe(true);
+    expect(output.to).toMatch(/test-task\.md$/);
 
     // Original file should not exist
     expect(existsSync(taskPath)).toBe(false);

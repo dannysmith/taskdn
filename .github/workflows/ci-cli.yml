@@ -1,0 +1,111 @@
+name: CI - CLI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tdn-cli/**'
+      - '.github/workflows/ci-cli.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'tdn-cli/**'
+      - '.github/workflows/ci-cli.yml'
+
+defaults:
+  run:
+    working-directory: tdn-cli
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Lint & Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tdn-cli/crates/core -> target'
+      - run: bun install
+      - run: bun run build  # Build NAPI bindings
+      - run: bun run check
+
+  test:
+    name: Test - ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tdn-cli/crates/core -> target'
+      - run: bun install
+      - run: bun run build
+      - run: bun run test
+
+  build:
+    name: Build Binary - ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: darwin-arm64
+            runner: macos-latest
+          - target: darwin-x64
+            runner: macos-15-intel
+          - target: linux-x64
+            runner: ubuntu-latest
+          - target: linux-arm64
+            runner: ubuntu-24.04-arm
+          - target: windows-x64
+            runner: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './tdn-cli/crates/core -> target'
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build NAPI bindings
+        run: bun run build
+
+      - name: Build standalone binary (Unix)
+        if: matrix.target != 'windows-x64'
+        run: bun build --compile --minify src/index.ts --outfile dist/tdn-${{ matrix.target }}
+
+      - name: Build standalone binary (Windows)
+        if: matrix.target == 'windows-x64'
+        run: bun build --compile --minify src/index.ts --outfile dist/tdn-${{ matrix.target }}.exe
+
+      - name: Smoke test binary (Unix)
+        if: matrix.target != 'windows-x64'
+        run: |
+          ./dist/tdn-${{ matrix.target }} --version
+          ./dist/tdn-${{ matrix.target }} --help
+
+      - name: Smoke test binary (Windows)
+        if: matrix.target == 'windows-x64'
+        run: |
+          .\dist\tdn-${{ matrix.target }}.exe --version
+          .\dist\tdn-${{ matrix.target }}.exe --help
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tdn-${{ matrix.target }}
+          path: tdn-cli/dist/tdn-${{ matrix.target }}*
+          if-no-files-found: error

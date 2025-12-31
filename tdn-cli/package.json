@@ -22,7 +22,10 @@
     "fix": "bun run format && bun run lint:fix && cargo fmt --manifest-path crates/core/Cargo.toml",
     "test": "bun run test:ts && bun run test:rust",
     "test:ts": "bun test",
-    "test:rust": "cargo test --manifest-path crates/core/Cargo.toml"
+    "test:rust": "cargo test --manifest-path crates/core/Cargo.toml",
+    "build:binary": "bun build --compile --minify src/index.ts --outfile dist/tdn",
+    "build:binary:release": "bun build --compile --minify --sourcemap src/index.ts --outfile dist/tdn",
+    "release:prepare": "node scripts/prepare-release.js"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
