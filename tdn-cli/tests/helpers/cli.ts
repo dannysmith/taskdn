@@ -93,3 +93,12 @@ export async function runCli(
 export function fixturePath(relativePath: string): string {
   return resolve(import.meta.dir, '../fixtures', relativePath);
 }
+
+/**
+ * Check if a path contains an archive directory segment.
+ * Works on both Windows (backslash) and Unix (forward slash) paths.
+ */
+export function isArchivePath(path: string): boolean {
+  // Match 'archive/' or 'archive\' in the path
+  return /archive[/\\]/.test(path);
+}

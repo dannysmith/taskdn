@@ -1,6 +1,7 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { validateVaultPath } from '@/config/index.ts';
-import { platform } from 'os';
+import { platform, homedir } from 'os';
+import { join, sep } from 'path';
 
 describe('config security', () => {
   describe('validateVaultPath', () => {
@@ -33,10 +34,10 @@ describe('config security', () => {
     });
 
     test('accepts absolute paths in home directory', () => {
-      const { homedir } = require('os');
       const home = homedir();
-      const result = validateVaultPath(`${home}/Documents/tasks`, 'tasksDir');
-      expect(result).toBe(`${home}/Documents/tasks`);
+      const testPath = join(home, 'Documents', 'tasks');
+      const result = validateVaultPath(testPath, 'tasksDir');
+      expect(result).toBe(testPath);
       expect(warnCalls).toHaveLength(0);
     });
 
@@ -129,10 +130,17 @@ describe('config security', () => {
         ).toThrow('system directory');
       });
 
-      test('warns when path is outside home directory but not system dir', () => {
-        // /tmp is outside home but not a protected system directory
+      test('accepts /tmp without warning (Linux temp directory)', () => {
+        // /tmp is the standard temp directory on Linux, should be allowed like /var/folders on macOS
         const result = validateVaultPath('/tmp/tasks', 'tasksDir');
         expect(result).toBe('/tmp/tasks');
+        expect(warnCalls).toHaveLength(0);
+      });
+
+      test('warns when path is outside home directory and not a temp dir', () => {
+        // /opt is outside home and not a temp directory
+        const result = validateVaultPath('/opt/tasks', 'tasksDir');
+        expect(result).toBe('/opt/tasks');
         expect(warnCalls.length).toBeGreaterThan(0);
         expect(warnCalls[0]).toContain('outside your home directory');
       });
@@ -140,7 +148,13 @@ describe('config security', () => {
 
     test('resolves relative paths to absolute', () => {
       const result = validateVaultPath('./tasks', 'tasksDir');
-      expect(result).toMatch(/^\/.*tasks$/);
+      // On Windows, absolute paths start with drive letter (e.g., C:\)
+      // On Unix, they start with /
+      if (platform() === 'win32') {
+        expect(result).toMatch(/^[A-Z]:\\.*tasks$/i);
+      } else {
+        expect(result).toMatch(/^\/.*tasks$/);
+      }
     });
 
     test('includes pathType in error messages', () => {
@@ -154,11 +168,12 @@ describe('config security', () => {
     });
 
     test('handles paths with .. in the middle correctly', () => {
-      const { homedir } = require('os');
       const home = homedir();
       // A path like ~/foo/../bar should resolve to ~/bar, which is safe
-      const result = validateVaultPath(`${home}/foo/../bar`, 'tasksDir');
-      expect(result).toBe(`${home}/bar`);
+      const testPath = join(home, 'foo', '..', 'bar');
+      const expectedPath = join(home, 'bar');
+      const result = validateVaultPath(testPath, 'tasksDir');
+      expect(result).toBe(expectedPath);
       expect(warnCalls).toHaveLength(0);
     });
   });

@@ -68,9 +68,10 @@ export function validateVaultPath(path: string, pathType: string = 'vault path')
     }
 
     // Warn if outside home directory (informational, not blocking)
-    // Exception: /var/folders is allowed (macOS temp directory)
+    // Exceptions: temp directories on macOS (/var/folders) and Linux (/tmp)
     const home = homedir();
-    if (!absolutePath.startsWith(home) && !absolutePath.startsWith('/var/folders/')) {
+    const isTempDir = absolutePath.startsWith('/var/folders/') || absolutePath.startsWith('/tmp/');
+    if (!absolutePath.startsWith(home) && !isTempDir) {
       console.warn(
         `Warning: ${pathType} is outside your home directory: ${absolutePath}\n` +
           `This may cause permission issues or affect system files.`

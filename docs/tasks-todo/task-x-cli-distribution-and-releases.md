@@ -8,7 +8,7 @@ Set up a production-ready distribution system for `tdn-cli` using Bun's standalo
 
 ```bash
 # Homebrew (macOS/Linux)
-brew install taskdn/tdn/tdn
+brew install dannysmith/taproom/tdn
 
 # Direct download
 curl -fsSL https://github.com/taskdn/taskdn/releases/latest/download/install.sh | bash
@@ -39,7 +39,7 @@ We tested both approaches:
 
 Before starting:
 
-1. Create GitHub repository: `taskdn/homebrew-tdn` for Homebrew tap
+1. Create GitHub repository: `dannysmith/homebrew-taproom` for Homebrew tap
 2. Create GitHub PAT for Homebrew updates (see "GitHub Secrets Required" section)
 3. (Optional) Set up domain for install script hosting
 
@@ -66,9 +66,12 @@ Create build scripts and verify binaries work on each platform.
 tdn-cli/
 ├── dist/           # Built binaries (gitignored)
 ├── scripts/
-│   ├── build-release.sh   # Script for local builds
-│   └── install.sh         # User install script
+│   ├── build-release.sh     # Script for local builds
+│   ├── install.sh           # User install script
+│   └── prepare-release.js   # Version bump + release prep (already created)
 ```
+
+**Note:** `prepare-release.js` already exists. Run with `bun run release:prepare 1.0.0`.
 
 **1.3: Create build-release.sh**
 
@@ -297,7 +300,12 @@ jobs:
         run: |
           cd dist
           tar -czvf tdn-${{ matrix.target }}.tar.gz tdn
-          sha256sum tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          # macOS uses shasum, Linux uses sha256sum
+          if command -v sha256sum &> /dev/null; then
+            sha256sum tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          else
+            shasum -a 256 tdn-${{ matrix.target }}.tar.gz > tdn-${{ matrix.target }}.tar.gz.sha256
+          fi
           rm tdn
 
       - name: Create archive (Windows)
@@ -366,9 +374,9 @@ jobs:
 
 Set up Homebrew distribution.
 
-**4.1: Create homebrew-tdn repository**
+**4.1: Create homebrew-taproom repository**
 
-Create `taskdn/homebrew-tdn` repository with:
+Create `dannysmith/homebrew-taproom` repository with:
 
 `Formula/tdn.rb`:
 ```ruby
@@ -410,15 +418,15 @@ class Tdn < Formula
 end
 ```
 
-**4.2: Create auto-update workflow in homebrew-tdn repo**
+**4.2: Create auto-update workflow in homebrew-taproom repo**
 
-`.github/workflows/update-formula.yml`:
+`.github/workflows/update-tdn-formula.yml`:
 ```yaml
 name: Update Formula
 
 on:
   repository_dispatch:
-    types: [update-formula]
+    types: [update-tdn-formula]
 
 permissions:
   contents: write
@@ -432,36 +440,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download archives and calculate checksums
+      - name: Download checksums and update formula
         run: |
           BASE_URL="https://github.com/taskdn/taskdn/releases/download/tdn-cli-v${VERSION}"
 
-          # Download each archive and get checksum
+          # Download checksums and export as env vars
           for target in darwin-arm64 darwin-x64 linux-arm64 linux-x64; do
-            echo "Downloading ${target}..."
-            curl -sL "${BASE_URL}/tdn-${target}.tar.gz.sha256" -o "${target}.sha256"
-            # Extract just the hash (first field)
-            HASH=$(cut -d' ' -f1 "${target}.sha256")
-            echo "${target}=${HASH}" >> checksums.env
+            echo "Fetching ${target} checksum..."
+            HASH=$(curl -sL "${BASE_URL}/tdn-${target}.tar.gz.sha256" | cut -d' ' -f1)
+            # Export with underscores (bash doesn't like hyphens in var names)
+            VAR_NAME=$(echo "$target" | tr '-' '_')
+            export "$VAR_NAME=$HASH"
             echo "  ${target}: ${HASH}"
           done
-
-      - name: Update formula
-        run: |
-          # Load checksums
-          source checksums.env
 
           # Update version
           sed -i "s/version \".*\"/version \"${VERSION}\"/" Formula/tdn.rb
 
-          # Update each sha256 placeholder
-          sed -i "s/PLACEHOLDER_DARWIN_ARM64/${darwin_arm64:-PLACEHOLDER_DARWIN_ARM64}/" Formula/tdn.rb
-          sed -i "s/PLACEHOLDER_DARWIN_X64/${darwin_x64:-PLACEHOLDER_DARWIN_X64}/" Formula/tdn.rb
-          sed -i "s/PLACEHOLDER_LINUX_ARM64/${linux_arm64:-PLACEHOLDER_LINUX_ARM64}/" Formula/tdn.rb
-          sed -i "s/PLACEHOLDER_LINUX_X64/${linux_x64:-PLACEHOLDER_LINUX_X64}/" Formula/tdn.rb
-
-          # For subsequent updates, replace existing hashes (64 hex chars)
-          sed -i "s/sha256 \"[a-f0-9]\{64\}\"/sha256 \"${darwin_arm64}\"/" Formula/tdn.rb || true
+          # Update checksums - use perl for multi-line regex (more reliable than sed)
+          # Each sha256 is updated based on its preceding url line
+          perl -i -0pe "s|(url.*tdn-darwin-arm64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$darwin_arm64\"|g" Formula/tdn.rb
+          perl -i -0pe "s|(url.*tdn-darwin-x64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$darwin_x64\"|g" Formula/tdn.rb
+          perl -i -0pe "s|(url.*tdn-linux-arm64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$linux_arm64\"|g" Formula/tdn.rb
+          perl -i -0pe "s|(url.*tdn-linux-x64.*\n\s*)sha256 \"[^\"]*\"|\1sha256 \"$linux_x64\"|g" Formula/tdn.rb
 
           echo "Updated Formula/tdn.rb:"
           cat Formula/tdn.rb
@@ -476,15 +477,9 @@ jobs:
             Automated update triggered by new release.
 
             **Version:** ${{ env.VERSION }}
-
-            **Checksums:**
-            - darwin-arm64: `${{ env.darwin_arm64 }}`
-            - darwin-x64: `${{ env.darwin_x64 }}`
-            - linux-arm64: `${{ env.linux_arm64 }}`
-            - linux-x64: `${{ env.linux_x64 }}`
 ```
 
-**Note:** The Homebrew formula update workflow above is simplified. For production, consider using a more robust approach like a dedicated script that properly parses and updates the Ruby formula.
+**Note:** The perl regex matches each sha256 line based on its preceding url line, so it works for both initial placeholders and subsequent hash updates. Test on first release.
 
 ### Phase 5: Install Script
 
@@ -636,9 +631,9 @@ echo ""
 info "Run 'tdn --help' to get started"
 ```
 
-### Phase 6: Release Automation (Optional)
+### Phase 6: Release Automation (Optional - Skip for Manual Releases)
 
-Set up release-please for automated versioning and changelogs.
+Set up release-please for automated versioning and changelogs. **Skip this phase if you prefer manual releases** — just use `bun run release:prepare VERSION` and push the tag yourself.
 
 **6.1: Create release-please configuration**
 
@@ -753,7 +748,7 @@ tdn --version
 - [ ] Homebrew update is triggered (for non-pre-release tags)
 
 ### Phase 4: Homebrew
-- [ ] `brew tap taskdn/tdn` works
+- [ ] `brew tap dannysmith/taproom` works
 - [ ] `brew install tdn` downloads correct binary for platform
 - [ ] `tdn --version` works after install
 - [ ] Formula auto-update PR is created on new releases
@@ -779,12 +774,12 @@ tdn --version
 
 | Secret | Purpose | How to Create |
 |--------|---------|---------------|
-| `HOMEBREW_TAP_TOKEN` | Trigger updates in homebrew-tdn repo | Create a fine-grained PAT with `repo` scope for `taskdn/homebrew-tdn` only |
+| `HOMEBREW_TAP_TOKEN` | Trigger updates in homebrew-taproom repo | Create a fine-grained PAT with `repo` scope for `dannysmith/homebrew-taproom` only |
 
 **Creating HOMEBREW_TAP_TOKEN:**
 1. Go to GitHub Settings → Developer settings → Personal access tokens → Fine-grained tokens
 2. Create new token with:
-   - Repository access: Only select repositories → `taskdn/homebrew-tdn`
+   - Repository access: Only select repositories → `dannysmith/homebrew-taproom`
    - Permissions: Contents (read/write), Pull requests (read/write)
 3. Add as secret in `taskdn/taskdn` repo: Settings → Secrets → Actions → New repository secret
 
@@ -819,15 +814,15 @@ This is acceptable because:
 
 ### Rust Version
 
-The project requires Rust 1.85+ (for edition 2024). The workflows pin to `dtolnay/rust-toolchain@1.85` to ensure consistent builds. Update this when bumping the MSRV.
+The project requires Rust stable. The workflows use `dtolnay/rust-toolchain@stable` to ensure compatibility with NAPI-RS dependencies.
 
 ### Cross-Compilation Limitation
 
 NAPI-RS binaries cannot be cross-compiled. The Rust code must be compiled on the target platform. This is why we use platform-specific runners instead of cross-compiling from Linux.
 
-### Conventional Commits
+### Conventional Commits (Only if using Phase 6)
 
-For release-please to work, use conventional commit format:
+For release-please to work, use conventional commit format. **If doing manual releases, skip this.**
 
 ```
 feat(cli): add new filter option
@@ -840,10 +835,11 @@ chore(cli): update dependencies
 
 Version appears in multiple places:
 - `tdn-cli/package.json` — Source of truth
-- `.release-please-manifest.json` — Updated by release-please
-- Git tag — Created by release-please
+- `tdn-cli/crates/core/Cargo.toml` — Rust crate version
+- `.release-please-manifest.json` — Updated by release-please (if using)
+- Git tag — Created manually or by release-please
 
-release-please keeps these in sync automatically. For manual releases, update `package.json` first.
+**For manual releases:** Use `bun run release:prepare 1.0.0` which updates both `package.json` and `Cargo.toml`, runs checks, and optionally creates the git commit/tag.
 
 ### Future Enhancements
 
