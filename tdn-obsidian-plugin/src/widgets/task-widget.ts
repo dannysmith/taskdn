@@ -49,10 +49,12 @@ export function createTaskWidget(options: TaskWidgetOptions): HTMLElement {
   const title = document.createElement("span");
   title.className = "taskdn-title";
   title.textContent = taskData.title;
-  title.addEventListener("click", (e) => {
+  title.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    app.workspace.openLinkText(file.path, "", false);
+    // Use openFile directly since we have the TFile object
+    const leaf = app.workspace.getLeaf(false);
+    await leaf.openFile(file);
   });
   container.appendChild(title);
 
@@ -101,10 +103,18 @@ function createMetaLink(
   const el = document.createElement("span");
   el.className = className;
   el.textContent = linkText;
-  el.addEventListener("click", (e) => {
+  el.addEventListener("click", async (e) => {
     e.preventDefault();
     e.stopPropagation();
-    app.workspace.openLinkText(linkText, "", false);
+    // Try to resolve the link to a file first
+    const targetFile = app.metadataCache.getFirstLinkpathDest(linkText, "");
+    if (targetFile) {
+      const leaf = app.workspace.getLeaf(false);
+      await leaf.openFile(targetFile);
+    } else {
+      // Fallback to openLinkText for unresolved links
+      await app.workspace.openLinkText(linkText, "", false);
+    }
   });
   return el;
 }
