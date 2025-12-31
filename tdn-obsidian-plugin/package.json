@@ -1,0 +1,29 @@
+{
+  "name": "taskdn-obsidian-plugin",
+  "version": "0.1.0",
+  "description": "Render wikilinks to task files as interactive checklist widgets",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "obsidian-plugin",
+    "tasks"
+  ],
+  "author": "Danny",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "builtin-modules": "^4.0.0",
+    "esbuild": "^0.24.2",
+    "obsidian": "^1.7.2",
+    "typescript": "^5.7.2"
+  },
+  "dependencies": {
+    "@codemirror/language": "^6.12.1",
+    "@codemirror/state": "^6.5.0",
+    "@codemirror/view": "^6.35.3"
+  }
+}

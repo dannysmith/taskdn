@@ -1,0 +1,115 @@
+/* Taskdn Widget Styles */
+
+.taskdn-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  background-color: var(--background-secondary);
+  font-size: 0.95em;
+  vertical-align: baseline;
+  cursor: default;
+}
+
+/* Status-based styling */
+.taskdn-widget[data-status="done"] {
+  opacity: 0.7;
+}
+
+.taskdn-widget[data-status="done"] .taskdn-title {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.taskdn-widget[data-status="blocked"] {
+  border-left: 3px solid var(--text-warning);
+}
+
+.taskdn-widget[data-status="in-progress"] {
+  border-left: 3px solid var(--text-accent);
+}
+
+/* Checkbox */
+.taskdn-checkbox {
+  cursor: pointer;
+  width: 1em;
+  height: 1em;
+  margin: 0;
+  accent-color: var(--interactive-accent);
+}
+
+/* Title */
+.taskdn-title {
+  cursor: pointer;
+  color: var(--text-normal);
+}
+
+.taskdn-title:hover {
+  color: var(--text-accent);
+  text-decoration: underline;
+}
+
+/* Meta section (project, area, due date) */
+.taskdn-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  margin-left: 0.5em;
+  font-size: 0.85em;
+  color: var(--text-muted);
+}
+
+/* Project link */
+.taskdn-project {
+  cursor: pointer;
+  color: var(--text-accent);
+  opacity: 0.8;
+}
+
+.taskdn-project:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.taskdn-project::before {
+  content: "📁 ";
+}
+
+/* Area link */
+.taskdn-area {
+  cursor: pointer;
+  color: var(--text-accent);
+  opacity: 0.8;
+}
+
+.taskdn-area:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.taskdn-area::before {
+  content: "🏷️ ";
+}
+
+/* Due date */
+.taskdn-due {
+  white-space: nowrap;
+}
+
+/* Overdue styling */
+.taskdn-widget[data-overdue="true"] .taskdn-due {
+  color: var(--text-error);
+}
+
+/* Make widget look good in different contexts */
+.markdown-preview-view .taskdn-widget,
+.cm-line .taskdn-widget {
+  margin: 0 0.1em;
+}
+
+/* List context - ensure proper alignment */
+.markdown-preview-view li .taskdn-widget,
+.cm-line .taskdn-widget {
+  vertical-align: middle;
+}

@@ -1,0 +1,10 @@
+{
+  "id": "taskdn",
+  "name": "Taskdn",
+  "version": "0.1.0",
+  "minAppVersion": "1.4.0",
+  "description": "Render wikilinks to task files as interactive checklist widgets and convert checklists to tasks.",
+  "author": "Danny",
+  "authorUrl": "https://github.com/danny",
+  "isDesktopOnly": false
+}
