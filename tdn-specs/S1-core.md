@@ -1,6 +1,6 @@
 # Specification S1: Core (Data Store)
 
-**Version:** 1.0.0-draft
+**Version:** 1.0.0
 
 This specification defines a file format for storing tasks, projects, and areas as Markdown files with YAML frontmatter. It is deliberately simple and opinionated. All software which implements this standard will be mutually compatible when reading/writing task files on disk.
 
