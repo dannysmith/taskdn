@@ -8,6 +8,7 @@
     "demo:import-to-things": "bun scripts/import-demo-vault-to-things.ts",
     "demo:reset": "./scripts/reset-dummy-vault.sh",
     "cli:install-local": "./scripts/install-cli-locally-via-symlink.sh",
-    "monorepo:check": "./scripts/monorepo-check.sh"
+    "monorepo:check": "./scripts/monorepo-check.sh",
+    "versions": "bun scripts/version-status.ts"
   }
 }
