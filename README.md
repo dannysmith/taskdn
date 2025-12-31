@@ -11,7 +11,7 @@
 | **CLI**             | ✅ Stable      |
 | **Claude Plugin**   | ✅ Stable      |
 | **Desktop App**     | ⌛ In Progress |
-| **Obsidian Plugin** | ❌ Not Started |
+| **Obsidian Plugin** | ✅ Stable      |
 | **Extras**          | ❌ Not Started |
 
 ---
@@ -27,12 +27,13 @@ A task-management system for **individuals** that feels as slick as [Things](htt
 
 ## The Suite of Tools
 
-| Tool              | Description                                     | Directory            |
-| ----------------- | ----------------------------------------------- | -------------------- |
-| **Specs**         | Formal specifications for the protocol          | `tdn-specs/`         |
-| **CLI**           | Command-line interface for humans and AI agents | `tdn-cli/`           |
-| **Claude Plugin** | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/` |
-| **Desktop App**   | Cross-platform Tauri app for day-to-day use     | `tdn-desktop/`       |
+| Tool                | Description                                        | Directory                                                        |
+| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------- |
+| **Specs**           | Formal specifications for the protocol             | `tdn-specs/`                                                     |
+| **CLI**             | Command-line interface for humans and AI agents    | `tdn-cli/`                                                       |
+| **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                             |
+| **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn) |
+| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                   |
 
 The CLI contains an embedded Rust core library that handles parsing, validation, and file operations. When the desktop app is ready, this core will be extracted to a shared workspace crate.
 
@@ -52,6 +53,12 @@ The [Claude Code plugin](tdn-claude-plugin/README.md) teaches Claude to work as 
 ```bash
 claude --plugin-dir ./tdn-claude-plugin
 ```
+
+### Obsidian Plugin
+
+The [Obsidian plugin](https://github.com/dannysmith/obsidian-taskdn) renders wikilinks to task files as interactive checklist widgets. Click to toggle status, open files, or navigate to projects/areas.
+
+See [tdn-obsidian-plugin/README.md](https://github.com/dannysmith/obsidian-taskdn/README.md) for installation instructions.
 
 ### CLI Installation
 
@@ -79,6 +86,7 @@ taskdn/
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)
 ├── tdn-claude-plugin/   # Claude Code plugin
 ├── tdn-desktop/         # Desktop app (Tauri v2)
+├── tdn-obsidian-plugin/ # Obsidian plugin
 └── tdn-specs/           # Protocol specifications
 ```
 
