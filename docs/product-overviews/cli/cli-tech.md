@@ -245,7 +245,7 @@ The CLI feels responsive for typical vaults (up to a few thousand files). Parall
 
 ## Implementation Notes
 
-The CLI was built fresh against the current specifications (S1, S2). Prior research spikes in `archived-projects/` informed architectural decisions but were not copied wholesale.
+The CLI was built fresh against the current specifications (S1, S2).
 
 **Key learnings from research phase:**
 - NAPI-RS provides excellent TypeScript integration with Rust

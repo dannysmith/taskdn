@@ -14,8 +14,6 @@ All top level documentation lives in `docs/`.
 
   `docs/tasks-done` - Completed tasks. Old documents which may be useful to reference. Do not reference these without asking the user as they'll be out of date.
 
-- `docs/archive` - Old documents which may be useful to reference. Do not reference these without asking the user as they'll be out of date.
-
 ### Product Overview Docs
 
 `docs/product-overviews/` Contains one folder for each of the products in development. This is for storing the important high level evergreen documents for each product. These are stored in the top level docs because it will often be necessary for other projects to reference these.
@@ -36,10 +34,6 @@ Most of the product sub-directories will have their own `tdn-<name>/docs/` with 
 | `tdn-desktop/` | Desktop app | Tauri v2 & React      | `docs/product-overviews/desktop` |
 
 **Note:** The CLI contains an embedded Rust core library (via NAPI-RS). When the desktop app is ready, this core MAY be extracted to a shared workspace crate. See `docs/product-overviews/cli/cli-tech.md` for details.
-
-## Archived Projects
-
-`archived-projects` contains code which was developed during a research spike. Never look in this directory unless the user expressly asks you to.
 
 ## Important: "Tasks" in This Project
 
