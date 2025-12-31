@@ -117,7 +117,7 @@ jobs:
 
       - name: Extract version
         id: version
-        run: echo "version=\"${GITHUB_REF#refs/tags/tdn-cli-v}\"" >> $GITHUB_OUTPUT
+        run: echo "version=${GITHUB_REF#refs/tags/tdn-cli-v}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
