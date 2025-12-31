@@ -130,10 +130,17 @@ describe('config security', () => {
         ).toThrow('system directory');
       });
 
-      test('warns when path is outside home directory but not system dir', () => {
-        // /tmp is outside home but not a protected system directory
+      test('accepts /tmp without warning (Linux temp directory)', () => {
+        // /tmp is the standard temp directory on Linux, should be allowed like /var/folders on macOS
         const result = validateVaultPath('/tmp/tasks', 'tasksDir');
         expect(result).toBe('/tmp/tasks');
+        expect(warnCalls).toHaveLength(0);
+      });
+
+      test('warns when path is outside home directory and not a temp dir', () => {
+        // /opt is outside home and not a temp directory
+        const result = validateVaultPath('/opt/tasks', 'tasksDir');
+        expect(result).toBe('/opt/tasks');
         expect(warnCalls.length).toBeGreaterThan(0);
         expect(warnCalls[0]).toContain('outside your home directory');
       });

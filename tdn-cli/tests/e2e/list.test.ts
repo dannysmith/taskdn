@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { runCli } from '../helpers/cli';
+import { runCli, isArchivePath } from '../helpers/cli';
 
 describe('tdn list', () => {
   describe('default behavior (active tasks)', () => {
@@ -901,13 +901,13 @@ describe('tdn list --include-archived flag', () => {
     const { stdout, exitCode } = await runCli(['list', '--include-archived', '--json']);
     expect(exitCode).toBe(0);
     const output = JSON.parse(stdout);
-    expect(output.tasks.some((t: { path: string }) => t.path.includes('archive/'))).toBe(true);
+    expect(output.tasks.some((t: { path: string }) => isArchivePath(t.path))).toBe(true);
   });
 
   test('does not include archived tasks by default', async () => {
     const { stdout } = await runCli(['list', '--json']);
     const output = JSON.parse(stdout);
-    expect(output.tasks.every((t: { path: string }) => !t.path.includes('archive/'))).toBe(true);
+    expect(output.tasks.every((t: { path: string }) => !isArchivePath(t.path))).toBe(true);
   });
 });
 
@@ -917,7 +917,7 @@ describe('tdn list --only-archived flag', () => {
     expect(exitCode).toBe(0);
     const output = JSON.parse(stdout);
     expect(output.tasks.length).toBeGreaterThan(0);
-    expect(output.tasks.every((t: { path: string }) => t.path.includes('archive/'))).toBe(true);
+    expect(output.tasks.every((t: { path: string }) => isArchivePath(t.path))).toBe(true);
   });
 });
 
