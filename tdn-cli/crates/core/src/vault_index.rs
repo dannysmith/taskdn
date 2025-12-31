@@ -1083,7 +1083,7 @@ mod tests {
             "q1.md",
             "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
         );
-        let task_path = format!("{}/task1.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("task1.md");
         write_file(
             Path::new(&config.tasks_dir),
             "task1.md",
@@ -1091,7 +1091,7 @@ mod tests {
         );
 
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert_eq!(result.task.unwrap().title, "Task One");
@@ -1125,7 +1125,7 @@ mod tests {
             "work.md",
             "---\ntitle: Work\n---\n",
         );
-        let task_path = format!("{}/task1.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("task1.md");
         write_file(
             Path::new(&config.tasks_dir),
             "task1.md",
@@ -1133,7 +1133,7 @@ mod tests {
         );
 
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert!(result.project.is_none()); // No project reference
@@ -1146,7 +1146,7 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let task_path = format!("{}/task1.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("task1.md");
         write_file(
             Path::new(&config.tasks_dir),
             "task1.md",
@@ -1154,7 +1154,7 @@ mod tests {
         );
 
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert!(result.project.is_none());
@@ -1167,7 +1167,7 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let task_path = format!("{}/task1.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("task1.md");
         write_file(
             Path::new(&config.tasks_dir),
             "task1.md",
@@ -1175,7 +1175,7 @@ mod tests {
         );
 
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert!(result.project.is_none());
@@ -1188,7 +1188,7 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let task_path = format!("{}/task1.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("task1.md");
         write_file(
             Path::new(&config.tasks_dir),
             "task1.md",
@@ -1196,7 +1196,7 @@ mod tests {
         );
 
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert!(result.area.is_none());
@@ -1224,7 +1224,7 @@ mod tests {
             "q1.md",
             "---\ntitle: Q1\narea: \"[[Work]]\"\n---\n",
         );
-        let task_path = format!("{}/task1.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("task1.md");
         // Task has direct area "Personal" but project is in "Work"
         write_file(
             Path::new(&config.tasks_dir),
@@ -1233,7 +1233,7 @@ mod tests {
         );
 
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert!(result.project.is_some());
@@ -1315,16 +1315,16 @@ mod tests {
         let temp_dir = create_temp_vault();
         let config = create_vault_config(&temp_dir);
 
-        let task_path = format!("{}/my-task.md", config.tasks_dir);
+        let task_path = Path::new(&config.tasks_dir).join("my-task.md");
         write_file(
             Path::new(&config.tasks_dir),
             "my-task.md",
             "---\ntitle: My Task\nstatus: ready\n---\n",
         );
 
-        // Look up by absolute path (starts with /)
+        // Look up by absolute path (starts with / on Unix, drive letter on Windows)
         let session = create_vault_session(config.clone());
-        let result = get_task_context(&session, task_path);
+        let result = get_task_context(&session, task_path.to_string_lossy().to_string());
 
         assert!(result.task.is_some());
         assert_eq!(result.task.unwrap().title, "My Task");
