@@ -28,20 +28,22 @@ brew tap dannysmith/taproom
 brew install tdn
 ```
 
-### From Source
+### From Source (Development)
 
-To build and install from source:
+For development, install from source to get a symlink that always points to your local build:
 
 ```bash
 # From the tdn-cli/ directory
 ./scripts/install-local.sh
 ```
 
-This creates a symlink at `~/.local/bin/tdn`. To update after pulling changes:
+This creates a symlink at `~/.local/bin/tdn`. After pulling changes or modifying code, rebuild:
 
 ```bash
 bun run build
 ```
+
+Note: If you have both Homebrew and local installs, whichever appears first in your `$PATH` takes precedence.
 
 ## Setup (Development)
 
