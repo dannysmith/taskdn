@@ -53,6 +53,15 @@ The [Claude Code plugin](tdn-claude-plugin/README.md) teaches Claude to work as 
 claude --plugin-dir ./tdn-claude-plugin
 ```
 
+### CLI Installation
+
+```bash
+brew tap dannysmith/taproom
+brew install tdn
+```
+
+See [tdn-cli/README.md](tdn-cli/README.md) for more options and usage.
+
 ## Project Structure
 
 This is a **monorepo**. Each `tdn-*` directory is a self-contained project with its own documentation, tests, build configuration etc.
