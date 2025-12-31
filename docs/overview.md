@@ -150,7 +150,7 @@ A command-line interface for both humans and AI agents to use. Human users can m
 
 The CLI includes an embedded Rust core library (connected via NAPI-RS bindings) that handles all file parsing, validation, and manipulation. When the desktop app is ready, this core will be extracted to a shared workspace crate that both products can use.
 
-See [CLI Requirements](product-overviews/cli/cli-requirements.md) and [CLI Technical Overview](product-overviews/cli/cli-tech.md).
+See [CLI README](../tdn-cli/README.md)
 
 ### 3. Desktop App
 
@@ -158,13 +158,15 @@ A cross-platform Tauri app for day-to-day task management which feels as slick a
 
 If they're in _planning mode_ they'll want to see contextual views and have important information surfaced where it's needed. If they're in _doing mode_ they'll want to see and work with their short-term task list without distractions.
 
-See [Desktop Requirements](product-overviews/desktop/desktop-requirements.md).
+See [Desktop README](../tdn-desktop/README.md).
 
-### 4. Obsidian Plugin [DEFERRED PROJECT]
+### 4. Obsidian Plugin
 
 A lightweight integration which renders any links to task documents as special widgets, which show some meta-data about the task and allows their status to be changed. Also allows any regular checklist item to be easily turned into a task in-place.
 
-### 5. Extras [DEFERRED PROJECT]
+See [Obsidian Plugin Repo](https://github.com/dannysmith/obsidian-taskdn)
+
+### 5. Extras
 
 - Templates and bases for Obsidian
 - Claude Code Plugin with skill & commands

@@ -86,7 +86,6 @@ taskdn/
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)
 ├── tdn-claude-plugin/   # Claude Code plugin
 ├── tdn-desktop/         # Desktop app (Tauri v2)
-├── tdn-obsidian-plugin/ # Obsidian plugin
 └── tdn-specs/           # Protocol specifications
 ```
 
