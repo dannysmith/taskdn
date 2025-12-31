@@ -129,7 +129,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Trigger Homebrew update
-        if: ${{ !contains(github.ref, '-') }}  # Skip for pre-releases (e.g., v1.0.0-beta)
+        # Skip for pre-releases (versions containing '-', e.g., 1.0.0-beta)
+        if: ${{ !contains(steps.version.outputs.version, '-') }}
         uses: peter-evans/repository-dispatch@v3
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
