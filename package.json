@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "task:complete": "node scripts/complete-task.js",
-    "task:rename-done": "node scripts/complete-task.js --rename-existing"
+    "task:rename-done": "node scripts/complete-task.js --rename-existing",
+    "demo:import-to-things": "bun scripts/import-demo-vault-to-things.ts",
+    "demo:reset": "./scripts/reset-dummy-vault.sh",
+    "cli:install-local": "./scripts/install-cli-locally-via-symlink.sh"
   }
 }

@@ -33,8 +33,8 @@ brew install tdn
 For development, install from source to get a symlink that always points to your local build:
 
 ```bash
-# From the tdn-cli/ directory
-./scripts/install-local.sh
+# From the monorepo root
+bun cli:install-local
 ```
 
 This creates a symlink at `~/.local/bin/tdn`. After pulling changes or modifying code, rebuild:
