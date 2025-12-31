@@ -43,8 +43,12 @@ class TaskLinkWidget extends WidgetType {
     );
   }
 
-  ignoreEvent(): boolean {
-    // Let events pass through to our widget handlers
+  ignoreEvent(event: Event): boolean {
+    // Return true to prevent the editor from handling mouse events
+    // This stops clicks from moving the cursor and removing the decoration
+    if (event.type === "mousedown" || event.type === "mouseup" || event.type === "click") {
+      return true;
+    }
     return false;
   }
 }
