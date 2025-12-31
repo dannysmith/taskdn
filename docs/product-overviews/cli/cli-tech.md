@@ -209,15 +209,7 @@ taskdn-core = { path = "../../taskdn-cli/crates/core" }
 
 ## Distribution
 
-The CLI will be distributed as a standalone binary using `bun build --compile`. This bundles:
-
-- Bun runtime
-- TypeScript code
-- Native Rust addon (.node file)
-
-Cross-compilation is supported for macOS (arm64, x64), Linux (x64, arm64), and Windows (x64).
-
-Binary size will be approximately 50MB (Bun runtime is the majority). This is acceptable for a developer tool.
+The CLI is distributed as a standalone binary using `bun build --compile`, which bundles the Bun runtime, TypeScript code, and native Rust addon into a single executable. See the project README for installation instructions.
 
 ---
 
