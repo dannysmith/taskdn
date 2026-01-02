@@ -1,5 +1,7 @@
 # Task: Starlight Marketing Site
 
+Working dir: `website/`
+
 ## Phase 1 - Setup
 
 - [ ] Install
