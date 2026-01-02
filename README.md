@@ -12,6 +12,7 @@
 | **Claude Plugin**   | ✅ Stable      |
 | **Desktop App**     | ⌛ In Progress |
 | **Obsidian Plugin** | ✅ Stable      |
+| **Website**         | ⌛ In Progress |
 | **Extras**          | ❌ Not Started |
 
 ---
@@ -34,6 +35,7 @@ A task-management system for **individuals** that feels as slick as [Things](htt
 | **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                             |
 | **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn) |
 | **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                   |
+| **Website**         | Documentation and marketing site                   | `website/`                                                       |
 
 ## Installation
 
@@ -85,9 +87,10 @@ taskdn/
 │   └── tasks-todo/      # Active development tasks
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)
 ├── tdn-claude-plugin/   # Claude Code plugin
-├── tdn-obsidian-plugin/ # Stub with README.md pointing at obsidian-taskdn repo
 ├── tdn-desktop/         # Desktop app (Tauri v2)
-└── tdn-specs/           # Protocol specifications
+├── tdn-obsidian-plugin/ # Stub with README.md pointing at obsidian-taskdn repo
+├── tdn-specs/           # Protocol specifications
+└── website/             # Documentation & marketing site (Astro/Starlight)
 ```
 
 ## Development

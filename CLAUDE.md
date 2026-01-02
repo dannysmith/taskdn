@@ -28,10 +28,11 @@ Most of the product sub-directories will have their own `tdn-<name>/docs/` with 
 
 ## Product Sub-directories
 
-| Directory      | What it is  | Language/Stack        | High-level docs                  |
-| -------------- | ----------- | --------------------- | -------------------------------- |
-| `tdn-cli/`     | CLI tool    | TypeScript/Bun + Rust | `docs/product-overviews/cli`     |
-| `tdn-desktop/` | Desktop app | Tauri v2 & React      | `docs/product-overviews/desktop` |
+| Directory      | What it is            | Language/Stack        | High-level docs                  |
+| -------------- | --------------------- | --------------------- | -------------------------------- |
+| `tdn-cli/`     | CLI tool              | TypeScript/Bun + Rust | `docs/product-overviews/cli`     |
+| `tdn-desktop/` | Desktop app           | Tauri v2 & React      | `docs/product-overviews/desktop` |
+| `website/`     | Docs & marketing site | Astro/Starlight       | —                                |
 
 **Note:** The CLI contains an embedded Rust core library (via NAPI-RS). When the desktop app is ready, this core MAY be extracted to a shared workspace crate. See `docs/product-overviews/cli/cli-tech.md` for details.
 
