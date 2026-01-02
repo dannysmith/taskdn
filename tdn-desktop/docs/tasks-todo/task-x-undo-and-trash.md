@@ -1,0 +1,3 @@
+# Task: Undo & Trash
+
+We should make sure that Command Z works as expected everywhere. We might also want to consider some sort of trash for deleted tasks so they can be added back again. I almost feel like this trash can and deleted tasks should be stored in the app's installation directory for the desktop app. Not in the actual Vault. And then those deleted tasks can be uh reinstated and cleared every after thirty days or something. This is really just to prevent people accidentally deleting tasks that have loads of important data in them. Which is more likely to happen in the desktop app because you can just press backspace to delete a task. And it should probably confirm deletion as well.
