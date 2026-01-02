@@ -4,8 +4,8 @@ Working dir: `website/`
 
 ## Phase 1 - Setup
 
-- [ ] Install
-- [ ] Set up Theme: https://delucis.github.io/starlight-theme-flexoki/
+- [x] Install
+- [x] Set up Theme: https://delucis.github.io/starlight-theme-flexoki/
 - [ ] Remove cruft, update readme, set up basic structure & AGENTS.md etc
 - [ ] Add tsc, eslint, prettier etc with appropriate plugins
 - [ ] Update top-level docs & pages
