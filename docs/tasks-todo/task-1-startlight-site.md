@@ -6,14 +6,14 @@ Working dir: `website/`
 
 - [x] Install
 - [x] Set up Theme: https://delucis.github.io/starlight-theme-flexoki/
-- [ ] Remove cruft, update readme, set up basic structure & AGENTS.md etc
-- [ ] Add tsc, eslint, prettier etc with appropriate plugins
-- [ ] Update top-level docs & pages
+- [x] Remove cruft, update readme, set up basic structure & AGENTS.md etc
+- [x] Add tsc, eslint, prettier etc with appropriate plugins
+- [x] Update top-level docs & pages
 - [ ] Generate and add logo
 - [ ] Generate favicon (multiple sizes/formats)
-- [ ] Configure Open Graph / social meta tags (check what Starlight provides by default)
-- [ ] Enable sitemap & add to robots.txt
-- [ ] https://delucis.github.io/starlight-llms-txt/
+- [x] Configure Open Graph / social meta tags (check what Starlight provides by default)
+- [x] Enable sitemap & add to robots.txt
+- [x] https://delucis.github.io/starlight-llms-txt/
 - [ ] Set up splash page and hero
 - [ ] Set up Simple Analytics
 - [ ] Set up custom domain: tdn.danny.is
