@@ -1,49 +1,23 @@
-# Starlight Starter Kit: Basics
+# Taskdn Website
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+Documentation website for [Taskdn](../README.md), built with [Astro Starlight](https://starlight.astro.build/).
 
-```
-bun create astro@latest -- --template starlight
-```
+This is part of the [Taskdn monorepo](https://github.com/dannysmith/taskdn). See the [main README](../README.md) for project overview and other components.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Development
 
-## 🚀 Project Structure
+All commands are run from the `website/` directory:
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
+| Command       | Action                                     |
+| :------------ | :----------------------------------------- |
+| `bun install` | Install dependencies                       |
+| `bun dev`     | Start local dev server at `localhost:4321` |
+| `bun build`   | Build production site to `./dist/`         |
+| `bun preview` | Preview build locally before deploying     |
+| `bun astro`   | Run Astro CLI commands                     |
 
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
-```
+## Stack
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
-
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
-
-Static assets, like favicons, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `bun install`             | Installs dependencies                            |
-| `bun dev`             | Starts local dev server at `localhost:4321`      |
-| `bun build`           | Build your production site to `./dist/`          |
-| `bun preview`         | Preview your build locally, before deploying     |
-| `bun astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `bun astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+- [Astro](https://astro.build/) - Static site generator
+- [Starlight](https://starlight.astro.build/) - Documentation theme
+- [Flexoki Theme](https://github.com/delucis/starlight-theme-flexoki) - Color theme
