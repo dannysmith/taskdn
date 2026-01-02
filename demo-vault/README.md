@@ -10,8 +10,8 @@ See [Project Overview](../docs/overview.md) for context on Taskdn.
 demo-vault/
 ├── areas/           # 10 area files
 ├── projects/        # 15 project files
-├── tasks/           # 55 active task files
-│   └── archive/     # 30 completed/dropped tasks
+├── tasks/           # 100 active task files
+│   └── archive/     # 40 completed/dropped tasks
 ├── templates/       # Obsidian templates
 │   └── bases/       # Obsidian Bases definitions
 └── README.md
