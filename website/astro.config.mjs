@@ -11,6 +11,11 @@ export default defineConfig({
     starlight({
       plugins: [starlightThemeFlexoki(), starlightLlmsTxt()],
       title: 'Taskdn',
+      logo: {
+        src: './src/assets/icon-1024-trans.png',
+        alt: 'Taskdn',
+      },
+      favicon: '/icon-crop.png',
       description:
         'A plaintext task management system for individuals. Store tasks as markdown files, manipulate them via CLI, desktop app, or AI assistants.',
       social: [
