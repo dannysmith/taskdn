@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://taskdn.com/sitemap-index.xml
+Sitemap: https://tdn.danny.is/sitemap-index.xml
