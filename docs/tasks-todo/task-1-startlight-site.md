@@ -15,7 +15,7 @@ Working dir: `website/`
 - [x] Enable sitemap & add to robots.txt
 - [x] https://delucis.github.io/starlight-llms-txt/
 - [ ] Set up splash page and hero
-- [ ] Set up Simple Analytics
+- [x] Set up Simple Analytics
 - [x] Set up custom domain: tdn.danny.is
 - [x] Set up build on GH Pages https://melikyan.dev/blog/how-to-quickly-setup-a-blog/
 

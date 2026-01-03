@@ -9,7 +9,7 @@ export default defineConfig({
   site: 'https://tdn.danny.is',
   integrations: [
     starlight({
-      plugins: [starlightThemeFlexoki(), starlightLlmsTxt()],
+      plugins: [starlightThemeFlexoki({ accentColor: 'blue' }), starlightLlmsTxt()],
       title: 'Taskdn',
       logo: {
         src: './src/assets/icon-1024-trans.png',
