@@ -17,7 +17,7 @@ Tools like Notion have some downsides tho:
 
 File-based apps like Obsidian solve these issues. With the new bases feature, we can fairly easily replicate most Notion setups in Obsidian, and by storing our documents (including areas, projects etc) as markdown files on disk we can interact with them via both the Obsidian app and anything else which can operate on a filesystem containing Markdown files with YAML frontmatter, including AI coding tools.
 
-This works great for documents, but **not for Tasks**. The ideal UI for task management is very different to that required for document management. I want to write my project plans in an Obsidian-like UI, but view and complete tasks in an app like [Things](https://culturedcode.com/things/). This also applies to AI agents: tools like `grep`, `ls`, `ReadFile` & `WriteFile` are fine for working with directories of project docs, but terrible for operations like _"get me all the uncompleted tasks for all projects in my 'Side Projects' area"_. To be effective, agents need a n interface where queries like this reliably and quickly return the info in a form appropriate for LLMs.
+This works great for documents, but **not for Tasks**. The ideal UI for task management is very different to that required for document management. I want to write my project plans in an Obsidian-like UI, but view and complete tasks in an app like [Things](https://culturedcode.com/things/). This also applies to AI agents: tools like `grep`, `ls`, `ReadFile` & `WriteFile` are fine for working with directories of project docs, but terrible for operations like _"get me all the uncompleted tasks for all projects in my 'Side Projects' area"_. To be effective, agents need an interface where queries like this reliably and quickly return the info in a form appropriate for LLMs.
 
 ## Goal
 
@@ -27,16 +27,16 @@ This _definitely_ means at least two products: a beautiful desktop app for human
 
 ### General Requirements
 
-- Our products are **interfaces** for working with files on disk: all user data must be stored as markdown files with YAML frontmatter.
-- Zero dependency on third-party tools & conventions: We don't care if a user chooses to **also** use Obsidian or Git or Claude Code to work with their data, so we don't depend on their features (eg. Obsidian Bases or CC slash commands).
-- We play well with third-party tools & conventions: Anything which can read & manipulate markdown with YAML frontmatter can also do so with our data. With a few specific exceptions, we don't care where users keep their files, what other frontmatter they include or how they're named.
-- Wherever appropriate, we make our tools AI-friendly.
+- The products are **interfaces** for working with files on disk: all persistant task, project and area data must be stored as markdown files with YAML frontmatter.
+- Zero dependency on third-party tools & conventions: We don't care if a user chooses to **also** use Obsidian or Git or Claude Code to work with their data, so we don't **depend** on their features (eg. Obsidian Bases or CC slash commands).
+- Play well with third-party tools & conventions: Anything which can read & manipulate markdown with YAML frontmatter can also do so with our data. With a few specific exceptions, we don't care where users keep their files, what other frontmatter they include or how they're named.
 
 And wherever possible...
 
-- The mental model required to use our products is logical and shared across them.
+- The products are AI-friendly.
+- The mental model required to use the products is logical and shared across them.
 - We take care to support common Obsidian conventions, and try to maintain compatibility with other file-based task systems like [TaskNotes](https://tasknotes.dev/).
-- We prefer open, well-understood standards for things like querying and data transfer.
+- We prefer open, well-understood standards and conventions.
 
 ### Explicit Non-Goals
 
@@ -131,7 +131,7 @@ Discussion with finance team on 2025-01-10...
 
 ## Product Suite
 
-Eventually, this project will include the following products:
+This project will include the following products:
 
 ### 1. Protocol Specification
 
@@ -142,7 +142,7 @@ A set of unambiguous formal specifications describing the protocol and core APIs
 
 **Implement S1 and your files are compatible with other S1-compliant tools. Follow S2 guidance and your implementation behaves predictably.**
 
-See [tdn-specs README](../tdn-specs/README.md).
+See [tdn-specs README](../tdn-specs/README.md)
 
 ### 2. CLI App
 
@@ -158,7 +158,7 @@ A cross-platform Tauri app for day-to-day task management which feels as slick a
 
 If they're in _planning mode_ they'll want to see contextual views and have important information surfaced where it's needed. If they're in _doing mode_ they'll want to see and work with their short-term task list without distractions.
 
-See [Desktop README](../tdn-desktop/README.md).
+See [Desktop README](../tdn-desktop/README.md)
 
 ### 4. Obsidian Plugin
 
@@ -166,7 +166,12 @@ A lightweight integration which renders any links to task documents as special w
 
 See [Obsidian Plugin Repo](https://github.com/dannysmith/obsidian-taskdn)
 
+### 5. Claude Code Plugin
+
+A small-ish CC plugin for task and project management using the `tdn` CLI. Includes a SKill with instructions for managing areas, projects and tasks using the CLI app and directly, and commands to help with things like reviews, cleanup and the like.
+
+See [Claude Plugin README](../tdn-claude-plugin/README.md)
+
 ### 5. Extras
 
 - Templates and bases for Obsidian
-- Claude Code Plugin with skill & commands
