@@ -3,9 +3,65 @@ title: Taskdn
 description: A plaintext task management system for individuals.
 template: splash
 hero:
-  tagline: A task-management system that feels as slick as Things while storing data as markdown files on disk.
+  tagline: Task management that feels as slick as Things, with your data stored as markdown files you actually own.
   actions:
     - text: Get Started
       link: https://github.com/dannysmith/taskdn
       icon: github
+    - text: Read the Spec
+      link: https://github.com/dannysmith/taskdn/blob/main/tdn-specs/S1-core.md
+      icon: document
+      variant: minimal
 ---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## The Problem
+
+You want your notes, projects, and tasks in one place as plain files you own. Tools like Obsidian are great for documents, but **terrible for task management**. The ideal UI for tasks is completely different to that for documents.
+
+## The Solution
+
+Taskdn gives you the best of both worlds: **tasks as markdown on disk**, with purpose-built tools that work brilliantly in each context.
+
+<CardGrid>
+  <Card title="Your Data, Your Files" icon="document">
+    Everything stored as markdown with YAML frontmatter. No proprietary formats, no vendor lock-in. Use any editor alongside Taskdn.
+  </Card>
+  <Card title="Right Tool, Right Context" icon="setting">
+    Desktop app for daily task management. CLI for power users and scripts. AI-optimised interface for coding assistants.
+  </Card>
+  <Card title="For Individuals" icon="user">
+    Intentionally designed for personal productivity. No team features, no cloud sync, no complexity you don't need.
+  </Card>
+  <Card title="AI-Friendly" icon="rocket">
+    First-class support for AI agents. Claude Code plugin included. Structured output for LLMs, not just humans.
+  </Card>
+</CardGrid>
+
+## The Suite
+
+| Tool | Description |
+|------|-------------|
+| **CLI** | Command-line interface for humans and AI agents |
+| **Desktop App** | Cross-platform Tauri app (in progress) |
+| **Obsidian Plugin** | Render task links as interactive widgets |
+| **Claude Plugin** | AI-assisted task management |
+
+## How It Works
+
+Tasks, projects, and areas are markdown files with structured frontmatter:
+
+```yaml
+---
+title: Review quarterly report
+status: in-progress
+due: 2025-01-15
+projects:
+  - "[[Q1 Planning]]"
+---
+
+Notes, context, whatever you want in the body...
+```
+
+That's it. No database, no sync service, no magic. Just files.
