@@ -14,7 +14,7 @@ Working dir: `website/`
 - [x] Configure Open Graph / social meta tags (check what Starlight provides by default)
 - [x] Enable sitemap & add to robots.txt
 - [x] https://delucis.github.io/starlight-llms-txt/
-- [ ] Set up splash page and hero
+- [x] Set up splash page and hero
 - [x] Set up Simple Analytics
 - [x] Set up custom domain: tdn.danny.is
 - [x] Set up build on GH Pages https://melikyan.dev/blog/how-to-quickly-setup-a-blog/
@@ -41,13 +41,12 @@ Working dir: `website/`
 - [ ] Privacy Policy page (required for analytics)
 - [ ] Changelog page template
 
-## Phase 3 - Marketing Page
+## Phase 4 - The End
 
-- [ ] Spruce up homepage with nice imagery etc.
+- [ ] Spruce up homepage with nice imagery etc. Make it sexy
 - [ ] Screenshots, GIFs, or short videos showing the products
-- [ ] Link to GitHub repo
 
-## Phase 4 - Releases Process
+## Phase 4 - Changelog & Release Stuff
 
 - [ ] Set up GitHub Action which looks for new releases in this repo and in obsidian-taskdn and republishes them on the website changelog, as well as pulling the right installation artefacts from those repos into the website binary etc.
 - [ ] Automate changelog updates from releases
