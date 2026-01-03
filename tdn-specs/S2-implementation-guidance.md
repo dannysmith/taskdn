@@ -1,6 +1,6 @@
 # Specification S2: Implementation Guidance
 
-**Version:** 1.0.0-draft
+**Version:** 1.0.0
 
 This specification provides guidance for implementations that read, write, and present S1-compliant data. It covers field conventions, timestamp management, file safety, and common semantics.
 
@@ -16,18 +16,7 @@ The key words "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in th
 
 While S1 defines the file format and compatibility requirements, this specification addresses operational concerns: how to read files gracefully, how to write them safely, and how to present data consistently.
 
-### 1.2 Scope
-
-This specification covers:
-
-- Field naming conventions
-- Date handling
-- Reading and parsing files
-- Writing files (timestamps, safety)
-- Default filter semantics
-- Query and filter patterns
-
-### 1.3 Relationship to S1
+### 1.2 Relationship to S1
 
 S1 defines what files look like and what implementations must do for compatibility. This specification provides guidance on how implementations should behave for a good user experience.
 
@@ -37,9 +26,7 @@ S1 defines what files look like and what implementations must do for compatibili
 
 1. **Predictable over clever.** Users should be able to predict what an implementation will do. Avoid magic or implicit behaviors that might surprise.
 
-2. **Explicit over silent.** Empty results should be explicit, not silent. Errors should be informative, not cryptic.
-
-3. **Preserve user data.** Never discard data you don't understand. Unknown fields, custom metadata, and document bodies must survive round-trips.
+2. **Preserve user data.** Never discard data you don't understand. Unknown fields, custom metadata, and document bodies must survive round-trips.
 
 ---
 
@@ -111,11 +98,12 @@ Implementations SHOULD ignore unknown frontmatter fields during processing. This
 
 Implementations SHOULD automatically manage timestamp fields:
 
-| Event                                 | Field          | Action                  |
-| ------------------------------------- | -------------- | ----------------------- |
-| Task created                          | `created-at`   | Set to current datetime |
-| Task modified                         | `updated-at`   | Set to current datetime |
-| Status changed to `done` or `dropped` | `completed-at` | Set to current datetime |
+| Event                                   | Field          | Action                  |
+| --------------------------------------- | -------------- | ----------------------- |
+| Task created                            | `created-at`   | Set to current datetime |
+| Task modified                           | `updated-at`   | Set to current datetime |
+| Status changed to `done` or `dropped`   | `completed-at` | Set to current datetime |
+| Status changed from `done` or `dropped` | `completed-at` | Remove or unset field   |
 
 "Modified" includes any frontmatter change or body edit. Timestamps SHOULD use ISO 8601 format as specified in S1.
 
@@ -127,23 +115,17 @@ Implementations SHOULD automatically manage timestamp fields:
 
 ### 6.3 Atomic Writes
 
-To prevent file corruption from crashes or interrupts, implementations SHOULD use atomic write patterns:
-
-1. Write content to a temporary file in the same directory
-2. Sync the temporary file to disk (if available)
-3. Rename the temporary file to the target filename
-
-This pattern ensures the file is either fully written or not modified at all.
+To prevent file corruption from crashes or interrupts, implementations SHOULD use atomic write patterns.
 
 ### 6.4 Concurrent Access
 
-This specification does not define file locking, as taskdn is designed for single-user scenarios.
+This specification does not define file locking, as taskdn is designed for single-user scenarios. In general, the files on disk should be considered the source of truth.
 
 For long-running processes (TUI interfaces, desktop applications):
 
 - Implementations SHOULD watch for external file changes and reload affected data
-- Implementations MAY use file system notification APIs or polling
-- If a file is modified both externally and internally, implementations SHOULD warn the user or require intervention
+- Implementations SHOULD persist changes to disk quickly to avoid conflicts with external modifications
+- If a conflict arises, implementations SHOULD warn the user or require intervention
 
 ### 6.5 File Encoding and Formatting
 
@@ -163,7 +145,7 @@ By default, queries should return "active" items. The definition of "active" var
 
 - Status NOT IN (`done`, `dropped`, `icebox`)
 - `defer-until` is unset or <= today
-- File is not in the archive subdirectory
+- File is in the tasks directory (not a subdirectory)
 
 **Active projects:**
 
@@ -196,12 +178,6 @@ When multiple filters are applied:
 - **Contradictory filters:** Empty result (not an error)
   - Example: `due=today AND overdue=true` returns empty if logically impossible
 
-### 8.2 Sorting
-
-Common sort fields: `created`, `updated`, `due`, `title`.
-
-**Null handling:** Items without a value for the sort field SHOULD appear last, regardless of sort direction.
-
 ---
 
 ## 9. Error Handling
@@ -219,7 +195,7 @@ For programmatic interfaces (CLIs, SDKs, APIs), implementations SHOULD use consi
 
 ## 10. Agent-Friendly Output
 
-For implementations that output to AI agents or LLM-based tools: agents receive output in their context window and pay per token. Output should be token-efficient, gracefully degradable (truncated output should still be useful), and readable without parsing. Structured Markdown is often preferable to JSON for agent-facing output because truncated JSON is invalid, while Markdown degrades gracefully. Include file paths in output so agents can perform follow-up operations.
+For implementations that output to AI agents or LLM-based tools: agents receive output in their context window and pay per token. Output should be token-efficient, gracefully degradable (truncated output should still be useful), and readable without programatic parsing. Structured Markdown is often preferable to JSON for agent-facing output. Include file paths in output so agents can perform follow-up operations.
 
 The specific output format is implementation-defined.
 

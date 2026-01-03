@@ -1,4 +1,4 @@
-# Specification S1: Core (Data Store)
+# Specification S1: Core (Data Storage)
 
 **Version:** 1.0.0
 
@@ -67,6 +67,8 @@ A reference to another file, expressed as one of:
     - Unknown frontmatter fields MUST be preserved.
     - The Markdown body MUST be preserved.
     - YAML formatting (comments, field ordering) SHOULD be preserved where possible.
+11. Implementations MUST provide configuration options so users can specify paths to their `tasks_dir`, `projects_dir`, and `areas_dir` directories. Implementations MUST NOT _require_ these directories to be co-located.
+12. Implementations SHOULD NOT impose filename conventions.
 
 ---
 
@@ -78,14 +80,12 @@ A Task represents a single actionable item.
 
 - Task files MUST be stored in a designated tasks directory.
 - Task files in subdirectories SHALL NOT be read during normal operation.
-- Implementations SHOULD move completed or dropped tasks to a `tasks/archive` subdirectory.
+- Implementations MAY move completed or dropped tasks to a `tasks/archive` subdirectory.
 - Implementations MAY provide separate functionality to query archived tasks.
-
-The location of the tasks directory is implementation-defined. Implementations MUST provide configuration options for `tasks_dir`, `projects_dir`, and `areas_dir` to allow users to specify these paths.
 
 ### 3.2 Filename
 
-Any valid filename. Implementations SHOULD NOT impose filename conventions.
+Any valid filename.
 
 ### 3.3 Required Frontmatter Fields
 
@@ -148,7 +148,7 @@ Discussion with finance team on 2025-01-10...
 
 ## 4. Project Files
 
-A Project represents a collection of related tasks with a defined end goal. Projects are "finishable"—they have a clear completion state.
+A Project represents a collection of related tasks with a defined end goal.
 
 ### 4.1 File Location
 
@@ -208,7 +208,7 @@ This project covers all Q1 planning activities...
 
 ## 5. Area Files
 
-An Area represents an ongoing area of responsibility. Unlike projects, areas are never "finished"—they represent continuous commitments (e.g., "Health", "Finances", "Client: Acme Corp").
+An Area represents an ongoing area of responsibility (e.g., "Health", "Finances", "Client: Acme Corp").
 
 ### 5.1 File Location
 
@@ -234,7 +234,7 @@ Any valid filename.
 
 ### 5.5 Note on Area Status
 
-Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting them.
+Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting or moving them.
 
 When displaying areas, implementations SHOULD:
 
@@ -257,71 +257,18 @@ Key contacts, agreements, and background information...
 
 ---
 
-## 6. Implementation Requirements
+## 6. Appendix
 
-This section defines conformance requirements for software implementing this specification.
+### 6.1 JSON Schemas
 
-For guidance on reading, writing, and mutating files—including error handling, timestamp management, and file safety—see **[S2: Implementation Guidance](./S2-implementation-requirements.md)**.
-
-### 6.1 Conformance Levels
-
-Implementations MUST support:
-
-- Reading and parsing task files according to Section 3.
-- All required frontmatter fields for tasks.
-- The task status enum values defined in Section 3.5.
-
-Implementations SHOULD support:
-
-- Project and area files (Sections 4 and 5).
-- All optional frontmatter fields.
-- Moving completed tasks to an archive directory.
-
-Implementations MAY support:
-
-- Additional custom frontmatter fields.
-- Alternative file reference formats beyond WikiLinks.
-
----
-
-## 7. Appendix
-
-### 7.1 Design Rationale
-
-**Why one file per task?**
-Individual files allow tasks to be edited with any text editor, processed by command-line tools, and managed by AI coding assistants. They also enable rich note-taking within each task.
-
-**Why require a `tasks` directory?**
-A dedicated directory simplifies discovery and prevents implementations from scanning entire file systems. It also clearly separates actionable items from other content.
-
-**Why YAML frontmatter?**
-YAML frontmatter is widely supported by note-taking apps (Obsidian, Logseq), and developer tools. It balances human readability with machine parseability.
-
-**Why these specific status values?**
-The status values are designed to support common task management workflows (GTD-inspired inbox processing, blocking dependencies, intentional deferral) while remaining simple enough for quick triage.
-
-### 7.2 Compatibility Notes
-
-This specification is designed to be broadly compatible with:
-
-- [TaskNotes](https://tasknotes.dev/) for Obsidian
-- [Obsidian](https://obsidian.md/) properties and WikiLinks
-
-### 7.3 JSON Schemas
-
-Machine-readable JSON Schema files are available for validation:
+Machine-readable JSON Schema files are available to assist with validation:
 
 - [task.schema.json](./json-schemas/task.schema.json) - Task frontmatter validation
 - [project.schema.json](./json-schemas/project.schema.json) - Project frontmatter validation
 - [area.schema.json](./json-schemas/area.schema.json) - Area frontmatter validation
 
-These schemas can be used by editors (e.g., VS Code) for autocomplete and inline validation, or by implementations for programmatic validation.
+These schemas can be used by editors for autocomplete and inline validation, or by implementations for programmatic validation. **Conformance with these schemas does not guaruntee complete conformance with this specification** – some requirements cannot be encoded as JSON schemas.
 
-### 7.4 Future Considerations
+### 6.2 Guidance for Implementations
 
-The following features are intentionally omitted from v1.0 but may be considered for future versions:
-
-- Priority levels
-- Recurring tasks
-- Subtasks as separate files
-- Tags/labels
+[S2: Implementation Guidance](./S2-implementation-guidance.md) contains additional guidance for implementations.
