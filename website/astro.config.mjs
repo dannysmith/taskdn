@@ -6,7 +6,7 @@ import starlightLlmsTxt from 'starlight-llms-txt'
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://taskdn.com',
+  site: 'https://tdn.danny.is',
   integrations: [
     starlight({
       plugins: [starlightThemeFlexoki(), starlightLlmsTxt()],
@@ -28,6 +28,14 @@ export default defineConfig({
         {
           tag: 'meta',
           attrs: { name: 'twitter:card', content: 'summary_large_image' },
+        },
+        // Analytics
+        {
+          tag: 'script',
+          attrs: {
+            async: true,
+            src: 'https://scripts.simpleanalyticscdn.com/latest.js',
+          },
         },
       ],
       sidebar: [],
