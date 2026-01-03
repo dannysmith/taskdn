@@ -1,0 +1,60 @@
+---
+title: "Querying"
+description: "Find and filter tasks with list, show, and today"
+sidebar:
+  order: 2
+---
+
+{/* TODO: Write querying guide covering:
+- list command with filters
+- show command for full details
+- today command for daily view
+- Filtering by status, date, project, area
+- Sorting and limiting results
+- Examples for common workflows
+*/}
+
+## List Tasks
+
+```bash
+tdn list                           # All active tasks
+tdn list --status ready            # Ready tasks only
+tdn list --due today               # Due today
+tdn list --project "Q1 Planning"   # Tasks in a project
+```
+
+### Filtering
+
+Multiple filters combine with AND logic. Multiple values for the same filter use OR logic.
+
+```bash
+tdn list --status ready,in-progress --due this-week
+```
+
+### Sorting
+
+```bash
+tdn list --sort due              # Sort by due date
+tdn list --sort due --desc       # Newest first
+```
+
+## Show Task Details
+
+```bash
+tdn show "Fix login bug"
+```
+
+Shows full frontmatter and body content.
+
+## Today's Tasks
+
+```bash
+tdn today
+```
+
+Shows tasks that need attention today: in-progress, overdue, due today, scheduled today, and newly actionable.
+
+## Next Steps
+
+- [Context & AI Mode](/guides/cli/context-and-ai) — Hierarchical context for AI agents
+- [Commands Reference](/reference/cli/commands) — All flags and options

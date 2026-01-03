@@ -1,0 +1,61 @@
+---
+title: "Obsidian Plugin Reference"
+description: "Obsidian plugin behavior specification"
+sidebar:
+  order: 4
+---
+
+{/* TODO: Document detailed plugin behavior specification */}
+
+## Widget Rendering
+
+### When Widgets Render
+
+Widgets render for wikilinks to files in the configured tasks directory:
+
+- In bullet lists: `- [[task-name]]`
+- Inline: `See [[task-name]] for details`
+
+### Rendering Modes
+
+Works in both Live Preview and Reading Mode.
+
+## Status Toggle Behavior
+
+Clicking the checkbox toggles between:
+
+- `ready` → `done`
+- `done` → `ready`
+- Other statuses → `done`
+
+## Metadata Display
+
+Widgets show (when present):
+
+1. Title
+2. Status indicator (colored border)
+3. Project
+4. Area
+5. Due date
+6. Defer date
+
+## Checklist Conversion
+
+Right-click context menu on checklist items (`- [ ] Item`) offers "Convert to Taskdn task":
+
+1. Creates new file in tasks directory
+2. Uses item text as title
+3. Sets status to configured default
+4. Replaces checklist with wikilink
+
+## File Watching
+
+Plugin watches the tasks directory for changes and updates widgets when files change externally.
+
+## Error States
+
+| Condition | Behavior |
+|-----------|----------|
+| File not found | Shows broken link indicator |
+| Invalid frontmatter | Shows title only, no metadata |
+| Missing title | Uses filename |

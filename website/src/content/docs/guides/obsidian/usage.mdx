@@ -1,0 +1,58 @@
+---
+title: "Basic Usage"
+description: "Using task widgets and checklists in Obsidian"
+sidebar:
+  order: 2
+---
+
+{/* TODO: Write usage guide covering:
+- Widget rendering
+- Status indicators (colored borders)
+- Clicking to toggle status
+- Checklist integration
+- Converting checklist items to tasks
+- Live Preview vs Reading mode
+*/}
+
+## Task Widgets
+
+Link to a task file to create a widget:
+
+```markdown
+- [[fix-login-bug]]
+- [[review-quarterly-report]]
+```
+
+The widget displays:
+- Task title
+- Status (with colored indicator)
+- Project and area
+- Due date
+- Defer date (if set)
+
+## Status Indicators
+
+Colored left borders indicate status:
+
+| Color | Status |
+|-------|--------|
+| Blue | `inbox` |
+| Yellow | `in-progress` |
+| Red | `blocked` |
+| Green | `ready` |
+
+## Toggle Completion
+
+Click the checkbox to toggle between `ready` and `done`.
+
+## Checklist Integration
+
+Tasks in bullet lists behave like native Obsidian checklists — completed tasks show with strikethrough.
+
+## Convert to Task
+
+Right-click any checklist item to convert it into a Taskdn task file. The item text becomes the task title.
+
+## Next Steps
+
+- [Extras](/guides/obsidian/extras) — Templates, Bases, and WebClipper

@@ -1,0 +1,155 @@
+---
+title: "Commands Reference"
+description: "Complete reference for all tdn commands"
+sidebar:
+  order: 1
+---
+
+{/* TODO: Generate comprehensive command reference from CLI docs
+Include: syntax, all flags, examples for each command
+*/}
+
+## Global Flags
+
+All commands support:
+
+| Flag | Description |
+|------|-------------|
+| `--ai` | AI mode: structured Markdown, no prompts |
+| `--json` | JSON output |
+| `--ai --json` | AI Markdown in JSON envelope |
+
+## Query Commands
+
+### list
+
+Query and filter entities.
+
+```bash frame="none"
+tdn list [entity-type] [options]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--status <status>` | Filter by status (comma-separated for OR) |
+| `--due <when>` | Filter by due date |
+| `--scheduled <when>` | Filter by scheduled date |
+| `--overdue` | Due date in the past |
+| `--project <name>` | Filter by project |
+| `--area <name>` | Filter by area |
+| `--query <text>` | Full-text search |
+| `--sort <field>` | Sort by field |
+| `--desc` | Descending order |
+| `--limit <n>` | Limit results |
+| `--include-done` | Include done items |
+| `--include-dropped` | Include dropped items |
+| `--include-archived` | Include archived items |
+
+### show
+
+Display full entity details.
+
+```bash frame="none"
+tdn show <query>
+```
+
+### today
+
+Show today's actionable tasks.
+
+```bash frame="none"
+tdn today
+```
+
+### context
+
+Show entity with relationships.
+
+```bash frame="none"
+tdn context [entity-type] [query]
+```
+
+## Mutation Commands
+
+### new
+
+Create a new entity.
+
+```bash frame="none"
+tdn new <title> [options]
+```
+
+| Flag | Description |
+|------|-------------|
+| `--status <status>` | Initial status |
+| `--due <date>` | Due date |
+| `--scheduled <date>` | Scheduled date |
+| `--project <name>` | Assign to project |
+| `--area <name>` | Assign to area |
+| `--dry-run` | Preview without creating |
+
+### set status
+
+Change entity status.
+
+```bash frame="none"
+tdn set status <query...> <status>
+```
+
+### update
+
+Modify entity fields.
+
+```bash frame="none"
+tdn update <query> --set <field>=<value>
+```
+
+### archive
+
+Move to archive subdirectory.
+
+```bash frame="none"
+tdn archive <query>
+```
+
+### append-body
+
+Add content to body.
+
+```bash frame="none"
+tdn append-body <query> <text>
+```
+
+### open
+
+Open in $EDITOR.
+
+```bash frame="none"
+tdn open <query>
+```
+
+## Utility Commands
+
+### doctor
+
+Health check the vault.
+
+```bash frame="none"
+tdn doctor
+```
+
+### config
+
+Show current configuration.
+
+```bash frame="none"
+tdn config
+```
+
+### init
+
+Interactive setup.
+
+```bash frame="none"
+tdn init
+```

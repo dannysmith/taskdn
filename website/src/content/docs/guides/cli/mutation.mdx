@@ -1,0 +1,80 @@
+---
+title: "Mutation"
+description: "Create and modify tasks, projects, and areas"
+sidebar:
+  order: 4
+---
+
+{/* TODO: Write mutation guide covering:
+- new command
+- set status command
+- update command
+- archive command
+- append-body command
+- open command
+- Batch operations
+- Dry run mode
+*/}
+
+## Create Tasks
+
+```bash
+tdn new "Write documentation"
+tdn new "Fix bug" --status ready --due tomorrow --project "Q1 Planning"
+```
+
+## Change Status
+
+```bash
+tdn set status "Fix bug" done
+tdn set status "Old task" dropped
+```
+
+Batch operations work too:
+
+```bash
+tdn set status task1.md task2.md task3.md done
+```
+
+## Update Fields
+
+```bash
+tdn update "Fix bug" --set due=2025-01-10
+tdn update "Fix bug" --set project="Q2 Planning"
+```
+
+## Archive
+
+Move completed tasks to the archive subdirectory:
+
+```bash
+tdn archive "Old task"
+```
+
+## Append to Body
+
+Add notes to a task's body:
+
+```bash
+tdn append-body "Fix bug" "Discussed with Sarah - try the OAuth refresh approach"
+```
+
+## Open in Editor
+
+```bash
+tdn open "Fix bug"    # Opens in $EDITOR
+```
+
+## Dry Run
+
+Preview changes without executing:
+
+```bash
+tdn new "Test task" --dry-run
+tdn set status "Task" done --dry-run
+```
+
+## Next Steps
+
+- [Commands Reference](/reference/cli/commands) — Complete command documentation
+- [Error Codes](/reference/cli/error-codes) — Understanding errors

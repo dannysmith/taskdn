@@ -1,0 +1,99 @@
+---
+title: "S1: Core (Data Format)"
+description: "File format specification for tasks, projects, and areas"
+sidebar:
+  order: 1
+---
+
+{/* TODO: Migrate content from tdn-specs/S1-core.md
+This should be the canonical public version of the specification.
+*/}
+
+**Version:** 1.0.0
+
+This specification defines a file format for storing tasks, projects, and areas as Markdown files with YAML frontmatter.
+
+## 1. General Rules
+
+1. All files MUST contain valid UTF-8 encoded Markdown with YAML frontmatter
+2. Frontmatter MUST be valid YAML 1.2, delimited by `---` lines
+3. All date values MUST use ISO 8601 format
+4. All enum values are case-sensitive and lowercase
+5. Implementations MUST preserve unknown frontmatter fields
+
+## 2. Tasks
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Task title |
+| `status` | enum | One of: `inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done` |
+| `created-at` | date/datetime | When created |
+| `updated-at` | date/datetime | When last modified |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `completed-at` | date/datetime | When completed or dropped |
+| `area` | file reference | Reference to area file |
+| `projects` | array | Single-element array of project reference |
+| `due` | date/datetime | Hard deadline |
+| `scheduled` | date | Planned work date |
+| `defer-until` | date | Hide until this date |
+
+### Status Values
+
+| Status | Description |
+|--------|-------------|
+| `inbox` | Newly captured, not yet processed |
+| `icebox` | Intentionally deferred indefinitely |
+| `ready` | Processed and ready to work on |
+| `in-progress` | Currently being worked on |
+| `blocked` | Cannot proceed due to external dependency |
+| `dropped` | Abandoned |
+| `done` | Completed |
+
+## 3. Projects
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Project title |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | enum | One of: `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done` |
+| `area` | file reference | Reference to area file |
+| `description` | string | Short description |
+| `start-date` | date | When work began/begins |
+| `end-date` | date | When completed/expected |
+| `blocked-by` | array | Project references that block this |
+
+## 4. Areas
+
+### Required Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Area title |
+
+### Optional Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | string | Typically `active` or `archived` |
+| `type` | string | Area type (e.g., "client", "life-area") |
+| `description` | string | Short description |
+
+## 5. File References
+
+References to other files can be expressed as:
+
+- WikiLink: `[[Project Name]]`
+- Relative path: `./projects/my-project.md`
+- Filename: `my-project.md`

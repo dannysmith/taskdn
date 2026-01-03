@@ -1,0 +1,41 @@
+---
+title: "The Skill"
+description: "What Claude learns from the Taskdn skill"
+sidebar:
+  order: 2
+---
+
+{/* TODO: Write skill guide covering:
+- What the skill teaches Claude
+- The productivity assistant mindset
+- When Claude uses CLI vs direct file access
+- The decision tree for different operations
+*/}
+
+## What Claude Learns
+
+The Taskdn skill teaches Claude:
+
+1. **The tdn system** — Tasks, projects, and areas hierarchy
+2. **CLI commands** — How to use `tdn` with the `--ai` flag
+3. **When to use what** — CLI for queries, direct file access for complex edits
+4. **File format** — YAML frontmatter specifications
+
+## Productivity Assistant Mindset
+
+With the skill loaded, Claude thinks like a GTD coach rather than a programmer — focusing on what you need to accomplish rather than technical implementation.
+
+## Decision Guide
+
+Claude follows these patterns:
+
+| Intent | Action |
+|--------|--------|
+| Query tasks | `tdn list --ai` or `tdn context --ai` |
+| Create task | `tdn new "title" --ai` |
+| Complete task | `tdn set status "task" done` |
+| Complex edits | Direct file modification |
+
+## Next Steps
+
+- [Commands](/guides/claude-code/commands) — Available slash commands
