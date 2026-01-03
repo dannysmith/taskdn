@@ -16,8 +16,8 @@ Working dir: `website/`
 - [x] https://delucis.github.io/starlight-llms-txt/
 - [ ] Set up splash page and hero
 - [ ] Set up Simple Analytics
-- [ ] Set up custom domain: tdn.danny.is
-- [ ] Set up build on GH Pages https://melikyan.dev/blog/how-to-quickly-setup-a-blog/
+- [x] Set up custom domain: tdn.danny.is
+- [x] Set up build on GH Pages https://melikyan.dev/blog/how-to-quickly-setup-a-blog/
 
 ## Phase 2 - Documentation Content
 
