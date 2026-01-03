@@ -9,8 +9,8 @@ Working dir: `website/`
 - [x] Remove cruft, update readme, set up basic structure & AGENTS.md etc
 - [x] Add tsc, eslint, prettier etc with appropriate plugins
 - [x] Update top-level docs & pages
-- [ ] Generate and add logo
-- [ ] Generate favicon (multiple sizes/formats)
+- [x] Generate and add logo
+- [x] Generate favicon (multiple sizes/formats)
 - [x] Configure Open Graph / social meta tags (check what Starlight provides by default)
 - [x] Enable sitemap & add to robots.txt
 - [x] https://delucis.github.io/starlight-llms-txt/
