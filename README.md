@@ -3,39 +3,23 @@
 > [!WARNING]
 > This project is new and very much under development.
 
-## Status
-
-| Component           | Status         |
-| ------------------- | -------------- |
-| **Spec**            | ✅ Stable      |
-| **CLI**             | ✅ Stable      |
-| **Claude Plugin**   | ✅ Stable      |
-| **Desktop App**     | ⌛ In Progress |
-| **Obsidian Plugin** | ✅ Stable      |
-| **Website**         | ⌛ In Progress |
-| **Extras**          | ❌ Not Started |
-
----
-
 A task-management system for **individuals** that feels as slick as [Things](https://culturedcode.com/things/) while storing data as markdown files (with YAML frontmatter) on disk. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
 
 **The core idea:** provide the right user interface in the right context.
+
+| Tool                | Description                                        | Directory                                                        | Status         |
+| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------- | -------------- |
+| **Specs**           | Formal specifications for the protocol             | `tdn-specs/`                                                     | ✅ Stable      |
+| **CLI**             | Command-line interface for humans and AI agents    | `tdn-cli/`                                                       | ✅ Stable      |
+| **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                             | ✅ Stable      |
+| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                   | ⌛ In Progress |
+| **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn) | ✅ Stable      |
+| **Website**         | Documentation and marketing site                   | `website/`                                                       | ⌛ In Progress |
 
 ## Documentation
 
 - [Project Overview & Philosophy](docs/overview.md) – Why this project exists, design decisions. Read first.
 - [The Core Specification](tdn-specs/S1-core.md) – Formal spec for task/project/area file formats.
-
-## The Suite of Tools
-
-| Tool                | Description                                        | Directory                                                        |
-| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------- |
-| **Specs**           | Formal specifications for the protocol             | `tdn-specs/`                                                     |
-| **CLI**             | Command-line interface for humans and AI agents    | `tdn-cli/`                                                       |
-| **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                             |
-| **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn) |
-| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                   |
-| **Website**         | Documentation and marketing site                   | `website/`                                                       |
 
 ## Installation
 
