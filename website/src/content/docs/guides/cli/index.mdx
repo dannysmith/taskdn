@@ -1,0 +1,25 @@
+---
+title: "CLI"
+description: "Command-line interface for humans and AI agents"
+sidebar:
+  order: 3
+---
+
+import { CardGrid, LinkCard } from '@astrojs/starlight/components'
+
+The Taskdn CLI serves two audiences: humans working in the terminal and AI coding assistants like Claude Code and Cursor.
+
+<CardGrid>
+  <LinkCard title="Installation" href="/guides/cli/installation" description="Install and configure" />
+  <LinkCard title="Querying" href="/guides/cli/querying" description="Find and filter tasks" />
+  <LinkCard title="Context & AI Mode" href="/guides/cli/context-and-ai" description="AI-optimised output" />
+  <LinkCard title="Mutation" href="/guides/cli/mutation" description="Create and modify tasks" />
+</CardGrid>
+
+## Overview
+
+The CLI provides different output modes for different users:
+
+- **Human mode** (default) — Pretty terminal output with colors and interactive prompts
+- **AI mode** (`--ai`) — Structured markdown optimised for LLM consumption
+- **JSON mode** (`--json`) — Machine-readable structured data

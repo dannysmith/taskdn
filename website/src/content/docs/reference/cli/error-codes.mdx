@@ -1,0 +1,53 @@
+---
+title: "Error Codes"
+description: "CLI error types and handling"
+sidebar:
+  order: 5
+---
+
+{/* TODO: Expand from S2 error codes */}
+
+## Error Types
+
+| Code | When | Contextual Info |
+|------|------|-----------------|
+| `NOT_FOUND` | Entity doesn't exist | Similar items |
+| `AMBIGUOUS` | Multiple fuzzy matches | List of matches |
+| `INVALID_STATUS` | Bad status value | Valid statuses |
+| `INVALID_DATE` | Unparseable date | Expected formats |
+| `INVALID_PATH` | Path outside configured dirs | Configured paths |
+| `PARSE_ERROR` | YAML malformed | Line number, issue |
+| `MISSING_FIELD` | Required field absent | Which field |
+| `REFERENCE_ERROR` | Broken project/area ref | The broken reference |
+| `PERMISSION_ERROR` | Can't read/write file | File path |
+| `CONFIG_ERROR` | Config missing/invalid | How to fix |
+
+## Error Output
+
+### Human Mode
+
+Formatted with context and suggestions on stderr.
+
+### AI/JSON Modes
+
+Structured error object on stdout:
+
+```json
+{
+  "error": {
+    "code": "NOT_FOUND",
+    "message": "Task not found: 'login bug'",
+    "suggestions": ["Fix login bug", "Login page update"]
+  }
+}
+```
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success |
+| `1` | Runtime error |
+| `2` | Usage error |
+
+**Distinction:** Exit 2 = command syntax wrong. Exit 1 = command valid but operation failed.

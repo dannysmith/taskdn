@@ -1,0 +1,46 @@
+---
+title: "Installation & Configuration"
+description: "Install and configure the Taskdn Obsidian plugin"
+sidebar:
+  order: 1
+---
+
+import { Steps, Aside } from '@astrojs/starlight/components'
+
+<Aside type="note">
+Ensure WikiLinks are enabled: Settings → Files & Links → "Use [[Wikilinks]]"
+</Aside>
+
+## Install
+
+<Steps>
+1. Open Settings → Community Plugins
+
+2. Search for "Taskdn"
+
+3. Install and enable the plugin
+</Steps>
+
+## Configuration
+
+Open Settings → Taskdn to configure:
+
+| Setting | Description | Default |
+|---------|-------------|---------|
+| Tasks directory | Location of task files | `tasks` |
+| Default status | Status for new tasks | `inbox` |
+| Desktop app button | Show button to open in desktop app | Off |
+| Ignored files | Patterns to exclude | — |
+
+### Ignored Files
+
+Use glob patterns to exclude files:
+
+```
+archive/*
+*.template.md
+```
+
+## Next Steps
+
+- [Usage](/guides/obsidian/usage) — Using widgets and checklists
