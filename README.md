@@ -1,7 +1,6 @@
 # Taskdn
 
-> [!WARNING]
-> This project is new and very much under development.
+**[Documentation & Getting Started](https://tdn.danny.is)**
 
 A task-management system for **individuals** that feels as slick as [Things](https://culturedcode.com/things/) while storing data as markdown files (with YAML frontmatter) on disk. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
 
