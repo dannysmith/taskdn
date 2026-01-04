@@ -273,16 +273,7 @@ The `context` command is especially valuable for AI agents. With a single call, 
 
 ## Date Formats
 
-All date filters accept multiple formats:
-
-| Format | Example | Meaning |
-|--------|---------|---------|
-| Keywords | `today`, `tomorrow` | Exact date |
-| Weekdays | `monday`, `friday`, `wed` | Next occurrence |
-| Relative | `this-week` | Within 7 days |
-| ISO 8601 | `2025-01-15` | Exact date |
-
-In output, dates are always shown in ISO 8601 format (`YYYY-MM-DD`).
+Date filters accept natural language (`today`, `tomorrow`, `friday`, `next week`), relative formats (`+3d`, `+1w`), and ISO 8601 (`2025-01-15`). See the [CLI Reference](/reference/cli/cli-reference#date-input) for the full list.
 
 <CardGrid>
   <LinkCard
