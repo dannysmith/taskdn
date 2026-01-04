@@ -7,55 +7,55 @@ Most of us who care about productivity have been through the cycle. You find a t
 
 So you try plain text. Markdown files in a folder, maybe managed with [Obsidian](https://obsidian.md). Now you own your data—it's just files on your computer. You can edit them in any text editor, version them with git, back them up however you want. But the actual experience of *doing* task management gets worse. Obsidian is great for writing and thinking, but it's not designed for quickly triaging your inbox or seeing what's due today. You end up with Dataview queries that sort of work, or you just accept that your task list will never feel as good as Things.
 
-Taskdn exists because I wanted both: tasks as plain files that I actually own, and interfaces that are genuinely good for task management. Not a compromise where you get mediocre versions of each, but the real thing on both sides.
+Taskdn exists because I wanted both: tasks as plain files that I actually own, and interfaces that are actually good for task management. Not a compromise where you get mediocre versions of each, but the real thing.
 
 ## The Core Idea
 
-The insight behind Taskdn is simple: separate your data from your interfaces.
+The idea behind Taskdn is simple: separate your data from your interfaces.
 
-Your tasks, projects, and areas are stored as markdown files with YAML frontmatter. Three directories, one file per entity. That's the data layer—it never changes regardless of how you interact with it.
+Your tasks, projects, and areas are stored as markdown files with YAML frontmatter. Three directories, one file per entity. That's the data layer. It stays the same regardless of how you interact with it.
 
 The products (desktop app, CLI, Obsidian plugin, Claude Code skill) are interfaces to those files. They read and write the same format, so you can switch between them freely. Use the desktop app when you're focused on getting things done. Switch to the CLI when you want an AI to help with a weekly review. Check off a task from the Obsidian plugin while you're working on project notes. All of these are just different windows into the same underlying files.
 
-This means your data is never trapped. If you decide Taskdn isn't for you, your tasks are still just markdown files—take them wherever you want. If someone builds a better interface, it can read your existing files. If you want to write a script that does something we haven't thought of, you can.
+This means your data isn't trapped. If you decide Taskdn isn't for you, your tasks are still just markdown files. Take them wherever you want. If someone builds a better interface, it can read your existing files. If you want to write a script that does something we haven't thought of, you can.
 
 ## Principles
 
-Three principles guide how Taskdn works. They're the criteria we use when making design decisions, and they explain some choices that might otherwise seem arbitrary.
+Three principles guide how Taskdn works, and explain some choices that might otherwise seem arbitrary.
 
 ### 1. Opinionated about tasks, agnostic about everything else
 
-Taskdn has strong opinions about how tasks should work. There's a defined set of statuses, required fields for dates, specific semantics for things like `defer-until` and `scheduled`. This rigidity is intentional—it's what lets the interfaces be good. When the desktop app knows exactly what statuses exist and what they mean, it can show you smart views like "everything that's actionable today" without you configuring anything.
+Taskdn has strong opinions about how tasks should work. There's a defined set of statuses, required fields for dates, specific semantics for things like `defer-until` and `scheduled`. This rigidity is intentional. It's what lets the interfaces be good. When the desktop app knows exactly what statuses exist and what they mean, it can show you smart views like "everything that's actionable today" without you configuring anything.
 
-But outside of task structure, Taskdn has almost no opinions. Your project files can contain whatever you want—meeting notes, links, planning documents, embedded images. Add any frontmatter fields you like to your tasks; Taskdn will preserve them even if it doesn't understand them. Name your files however makes sense to you. Put your directories wherever you want on disk. Use wikilinks or don't. The system adapts to your existing workflow rather than demanding you adapt to it.
+But outside of task structure, Taskdn has almost no opinions. Your project files can contain whatever you want—meeting notes, links, planning documents, embedded images. Add any frontmatter fields you like to your tasks; Taskdn will preserve them even if it doesn't understand them. Name your files however makes sense to you. Put your directories wherever you want on disk. Use wikilinks or don't.
 
 This split is deliberate. Tasks benefit from consistency (you want "done" to mean the same thing everywhere), but everything else benefits from flexibility (your project notes are yours to structure however you think).
 
 ### 2. Context-appropriate interfaces
 
-Different situations call for different tools. When you're capturing a quick thought while working on something else, you need speed—every click or keystroke is friction. When you're in "doing mode," working through your list, you want focus—show me the next thing, hide everything else. When you're planning your week, you need the big picture—what's due, what's blocked, how do projects relate to each other.
+Different situations call for different tools. When you're capturing a quick thought while working on something else, you need speed, since every click is friction. When you're in "doing mode," working through your list, you want focus. Show me what's next, hide everything else. When you're planning your week, you need the big picture: what's due, what's blocked, how projects relate to each other.
 
 No single interface serves all these contexts well. A UI optimized for quick capture will feel cluttered when you're trying to focus. A minimal "what's next" view won't help when you're planning.
 
-This is why Taskdn has multiple products instead of one app that tries to do everything. The desktop app is optimized for humans doing task management—it should feel as good as [Things](https://culturedcode.com/things/). The CLI has completely separate modes for humans at a terminal versus AI agents, because they have fundamentally different needs (pretty output vs structured data, fuzzy search vs exact paths, interactive prompts vs single-call operations). The Obsidian plugin is lightweight precisely because you're not there to do task management—you're there to write, and you just want to check something off without context-switching.
+This is why Taskdn has multiple products instead of one app that tries to do everything. The desktop app is optimized for humans doing task management—it should feel as good as [Things](https://culturedcode.com/things/). The CLI has completely separate modes for humans at a terminal versus AI agents, because their needs are different (pretty output vs structured data, fuzzy search vs exact paths, interactive prompts vs single-call operations). The Obsidian plugin is lightweight precisely because you're not there to do task management—you're there to write, and you just want to check something off without context-switching.
 
 ### 3. AI as a first-class citizen
 
-Files on disk have a massive advantage that wasn't obvious when most task apps were designed: AI tools can work with them directly.
+Files on disk have a big advantage that wasn't obvious when most task apps were designed: AI tools can work with them directly.
 
-An AI agent that can read and write files can query your tasks, create new ones, mark things complete, or help you plan—without any API keys, integrations, or special permissions. The files are right there. This is a fundamentally different model from "AI features" bolted onto a proprietary app, where you're dependent on whether the vendor decides to build what you need.
+An AI agent that can read and write files can query your tasks, create new ones, mark things complete, or help you plan—without any API keys, integrations, or special permissions. The files are right there. This is different from "AI features" bolted onto a proprietary app, where you're dependent on whether the vendor decides to build what you need.
 
 The CLI takes this further with an `--ai` mode specifically designed for LLM consumption. Instead of pretty terminal output, it returns structured markdown that's token-efficient and degrades gracefully if truncated. The `context` command returns an entity plus all its relationships in one call, so an agent can understand a project's full picture without multiple round trips.
 
-This isn't about replacing human judgment—it's about making AI assistance actually useful for productivity. You can ask Claude to help with a weekly review, create tasks as you work through a problem together, or surface things you might have forgotten. The files-on-disk architecture makes this natural rather than requiring special integrations.
+The point isn't to replace human judgment. It's to make AI assistance actually useful for productivity. You can ask Claude to help with a weekly review, create tasks as you work through a problem together, or surface things you might have forgotten. The files-on-disk architecture makes this natural rather than requiring special integrations.
 
 ## Interoperability
 
 Taskdn is designed to play well with other tools, not to lock you in.
 
-When reading files, Taskdn ignores frontmatter fields it doesn't recognize. When writing, it preserves them—along with your markdown body, your formatting, even YAML comments if possible. You can add custom fields for your own scripts or other tools, and Taskdn won't touch them.
+When reading files, Taskdn ignores frontmatter fields it doesn't recognize. When writing, it preserves them, along with your markdown body, your formatting, even YAML comments where possible. You can add custom fields for your own scripts or other tools, and Taskdn won't touch them.
 
-This matters because your task files might also be used by Obsidian, by custom scripts, by other plugins. We try to maintain compatibility with other file-based task systems like [TaskNotes](https://tasknotes.dev/). And if you're using wikilinks to connect tasks to other notes in your vault, those links just work—they're standard Obsidian syntax.
+Your task files might also be used by Obsidian, by custom scripts, by other plugins. We try to maintain compatibility with other file-based task systems like [TaskNotes](https://tasknotes.dev/). And if you're using wikilinks to connect tasks to other notes in your vault, those links just work—they're standard Obsidian syntax.
 
 The goal is that Taskdn should fit into your existing setup, not demand that you reorganize everything around it.
 
@@ -67,7 +67,7 @@ A few specific choices come up often enough that they're worth explaining direct
 
 **Why YAML frontmatter?** It's widely supported by note-taking apps (Obsidian, Logseq), static site generators, and developer tools. The format balances human readability with machine parseability—you can edit it by hand, but tools can also manipulate it reliably. JSON would be harder to read; plain markdown without structure would be harder to parse.
 
-**Why these specific statuses?** The task statuses (`inbox`, `ready`, `in-progress`, `blocked`, `icebox`, `done`, `dropped`) are designed to support common workflows—GTD-style inbox processing, tracking blocked work, intentionally deferring things—while remaining simple enough for quick triage. You shouldn't need to think hard about which status applies. Project statuses are similar but reflect that projects have different states than tasks (you can "pause" a project but not really a task).
+**Why these specific statuses?** The task statuses (`inbox`, `ready`, `in-progress`, `blocked`, `icebox`, `done`, `dropped`) support common workflows: GTD-style inbox processing, tracking blocked work, intentionally deferring things. But they're simple enough for quick triage. You shouldn't need to think hard about which status applies. Project statuses are similar but reflect that projects have different states than tasks (you can "pause" a project but not really a task).
 
 **Why separate directories?** A dedicated `tasks/` directory simplifies discovery. Without it, Taskdn would need to scan your entire vault or filesystem looking for task files, which is slow and error-prone. It also creates a clear boundary: things in `tasks/` are actionable items, everything else is reference material or notes.
 

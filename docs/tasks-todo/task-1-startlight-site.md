@@ -67,6 +67,17 @@ Working dir: `website/`
 
 - [ ] `desktop/overview.mdx`
 
+### Final Touches
+
+- [ ] Add a setup.md to the end of the start here section. This should start with a paragraph explaining that this assumes you have obsidian and Claude code installed. And then it should contain a steps component that walks through the ideal order of getting everything installed Starting with a new empty obsidian vault to store all this. Each steps component should just have uh like the minimum required to get things working. So that probably looks like:
+  1. Clone the starter vault and open in Obsidian and turn on bases and wikilinks. Should end with a details section to cover optionally installing the folder notes plugin and configuring that. Check outthe bases.
+  2. Install & configure the Obsidian Plugin. Check out the "overview" pages and the example showing the widgets.
+  3. install and configure the CLI to point at your folder and try running a context command
+  4. globally install and configure the Claude Code plugin and try askingit a question.
+  5. Install and configure the desktop app and look at your tasks
+- [ ] Add images and videos
+- [ ] Review entire set of documentation together for inconsistencies, needless repetition, AI-isms and the like.
+
 ## Phase 3 - Changelog (Manual for now)
 
 ## Phase 4 - Proper Splash/Homepage
