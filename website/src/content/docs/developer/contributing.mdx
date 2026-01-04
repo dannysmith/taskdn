@@ -5,6 +5,28 @@ sidebar:
   order: 1
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { LinkCard } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+Taskdn is developed in a [monorepo on GitHub](https://github.com/dannysmith/taskdn). The CLI, desktop app, specifications, and this website all live there. The [Obsidian plugin](https://github.com/dannysmith/obsidian-taskdn) has its own repository.
+
+## Current Status
+
+I'm not actively looking for contributors right now. The desktop app needs to be finished first, and the codebase is still settling. Once that's done, I'll expand these guidelines with setup instructions, coding standards, and areas where help would be useful.
+
+That said, constructive feedback is welcome. If you've got thoughts on the specs, the CLI interface, or how things work, open an issue.
+
+## Issues and Pull Requests
+
+Raise issues on the main [taskdn repository](https://github.com/dannysmith/taskdn), including issues about the Obsidian plugin. Pull requests for the Obsidian plugin go to [its own repository](https://github.com/dannysmith/obsidian-taskdn).
+
+## Building Your Own Implementation
+
+If you want to build your own tool that works with Taskdn files, implement the [S1 specification](/specification/s1-core). That's the file format: field names, valid values, directory structure. Meet that spec and your tool will read and write files that work with everything else.
+
+If you're building something, let me know. I'm keen to see other implementations and will link to them from the docs.
+
+<LinkCard
+  title="S1: Core Specification"
+  href="/specification/s1-core"
+  description="The file format specification for tasks, projects, and areas"
+/>

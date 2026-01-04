@@ -59,6 +59,9 @@ export default defineConfig({
             {
               slug: 'philosophy',
             },
+            {
+              slug: 'setup',
+            },
           ],
         },
         {
