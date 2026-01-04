@@ -1,20 +1,203 @@
 ---
-title: 'Overview'
-description: 'Command-line interface for humans and AI agents'
+title: 'CLI Overview'
+description: 'Terminal interface for managing tasks, projects, and areas'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Tabs, TabItem, Steps, Aside, Badge, LinkCard } from '@astrojs/starlight/components'
 
-<UnderConstruction />
-
-## Overview
-
-The CLI is the core interface for Taskdn. It's a command-line tool that allows you to manage your tasks, projects, and areas.
+The CLI gives you full access to your tasks from the terminal. List what's due today, create tasks while you're working, mark things done—all without leaving your command line. It's designed for both humans (pretty output, fuzzy search, interactive prompts) and AI agents (structured data, exact paths, no prompts).
 
 ## Installation
 
-## Basic Usage
+<Tabs syncKey="pkg">
+  <TabItem label="Homebrew" icon="apple">
+    ```bash
+    brew tap dannysmith/taproom
+    brew install tdn
+    ```
+  </TabItem>
+  <TabItem label="npm" icon="seti:npm">
+    ```bash
+    npm install -g @taskdn/cli
+    ```
+  </TabItem>
+</Tabs>
+
+Verify the installation:
+
+```bash
+tdn --version
+```
+
+## Quick Start
+
+Once installed, point `tdn` at your task directories. If you're using the [starter vault](/obsidian/starter-vault), create a config file:
+
+```bash
+tdn init
+```
+
+This walks you through setting up your `tasks/`, `projects/`, and `areas/` directories.
+
+### Basic Usage
+
+See what needs attention today:
+
+```bash
+tdn today
+```
+
+List all your active tasks:
+
+```bash
+tdn list
+```
+
+Create a new task:
+
+```bash
+tdn new "Review quarterly report" --due friday --project "Q1 Planning"
+```
+
+Mark something done:
+
+```bash
+tdn set status "Review quarterly report" done
+```
+
+Get the full picture of a project:
+
+```bash
+tdn context project "Q1 Planning"
+```
 
 ## Output Modes
 
+The CLI has three output modes, selected with flags:
+
+| Flags         | Output              | Use Case                      |
+| ------------- | ------------------- | ----------------------------- |
+| (none)        | Formatted for terminal | Humans at a terminal         |
+| `--ai`        | Structured Markdown | AI agents (Claude Code, etc.) |
+| `--json`      | JSON                | Scripts and automation        |
+
+### Human Mode (Default)
+
+Colored, formatted output designed for terminal display. Interactive prompts appear when needed—for example, if your search matches multiple tasks, you'll be asked to pick one.
+
+```bash
+tdn list --status ready
+```
+
+### AI Mode
+
+Add `--ai` to get structured Markdown that LLMs can parse easily. No prompts, no colors—just clean data with file paths included so agents can make follow-up calls.
+
+```bash
+tdn list --status ready --ai
+```
+
+AI mode is covered in detail in [Working with AI](/cli/working-with-ai).
+
+### JSON Mode
+
+Add `--json` for machine-readable output. Useful for scripting or piping to other tools.
+
+```bash
+tdn list --status ready --json
+```
+
+You can combine `--ai --json` to get AI-optimized Markdown wrapped in a JSON envelope—useful when an agent needs both structured data and the full context output.
+
 ## Configuration
+
+Taskdn CLI looks for configuration in this order:
+
+1. **Environment variables** — `TASKDN_TASKS_DIR`, `TASKDN_PROJECTS_DIR`, `TASKDN_AREAS_DIR`
+2. **Local config** — `.taskdn.json` in the current directory
+3. **User config** — `~/.taskdn.json`
+4. **Defaults** — `./tasks`, `./projects`, `./areas` relative to current directory
+
+### Config File
+
+Create a `.taskdn.json` to set your directory paths:
+
+```json title=".taskdn.json"
+{
+  "tasksDir": "~/notes/tasks",
+  "projectsDir": "~/notes/projects",
+  "areasDir": "~/notes/areas"
+}
+```
+
+Paths can be absolute or relative, and `~` expands to your home directory.
+
+Run `tdn config` to see your current effective configuration:
+
+```bash
+tdn config
+```
+
+### Ignoring Files
+
+If you have files in your task directories that aren't tasks (like `README.md` or `Overview.md`), exclude them with ignore patterns:
+
+```json title=".taskdn.json"
+{
+  "tasksDir": "~/notes/tasks",
+  "projectsDir": "~/notes/projects",
+  "areasDir": "~/notes/areas",
+  "ignore": [
+    "README.md",
+    "Overview.md",
+    "*.bak",
+    "*.tmp"
+  ]
+}
+```
+
+Patterns use `.gitignore`-style glob syntax and match filenames only (not paths).
+
+## Health Check
+
+The `doctor` command checks your vault for issues:
+
+```bash
+tdn doctor
+```
+
+It validates:
+
+- Configuration (are your directories accessible?)
+- File structure (can files be parsed?)
+- Field values (are statuses valid? are dates well-formed?)
+- References (do project/area links point to real files?)
+
+Any problems are reported with suggestions for fixing them. Run `doctor` periodically, especially after editing files manually.
+
+<Aside type="tip">
+If you're having issues with the CLI, `tdn doctor` is the first thing to try. It catches most common problems like malformed frontmatter or broken references.
+</Aside>
+
+## Shell Completions
+
+Tab completions are available for commands, options, and values.
+
+```bash
+tdn completion install
+```
+
+This adds completions to your shell configuration. After installation:
+
+```bash
+tdn <TAB>                      # Commands: list, show, new, set, etc.
+tdn list <TAB>                 # Arguments: tasks, projects, areas
+tdn set status <TAB>           # Status values: inbox, ready, in-progress, etc.
+tdn list --status=<TAB>        # Option values
+```
+
+<LinkCard
+  title="Read Commands"
+  href="/cli/read-commands"
+  description="Learn how to query tasks, projects, and areas"
+/>

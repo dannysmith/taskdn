@@ -3,6 +3,296 @@ title: 'Read Commands'
 description: 'Find and filter tasks with list, show, and today'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Aside, Badge, LinkCard, CardGrid, Card } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+Read commands query your tasks, projects, and areas without changing anything. Use them to find what needs attention, review project status, or explore your data.
+
+## list
+
+The `list` command shows multiple entities matching your filters. By default it lists active tasks.
+
+```bash
+tdn list
+```
+
+### Entity Types
+
+List different entity types by specifying them:
+
+```bash
+tdn list tasks        # Default
+tdn list projects     # All active projects
+tdn list areas        # All active areas
+```
+
+Both singular and plural forms work: `task` and `tasks` are equivalent.
+
+### Filtering by Status
+
+Filter tasks by status with `--status` (or `-s`):
+
+```bash
+tdn list --status inbox
+tdn list --status ready
+tdn list --status in-progress
+```
+
+Comma-separate multiple statuses for OR logic:
+
+```bash
+tdn list --status inbox,ready    # Tasks that are inbox OR ready
+```
+
+### Filtering by Dates
+
+Filter by due date or scheduled date:
+
+```bash
+tdn list --due today
+tdn list --due tomorrow
+tdn list --due this-week
+tdn list --scheduled today
+```
+
+Find overdue tasks:
+
+```bash
+tdn list --overdue
+```
+
+### Filtering by Relationships
+
+Find tasks belonging to a specific project or area:
+
+```bash
+tdn list --project "Q1 Planning"
+tdn list --area "Work"
+```
+
+These filters use case-insensitive substring matching, so `--project planning` matches "Q1 Planning".
+
+### Full-Text Search
+
+Search in task titles and body content:
+
+```bash
+tdn list --query "authentication"
+```
+
+### Combining Filters
+
+Filters of different types combine with AND logic:
+
+```bash
+tdn list --status ready --project "Q1 Planning"    # Ready tasks in Q1 Planning
+tdn list --status inbox,ready --due this-week      # Inbox or ready, due this week
+```
+
+### Sorting and Limiting
+
+Sort results by any field:
+
+```bash
+tdn list --sort due               # Earliest due first
+tdn list --sort due --desc        # Latest due first
+tdn list --sort created-at --desc # Most recently created first
+tdn list --sort title             # Alphabetical
+```
+
+Limit the number of results:
+
+```bash
+tdn list --limit 10
+```
+
+### Including Completed Tasks
+
+By default, `list` excludes completed and dropped tasks. Include them with flags:
+
+```bash
+tdn list --include-done       # Include completed tasks
+tdn list --include-dropped    # Include dropped tasks
+tdn list --include-closed     # Include both done and dropped
+tdn list --include-icebox     # Include tasks in icebox
+```
+
+Filter by when tasks were completed:
+
+```bash
+tdn list --include-done --completed-today
+tdn list --include-done --completed-this-week
+tdn list --include-done --completed-after 2025-01-01
+```
+
+### Deferred and Archived Tasks
+
+Tasks with a future `defer-until` date are hidden by default. Include them:
+
+```bash
+tdn list --include-deferred
+```
+
+Archived tasks (in an `archive/` subdirectory) are also hidden. View them:
+
+```bash
+tdn list --include-archived    # Include archived tasks
+tdn list --only-archived       # Show only archived tasks
+```
+
+### Listing Projects and Areas
+
+The same filters work for projects:
+
+```bash
+tdn list projects --status in-progress
+tdn list projects --area "Work"
+tdn list projects --include-done
+```
+
+And for areas:
+
+```bash
+tdn list areas
+tdn list areas --include-archived
+```
+
+## show
+
+The `show` command displays complete details for a single entity, including its full body content.
+
+```bash
+tdn show "Review quarterly report"
+```
+
+You can reference entities by title (fuzzy matching) or by file path:
+
+```bash
+tdn show "quarterly report"              # Fuzzy match on title
+tdn show tasks/review-quarterly-report.md   # Exact path
+```
+
+<Aside type="note">
+In human mode, if your query matches multiple entities, you'll be prompted to select one. In AI mode, ambiguous queries return an error listing all matches.
+</Aside>
+
+### Viewing Projects and Areas
+
+The same command works for projects and areas:
+
+```bash
+tdn show "Q1 Planning"       # Shows project details
+tdn show "Work"              # Shows area details
+```
+
+The CLI determines the entity type automatically based on where the file is found.
+
+## today
+
+The `today` command is a convenience shortcut that shows everything needing attention today:
+
+```bash
+tdn today
+```
+
+This includes:
+
+- Tasks currently **in-progress**
+- **Overdue** tasks (due date in the past)
+- Tasks **due today**
+- Tasks **scheduled for today**
+- Tasks **newly actionable today** (defer-until equals today)
+
+It excludes:
+
+- Completed, dropped, and icebox tasks
+- Deferred tasks (defer-until in the future)
+- Archived tasks
+
+Think of `today` as your daily checklist—run it in the morning to see what needs attention.
+
+## context
+
+The `context` command provides a comprehensive view of an entity and all its relationships. It's particularly useful for understanding the full picture around a project or area.
+
+### Vault Overview
+
+Run `context` with no arguments to get an overview of your entire vault:
+
+```bash
+tdn context
+```
+
+This shows statistics, your area/project structure, what's due soon, and what you're currently working on.
+
+### Area Context
+
+See everything in an area—all its projects and tasks:
+
+```bash
+tdn context area "Work"
+```
+
+This returns:
+- Area details and body content
+- All projects in this area (grouped by status)
+- Timeline of due and scheduled tasks
+- Currently in-progress tasks with details
+- Ready tasks up next
+
+### Project Context
+
+See a project's full picture:
+
+```bash
+tdn context project "Q1 Planning"
+```
+
+This returns:
+- Project details and body content
+- Parent area information
+- Timeline of due and scheduled tasks
+- All active tasks grouped by status
+
+### Task Context
+
+Get context around a specific task:
+
+```bash
+tdn context task "Fix authentication bug"
+```
+
+This returns:
+- Full task details
+- Parent project (if any) with excerpt
+- Parent area (if any) with excerpt
+- Alert banner if the task is overdue, due today, or newly actionable
+
+<Aside type="tip">
+The `context` command is especially valuable for AI agents. With a single call, an agent gets everything it needs to understand a project or help with planning. See [Working with AI](/cli/working-with-ai) for more.
+</Aside>
+
+## Date Formats
+
+All date filters accept multiple formats:
+
+| Format | Example | Meaning |
+|--------|---------|---------|
+| Keywords | `today`, `tomorrow` | Exact date |
+| Weekdays | `monday`, `friday`, `wed` | Next occurrence |
+| Relative | `this-week` | Within 7 days |
+| ISO 8601 | `2025-01-15` | Exact date |
+
+In output, dates are always shown in ISO 8601 format (`YYYY-MM-DD`).
+
+<CardGrid>
+  <LinkCard
+    title="Write Commands"
+    href="/cli/write-commands"
+    description="Create and modify tasks, projects, and areas"
+  />
+  <LinkCard
+    title="Working with AI"
+    href="/cli/working-with-ai"
+    description="Use the CLI with Claude Code and other AI agents"
+  />
+</CardGrid>
