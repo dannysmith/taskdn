@@ -18,9 +18,63 @@ Working dir: `website/`
 - [x] Set up Simple Analytics
 - [x] Set up custom domain: tdn.danny.is
 - [x] Set up build on GH Pages https://melikyan.dev/blog/how-to-quickly-setup-a-blog/
-- [ ] Privicy & Cookies Policy
+- [x] Privicy & Cookies Policy
 
 ## Phase 2 - Write Docs Content
+
+### Start Here
+
+- [ ] `getting-started.mdx`
+  - [ ] intro
+  - [ ] The suite table
+  - [ ] core concepts
+    - [ ] entities, fields & statuses
+    - [ ] quick install options
+- [ ] `philosophy.mdx`
+
+### Desktop App
+
+- [ ] `desktop/overview.mdx`
+
+### CLI
+
+- [ ] `cli/overview.mdx`
+- [ ] `cli/read-commands.mdx`
+- [ ] `cli/write-commands.mdx`
+- [ ] `cli/working-with-ai.mdx`
+
+### Obsidian Integration
+
+- [ ] `obsidian/plugin.mdx`
+- [ ] `obsidian/starter-vault.mdx`
+
+### Claude Code Plugin
+
+- [ ] `claude-code/overview.mdx`
+- [ ] `claude-code/skill.mdx`
+- [ ] `claude-code/slash-commands.mdx`
+
+### The Specification
+
+- [ ] `specification/overview.mdx`
+- [ ] `specification/s1-core.mdx`
+- [ ] `specification/s2-implementation.mdx`
+
+### Reference
+
+- [ ] `reference/cli/cli-reference.mdx`
+- [ ] `reference/cli/obsidian-plugin-reference.mdx`
+- [ ] `reference/desktop-reference/url-scheme.mdx`
+- [ ] `reference/desktop-reference/keyboard-shortcuts.mdx`
+
+### Developer
+
+- [ ] `developer/contributing.mdx`
+- [ ] `developer/roadmap.mdx`
+
+### Homepage
+
+- [ ] `index.mdx` — Review/update hero content and CTAs
 
 ## Phase 3 - Changelog (Manual for now)
 
