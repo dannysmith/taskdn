@@ -56,9 +56,9 @@ Working dir: `website/`
 
 ### The Specification
 
-- [ ] `specification/overview.mdx`
-- [ ] `specification/s1-core.mdx`
-- [ ] `specification/s2-implementation.mdx`
+- [x] `specification/overview.mdx`
+- [x] `specification/s1-core.mdx`
+- [x] `specification/s2-implementation.mdx`
 
 ### Reference
 
