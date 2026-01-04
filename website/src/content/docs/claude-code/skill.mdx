@@ -1,8 +1,122 @@
 ---
-title: 'The Skill'
-description: 'The Taskdn skill for Claude Code'
+title: 'Task Management Skill'
+description: 'What the skill teaches Claude and how to use it'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { FileTree, Aside } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+The task management skill is a comprehensive knowledge base that teaches Claude how to work with the tdn system. When loaded, Claude understands your file format, knows all the CLI commands, and shifts into a productivity-focused mindset.
+
+## What the Skill Teaches
+
+The skill gives Claude detailed knowledge of:
+
+**The tdn system** — The hierarchy of tasks, projects, and areas. What each entity type is for, how they relate to each other, what statuses mean.
+
+**CLI commands** — Complete documentation for every `tdn` command with examples. Claude knows when to use [`--ai` mode](/cli/working-with-ai), how to filter and sort output, and which commands to use for different operations.
+
+**When to use what** — Guidelines for choosing between CLI commands and direct file access. CLI for creating and updating tasks (handles timestamps and formatting), direct reads for bulk analysis (more efficient).
+
+**File format** — The YAML frontmatter specification, field types, status values. Claude can work with your files without corrupting unknown fields or breaking the format.
+
+**Productivity mindset** — When helping with tasks, Claude thinks like a GTD coach rather than a programmer. It focuses on clarity, prioritization, and actionability—even though it retains all its technical capabilities.
+
+## Skill Structure
+
+The skill consists of a main file and several reference documents:
+
+<FileTree>
+- task-management/
+  - **SKILL.md** (main skill file, loaded first)
+  - command-reference.md
+  - decision-guide.md
+  - examples.md
+  - obsidian.md
+  - reviews.md
+  - specification.md
+  - templates.md
+</FileTree>
+
+| File | Purpose |
+|------|---------|
+| `SKILL.md` | Core knowledge — system overview, critical rules, quick command reference |
+| `command-reference.md` | Complete documentation for every CLI command |
+| `decision-guide.md` | When to use CLI vs direct file access |
+| `examples.md` | Common workflow examples |
+| `obsidian.md` | Guidance for Obsidian users (bases, wikilinks, templates) |
+| `reviews.md` | How to conduct inbox processing, weekly reviews, etc. |
+| `specification.md` | Status values, field definitions, file format details |
+| `templates.md` | Task, project, and area templates for reference |
+
+Claude doesn't load all these files immediately—it reads the main skill file first, then references the detailed docs when needed.
+
+## Loading the Skill
+
+The skill loads automatically when you use a slash command like `/tdn:today` or `/tdn:prime`. You can also load it manually:
+
+```
+/skill task-management
+```
+
+Once loaded, Claude is ready to help with any task management request.
+
+<Aside type="note">
+The skill persists for the duration of your Claude Code session. You don't need to reload it between questions.
+</Aside>
+
+## What You Can Ask
+
+With the skill loaded, Claude can help with a wide range of task management operations:
+
+### Querying Tasks
+
+- "What's on my plate today?"
+- "Show me all blocked tasks"
+- "What's the status of the Q1 Planning project?"
+- "List tasks that are overdue"
+- "What's in my inbox?"
+
+Claude will run the appropriate `tdn` commands and present the results.
+
+### Creating and Updating
+
+- "Create a task to call the dentist"
+- "Add a task to review the budget under Q1 Planning, due next Friday"
+- "Mark the dentist task as done"
+- "Change the quarterly report task to blocked"
+- "Reschedule everything due this week to next Monday"
+
+Claude handles the CLI commands, including proper flags and date parsing.
+
+### Reviews and Planning
+
+- "Help me process my inbox"
+- "Let's do a quick weekly review"
+- "What projects need attention?"
+- "Are there any stuck tasks I should look at?"
+
+Claude can guide you through structured reviews, asking clarifying questions as needed.
+
+### Context and Analysis
+
+- "Give me an overview of my tasks"
+- "What's the full picture for the Website Redesign project?"
+- "How many tasks do I have in each status?"
+
+Claude can read files directly for analysis that doesn't require the CLI.
+
+## How Claude Uses the CLI
+
+Claude runs `tdn` commands with the [`--ai` flag](/cli/working-with-ai), which produces structured output designed for LLMs. This avoids interactive prompts that would hang, and returns data in a format that's easy for Claude to parse and explain.
+
+For example, when you ask "What's due today?", Claude might run:
+
+```bash
+tdn today --ai
+```
+
+The output includes task titles, statuses, due dates, and file paths—everything Claude needs to answer your question and take follow-up actions if requested.
+
+<Aside type="tip">
+If Claude ever seems confused about your task setup, ask it to run [`tdn doctor`](/cli/overview#health-check). This checks your vault configuration and reports any issues.
+</Aside>

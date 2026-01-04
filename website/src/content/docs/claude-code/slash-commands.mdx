@@ -1,8 +1,102 @@
 ---
 title: 'Slash Commands'
-description: 'Slash commands available in Claude Code Plugin'
+description: 'Quick commands for common task management operations'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Aside } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+[Slash commands](https://docs.anthropic.com/en/docs/claude-code/slash-commands) are shortcuts you can run in Claude Code. Type the command, and Claude executes it immediately—loading the skill if needed and running the appropriate operations.
+
+The tdn plugin provides two slash commands:
+
+| Command | Purpose |
+|---------|---------|
+| `/tdn:prime` | Load context about your tasks, projects, and areas |
+| `/tdn:today` | Show what needs attention today |
+
+## /tdn:prime
+
+Primes your Claude Code session with full context about your task system. Use this at the start of a session when you want Claude to understand your current situation before you start asking questions.
+
+### What It Does
+
+1. Loads the task management skill
+2. Runs `tdn config --ai` to find your vault configuration
+3. Runs [`tdn context`](/cli/read-commands#context) to get an overview of all areas, projects, and tasks
+4. Reports back with a summary: "Got it... X areas, Y active projects..."
+
+### When to Use It
+
+Run `/tdn:prime` when:
+
+- Starting a new Claude Code session where you'll be working with tasks
+- You want Claude to have full context before helping with planning
+- Claude seems confused about your task setup and needs a refresh
+
+### Example
+
+```
+> /tdn:prime
+
+Got it... 5 areas, 12 active projects... 🚀
+```
+
+After priming, Claude knows about your areas, projects, and their relationships. You can ask questions like "What's going on with the Q1 Planning project?" without needing to explain what that project is.
+
+<Aside type="tip">
+You don't need to prime every session. If you're just asking a quick question like "What's due today?", the `/tdn:today` command is more efficient.
+</Aside>
+
+## /tdn:today
+
+Shows all tasks that need attention today. This is the command you'll probably use most often—a quick check of what's on your plate.
+
+### What It Does
+
+Runs [`tdn today`](/cli/read-commands#today) and displays the results. The output includes tasks that are:
+
+- **In-progress** — Currently being worked on
+- **Overdue** — Past their due date
+- **Due today** — Due date is today
+- **Scheduled today** — Scheduled for today
+- **Newly actionable** — Defer-until date is today (they just became available)
+
+### What It Excludes
+
+The command filters out tasks you don't need to see right now:
+
+- Done, dropped, and icebox tasks
+- Deferred tasks (defer-until is in the future)
+- Archived tasks
+
+### Example
+
+```
+> /tdn:today
+
+## Today's Tasks
+
+### In Progress
+- Review quarterly report (Q1 Planning) — due tomorrow
+
+### Due Today
+- Call dentist — Health
+
+### Scheduled Today
+- Team standup notes — Work
+- Review PR #123 — Website Redesign
+```
+
+### Taking Action
+
+After running `/tdn:today`, you can ask Claude to act on any task:
+
+- "Mark the dentist call as done"
+- "Reschedule the team standup to tomorrow"
+- "What's the context for the quarterly report task?"
+
+Claude has the skill loaded and knows about the tasks, so it can handle follow-up requests immediately.
+
+## Adding New Commands
+
+As the plugin evolves, new slash commands may be added. Check `/plugins` in Claude Code to see currently available commands, or visit the [plugin repository](https://github.com/dannysmith/taskdn) for updates.
