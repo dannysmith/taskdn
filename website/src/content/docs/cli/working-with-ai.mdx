@@ -109,14 +109,113 @@ Run `context` with no arguments for an orientation to the entire vault:
 tdn context --ai
 ```
 
-This returns:
+Here's an abbreviated example of the output:
 
-- **Stats** — Counts of areas, projects, tasks; overdue and due-today counts
-- **Structure** — Areas with their projects and task counts, using compact notation
-- **Timeline** — Overdue, due today, scheduled today, newly actionable, blocked, and scheduled this week
-- **In-Progress Tasks** — Full details on what's currently being worked on
-- **Excerpts** — Body content from active areas and projects
-- **Reference Table** — File paths for all mentioned entities
+```markdown
+# Overview
+
+**Stats:** 3 areas · 8 active projects · 34 active tasks · ⚠️ 2 overdue · 📅 3 due today · ▶️ 5 in-progress
+_Excludes: done/dropped/icebox tasks, done projects, archived areas_
+
+---
+
+## Structure
+
+### 📁 Work
+
+Tasks: 18 total (4 direct, 14 via projects)
+├── 🔵 Q1 Planning [in-progress] — 8 tasks (2▶️ 4🟢 1📥 1🚫)
+│   ├── ▶️ Fix authentication bug
+│   └── ▶️ Document API v2 endpoints
+├── 🟢 Client Onboarding [ready] — 4 tasks (4🟢)
+├── 🟡 Q2 Roadmap [planning] — 2 tasks (2📥)
+└── 📋 Direct: 4 tasks (1▶️ 2🟢 1📥)
+    └── ▶️ Review team capacity
+
+### 📁 Personal
+
+Tasks: 12 total (3 direct, 9 via projects)
+├── 🔵 Home Renovation [in-progress] — 6 tasks (1▶️ 3🟢 2📥)
+│   └── ▶️ Get contractor quotes
+└── 📋 Direct: 3 tasks (1▶️ 2🟢)
+
+---
+
+## Timeline
+
+### Overdue (2)
+
+- **Fix critical security issue** — due Jan 10 — Q1 Planning → Work
+- **Submit expense report** — due Jan 12 — Work (direct)
+
+### Due Today (3)
+
+- **Review PR #847** — Q1 Planning → Work
+- **Call insurance company** — Personal (direct)
+
+### Scheduled This Week
+
+**Tomorrow (Thu Jan 16)**
+- Team standup prep — Work (direct)
+
+---
+
+## In-Progress Tasks (5)
+
+### Fix authentication bug
+
+Q1 Planning → Work · due 2025-01-18
+
+The SSO authentication flow is failing for enterprise users...
+
+---
+
+## Reference
+
+| Entity       | Type    | Path                    |
+| ------------ | ------- | ----------------------- |
+| Work         | area    | areas/work.md           |
+| Q1 Planning  | project | projects/q1-planning.md |
+| Fix auth bug | task    | tasks/fix-auth-bug.md   |
+```
+
+#### Understanding the Format
+
+The output follows a principle of **progressive disclosure**—most important information first, details later. An agent can stop reading at any point and still have useful context:
+
+1. **Stats** — Quick counts and alerts (overdue, due today)
+2. **Structure** — Visual hierarchy of areas, projects, and what you're working on
+3. **Timeline** — Time-sensitive items requiring attention
+4. **In-Progress Tasks** — Full body content for active work
+5. **Excerpts** — Project and area context (truncated to ~200 words)
+6. **Reference** — File paths for follow-up commands
+
+#### Emoji Notation
+
+The structure tree uses emoji to convey status at a glance:
+
+**Project status:**
+- 🔵 in-progress
+- 🟢 ready
+- 🟡 planning
+- 🚫 blocked
+- ⏸️ paused
+
+**Task counts** use a compact shorthand: `(2▶️ 4🟢 1📥)` means 2 in-progress, 4 ready, 1 inbox. Only non-zero counts appear.
+
+**Other indicators:**
+- 📁 marks an area
+- 📋 marks "direct" tasks (belonging to an area without a project)
+- ⚠️ overdue count
+- 📅 due today count
+
+#### Why This Format?
+
+This format is designed specifically for LLM context windows:
+
+- **Token-efficient** — Emoji and shorthand notation pack more information into fewer tokens than verbose text
+- **Gracefully degradable** — If output is truncated, earlier sections (stats, structure) remain intact and useful
+- **Self-contained** — The reference table at the end provides file paths, so an agent can act on any mentioned entity without additional queries
 
 This is the best first call for an agent that needs to understand your current work situation.
 
