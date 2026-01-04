@@ -2,3 +2,7 @@ dist/
 .astro/
 node_modules/
 bun.lock
+
+# Ignore markdown/MDX - Prettier breaks Starlight-specific syntax
+*.md
+*.mdx
