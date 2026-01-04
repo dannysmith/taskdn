@@ -33,6 +33,10 @@ Working dir: `website/`
 - [x] `getting-started.mdx`
 - [x] `philosophy.mdx`
 
+### Desktop App
+
+- [x] `desktop/overview.mdx`
+
 ### Obsidian Integration
 
 - [ ] `obsidian/plugin.mdx`
@@ -62,10 +66,6 @@ Working dir: `website/`
 
 - [ ] `developer/contributing.mdx`
 - [ ] `developer/roadmap.mdx`
-
-### Desktop App
-
-- [ ] `desktop/overview.mdx`
 
 ### Final Touches
 
