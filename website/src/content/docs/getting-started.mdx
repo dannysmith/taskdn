@@ -5,9 +5,11 @@ description: 'Learn the fundamentals of Taskdn'
 
 import { Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
 
-Taskdn is a plain-text task management system for individuals. Store your tasks, projects, and areas as markdown files with YAML frontmatter, then work with them through whichever interface suits your context: a desktop app for daily task management, a CLI for scripting and AI agents, an Obsidian plugin for knowledge workers, or a Claude Code skill for AI-assisted productivity.
+Most task management apps force a choice: use something like Notion and get powerful features but lose ownership of your data, or use plain files and miss out on good UIs. Taskdn is a different approach—your tasks live as markdown files on disk, but you get proper tools to work with them.
 
-The system is built on a simple principle: **your data is just files on disk**. Any tool that can read and write markdown files can work with your tasks. Taskdn products are interfaces optimized for specific contexts—not data silos.
+The system stores tasks, projects, and areas as markdown files with YAML frontmatter. Three directories, one file per entity, that's it. Keep them in an [Obsidian](https://obsidian.md) vault, a git repo, or just a folder on your desktop. Since everything is just files, you can edit them in any text editor, version them, back them up however you like, or build your own tools on top.
+
+But raw files aren't great for actually *doing* task management. That's where the Taskdn products come in—interfaces designed for specific contexts, all reading and writing the same files.
 
 ## The Suite
 
@@ -20,19 +22,21 @@ The system is built on a simple principle: **your data is just files on disk**. 
 
 ## Core Concepts
 
-Taskdn draws on GTD and PARA methods. Everything is stored as markdown files with YAML frontmatter—one file per entity. This means you own your data, can version it with git, edit it in any text editor, and build your own tools on top of it.
+Your data lives in three directories: `tasks/`, `projects/`, and `areas/`. Each entity gets its own markdown file with YAML frontmatter at the top and freeform notes in the body. That's the whole system.
 
-The products are **interfaces** to these files. The desktop app presents tasks in a polished UI optimized for doing and planning. The CLI provides programmatic access with output modes for humans, AI agents, and scripts. The Obsidian plugin lets you see task metadata while working in your notes. The Claude Code skill teaches Claude how to help you manage tasks effectively.
+Many people keep these directories inside an Obsidian vault, which works well—you can link between tasks and notes, use Obsidian's search, and the Taskdn plugin adds task-specific features. But Obsidian isn't required. The files work anywhere.
+
+This file-based approach also means AI tools can work with your tasks directly. [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (or any agent that can read files) can query your tasks, create new ones, or help with planning—no API keys or integrations required. The CLI has an `--ai` mode that outputs structured data designed for LLMs.
 
 ### The Hierarchy
 
-Three entity types form a hierarchy:
+Taskdn uses three entity types, loosely based on [GTD](https://gettingthingsdone.com/) and [PARA](https://fortelabs.com/blog/para/):
 
-- **Areas** are ongoing areas of responsibility (e.g., "Work", "Health", "Client: Acme Corp"). They never end.
-- **Projects** are collections of tasks with a defined end goal. Projects optionally belong to an area.
-- **Tasks** are small, actionable items. Tasks can belong to a project, an area directly, or stand alone.
+- **Areas** are ongoing areas of responsibility—things like "Work", "Health", or "Client: Acme Corp". They don't end.
+- **Projects** have a defined goal and finish when you're done. They can belong to an area.
+- **Tasks** are the actual things you do. A task can belong to a project, to an area directly, or stand alone.
 
-This hierarchy lets you organize work naturally: an area like "Work" might contain projects like "Q1 Planning" and "Website Redesign", each with their own tasks. A task like "Call the dentist" might belong directly to your "Health" area without needing a project.
+So "Work" (area) might contain "Q1 Planning" (project), which contains "Review budget spreadsheet" (task). Or "Call the dentist" might just sit under "Health" without needing a project.
 
 ### Tasks
 
@@ -106,13 +110,15 @@ description: Professional responsibilities and career development.
 Current role, key responsibilities, and long-term goals...
 ```
 
-## Using the Products
+Areas don't have workflow statuses—they're just `active` or `archived`. Most of the time you won't think about area status at all.
 
-Each product serves a different context. You might use the desktop app for daily work, the CLI for weekly reviews with AI assistance, and the Obsidian plugin when you're deep in your notes.
+## The Products
+
+Different contexts need different tools. You might use the desktop app when you're focused on getting things done, switch to the CLI when you want Claude to help with a weekly review, and use the Obsidian plugin when you're working on project notes and want to check off a task without leaving your document.
 
 ### Desktop App
 
-The desktop app is for day-to-day task management—a replacement for apps like Things or Todoist. It provides a polished interface for capturing tasks, planning your day, and working through your lists. Quick capture, keyboard shortcuts, and smart views help you stay focused.
+Think Things or Todoist, but reading your markdown files. The desktop app is where you do most of your day-to-day task management—capture quick thoughts, plan your day, work through your lists. It's designed to feel fast and get out of your way.
 
 {/* TODO: Add screenshot of desktop app */}
 
@@ -128,7 +134,7 @@ The desktop app is for day-to-day task management—a replacement for apps like 
 
 ### CLI
 
-The CLI is for programmatic access and AI integration. It serves two audiences with distinct modes: a pretty, interactive mode for humans at the terminal, and a structured markdown mode for AI agents like Claude Code or Cursor.
+The CLI has two faces. For humans, it's a fast way to query and update tasks from the terminal—nice formatting, fuzzy search, natural language dates (`--due tomorrow`). For AI agents, add `--ai` and it outputs structured markdown that LLMs can parse easily.
 
 {/* TODO: Add screenshot showing CLI commands and output */}
 
@@ -136,7 +142,7 @@ The CLI is for programmatic access and AI integration. It serves two audiences w
   <em>Screenshot coming soon</em>
 </div>
 
-Key features include natural language date parsing (`--due tomorrow`), fuzzy entity lookup, advanced filtering, and the `context` command which gives AI agents a complete picture of your vault or a specific entity's relationships.
+The `context` command is particularly useful for AI workflows—it returns an entity plus all its relationships, so an agent can understand a project's full picture in one call.
 
 <LinkCard
   title="CLI Documentation"
@@ -146,7 +152,7 @@ Key features include natural language date parsing (`--due tomorrow`), fuzzy ent
 
 ### Obsidian Plugin
 
-The Obsidian plugin renders task links as rich widgets showing metadata like status, due date, and project. Change a task's status without leaving your notes. Turn any checklist item into a full task with one click.
+If you use Obsidian, the plugin makes task links show up as widgets with status, due date, and project info. Click to change status without opening the file. You can also turn any checklist item into a proper task file.
 
 {/* TODO: Add screenshot of Obsidian with task widgets */}
 
@@ -162,7 +168,7 @@ The Obsidian plugin renders task links as rich widgets showing metadata like sta
 
 ### Claude Code Plugin
 
-The Claude Code plugin teaches Claude to work as your productivity assistant. Load the skill and Claude understands your task system—ask it to show what's overdue, create tasks for you, mark things complete, or help with planning. The `/tdn:today` command gives you a quick overview of today's focus.
+Load the skill and Claude knows how to work with your tasks. Ask it what's overdue, have it create tasks as you work, or get help planning your week. The `/tdn:today` command shows what needs attention today.
 
 {/* TODO: Add GIF/video showing Claude Code interaction */}
 
