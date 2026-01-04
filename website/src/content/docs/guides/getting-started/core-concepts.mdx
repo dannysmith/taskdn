@@ -1,17 +1,18 @@
 ---
-title: "Core Concepts"
-description: "The philosophy and mental model behind Taskdn"
+title: 'Core Concepts'
+description: 'The philosophy and mental model behind Taskdn'
 sidebar:
   order: 2
 ---
 
-{/* TODO: Write core concepts covering:
+{/\* TODO: Write core concepts covering:
+
 - Files on disk philosophy
 - Opinionated about tasks, agnostic about the rest
 - GTD/PARA inspiration
 - Low-friction UI optimised for context
 - AI-friendly design
-*/}
+  \*/}
 
 ## Files on Disk
 
@@ -24,3 +25,17 @@ We have strong opinions about how tasks should work, but none about how you orga
 ## Multiple Interfaces
 
 The same files work with the CLI, desktop app, and Obsidian plugin. Choose the right tool for your context.
+
+### 6.1 Design Rationale
+
+**Why one file per task?**
+Individual files allow tasks to be edited with any text editor, processed by command-line tools, and managed by AI coding assistants more easily than . They also enable rich note-taking within each task.
+
+**Why require a `tasks` directory?**
+A dedicated directory simplifies discovery and prevents implementations from scanning entire file systems. It also clearly separates actionable items from other content.
+
+**Why YAML frontmatter?**
+YAML frontmatter is widely supported by note-taking apps (Obsidian, Logseq), and developer tools. It balances human readability with machine parseability.
+
+**Why these specific status values?**
+The status values are designed to support common task management workflows (GTD-inspired inbox processing, blocking dependencies, intentional deferral) while remaining simple enough for quick triage.

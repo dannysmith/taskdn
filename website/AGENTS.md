@@ -2,31 +2,38 @@
 
 ## Purpose
 
-Public-facing website for Taskdn: marketing site, documentation, and specifications.
+Public-facing website for Taskdn: https://tdn.danny.is. It includes the following:
+
+- **Homepage** - A "marketing" landing/splash page with CTAs to download the products and learn more about their features.
+- **Docs** - User-facing documentation
+  - **Guides** - Helps users understand taskdn, learn its features and use the products.
+  - **Reference** - More technical reference documents, including the specifications.
+  - **Developer** - Documentation for developers wanting to contribute or create their own implementations.
+- **Changelog** - Log of releases to all products. Automatically generated.
 
 ## Stack
 
-[Astro](https://astro.build/) + [Starlight](https://starlight.astro.build/) + [Flexoki](https://stephango.com/flexoki) theme.
+[Astro](https://astro.build/) + [Starlight](https://starlight.astro.build/) + [Flexoki](https://stephango.com/flexoki) theme. Statically Generated. Github Pages & GitHub Actions for Deployment.
 
 ## Directory Structure
 
 ```
 website/
-├── src/content/docs/      # All content as .md or .mdx
-├── public/                # Static assets, robots.txt
-├── astro.config.mjs       # Site config, sidebar, SEO
-└── tsconfig.json
+├── src/assets/            # Assets used in documentation pages
+├── src/content/docs/      # All documentation content as .md or .mdx
+├── public/                # Static assets
+└── astro.config.mjs       # Site config, sidebar, SEO
 ```
 
-## Commands
+## Dev Commands
 
-| Command                | Action                       |
-| :--------------------- | :--------------------------- |
-| `bun dev`              | Start dev server (port 4321) |
-| `bun build`            | Build to `./dist/`           |
-| `bun run check`        | TypeScript checking          |
-| `bun run lint`         | ESLint                       |
-| `bun run format`       | Prettier (write)             |
+| Command            | Action                                           |
+| :----------------- | :----------------------------------------------- |
+| `bun dev`          | Start dev server (port 4321)                     |
+| `bun build`        | Build to `./dist/`                               |
+| `bun run check`    | Runs astro check, tsc, eslint and prettier check |
+| `bun run lint:fix` | ESLint Auto-fix                                  |
+| `bun run format`   | Prettier (write)                                 |
 
 ## SEO & Meta
 
@@ -38,16 +45,16 @@ Configured in `astro.config.mjs`:
 
 ---
 
-## Documentation Structure & Content
+## Writing Documentation
 
 Follow these conventions when creating or editing content in `src/content/docs/`.
 
 ### Page Types
 
-| Type | Purpose | Location |
-|------|---------|----------|
-| **Section Index** | Overview + navigation | `{section}/index.mdx` |
-| **Content Page** | Tutorial or guide | `{section}/{topic}.mdx` |
+| Type               | Purpose              | Location                |
+| ------------------ | -------------------- | ----------------------- |
+| **Section Index**  | Overview             | `{section}/index.mdx`   |
+| **Content Page**   | Tutorial or guide    | `{section}/{topic}.mdx` |
 | **Reference Page** | Lookup tables, specs | `reference/{topic}.mdx` |
 
 ### File Naming
@@ -63,91 +70,14 @@ Every page requires:
 
 ```yaml
 ---
-title: "Page Title"           # Appears in sidebar & H1
-description: "One sentence"   # For SEO/meta
+title: 'Page Title' # Appears in sidebar & H1
+description: 'One sentence' # For SEO/meta
 sidebar:
-  order: 1                    # Position within section
+  order: 1 # Position within section
   # label: "Short Name"       # Optional shorter sidebar text
   # badge: "New"              # Optional badge
 ---
 ```
-
-### Page Templates
-
-**Section Index** — brief intro, CardGrid navigation, overview paragraphs:
-
-````mdx
----
-title: "CLI Guide"
-description: "Learn how to use the Taskdn CLI"
-sidebar:
-  order: 3
----
-
-import { CardGrid, LinkCard } from '@astrojs/starlight/components'
-
-Brief intro to what this section covers.
-
-<CardGrid>
-  <LinkCard title="Installation" href="/guides/cli/installation" />
-  <LinkCard title="Querying" href="/guides/cli/querying" />
-</CardGrid>
-
-## Overview
-
-What is this? Who is it for? What can you do with it?
-````
-
-**Content Page** — summary, topics with examples, next steps:
-
-````mdx
----
-title: "Querying Tasks"
-description: "Use list, show, and today to find tasks"
-sidebar:
-  order: 2
----
-
-One paragraph summary.
-
-## Topic
-
-Content with examples.
-
-```bash
-tdn list --status ready
-```
-
-## Next Steps
-
-- [Related page](/path)
-````
-
-**Reference Page** — intro, then structured entries with syntax/options/examples:
-
-````mdx
----
-title: "Commands Reference"
-description: "Complete CLI command reference"
-sidebar:
-  order: 1
----
-
-## list
-
-Query and filter entities.
-
-**Syntax:** `tdn list [entity-type] [options]`
-
-| Flag | Description |
-|------|-------------|
-| `--status` | Filter by status |
-| `--due` | Filter by due date |
-
-```bash
-tdn list --status ready --due today
-```
-````
 
 ### Headings
 
@@ -156,59 +86,69 @@ tdn list --status ready --due today
 - **H3**: Subsections or individual items
 - **H4**: Rarely, only for deeply nested content
 
-### When to Use Components
+### Using Components
 
-Use `.mdx` and import from `@astrojs/starlight/components`.
+Use Starlight's built-in components by importing from `@astrojs/starlight/components` (only works in `.mdx` files).
 
-**Steps** — for sequential procedures only:
+### Steps Component
 
-```mdx
-<Steps>
-1. Install the CLI
-2. Create a config file
-3. Run your first command
-</Steps>
-```
+Use the `<Steps>` component to style numbered lists of tasks. This is useful for more complex step-by-step guides where each step needs to be clearly highlighted.
 
-**Tabs** — when reader chooses one option. Always use `syncKey`.
+Wrap `<Steps>` around a standard Markdown ordered list. All the usual Markdown syntax is applicable inside `<Steps>`.
 
-Standard keys: `pkg` (package managers), `os` (operating systems), `shell` (shells)
+### Tabs Component
+
+When instructions differ depending on the user's setup (eg Win/macos/Linus or npm/pnpm/bun).
+
+Keep multiple tab groups synchronized by adding the syncKey attribute. All `<Tabs>` on a page with the same syncKey value will display the same active label. This allows your reader to choose once (e.g. their operating system or package manager), and see their choice persisted across page navigations. Standard keys: `pkg` (package managers), `os` (operating systems), `shell` (shells)
 
 ````mdx
 <Tabs syncKey="pkg">
   <TabItem label="Homebrew" icon="apple">
-    ```bash
-    brew install dannysmith/taproom/tdn
-    ```
+    ```bash brew install dannysmith/taproom/tdn ```
   </TabItem>
   <TabItem label="npm" icon="seti:npm">
-    ```bash
-    npm install -g @taskdn/cli
-    ```
+    ```bash npm install -g @taskdn/cli ```
   </TabItem>
-  <TabItem label="Binary">
-    Download from GitHub Releases
-  </TabItem>
+  <TabItem label="Binary">Download from GitHub Releases</TabItem>
 </Tabs>
 ````
 
-````mdx
+```mdx
 <Tabs syncKey="os">
   <TabItem label="macOS">~/.config/taskdn/config.json</TabItem>
   <TabItem label="Windows">%APPDATA%\taskdn\config.json</TabItem>
   <TabItem label="Linux">~/.config/taskdn/config.json</TabItem>
 </Tabs>
-````
+```
 
-**Asides** — for parenthetical info. Types: `note` (default), `tip`, `caution`, `danger`. Don't overuse.
+### Aside Component
+
+For parenthetical info. Types: `note` (default), `tip`, `caution`, `danger`. Don't overuse.
+
+```mdx
+:::tip
+Use `--ai` mode when scripting.
+:::
+```
+
+or
 
 ```mdx
 <Aside type="tip">Use `--ai` mode when scripting.</Aside>
 ```
 
-**Cards** — `LinkCard` for navigation on index pages, `Card` for feature lists.
+### LinkCard, Card & CardGrid Components
 
-**FileTree** — for directory structures. Use `**bold**` to highlight.
+Use `LinkCard` for in-page navigation to other docs. Do not over-use.
+
+`Card` should be used sparingly to add interest to the documentation. Cards should amost always include a title, icon and some content.
+
+Cards and LinkCards can be arranged with the `CardGrid` component.
+
+### FileTree Component
+
+For all directory structures. Specify the structure of your files and directories with an unordered Markdown list inside `<FileTree>`. Create a sub-directory using a nested list or add a / to the end of a list item to render it as a directory without specific content. Use bold `**filename**` to highlight a file. Add a comment to a file or directory by adding more text after the name. Add placeholder files and directories by using either ... or … as the name.
 
 ### Code Blocks
 
@@ -220,10 +160,13 @@ Starlight uses [Expressive Code](https://expressive-code.com/).
 - Use `frame="none"` for syntax snippets that aren't runnable commands
 - Line highlighting: `{2,4-5}`, text markers: `"config"`, diff: `ins={2} del={1}`
 
-### Tables vs Lists
+### Details
 
-- **Tables**: Structured data with multiple attributes per item
-- **Lists**: Steps, features, or prose descriptions
+Details (also known as “disclosures” or “accordions”) are useful to hide content that is not immediately relevant. Use the standard HTML `<details>` and `<summary>` elements. These can contain markdown.
+
+### Tables
+
+Use for structured data with multiple attributes per item. You may find the `<Badge>` component useful in tables.
 
 ### Cross-References
 
