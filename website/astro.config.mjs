@@ -51,7 +51,7 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: 'Start Here',
+          label: '🚀 Start Here',
           items: [
             {
               slug: 'getting-started',
@@ -62,7 +62,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Desktop App',
+          label: '🖥️ Desktop App',
           badge: {
             text: 'Soon',
             variant: 'note',
@@ -74,7 +74,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'CLI',
+          label: '⌨️ CLI',
           items: [
             {
               slug: 'cli/overview',
@@ -91,7 +91,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Obsidian Integration',
+          label: '💎 Obsidian',
           items: [
             {
               slug: 'obsidian/plugin',
@@ -102,7 +102,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Claude Code Plugin',
+          label: '🤖 Claude Code',
           items: [
             {
               slug: 'claude-code/overview',
@@ -116,7 +116,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'The Specification',
+          label: '📋 Specification',
           items: [
             {
               slug: 'specification/overview',
@@ -130,7 +130,8 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Reference',
+          label: '📚 Reference',
+          collapsed: true,
           items: [
             {
               slug: 'reference/cli/cli-reference',
@@ -148,6 +149,18 @@ export default defineConfig({
                   slug: 'reference/desktop-reference/keyboard-shortcuts',
                 },
               ],
+            },
+          ],
+        },
+        {
+          label: '🛠️ Developer',
+          collapsed: true,
+          items: [
+            {
+              slug: 'developer/contributing',
+            },
+            {
+              slug: 'developer/roadmap',
             },
           ],
         },
