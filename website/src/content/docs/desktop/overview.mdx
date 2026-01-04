@@ -5,7 +5,14 @@ banner:
   content: 🚧 Desktop App coming soon!
 ---
 
+import { Image } from 'astro:assets'
 import UnderConstruction from '@components/UnderConstruction.astro'
+import desktop1 from '@assets/desktop-1.png'
+import desktop2 from '@assets/desktop-2.png'
+import desktop3 from '@assets/desktop-3.png'
+import desktop4 from '@assets/desktop-4.png'
+import desktop5 from '@assets/desktop-5.png'
+import desktop6 from '@assets/desktop-6.png'
 
 <UnderConstruction />
 
@@ -21,11 +28,7 @@ The desktop app makes your task files feel like a proper task management app. In
   <small>macOS first, Windows and Linux planned</small>
 </div>
 
-{/* TODO: Add screenshot or demo video */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Screenshot coming soon</em>
-</div>
+<Image src={desktop2} alt="Taskdn desktop app showing the Today view with task detail sidebar" />
 
 ## Features
 
@@ -37,6 +40,34 @@ The desktop app makes your task files feel like a proper task management app. In
 - **Command palette** — Quick access to any action, with contextual commands for the currently selected item.
 - **Search** — Fuzzy search across all tasks, projects, and areas. Find anything in a few keystrokes.
 - **URL scheme** — Deep links to open specific tasks, projects, or views from other apps or scripts.
+
+## Views
+
+### Today
+
+See what needs attention now—tasks scheduled for today, overdue items, and anything due soon.
+
+<Image src={desktop1} alt="Today view showing scheduled and overdue tasks" />
+
+### This Week
+
+A weekly calendar showing your tasks laid out by day. Drag tasks to reschedule them.
+
+<Image src={desktop3} alt="This Week view with tasks arranged by day" />
+
+### Calendar
+
+Monthly view for longer-term planning. See how your tasks are distributed across the month.
+
+<Image src={desktop6} alt="Calendar view showing tasks across the month" />
+
+### Areas and Projects
+
+Browse by area to see all related projects and tasks. View projects as cards or switch to a Kanban board grouped by status.
+
+<Image src={desktop4} alt="Area view showing projects as cards with progress indicators" />
+
+<Image src={desktop5} alt="Kanban board view with tasks grouped by status" />
 
 ## What This Isn't
 

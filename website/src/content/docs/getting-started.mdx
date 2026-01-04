@@ -4,6 +4,9 @@ description: 'Learn the fundamentals of Taskdn'
 ---
 
 import { Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
+import { Image } from 'astro:assets'
+import desktopScreenshot from '@assets/desktop-1.png'
+import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
 
 Most task management apps force a choice: use something like Notion and get powerful features but lose ownership of your data, or use plain files and miss out on good UIs. Taskdn is a different approach—your tasks live as markdown files on disk, but you get proper tools to work with them.
 
@@ -120,11 +123,7 @@ Different contexts need different tools. You might use the desktop app when you'
 
 Think Things or Todoist, but reading your markdown files. The desktop app is where you do most of your day-to-day task management—capture quick thoughts, plan your day, work through your lists. It's designed to feel fast and get out of your way.
 
-{/* TODO: Add screenshot of desktop app */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Screenshot coming soon</em>
-</div>
+<Image src={desktopScreenshot} alt="Taskdn desktop app showing the Today view" />
 
 <LinkCard
   title="Desktop App Documentation"
@@ -154,11 +153,7 @@ The `context` command is particularly useful for AI workflows—it returns an en
 
 If you use Obsidian, the plugin makes task links show up as widgets with status, due date, and project info. Click to change status without opening the file. You can also turn any checklist item into a proper task file.
 
-{/* TODO: Add screenshot of Obsidian with task widgets */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Screenshot coming soon</em>
-</div>
+<Image src={obsidianScreenshot} alt="Taskdn tasks rendered as interactive widgets in Obsidian" />
 
 <LinkCard
   title="Obsidian Plugin Documentation"

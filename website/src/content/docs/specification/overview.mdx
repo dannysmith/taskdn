@@ -6,7 +6,11 @@ tableOfContents: false
 
 import { LinkCard, CardGrid } from '@astrojs/starlight/components'
 
-Formal specifications describing the protocol and core behaviors of the system. Tools which implement these will be compatible with each other.
+Taskdn is a file format as much as a set of apps. The specifications document that format precisely, so anyone can build tools that read and write the same files. Your tasks shouldn't be trapped in one application.
+
+If you're building something that works with task files (a mobile app, a web interface, a sync service, an automation script), these specs tell you exactly what to expect and what to produce. Follow them and your tool will interoperate with the CLI, desktop app, and anything else that's spec-compliant. Users can mix and match implementations without data getting corrupted or misinterpreted.
+
+S1 defines the file format itself: what fields exist, what values are valid, how files are organised. S2 provides guidance on how implementations should behave when reading and writing those files.
 
 <CardGrid>
   <LinkCard
