@@ -26,7 +26,7 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
       - property: file.name
         direction: ASC
@@ -47,7 +47,7 @@ views:
       - scheduled
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
       - property: file.name
         direction: ASC
@@ -72,7 +72,7 @@ views:
       - scheduled
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
   - type: table
     name: In Progress
@@ -84,7 +84,7 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
   - type: table
     name: Blocked
@@ -96,7 +96,7 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
   - type: table
     name: Overdue
@@ -111,5 +111,5 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
