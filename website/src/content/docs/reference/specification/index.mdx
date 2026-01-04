@@ -1,21 +1,6 @@
 ---
-title: "The Specification"
-description: "Formal Taskdn specifications"
+title: 'The Specification'
+description: 'Formal Taskdn specifications'
 sidebar:
   order: 1
 ---
-
-import { CardGrid, LinkCard } from '@astrojs/starlight/components'
-
-The Taskdn specification defines how tasks, projects, and areas are stored on disk. Software implementing these specs will be mutually compatible.
-
-<CardGrid>
-  <LinkCard title="S1: Core" href="/reference/specification/s1-core" description="Data format specification" />
-  <LinkCard title="S2: Implementation" href="/reference/specification/s2-implementation" description="Implementation guidance" />
-</CardGrid>
-
-## Overview
-
-- **S1: Core** — The file format: frontmatter fields, status values, file references. Implement this and your files are compatible with other S1-compliant tools.
-
-- **S2: Implementation** — Guidance for implementations: field conventions, timestamp management, file safety, query semantics. Follow this and your implementation behaves predictably.

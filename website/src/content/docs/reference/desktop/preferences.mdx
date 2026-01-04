@@ -1,44 +1,6 @@
 ---
-title: "Preferences"
-description: "Desktop app settings and configuration"
+title: 'Preferences'
+description: 'Desktop app settings and configuration'
 sidebar:
-  order: 3
+  order: 2
 ---
-
-import { Aside } from '@astrojs/starlight/components'
-
-<Aside type="note">
-The desktop app is under development. Preferences are subject to change.
-</Aside>
-
-{/* TODO: Document preferences when app is built */}
-
-## General
-
-| Setting | Description | Default |
-|---------|-------------|---------|
-| Theme | Light, Dark, or System | System |
-| Start at login | Launch on system startup | Off |
-| Quick capture shortcut | Global hotkey | `⌥ Space` |
-
-## Vault
-
-| Setting | Description |
-|---------|-------------|
-| Tasks directory | Path to tasks folder |
-| Projects directory | Path to projects folder |
-| Areas directory | Path to areas folder |
-
-## Appearance
-
-{/* TODO: Document appearance settings */}
-
-## Advanced
-
-### settings.json
-
-Preferences are stored in:
-
-- **macOS:** `~/Library/Application Support/taskdn/settings.json`
-- **Windows:** `%APPDATA%\taskdn\settings.json`
-- **Linux:** `~/.config/taskdn/settings.json`
