@@ -342,6 +342,67 @@ Barebones instructions:
 
 ---
 
+### Phase 10: Last Bits
+
+- [ ] Test in Obsidian
+- [ ] Create WebClipper Template and add to relevant page in docs site and to README.md
+- [ ] Move to own repo
+- [ ] Update top-level taskdn README table to show this as a seperate project with done status.
+- [ ] Update starter-vault with screenshot and instructions. ensure that what's in there matches what's in the repository. Also update setup-guide appropriately.
+
+#### WebClipper Template 
+
+Below is a webclipper template JSON thing for a kind of default note that I've just exported from my webclipper. We just need to change the fields to match those of a new task, injecting any data which we think is important into it, and setting the relevant fields automatically, Either based on data that's been pulled out of the web thing or just based on standard things. Like the status for this should definitely be inbox. All it needs to do is create tasks. 
+
+{
+	"schemaVersion": "0.1.0",
+	"name": "Default",
+	"behavior": "create",
+	"noteContentFormat": "{{content}}",
+	"properties": [
+		{
+			"name": "title",
+			"value": "{{title}}",
+			"type": "text"
+		},
+		{
+			"name": "source",
+			"value": "{{url}}",
+			"type": "text"
+		},
+		{
+			"name": "author",
+			"value": "{{author|split:\\\", \\\"|wikilink|join}}",
+			"type": "multitext"
+		},
+		{
+			"name": "published",
+			"value": "{{published}}",
+			"type": "date"
+		},
+		{
+			"name": "created",
+			"value": "{{date}}",
+			"type": "date"
+		},
+		{
+			"name": "description",
+			"value": "{{description}}",
+			"type": "text"
+		},
+		{
+			"name": "tags",
+			"value": "clippings",
+			"type": "multitext"
+		}
+	],
+	"triggers": [],
+	"noteNameFormat": "{{title}}",
+	"path": "tasks"
+}```
+
+---
+
 ## Technical Notes
 
 ### WikiLinks in YAML

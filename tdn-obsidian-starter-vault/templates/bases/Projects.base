@@ -1,0 +1,59 @@
+filters:
+  and:
+    - file.inFolder("projects")
+    - file.name != "Overview"
+properties:
+  file.name:
+    displayName: Project
+  note.status:
+    displayName: Status
+  note.area:
+    displayName: Area
+  note.start-date:
+    displayName: Started
+  note.end-date:
+    displayName: End Date
+  note.description:
+    displayName: Description
+views:
+  - type: table
+    name: All Projects
+    order:
+      - file.name
+      - status
+      - area
+      - start-date
+    sort:
+      - property: note.status
+        direction: ASC
+      - property: file.name
+        direction: ASC
+  - type: table
+    name: Active
+    filters:
+      or:
+        - note.status == "in-progress"
+        - note.status == "planning"
+        - note.status == "ready"
+    order:
+      - file.name
+      - status
+      - area
+    sort:
+      - property: note.status
+        direction: ASC
+      - property: file.name
+        direction: ASC
+  - type: table
+    name: On Hold
+    filters:
+      or:
+        - note.status == "paused"
+        - note.status == "blocked"
+    order:
+      - file.name
+      - status
+      - area
+    sort:
+      - property: file.name
+        direction: ASC

@@ -1,0 +1,30 @@
+filters:
+  and:
+    - file.inFolder("projects")
+    - file.name != "Overview"
+    - note.area.contains(this.file.name)
+    - or:
+        - note.status == "in-progress"
+        - note.status == "planning"
+        - note.status == "ready"
+        - note.status == "paused"
+        - note.status == "blocked"
+properties:
+  file.name:
+    displayName: Project
+  note.status:
+    displayName: Status
+  note.start-date:
+    displayName: Start Date
+views:
+  - type: table
+    name: Area Projects
+    order:
+      - file.name
+      - status
+      - start-date
+    sort:
+      - property: note.status
+        direction: ASC
+      - property: file.name
+        direction: ASC
