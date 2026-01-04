@@ -344,11 +344,11 @@ Barebones instructions:
 
 ### Phase 10: Last Bits
 
-- [ ] Test in Obsidian
-- [ ] Create WebClipper Template and add to relevant page in docs site and to README.md
-- [ ] Move to own repo
+- [x] Test in Obsidian
+- [x] Create WebClipper Template and add to relevant page in docs site and to README.md
+- [x] Move to own repo
 - [ ] Update top-level taskdn README table to show this as a seperate project with done status.
-- [ ] Update starter-vault with screenshot and instructions. ensure that what's in there matches what's in the repository. Also update setup-guide appropriately.
+- [ ] Update starter-vault.md in docs site with instructions and remove screenshot placeholder. ensure that what's in there matches what's in the repository. Also update setup-guide appropriately.
 
 #### WebClipper Template 
 

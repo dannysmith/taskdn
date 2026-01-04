@@ -168,10 +168,12 @@ See [Obsidian Plugin Repo](https://github.com/dannysmith/obsidian-taskdn)
 
 ### 5. Claude Code Plugin
 
-A small-ish CC plugin for task and project management using the `tdn` CLI. Includes a SKill with instructions for managing areas, projects and tasks using the CLI app and directly, and commands to help with things like reviews, cleanup and the like.
+A small-ish CC plugin for task and project management using the `tdn` CLI. Includes a Skill with instructions for managing areas, projects and tasks using the CLI app and directly, and commands to help with things like reviews, cleanup and the like.
 
 See [Claude Plugin README](../tdn-claude-plugin/README.md)
 
-### 5. Extras
+### 6. Starter Vault
 
-- Templates and bases for Obsidian
+A pre-configured Obsidian vault with templates, Bases, and example content. Clone it to get a working Taskdn setup in minutes. Includes templates for tasks, projects, and areas, plus pre-configured Bases with filtered views.
+
+See [Starter Vault Repo](https://github.com/dannysmith/tdn-obsidian-starter-vault)
