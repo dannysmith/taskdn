@@ -21,6 +21,8 @@ Public-facing website for Taskdn: https://tdn.danny.is. It includes the followin
 website/
 ├── src/assets/            # Assets used in documentation pages
 ├── src/components/        # Custom Astro components
+├── src/layouts/           # Layouts for standalone pages
+├── src/pages/             # Standalone Astro pages (outside Starlight)
 ├── src/content/docs/      # All documentation content as .md or .mdx
 ├── public/                # Static assets
 └── astro.config.mjs       # Site config, sidebar, SEO
