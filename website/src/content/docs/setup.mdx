@@ -1,0 +1,99 @@
+---
+title: 'Setup Guide'
+description: 'Get everything installed and configured'
+---
+
+import { Steps, Aside, LinkCard } from '@astrojs/starlight/components'
+
+This guide walks through setting up the full Taskdn suite. It assumes you already have [Obsidian](https://obsidian.md) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed.
+
+<Steps>
+
+1. **Set up the starter vault**
+
+   Clone the starter vault and open it in Obsidian:
+
+   ```bash
+   git clone https://github.com/dannysmith/obsidian-taskdn-starter-vault my-tasks
+   cd my-tasks && rm -rf .git README.md
+   ```
+
+   Open the folder as a vault in Obsidian. When prompted, trust the vault to enable plugins.
+
+   Go to **Settings → Files and links** and make sure **Wikilinks** are enabled. Then go to **Settings → Core plugins** and enable **Bases** and **Templates**.
+
+   Have a look around. Check out the `tasks/Overview.md`, `projects/Overview.md`, and `areas/Overview.md` files to see the Bases views.
+
+   <details>
+   <summary>Optional: Folder Notes plugin</summary>
+
+   The [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes) plugin makes the Overview files open automatically when you click a folder. Install it from Community Plugins, then set the folder note name to `Overview.md`.
+
+   </details>
+
+   <LinkCard title="Starter Vault Documentation" href="/obsidian/starter-vault" />
+
+2. **Install the Obsidian plugin**
+
+   Go to **Settings → Community Plugins**, search for "Taskdn", and install it.
+
+   In plugin settings, set the tasks directory to `tasks` (or wherever your tasks live).
+
+   Now look at `example-note.md` in your vault to see task links rendered as interactive widgets. Click a checkbox to mark a task done.
+
+   <LinkCard title="Obsidian Plugin Documentation" href="/obsidian/plugin" />
+
+3. **Install and configure the CLI**
+
+   Install the CLI:
+
+   ```bash
+   brew tap dannysmith/taproom && brew install tdn
+   ```
+
+   Create a config file pointing to your vault:
+
+   ```bash
+   tdn init
+   ```
+
+   Try it out:
+
+   ```bash
+   tdn context
+   ```
+
+   You should see an overview of your areas, projects, and tasks.
+
+   <LinkCard title="CLI Documentation" href="/cli/overview" />
+
+4. **Install the Claude Code plugin**
+
+   In Claude Code, install the plugin globally:
+
+   ```
+   /plugin marketplace add dannysmith/taskdn
+   /plugin install tdn@tdn-marketplace
+   ```
+
+   Try asking Claude about your tasks:
+
+   ```
+   /tdn:today
+   ```
+
+   Or just ask naturally: "What's on my plate this week?"
+
+   <LinkCard title="Claude Code Plugin Documentation" href="/claude-code/overview" />
+
+5. **Install the desktop app**
+
+   <Aside type="note">
+   The desktop app is coming soon. Check back here for installation instructions.
+   </Aside>
+
+   Once installed, point it at your vault directory and you'll see your tasks in a proper task management UI.
+
+   <LinkCard title="Desktop App Documentation" href="/desktop/overview" />
+
+</Steps>
