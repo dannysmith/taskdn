@@ -7,14 +7,15 @@ A task-management system for **individuals** that feels as slick as [Things](htt
 
 **The core idea:** provide the right user interface in the right context.
 
-| Tool                | Description                                        | Directory                                                        | Status         |
-| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------- | -------------- |
-| **Specs**           | Formal specifications for the protocol             | `tdn-specs/`                                                     | ✅ Stable      |
-| **CLI**             | Command-line interface for humans and AI agents    | `tdn-cli/`                                                       | ✅ Stable      |
-| **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                             | ✅ Stable      |
-| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                   | ⌛ In Progress |
-| **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn) | ✅ Stable      |
-| **Website**         | Documentation and marketing site                   | `website/`                                                       | ⌛ In Progress |
+| Tool                | Description                                        | Directory                                                                        | Status         |
+| ------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------- | -------------- |
+| **Specs**           | Formal specifications for the protocol             | `tdn-specs/`                                                                     | ✅ Stable      |
+| **CLI**             | Command-line interface for humans and AI agents    | `tdn-cli/`                                                                       | ✅ Stable      |
+| **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                                             | ✅ Stable      |
+| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                                   | ⌛ In Progress |
+| **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn)                 | ✅ Stable      |
+| **Starter Vault**   | Pre-configured Obsidian vault with templates/bases | [tdn-obsidian-starter-vault](https://github.com/dannysmith/tdn-obsidian-starter-vault) | ✅ Stable      |
+| **Website**         | Documentation and marketing site                   | `website/`                                                                       | ✅ Stable      |
 
 ## Documentation
 

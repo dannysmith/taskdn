@@ -4,17 +4,8 @@ description: 'Pre-configured Obsidian vault with templates and bases for Taskdn'
 ---
 
 import { FileTree, Steps } from '@astrojs/starlight/components'
-import UnderConstruction from '@components/UnderConstruction.astro'
-
-<UnderConstruction />
 
 The starter vault is a pre-configured Obsidian vault with templates, [Bases](https://obsidian.md/plugins/bases), and example content. Clone it to get a working Taskdn setup in minutes.
-
-{/* TODO: Add screenshot of the vault with bases views */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Screenshot coming soon</em>
-</div>
 
 ## Installation
 
@@ -23,7 +14,7 @@ The starter vault is a pre-configured Obsidian vault with templates, [Bases](htt
 1. Clone the starter vault:
 
    ```bash
-   git clone https://github.com/dannysmith/obsidian-taskdn-starter-vault my-tasks
+   git clone https://github.com/dannysmith/tdn-obsidian-starter-vault my-tasks
    cd my-tasks
    rm -rf .git README.md
    ```
@@ -43,19 +34,17 @@ The starter vault is a pre-configured Obsidian vault with templates, [Bases](htt
 <FileTree>
 - areas/
   - Overview.md (embedded bases view)
-  - work.md
-  - health.md
-  - ...
+  - Side Projects.md
 - projects/
-  - Overview.md         (embedded bases view)
-  - q1-planning.md
-  - website-redesign.md
-  - ...
+  - Overview.md (embedded bases view)
+  - Japan Trip 2025.md
+  - Learn Rust.md
+  - Website Redesign.md
 - tasks/
-  - Overview.md         (embedded bases view)
-  - archive/            (completed & dropped tasks)
-  - call-dentist.md
-  - review-report.md
+  - Overview.md (embedded bases view)
+  - archive/ (completed & dropped tasks)
+  - update-homepage.md
+  - book-flights.md
   - ...
 - templates/
   - bases/
@@ -66,8 +55,9 @@ The starter vault is a pre-configured Obsidian vault with templates, [Bases](htt
   - Task.md
   - Project.md
   - Area.md
-  - TripProject.md
-- example-note.md        (demonstrates plugin features)
+  - Trip Project.md
+- example-note.md (demonstrates plugin features)
+- getting-started.md
 - CLAUDE.md
 </FileTree>
 
@@ -75,13 +65,13 @@ The starter vault is a pre-configured Obsidian vault with templates, [Bases](htt
 
 Create new tasks, projects, and areas using Obsidian's Templates plugin. Each template includes the required frontmatter fields with sensible defaults.
 
-**Task Template** — Creates a task with `ready` status, today's date for `created-at` and `updated-at`, and empty fields for `due`, `scheduled`, `projects`, and `area`.
+**Task Template** — Creates a task with `ready` status, today's date for `created-at` and `updated-at`, and empty fields for `due`, `scheduled`, `defer-until`, `projects`, and `area`.
 
-**Project Template** — Creates a project with `planning` status, today's date for `start-date`, and sections for Overview, Scope, and Next Steps.
+**Project Template** — Creates a project with `planning` status, today's date for `start-date`, and sections for Overview and Next Steps.
 
 **Area Template** — Creates an area with `active` status and a prompt to define what "doing well" looks like.
 
-**Trip Project Template** — A more detailed template showing how to create project-specific templates with pre-filled checklists and sections.
+**Trip Project Template** — A more detailed template showing how to create project-specific templates with pre-filled checklists and sections for itinerary, transport, accommodation, and packing.
 
 To use a template, create a new file in the appropriate directory, then run the **Insert template** command (`Cmd/Ctrl + P` → "Insert template").
 
@@ -93,17 +83,21 @@ To use a template, create a new file in the appropriate directory, then run the 
 
 **Tasks.base** — Views for all tasks, filtered by status:
 - All Tasks
+- Active (excludes done, dropped, icebox; respects defer-until)
+- Inbox
 - Ready
 - In Progress
 - Blocked
-- Due This Week
+- Overdue
 
 **Projects.base** — Views for projects by status:
 - All Projects
-- Active (planning, ready, in-progress)
+- Active (in-progress, planning, ready)
 - On Hold (paused, blocked)
 
-**Areas.base** — Simple table of all active areas
+**Areas.base** — Views for areas:
+- All Areas
+- Active (excludes archived)
 
 **AreaProjects.base** — For embedding in area documents to show that area's projects
 
@@ -137,10 +131,42 @@ If you use the [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes)
 
 ## Web Clipper Template
 
-If you use the [Obsidian Web Clipper](https://obsidian.md/clipper), you can create a template that saves web pages directly as inbox tasks. The clipped content goes in the task body, ready for processing later. This template is configured to work with the starter vault.
+If you use the [Obsidian Web Clipper](https://obsidian.md/clipper), you can create a template that saves web pages directly as inbox tasks. The clipped content goes in the task body, ready for processing later.
+
+To add the template, open the Web Clipper settings and import this JSON:
 
 ```json
-// TODO: Add web clipper template JSON
+{
+  "schemaVersion": "0.1.0",
+  "name": "Taskdn Task",
+  "behavior": "create",
+  "noteContentFormat": "Clipped from: {{url}}\n\n{{content}}",
+  "properties": [
+    {
+      "name": "title",
+      "value": "{{title}}",
+      "type": "text"
+    },
+    {
+      "name": "status",
+      "value": "inbox",
+      "type": "text"
+    },
+    {
+      "name": "created-at",
+      "value": "{{date}}",
+      "type": "date"
+    },
+    {
+      "name": "updated-at",
+      "value": "{{date}}",
+      "type": "date"
+    }
+  ],
+  "triggers": [],
+  "noteNameFormat": "{{title|safe_name}}",
+  "path": "tasks"
+}
 ```
 
 See the [CLI documentation](/cli/overview) for other ways to capture tasks, including from the command line and via AI assistants.
