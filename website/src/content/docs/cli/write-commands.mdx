@@ -3,6 +3,256 @@ title: 'Write Commands'
 description: 'Create and modify tasks, projects, and areas'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Aside, Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+Write commands create new entities or modify existing ones. All changes are written directly to your markdown files.
+
+## new
+
+The `new` command creates tasks, projects, or areas.
+
+### Creating Tasks
+
+Create a task by providing a title:
+
+```bash
+tdn new "Review quarterly report"
+```
+
+Add a due date, project assignment, or other fields:
+
+```bash
+tdn new "Review quarterly report" --due friday --project "Q1 Planning"
+tdn new "Call the dentist" --area "Health" --scheduled tomorrow
+tdn new "Research competitors" --status inbox --defer-until "next monday"
+```
+
+### Date Options
+
+Dates accept natural language:
+
+```bash
+tdn new "Task" --due tomorrow
+tdn new "Task" --due friday
+tdn new "Task" --due "next week"
+tdn new "Task" --due +3d            # 3 days from now
+tdn new "Task" --due 2025-02-15     # ISO format
+```
+
+### Task Options
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--status <status>` | `-s` | Initial status (default: `inbox`) |
+| `--project <name>` | `-p` | Assign to project |
+| `--area <name>` | `-a` | Assign to area |
+| `--due <date>` | `-d` | Due date |
+| `--scheduled <date>` | | Scheduled date |
+| `--defer-until <date>` | | Hide until this date |
+
+### Creating Projects
+
+Specify `project` as the entity type:
+
+```bash
+tdn new project "Q2 Roadmap"
+tdn new project "Website Redesign" --area "Work" --status planning
+tdn new project "Home Renovation" --start-date "2025-03-01" --end-date "2025-06-30"
+```
+
+### Creating Areas
+
+```bash
+tdn new area "Health"
+tdn new area "Client: Acme Corp" --type client
+```
+
+### Dry Run
+
+Preview what would be created without actually creating the file:
+
+```bash
+tdn new "Review quarterly report" --due friday --dry-run
+```
+
+## set status
+
+The `set status` command changes task or project status. It automatically manages the `completed-at` field when transitioning to or from completion states.
+
+```bash
+tdn set status "Review quarterly report" done
+tdn set status "Website Redesign" in-progress
+```
+
+### Available Statuses
+
+**For tasks:**
+
+| Status | Description |
+|--------|-------------|
+| `inbox` | Newly captured, not yet processed |
+| `ready` | Processed and ready to work on |
+| `in-progress` | Currently being worked on |
+| `blocked` | Waiting on external dependency |
+| `icebox` | Intentionally deferred indefinitely |
+| `done` | Completed |
+| `dropped` | Abandoned |
+
+**For projects:**
+
+| Status | Description |
+|--------|-------------|
+| `planning` | Still being scoped |
+| `ready` | Planned and ready to begin |
+| `in-progress` | Active work happening |
+| `paused` | Temporarily on hold |
+| `blocked` | Cannot proceed |
+| `done` | Completed |
+
+### Batch Operations
+
+Update multiple tasks at once by providing multiple paths:
+
+```bash
+tdn set status task1.md task2.md task3.md done
+```
+
+Each file is processed independently. If some succeed and some fail, you'll see a summary of both.
+
+### Automatic Field Updates
+
+When you mark a task `done` or `dropped`, the CLI automatically sets `completed-at` to the current date. When you change status away from a completion state, `completed-at` is cleared.
+
+## update
+
+The `update` command modifies any field on a task, project, or area.
+
+```bash
+tdn update "Review quarterly report" --set due=2025-01-20
+tdn update "Review quarterly report" --set project="Q2 Planning" --set scheduled=friday
+```
+
+### Setting Fields
+
+Use `--set field=value` to change a field:
+
+```bash
+tdn update "Task" --set status=ready
+tdn update "Task" --set due=tomorrow
+tdn update "Task" --set area="Work"
+```
+
+Set multiple fields at once:
+
+```bash
+tdn update "Task" --set status=ready --set due=friday --set project="Q1 Planning"
+```
+
+### Removing Fields
+
+Use `--unset field` to remove a field:
+
+```bash
+tdn update "Task" --unset due
+tdn update "Task" --unset project --unset scheduled
+```
+
+### Available Fields
+
+**Tasks:** `status`, `due`, `scheduled`, `defer-until`, `project`, `area`
+
+**Projects:** `status`, `area`, `start-date`, `end-date`, `description`
+
+**Areas:** `status`, `type`, `description`
+
+<Aside type="note">
+The `update` command preserves all other frontmatter fields and body content. Only the fields you specify are changed.
+</Aside>
+
+## archive
+
+The `archive` command moves completed tasks to an `archive/` subdirectory within your tasks folder.
+
+```bash
+tdn archive "Review quarterly report"
+```
+
+This moves `tasks/review-quarterly-report.md` to `tasks/archive/review-quarterly-report.md`.
+
+### Archiving Multiple Tasks
+
+```bash
+tdn archive task1.md task2.md task3.md
+```
+
+### Why Archive?
+
+Archiving keeps your active task list clean while preserving history. Archived tasks:
+
+- Don't appear in `list`, `today`, or `context` by default
+- Can still be queried with `--include-archived` or `--only-archived`
+- Remain fully intact as markdown files
+
+<Aside type="tip">
+Archive tasks after completing them to keep your vault tidy. A good routine is to archive completed tasks during weekly reviews.
+</Aside>
+
+## open
+
+The `open` command opens a task file in your default editor (set by `$EDITOR`).
+
+```bash
+tdn open "Review quarterly report"
+```
+
+This is useful when you need to edit the task body directly—add notes, checklists, or other content that goes beyond structured frontmatter.
+
+<Aside type="note">
+The `open` command only works in human mode (no `--ai` flag). AI agents should use `show` to read content and `update` or `append-body` to modify it.
+</Aside>
+
+## append-body
+
+The `append-body` command adds text to the end of an entity's body content without replacing what's already there.
+
+```bash
+tdn append-body "Review quarterly report" "Discussed with Sarah - needs revision"
+```
+
+This appends the text with a timestamp, making it useful for progress notes:
+
+```markdown
+---
+title: Review quarterly report
+status: in-progress
+---
+
+## Notes
+
+Initial review complete.
+
+---
+
+Discussed with Sarah - needs revision [2025-01-15]
+```
+
+### Use Cases
+
+- Adding progress updates to a task
+- Logging meeting notes on a project
+- Appending context as you work
+
+The timestamp helps track when notes were added, which is especially useful when AI agents are adding updates.
+
+<CardGrid>
+  <LinkCard
+    title="Read Commands"
+    href="/cli/read-commands"
+    description="Query tasks, projects, and areas"
+  />
+  <LinkCard
+    title="Working with AI"
+    href="/cli/working-with-ai"
+    description="Use the CLI with Claude Code and other AI agents"
+  />
+</CardGrid>

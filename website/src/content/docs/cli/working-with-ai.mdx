@@ -1,8 +1,329 @@
 ---
 title: 'Working with AI'
-description: 'Working with AI agents like Claude Code and Cursor'
+description: 'Use the CLI with Claude Code and other AI agents'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Aside, Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+The CLI has a dedicated mode for AI agents. Add `--ai` to any command and the output changes from pretty terminal formatting to structured Markdown that LLMs can parse easily. This page explains how AI mode works and how to get the most out of it.
+
+## Why AI Mode Exists
+
+AI agents and humans have different needs:
+
+| Human Needs | AI Agent Needs |
+|-------------|----------------|
+| Colors, alignment, visual appeal | Structured, parseable data |
+| Fuzzy search ("the login task") | Exact identifiers (file paths) |
+| Interactive prompts for disambiguation | Single-call operations, no prompts |
+| Readable summaries | Token-efficient output |
+
+Rather than compromise, the CLI provides distinct modes optimized for each. An AI agent can query your tasks, understand projects, and make changes—all through the same CLI you use, just with `--ai` appended.
+
+## The --ai Flag
+
+Add `--ai` to any command to switch to AI mode:
+
+```bash
+tdn list --ai
+tdn show "Review quarterly report" --ai
+tdn context project "Q1 Planning" --ai
+```
+
+AI mode changes several things:
+
+1. **Output format** — Structured Markdown instead of formatted terminal output
+2. **No prompts** — Commands succeed or fail with a clear error; no interactive disambiguation
+3. **Paths included** — Every entity includes its file path, so agents can make follow-up calls
+4. **Token-efficient** — Compact notation where possible, progressive disclosure of detail
+
+### Output Format
+
+AI mode outputs structured Markdown that LLMs can read directly. Here's what `tdn list --status ready --ai` might return:
+
+```markdown
+## Tasks (3)
+
+### Review quarterly report
+
+- **path:** /Users/you/notes/tasks/review-quarterly-report.md
+- **status:** ready
+- **created-at:** 2025-01-10
+- **updated-at:** 2025-01-14
+- **due:** 2025-01-15
+- **project:** Q1 Planning
+
+### Update documentation
+
+- **path:** /Users/you/notes/tasks/update-documentation.md
+- **status:** ready
+- **created-at:** 2025-01-12
+- **updated-at:** 2025-01-12
+
+### Fix login bug
+
+- **path:** /Users/you/notes/tasks/fix-login-bug.md
+- **status:** ready
+- **created-at:** 2025-01-08
+- **updated-at:** 2025-01-14
+- **project:** Q1 Planning
+```
+
+Each entity appears as a heading with consistent field formatting. The path is always first—agents need it for follow-up commands.
+
+### Why Markdown?
+
+AI agents receive CLI output in their context window. Markdown works better than JSON for this:
+
+1. **Token-efficient** — More compact than JSON or YAML
+2. **Degrades gracefully** — If output is truncated (e.g., via `head -100`), partial Markdown is still useful; truncated JSON breaks
+3. **No parsing needed** — LLMs read Markdown directly without code execution
+4. **Familiar format** — LLMs are trained extensively on Markdown
+
+## The context Command
+
+The `context` command is designed specifically for AI agents. It returns not just an entity, but everything around it—parent relationships, child entities, timelines, and excerpts.
+
+### Why context Matters
+
+Without `context`, an agent helping with project planning would need multiple calls:
+
+1. Get the project details
+2. Get all tasks in the project
+3. Get the parent area
+4. Figure out what's overdue, due today, etc.
+
+The `context` command does all of this in one call:
+
+```bash
+tdn context project "Q1 Planning" --ai
+```
+
+Returns the project, its parent area (with excerpt), a timeline of due/scheduled tasks, and all active tasks grouped by status.
+
+### Vault Overview
+
+Run `context` with no arguments for an orientation to the entire vault:
+
+```bash
+tdn context --ai
+```
+
+This returns:
+
+- **Stats** — Counts of areas, projects, tasks; overdue and due-today counts
+- **Structure** — Areas with their projects and task counts, using compact notation
+- **Timeline** — Overdue, due today, scheduled today, newly actionable, blocked, and scheduled this week
+- **In-Progress Tasks** — Full details on what's currently being worked on
+- **Excerpts** — Body content from active areas and projects
+- **Reference Table** — File paths for all mentioned entities
+
+This is the best first call for an agent that needs to understand your current work situation.
+
+### Area Context
+
+```bash
+tdn context area "Work" --ai
+```
+
+Returns everything about an area:
+
+- Full area details and body content
+- All projects in this area, grouped by status
+- Timeline scoped to this area's tasks
+- In-progress tasks with full details
+- Up to 10 ready tasks
+- Project excerpts
+
+### Project Context
+
+```bash
+tdn context project "Q1 Planning" --ai
+```
+
+Returns:
+
+- Full project details and body content
+- Parent area summary and excerpt
+- Timeline scoped to this project's tasks
+- All active tasks grouped by status (in-progress tasks get full detail)
+
+### Task Context
+
+```bash
+tdn context task "Fix authentication bug" --ai
+```
+
+Returns:
+
+- Full task details and body content
+- Alert banner if overdue, due today, or newly actionable
+- Parent project (if any) with excerpt
+- Parent area (if any) with excerpt, noting whether the relationship is direct or via project
+
+## AI Mode for Write Commands
+
+Write commands also support `--ai`. The key difference: **AI agents must use exact file paths for write operations**.
+
+### Query First, Then Act
+
+The pattern for AI agents is:
+
+1. **Query** — Use `list`, `show`, or `context` to find entities and get their paths
+2. **Act** — Use the returned paths for `set status`, `update`, `archive`, etc.
+
+For example, an agent helping mark tasks done would:
+
+```bash
+# Step 1: Find the task
+tdn list --query "quarterly report" --ai
+
+# Output includes: path: /Users/you/notes/tasks/review-quarterly-report.md
+
+# Step 2: Mark it done using the path
+tdn set status /Users/you/notes/tasks/review-quarterly-report.md done --ai
+```
+
+This two-step pattern prevents mistakes. An agent can't accidentally complete the wrong task because it must use an exact path, not a fuzzy title match.
+
+### Why Paths for Writes?
+
+Fuzzy matching is convenient for humans but dangerous for agents. If an agent wants to mark "Fix bug" done and there are three tasks with "bug" in the title, which one should be affected?
+
+By requiring exact paths for write operations, the CLI eliminates this ambiguity. The agent gets the path from a query, then uses that path for the action. No guessing.
+
+## Output Format Details
+
+AI mode output follows consistent patterns that agents can rely on.
+
+### Entity Lists
+
+```markdown
+## Tasks (3)
+
+### Entity Title
+
+- **path:** /absolute/path/to/file.md
+- **status:** ready
+- **created-at:** 2025-01-10
+- **updated-at:** 2025-01-14
+- **optional-field:** value
+```
+
+Required fields always appear (path, status, timestamps for tasks). Optional fields appear only when set.
+
+### Mutations
+
+When a write command succeeds, output shows what changed:
+
+```markdown
+## Task Updated
+
+### Review quarterly report
+
+- **path:** /Users/you/notes/tasks/review-quarterly-report.md
+
+### Changes
+
+- **status:** ready → done
+- **completed-at:** (unset) → 2025-01-15
+```
+
+This confirms the change and shows before/after values.
+
+### Errors
+
+Errors in AI mode are structured and include machine-readable codes:
+
+```markdown
+## Error
+
+- **code:** AMBIGUOUS
+- **message:** Multiple tasks match "bug"
+- **matches:**
+  - Fix login bug (tasks/fix-login-bug.md)
+  - Debug authentication (tasks/debug-auth.md)
+  - Bug triage process (tasks/bug-triage.md)
+```
+
+The error code lets agents handle specific situations programmatically.
+
+## Combining --ai and --json
+
+For agents that need both structured metadata and the full context output:
+
+```bash
+tdn context project "Q1 Planning" --ai --json
+```
+
+This wraps the AI Markdown in a JSON envelope:
+
+```json
+{
+  "contextType": "project",
+  "entity": "Q1 Planning",
+  "summary": "Context for project 'Q1 Planning': 8 active tasks",
+  "content": "# Project: Q1 Planning\n\n**Stats:** 8 active tasks...",
+  "references": [
+    { "name": "Q1 Planning", "type": "project", "path": "projects/q1-planning.md" },
+    { "name": "Work", "type": "area", "path": "areas/work.md" }
+  ]
+}
+```
+
+The `content` field contains the full AI Markdown. The `references` array provides structured access to entity paths without parsing the Markdown.
+
+## Best Practices for AI Integration
+
+### Orient First
+
+When an agent starts helping with tasks, it should first understand the situation:
+
+```bash
+tdn context --ai
+```
+
+This single call tells the agent what areas and projects exist, what's overdue, what's in progress, and what's coming up.
+
+### Use context Over Multiple list Calls
+
+Instead of:
+
+```bash
+tdn list --project "Q1 Planning" --ai
+tdn show "Q1 Planning" --ai
+tdn list areas --ai
+```
+
+Use:
+
+```bash
+tdn context project "Q1 Planning" --ai
+```
+
+One call, complete picture.
+
+### Always Include --ai
+
+Agents should always use `--ai`. Without it:
+
+- Output may contain ANSI color codes
+- Interactive prompts might hang waiting for input
+- Paths aren't guaranteed to be included
+
+### Handle Errors Gracefully
+
+Check for error codes in the output. Common ones:
+
+| Code | Meaning | What to Do |
+|------|---------|------------|
+| `NOT_FOUND` | Entity doesn't exist | Check the path/title |
+| `AMBIGUOUS` | Multiple matches | Use a more specific query or exact path |
+| `INVALID_STATUS` | Status value not allowed | Check valid statuses for entity type |
+| `PARSE_ERROR` | File couldn't be parsed | Run `tdn doctor --ai` for details |
+
+<LinkCard
+  title="Claude Code Plugin"
+  href="/claude-code/overview"
+  description="Use the dedicated Claude Code plugin for even deeper AI integration"
+/>

@@ -42,12 +42,6 @@ Working dir: `website/`
 - [x] `obsidian/plugin.mdx`
 - [x] `obsidian/starter-vault.mdx`
 
-### Claude Code Plugin
-
-- [ ] `claude-code/overview.mdx`
-- [ ] `claude-code/skill.mdx`
-- [ ] `claude-code/slash-commands.mdx`
-
 ### CLI
 
 - [ ] `cli/overview.mdx`
@@ -55,12 +49,18 @@ Working dir: `website/`
 - [ ] `cli/write-commands.mdx`
 - [ ] `cli/working-with-ai.mdx`
 
+
+### Claude Code Plugin
+
+- [ ] `claude-code/overview.mdx`
+- [ ] `claude-code/skill.mdx`
+- [ ] `claude-code/slash-commands.mdx`
+
+
 ### Reference
 
 - [ ] `reference/cli/cli-reference.mdx`
 - [ ] `reference/cli/obsidian-plugin-reference.mdx`
-- [ ] `reference/desktop-reference/url-scheme.mdx`
-- [ ] `reference/desktop-reference/keyboard-shortcuts.mdx`
 
 ### Developer
 
