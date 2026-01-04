@@ -39,8 +39,8 @@ Working dir: `website/`
 
 ### Obsidian Integration
 
-- [ ] `obsidian/plugin.mdx`
-- [ ] `obsidian/starter-vault.mdx`
+- [x] `obsidian/plugin.mdx`
+- [x] `obsidian/starter-vault.mdx`
 
 ### Claude Code Plugin
 
