@@ -34,6 +34,83 @@ import splashImage from '../assets/icon-1024-trans.png';
         </a>
       </div>
     </div>
+
+    <section class="concept">
+      <div class="file-example">
+        <div class="file-header">
+          <span class="file-icon">📄</span>
+          <span class="file-name">tasks/review-quarterly-report.md</span>
+        </div>
+        <pre><code><span class="yaml-delimiter">---</span>
+<span class="yaml-key">title:</span> <span class="yaml-string">Review quarterly report</span>
+<span class="yaml-key">status:</span> <span class="yaml-value">in-progress</span>
+<span class="yaml-key">due:</span> <span class="yaml-date">2025-01-15</span>
+<span class="yaml-key">projects:</span>
+  <span class="yaml-link">- '[[Q1 Planning]]'</span>
+<span class="yaml-delimiter">---</span>
+
+<span class="md-heading">## Notes</span>
+Key points to review:
+- Revenue projections
+- Budget allocations</code></pre>
+      </div>
+
+      <p class="concept-text">
+        Your tasks are just markdown files. Edit them anywhere, version them with git, back them up however you like.
+      </p>
+    </section>
+
+    <section class="hierarchy">
+      <div class="hierarchy-items">
+        <div class="hierarchy-item">
+          <span class="hierarchy-icon">🗂️</span>
+          <span class="hierarchy-label">Areas</span>
+          <span class="hierarchy-desc">Ongoing responsibilities</span>
+        </div>
+        <span class="hierarchy-arrow">→</span>
+        <div class="hierarchy-item">
+          <span class="hierarchy-icon">📁</span>
+          <span class="hierarchy-label">Projects</span>
+          <span class="hierarchy-desc">Goals with an end</span>
+        </div>
+        <span class="hierarchy-arrow">→</span>
+        <div class="hierarchy-item">
+          <span class="hierarchy-icon">✓</span>
+          <span class="hierarchy-label">Tasks</span>
+          <span class="hierarchy-desc">Things you do</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="products">
+      <h2>The Suite</h2>
+      <div class="product-grid">
+        <a href="/desktop/overview" class="product">
+          <span class="product-icon">🖥️</span>
+          <span class="product-name">Desktop App</span>
+          <span class="product-desc">Beautiful day-to-day task management</span>
+          <span class="product-status coming-soon">Coming Soon</span>
+        </a>
+        <a href="/cli/overview" class="product">
+          <span class="product-icon">⌨️</span>
+          <span class="product-name">CLI</span>
+          <span class="product-desc">Terminal interface for humans & AI</span>
+          <span class="product-status available">Available</span>
+        </a>
+        <a href="/obsidian/plugin" class="product">
+          <span class="product-icon">💎</span>
+          <span class="product-name">Obsidian Plugin</span>
+          <span class="product-desc">Tasks inside your vault</span>
+          <span class="product-status available">Available</span>
+        </a>
+        <a href="/claude-code/overview" class="product">
+          <span class="product-icon">🤖</span>
+          <span class="product-name">Claude Code</span>
+          <span class="product-desc">AI-assisted task management</span>
+          <span class="product-status available">Available</span>
+        </a>
+      </div>
+    </section>
   </main>
 
   <footer>
@@ -48,21 +125,23 @@ import splashImage from '../assets/icon-1024-trans.png';
 <style>
   main {
     flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: block;
     padding: 2rem;
+    max-width: 700px;
+    margin: 0 auto;
   }
 
   .hero {
     text-align: center;
+    padding-top: 2rem;
+    margin-bottom: 4rem;
   }
 
   .splash-image {
     width: 70%;
-    max-width: 400px;
+    max-width: 300px;
     height: auto;
-    margin-bottom: 2rem;
+    margin-bottom: 1.5rem;
   }
 
   h1 {
@@ -74,10 +153,11 @@ import splashImage from '../assets/icon-1024-trans.png';
   }
 
   .tagline {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     color: var(--color-text-muted);
     margin-bottom: 2rem;
     line-height: 1.5;
+    max-width: 500px;
   }
 
   .actions {
@@ -124,6 +204,204 @@ import splashImage from '../assets/icon-1024-trans.png';
   .button.secondary:hover {
     border-color: var(--color-text-muted);
     background: var(--color-bg);
+  }
+
+  /* File example section */
+  .concept {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .file-example {
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    text-align: left;
+  }
+
+  .file-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+    font-size: 0.8125rem;
+  }
+
+  .file-icon {
+    font-size: 0.875rem;
+  }
+
+  .file-name {
+    color: var(--color-text-muted);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+
+  .file-example pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .file-example code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  }
+
+  .yaml-delimiter { color: var(--color-text-muted); }
+  .yaml-key { color: var(--color-accent); }
+  .yaml-string { color: var(--color-text); }
+  .yaml-value { color: #d0a215; }
+  .yaml-date { color: #879a39; }
+  .yaml-link { color: var(--color-accent); opacity: 0.8; }
+  .md-heading { color: var(--color-text); font-weight: 600; }
+
+  @media (prefers-color-scheme: light) {
+    .yaml-value { color: #ad5c00; }
+    .yaml-date { color: #66800b; }
+  }
+
+  .concept-text {
+    margin-top: 1.25rem;
+    color: var(--color-text-muted);
+    font-size: 0.9375rem;
+  }
+
+  /* Hierarchy section */
+  .hierarchy {
+    text-align: center;
+    margin-bottom: 4rem;
+  }
+
+  .hierarchy-items {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .hierarchy-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .hierarchy-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .hierarchy-label {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--color-text);
+  }
+
+  .hierarchy-desc {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+  }
+
+  .hierarchy-arrow {
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    opacity: 0.5;
+  }
+
+  /* Products section */
+  .products {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .products h2 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    color: var(--color-text);
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  @media (max-width: 600px) {
+    .product-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .product {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    text-align: left;
+    transition: all 0.15s ease;
+  }
+
+  .product:hover {
+    text-decoration: none;
+    border-color: var(--color-text-muted);
+  }
+
+  .product-icon {
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .product-name {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--color-text);
+  }
+
+  .product-desc {
+    font-size: 0.8125rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .product-status {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+  }
+
+  .product-status.available {
+    background: rgba(135, 154, 57, 0.15);
+    color: #879a39;
+  }
+
+  .product-status.coming-soon {
+    background: rgba(208, 162, 21, 0.15);
+    color: #d0a215;
+  }
+
+  @media (prefers-color-scheme: light) {
+    .product-status.available {
+      background: rgba(102, 128, 11, 0.1);
+      color: #66800b;
+    }
+
+    .product-status.coming-soon {
+      background: rgba(173, 92, 0, 0.1);
+      color: #ad5c00;
+    }
   }
 
   footer {
