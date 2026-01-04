@@ -44,23 +44,22 @@ Working dir: `website/`
 
 ### CLI
 
-- [ ] `cli/overview.mdx`
-- [ ] `cli/read-commands.mdx`
-- [ ] `cli/write-commands.mdx`
-- [ ] `cli/working-with-ai.mdx`
+- [x] `cli/overview.mdx`
+- [x] `cli/read-commands.mdx`
+- [x] `cli/write-commands.mdx`
+- [x] `cli/working-with-ai.mdx`
 
 
 ### Claude Code Plugin
 
-- [ ] `claude-code/overview.mdx`
-- [ ] `claude-code/skill.mdx`
-- [ ] `claude-code/slash-commands.mdx`
+- [x] `claude-code/overview.mdx`
+- [x] `claude-code/skill.mdx`
+- [x] `claude-code/slash-commands.mdx`
 
 
 ### Reference
 
-- [ ] `reference/cli/cli-reference.mdx`
-- [ ] `reference/cli/obsidian-plugin-reference.mdx`
+- [x] `reference/cli/cli-reference.mdx`
 
 ### Developer
 

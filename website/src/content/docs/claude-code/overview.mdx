@@ -1,8 +1,131 @@
 ---
-title: 'Overview'
-description: 'Learn how to use the Taskdn plugin for Claude Code'
+title: 'Claude Code Plugin'
+description: 'AI-assisted task management with Claude Code'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+[Claude Code](https://docs.anthropic.com/en/docs/claude-code) supports [plugins](https://docs.anthropic.com/en/docs/claude-code/plugins) that extend its capabilities. The Taskdn plugin teaches Claude to work as a productivity assistant. Once installed, Claude understands your task system—it can query what's due, create tasks as you work, help with weekly reviews, and generally act like a knowledgeable GTD coach who happens to also be a capable programmer.
+
+{/* TODO: Add GIF showing Claude helping with task management */}
+
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Demo coming soon</em>
+</div>
+
+## Why Use Claude for Tasks?
+
+Your task files are just markdown on disk. Claude Code can already read and edit them. But raw file access isn't great for task management—you'd need to tell Claude the file format, explain what statuses mean, remind it about the CLI commands, and hope it doesn't mangle your frontmatter.
+
+The plugin solves this by teaching Claude everything it needs to know upfront:
+
+- **The tdn system** — hierarchy of tasks, projects, and areas
+- **CLI commands** — how to use `tdn` with the right flags
+- **When to use what** — CLI for mutations, direct file access for bulk reads
+- **Productivity mindset** — thinking like a GTD coach, not just a programmer
+
+With the skill loaded, you can just ask natural questions: "What's overdue?", "Create a task to call the dentist", "Show me the Q1 Planning project". Claude handles the details.
+
+## Prerequisites
+
+The plugin requires the [tdn CLI](/cli/overview) to be installed and configured. Claude uses the CLI to query and update your tasks—the plugin teaches Claude *how* to use it effectively.
+
+Make sure you can run `tdn today` successfully before installing the plugin.
+
+## Installation
+
+Install the plugin globally so it's available in any Claude Code session:
+
+<Steps>
+
+1. Add the plugin from the marketplace:
+
+   ```bash
+   /plugin marketplace add dannysmith/taskdn
+   ```
+
+2. Install it:
+
+   ```bash
+   /plugin install tdn@tdn-marketplace
+   ```
+
+3. Verify it's available:
+
+   ```bash
+   /plugins
+   ```
+
+   You should see `tdn@tdn-marketplace` in the list.
+
+</Steps>
+
+<Aside type="tip">
+Installing globally means Claude can help with tasks from any project directory, not just your notes vault.
+</Aside>
+
+## What's in the Plugin
+
+The plugin provides two things: a [**skill**](https://agentskills.io/) and [**slash commands**](https://docs.anthropic.com/en/docs/claude-code/slash-commands).
+
+### Skill
+
+The skill is a comprehensive knowledge base that teaches Claude how to work with your tasks. When loaded, Claude understands the tdn file format, knows all the CLI commands, and adopts a productivity-focused mindset.
+
+You typically don't load the skill manually—the slash commands load it automatically. But you can invoke it directly if needed:
+
+```
+/skill task-management
+```
+
+<LinkCard
+  title="Skill Documentation"
+  href="/claude-code/skill"
+  description="What the skill teaches Claude and how to use it"
+/>
+
+### Slash Commands
+
+Slash commands are quick actions you can run in Claude Code. The plugin provides two:
+
+| Command | Purpose |
+|---------|---------|
+| `/tdn:prime` | Load context about your tasks, projects, and areas |
+| `/tdn:today` | Show what needs attention today |
+
+These are shortcuts for common operations. They load the skill automatically and run the appropriate commands.
+
+<LinkCard
+  title="Slash Commands Reference"
+  href="/claude-code/slash-commands"
+  description="Available commands and when to use them"
+/>
+
+## Usage Examples
+
+Once the plugin is installed, you can ask Claude to help with tasks naturally:
+
+**Quick queries:**
+- "What should I focus on today?"
+- "What's overdue?"
+- "Show me the Q1 Planning project"
+
+**Creating tasks:**
+- "Create a task to call the dentist, due Friday"
+- "Add a task to review the quarterly report under Q1 Planning"
+
+**Updates:**
+- "Mark 'Call dentist' as done"
+- "Reschedule the report review to next Monday"
+
+**Reviews:**
+- "Help me do a quick review of my inbox"
+- "What tasks are blocked?"
+
+Claude will use the `tdn` CLI with the right flags (including [`--ai` mode](/cli/working-with-ai)), or read files directly when that's more appropriate.
+
+{/* TODO: Add screenshot showing a conversation with Claude about tasks */}
+
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Screenshot coming soon</em>
+</div>
