@@ -1,4 +1,22 @@
 ---
 title: 'The Specification'
 description: 'Formal Taskdn specifications'
+tableOfContents: false
 ---
+
+import { LinkCard, CardGrid } from '@astrojs/starlight/components'
+
+Formal specifications describing the protocol and core behaviors of the system. Tools which implement these will be compatible with each other.
+
+<CardGrid>
+  <LinkCard
+    title="Core (Data Storage)"
+    href="/specification/s1-core"
+    description="Defines file format for tasks, projects, and areas as Markdown with YAML frontmatter. Conformance means your files are compatible with other S1-compliant tools."
+  />
+  <LinkCard
+    title="Implementation Guidance"
+    href="/specification/s2-implementation-guidance"
+    description="Recommendations for reading, writing, and presenting S1-compliant data. Conformance means your implementation behaves consistently and predictably."
+  />
+</CardGrid>
