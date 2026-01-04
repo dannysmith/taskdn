@@ -1,0 +1,115 @@
+filters:
+  and:
+    - file.inFolder("tasks")
+    - file.name != "Overview"
+properties:
+  file.name:
+    displayName: Task
+  note.status:
+    displayName: Status
+  note.due:
+    displayName: Due
+  note.scheduled:
+    displayName: Scheduled
+  note.projects:
+    displayName: Project
+  note.area:
+    displayName: Area
+  note.defer-until:
+    displayName: Deferred Until
+views:
+  - type: table
+    name: All Tasks
+    order:
+      - file.name
+      - status
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+      - property: file.name
+        direction: ASC
+  - type: table
+    name: Active
+    filters:
+      and:
+        - note.status != "done"
+        - note.status != "dropped"
+        - note.status != "icebox"
+        - or:
+            - note.defer-until <= today()
+            - note.defer-until == null
+    order:
+      - file.name
+      - status
+      - due
+      - scheduled
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+      - property: file.name
+        direction: ASC
+  - type: table
+    name: Inbox
+    filters:
+      and:
+        - note.status == "inbox"
+    order:
+      - file.name
+    sort:
+      - property: file.ctime
+        direction: DESC
+  - type: table
+    name: Ready
+    filters:
+      and:
+        - note.status == "ready"
+    order:
+      - file.name
+      - due
+      - scheduled
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+  - type: table
+    name: In Progress
+    filters:
+      and:
+        - note.status == "in-progress"
+    order:
+      - file.name
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+  - type: table
+    name: Blocked
+    filters:
+      and:
+        - note.status == "blocked"
+    order:
+      - file.name
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
+  - type: table
+    name: Overdue
+    filters:
+      and:
+        - note.due < today()
+        - note.status != "done"
+        - note.status != "dropped"
+    order:
+      - file.name
+      - status
+      - due
+      - projects
+    sort:
+      - property: note.due
+        direction: ASC
