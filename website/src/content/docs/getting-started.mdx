@@ -3,24 +3,175 @@ title: 'Getting Started'
 description: 'Learn the fundamentals of Taskdn'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+Taskdn is a plain-text task management system for individuals. Store your tasks, projects, and areas as markdown files with YAML frontmatter, then work with them through whichever interface suits your context: a desktop app for daily task management, a CLI for scripting and AI agents, an Obsidian plugin for knowledge workers, or a Claude Code skill for AI-assisted productivity.
+
+The system is built on a simple principle: **your data is just files on disk**. Any tool that can read and write markdown files can work with your tasks. Taskdn products are interfaces optimized for specific contexts—not data silos.
 
 ## The Suite
 
+|     | Product                                     | Status                                       | Description                                        |
+| --- | ------------------------------------------- | -------------------------------------------- | -------------------------------------------------- |
+| 🖥️  | [Desktop App](/desktop/overview)            | <Badge text="Coming Soon" variant="note" />  | Day-to-day task management with a beautiful UI     |
+| ⌨️  | [CLI](/cli/overview)                        | <Badge text="Available" variant="success" /> | Terminal interface for humans and AI agents        |
+| 💎  | [Obsidian Plugin](/obsidian/plugin)         | <Badge text="Available" variant="success" /> | View and manage tasks within Obsidian              |
+| 🤖  | [Claude Code Plugin](/claude-code/overview) | <Badge text="Available" variant="success" /> | Skill and commands for AI-assisted task management |
+
 ## Core Concepts
 
-One File per Entity
-YAML Frontmatter
-More detail in the spec. Entities:
+Taskdn draws on GTD and PARA methods. Everything is stored as markdown files with YAML frontmatter—one file per entity. This means you own your data, can version it with git, edit it in any text editor, and build your own tools on top of it.
 
-### Task
+The products are **interfaces** to these files. The desktop app presents tasks in a polished UI optimized for doing and planning. The CLI provides programmatic access with output modes for humans, AI agents, and scripts. The Obsidian plugin lets you see task metadata while working in your notes. The Claude Code skill teaches Claude how to help you manage tasks effectively.
 
-#### Statuses
+### The Hierarchy
 
-### Project
+Three entity types form a hierarchy:
 
-#### Statuses
+- **Areas** are ongoing areas of responsibility (e.g., "Work", "Health", "Client: Acme Corp"). They never end.
+- **Projects** are collections of tasks with a defined end goal. Projects optionally belong to an area.
+- **Tasks** are small, actionable items. Tasks can belong to a project, an area directly, or stand alone.
 
-### Area
+This hierarchy lets you organize work naturally: an area like "Work" might contain projects like "Q1 Planning" and "Website Redesign", each with their own tasks. A task like "Call the dentist" might belong directly to your "Health" area without needing a project.
+
+### Tasks
+
+A task represents a single actionable item. Tasks live in your configured `tasks/` directory.
+
+```yaml title="tasks/review-quarterly-report.md"
+---
+title: Review quarterly report
+status: in-progress
+scheduled: 2025-01-14
+projects:
+  - '[[Q1 Planning]]'
+---
+## Notes
+
+Key points to review:
+  - Revenue projections
+  - Budget allocations
+```
+
+#### Task Statuses
+
+| Status                                         | Meaning                                   |
+| ---------------------------------------------- | ----------------------------------------- |
+| <Badge text="inbox" variant="note" />          | Newly captured, not yet processed         |
+| <Badge text="icebox" variant="note" />         | Intentionally deferred indefinitely       |
+| <Badge text="ready" variant="default" />       | Processed and ready to be worked on       |
+| <Badge text="in-progress" variant="caution" /> | Currently being worked on                 |
+| <Badge text="blocked" variant="danger" />      | Cannot proceed due to external dependency |
+| <Badge text="dropped" variant="danger" />      | Abandoned, will not be completed          |
+| <Badge text="done" variant="success" />        | Completed successfully                    |
+
+### Projects
+
+A project represents a collection of related tasks with a defined end goal. Projects live in your configured `projects/` directory.
+
+```yaml title="projects/q1-planning.md"
+---
+title: Q1 Planning
+status: in-progress
+area: '[[Work]]'
+description: Quarterly planning and budget review for Q1 2025.
+---
+## Overview
+
+This project covers all Q1 planning activities...
+```
+
+#### Project Statuses
+
+| Status                                         | Meaning                          |
+| ---------------------------------------------- | -------------------------------- |
+| <Badge text="planning" variant="note" />       | Still being scoped or planned    |
+| <Badge text="ready" variant="default" />       | Planned and ready to begin       |
+| <Badge text="in-progress" variant="caution" /> | Active work is happening         |
+| <Badge text="paused" variant="caution" />      | Temporarily on hold              |
+| <Badge text="blocked" variant="danger" />      | Cannot proceed due to dependency |
+| <Badge text="done" variant="success" />        | Completed                        |
+
+### Areas
+
+An area represents an ongoing area of responsibility. Areas live in your configured `areas/` directory.
+
+```yaml title="areas/work.md"
+---
+title: Work
+description: Professional responsibilities and career development.
+---
+## Context
+
+Current role, key responsibilities, and long-term goals...
+```
+
+## Using the Products
+
+Each product serves a different context. You might use the desktop app for daily work, the CLI for weekly reviews with AI assistance, and the Obsidian plugin when you're deep in your notes.
+
+### Desktop App
+
+The desktop app is for day-to-day task management—a replacement for apps like Things or Todoist. It provides a polished interface for capturing tasks, planning your day, and working through your lists. Quick capture, keyboard shortcuts, and smart views help you stay focused.
+
+{/* TODO: Add screenshot of desktop app */}
+
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Screenshot coming soon</em>
+</div>
+
+<LinkCard
+  title="Desktop App Documentation"
+  href="/desktop/overview"
+  description="Learn about the desktop app's features and interface"
+/>
+
+### CLI
+
+The CLI is for programmatic access and AI integration. It serves two audiences with distinct modes: a pretty, interactive mode for humans at the terminal, and a structured markdown mode for AI agents like Claude Code or Cursor.
+
+{/* TODO: Add screenshot showing CLI commands and output */}
+
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Screenshot coming soon</em>
+</div>
+
+Key features include natural language date parsing (`--due tomorrow`), fuzzy entity lookup, advanced filtering, and the `context` command which gives AI agents a complete picture of your vault or a specific entity's relationships.
+
+<LinkCard
+  title="CLI Documentation"
+  href="/cli/overview"
+  description="Learn how to use the CLI for task management"
+/>
+
+### Obsidian Plugin
+
+The Obsidian plugin renders task links as rich widgets showing metadata like status, due date, and project. Change a task's status without leaving your notes. Turn any checklist item into a full task with one click.
+
+{/* TODO: Add screenshot of Obsidian with task widgets */}
+
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Screenshot coming soon</em>
+</div>
+
+<LinkCard
+  title="Obsidian Plugin Documentation"
+  href="/obsidian/plugin"
+  description="Set up the Obsidian integration"
+/>
+
+### Claude Code Plugin
+
+The Claude Code plugin teaches Claude to work as your productivity assistant. Load the skill and Claude understands your task system—ask it to show what's overdue, create tasks for you, mark things complete, or help with planning. The `/tdn:today` command gives you a quick overview of today's focus.
+
+{/* TODO: Add GIF/video showing Claude Code interaction */}
+
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Demo video coming soon</em>
+</div>
+
+<LinkCard
+  title="Claude Code Plugin Documentation"
+  href="/claude-code/overview"
+  description="Set up AI-assisted task management"
+/>
