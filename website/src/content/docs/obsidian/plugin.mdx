@@ -1,16 +1,49 @@
 ---
 title: 'Obsidian Plugin'
-description: 'Integrate Taskdn with your Obsidian notes'
+description: 'Integrate Taskdn with your Obsidian vault'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro'
+import { Image } from 'astro:assets'
+import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
 
-<UnderConstruction />
+The Obsidian plugin turns wikilinks to task files into interactive widgets. Link to a task from anywhere in your vault and see its status, project, dates, and other metadata inline. Check off tasks without opening the file.
 
-Intro
+<Image src={obsidianScreenshot} alt="Taskdn tasks rendered as interactive widgets in Obsidian" />
 
-## The Obsidian Plugin
+## Features
 
-[Intro and overview of features]
+- **Interactive task widgets** — Wikilinks to tasks render with checkboxes, status indicators, project/area, and due dates
+- **Status colours** — Coloured borders show task state at a glance (blue for inbox, yellow for in-progress, red for blocked)
+- **Check off tasks** — Click the checkbox to mark tasks done without leaving your note
+- **Convert checklist items** — Right-click any checklist item to turn it into a Taskdn task file
 
-### Installation & Configuration
+## Installation
+
+1. Open **Settings → Community Plugins**
+2. Search for "Taskdn"
+3. Click **Install**, then **Enable**
+
+Make sure WikiLinks are enabled in your vault settings.
+
+## Configuration
+
+Open **Settings → Taskdn** to configure:
+
+| Setting | Description |
+|---------|-------------|
+| Tasks directory | Path to your tasks folder (default: `tasks`) |
+| Default status | Status for newly converted tasks (default: `inbox`) |
+| Show desktop button | Whether to show the "open in desktop app" button |
+| Exclude patterns | Files to ignore, supports wildcards |
+
+## Usage
+
+Link to task files using standard wikilink syntax:
+
+```md
+- [[call-dentist]]
+- [[review-quarterly-report]]
+- Check out [[website-redesign]] when you have time
+```
+
+Works in both Live Preview and Reading mode. Tasks in bullet lists behave like native Obsidian checklists—completed tasks get strikethrough styling.

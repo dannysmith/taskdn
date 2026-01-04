@@ -105,6 +105,17 @@ import MyComponent from '@components/MyComponent.astro';
 
 **Never** use relative paths like `../../components/`. The alias is configured in `tsconfig.json`.
 
+### Images & Assets
+
+Images used in documentation live in `src/assets/`. Import them using the `@assets` alias and render with Astro's `<Image>` component:
+
+```mdx
+import { Image } from 'astro:assets'
+import screenshot from '@assets/my-screenshot.png'
+
+<Image src={screenshot} alt="Description of the image" />
+```
+
 ### Steps Component
 
 Use the `<Steps>` component to style numbered lists of tasks. This is useful for more complex step-by-step guides where each step needs to be clearly highlighted.

@@ -1,18 +1,146 @@
 ---
 title: 'Starter Vault'
-description: 'Integrate Taskdn with your Obsidian notes'
+description: 'Pre-configured Obsidian vault with templates and bases for Taskdn'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { FileTree, Steps } from '@astrojs/starlight/components'
+import UnderConstruction from '@components/UnderConstruction.astro'
 
 <UnderConstruction />
 
-## Starter Vault
+The starter vault is a pre-configured Obsidian vault with templates, [Bases](https://obsidian.md/plugins/bases), and example content. Clone it to get a working Taskdn setup in minutes.
 
-[Structure tree]
+{/* TODO: Add screenshot of the vault with bases views */}
 
-### Templates
+<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
+  <em>Screenshot coming soon</em>
+</div>
 
-### Bases & Overview Docs
+## Installation
 
-## WebClipper Template
+<Steps>
+
+1. Clone the starter vault:
+
+   ```bash
+   git clone https://github.com/dannysmith/obsidian-taskdn-starter-vault my-tasks
+   cd my-tasks
+   rm -rf .git README.md
+   ```
+
+2. Open the folder as a vault in Obsidian
+
+3. When prompted, **Trust** the vault to enable plugins
+
+4. Go to **Settings → Files and links** and ensure **Wikilinks** are enabled
+
+5. Go to **Settings → Core plugins** and enable **Bases** and **Templates**
+
+</Steps>
+
+## Vault Structure
+
+<FileTree>
+- areas/
+  - Overview.md (embedded bases view)
+  - work.md
+  - health.md
+  - ...
+- projects/
+  - Overview.md         (embedded bases view)
+  - q1-planning.md
+  - website-redesign.md
+  - ...
+- tasks/
+  - Overview.md         (embedded bases view)
+  - archive/            (completed & dropped tasks)
+  - call-dentist.md
+  - review-report.md
+  - ...
+- templates/
+  - bases/
+    - Tasks.base
+    - Projects.base
+    - Areas.base
+    - AreaProjects.base
+  - Task.md
+  - Project.md
+  - Area.md
+  - TripProject.md
+- example-note.md        (demonstrates plugin features)
+- CLAUDE.md
+</FileTree>
+
+## Templates
+
+Create new tasks, projects, and areas using Obsidian's Templates plugin. Each template includes the required frontmatter fields with sensible defaults.
+
+**Task Template** — Creates a task with `ready` status, today's date for `created-at` and `updated-at`, and empty fields for `due`, `scheduled`, `projects`, and `area`.
+
+**Project Template** — Creates a project with `planning` status, today's date for `start-date`, and sections for Overview, Scope, and Next Steps.
+
+**Area Template** — Creates an area with `active` status and a prompt to define what "doing well" looks like.
+
+**Trip Project Template** — A more detailed template showing how to create project-specific templates with pre-filled checklists and sections.
+
+To use a template, create a new file in the appropriate directory, then run the **Insert template** command (`Cmd/Ctrl + P` → "Insert template").
+
+## Bases
+
+[Obsidian Bases](https://obsidian.md/plugins/bases) let you create database-like views of your notes. The starter vault includes pre-configured bases for tasks, projects, and areas.
+
+### Included Bases
+
+**Tasks.base** — Views for all tasks, filtered by status:
+- All Tasks
+- Ready
+- In Progress
+- Blocked
+- Due This Week
+
+**Projects.base** — Views for projects by status:
+- All Projects
+- Active (planning, ready, in-progress)
+- On Hold (paused, blocked)
+
+**Areas.base** — Simple table of all active areas
+
+**AreaProjects.base** — For embedding in area documents to show that area's projects
+
+### Overview Pages
+
+Each directory contains an `Overview.md` file with embedded bases. Open `tasks/Overview.md` to see a filterable table of all your tasks. Switch between views using the tabs.
+
+Embed a base view in any note using:
+
+```md
+![[Tasks.base]]
+![[Tasks.base#Ready]]
+```
+
+## Plugin Configuration
+
+### Taskdn Plugin
+
+Go to **Settings → Taskdn** and configure:
+
+| Setting | Recommended Value |
+|---------|-------------------|
+| Tasks directory | `tasks` |
+| Exclude patterns | `Overview.md` |
+
+This prevents the Overview files from appearing as tasks.
+
+### Folder Notes (Optional)
+
+If you use the [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes) plugin, configure it to use `Overview.md` as the folder note name. This makes the Overview page open automatically when you click a folder in the file explorer.
+
+## Web Clipper Template
+
+If you use the [Obsidian Web Clipper](https://obsidian.md/clipper), you can create a template that saves web pages directly as inbox tasks. The clipped content goes in the task body, ready for processing later. This template is configured to work with the starter vault.
+
+```json
+// TODO: Add web clipper template JSON
+```
+
+See the [CLI documentation](/cli/overview) for other ways to capture tasks, including from the command line and via AI assistants.
