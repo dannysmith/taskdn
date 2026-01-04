@@ -46,7 +46,109 @@ export default defineConfig({
           },
         },
       ],
-      sidebar: [],
+      sidebar: [
+        {
+          label: 'Start Here',
+          items: [
+            {
+              slug: 'getting-started',
+            },
+            {
+              slug: 'philosophy',
+            },
+          ],
+        },
+        {
+          label: 'Desktop App',
+          badge: {
+            text: 'Soon',
+            variant: 'note',
+          },
+          items: [
+            {
+              slug: 'desktop/overview',
+            },
+          ],
+        },
+        {
+          label: 'CLI',
+          items: [
+            {
+              slug: 'cli/overview',
+            },
+            {
+              slug: 'cli/read-commands',
+            },
+            {
+              slug: 'cli/write-commands',
+            },
+            {
+              slug: 'cli/working-with-ai',
+            },
+          ],
+        },
+        {
+          label: 'Obsidian Integration',
+          items: [
+            {
+              slug: 'obsidian/plugin',
+            },
+            {
+              slug: 'obsidian/starter-vault',
+            },
+          ],
+        },
+        {
+          label: 'Claude Code Plugin',
+          items: [
+            {
+              slug: 'claude-code/overview',
+            },
+            {
+              slug: 'claude-code/skill',
+            },
+            {
+              slug: 'claude-code/slash-commands',
+            },
+          ],
+        },
+        {
+          label: 'The Specification',
+          items: [
+            {
+              slug: 'specification/overview',
+            },
+            {
+              slug: 'specification/s1-core',
+            },
+            {
+              slug: 'specification/s2-implementation',
+            },
+          ],
+        },
+        {
+          label: 'Reference',
+          items: [
+            {
+              slug: 'reference/cli/cli-reference',
+            },
+            {
+              slug: 'reference/cli/obsidian-plugin-reference',
+            },
+            {
+              label: 'Desktop App',
+              items: [
+                {
+                  slug: 'reference/desktop-reference/url-scheme',
+                },
+                {
+                  slug: 'reference/desktop-reference/keyboard-shortcuts',
+                },
+              ],
+            },
+          ],
+        },
+      ],
     }),
   ],
 })
