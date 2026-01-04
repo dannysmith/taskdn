@@ -1,3 +1,6 @@
+
+<img width="400" height="400" alt="icon-1024-trans" src="https://github.com/user-attachments/assets/f7d870a3-0c27-42f5-9d10-5e1b15812e40" />
+
 # Taskdn
 
 **[Documentation & Getting Started](https://tdn.danny.is)**
