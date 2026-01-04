@@ -137,9 +137,6 @@ export default defineConfig({
               slug: 'reference/cli/cli-reference',
             },
             {
-              slug: 'reference/cli/obsidian-plugin-reference',
-            },
-            {
               label: 'Desktop App',
               items: [
                 {
