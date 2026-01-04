@@ -71,10 +71,6 @@ Working dir: `website/`
 - [x] setup.md
 - [ ] Review entire set of documentation together for inconsistencies, needless repetition, AI-isms and the like.
 
-## Phase 3 - Changelog (Manual for now)
+## Improve homepage
 
-## Phase 4 - Proper Splash/Homepage
-
-## Phase 3 - Automatic Changelog & Product Installation Binaries
-
-- [ ] Set up GitHub Action which looks for new releases in this repo and in obsidian-taskdn and republishes them on the website changelog, as well as pulling the right installation artefacts from those repos into the website binary etc.
+Okay, I want to keep the current homepage pretty simple. Here's a screen shot of it. Um but I think it would probably be a good idea to include something in here that just demonstrates um like a nice stylised example of a task file. Maybe talks about the whole Areas Tasks Projects thing, and then also explains what the different products that are included are here with a very quick explanation of them. We should make this look as beautiful as possible while keeping it extremely clean and simple in the UI. I will eventually add some screenshots to this and do more work on it, but for now I think we can do a good job with just text, perhaps emojis, um, etcetera. 
