@@ -1,5 +1,7 @@
 
-<img width="400" height="400" alt="icon-1024-trans" src="https://github.com/user-attachments/assets/f7d870a3-0c27-42f5-9d10-5e1b15812e40" />
+<p align="center">
+  <img width="200" height="200" alt="Taskdn icon" src="https://github.com/user-attachments/assets/f7d870a3-0c27-42f5-9d10-5e1b15812e40" />
+</p>
 
 # Taskdn
 
