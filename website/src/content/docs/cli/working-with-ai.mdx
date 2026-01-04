@@ -313,14 +313,9 @@ Agents should always use `--ai`. Without it:
 
 ### Handle Errors Gracefully
 
-Check for error codes in the output. Common ones:
+Check for error codes in the output. Common ones include `NOT_FOUND` (entity doesn't exist), `AMBIGUOUS` (multiple matches—use a more specific query or exact path), and `PARSE_ERROR` (file couldn't be parsed—run `tdn doctor --ai` for details).
 
-| Code | Meaning | What to Do |
-|------|---------|------------|
-| `NOT_FOUND` | Entity doesn't exist | Check the path/title |
-| `AMBIGUOUS` | Multiple matches | Use a more specific query or exact path |
-| `INVALID_STATUS` | Status value not allowed | Check valid statuses for entity type |
-| `PARSE_ERROR` | File couldn't be parsed | Run `tdn doctor --ai` for details |
+See the [CLI Reference](/reference/cli/cli-reference#error-codes) for the full list of error codes.
 
 <LinkCard
   title="Claude Code Plugin"

@@ -1,18 +1,528 @@
 ---
 title: 'CLI Reference'
-description: 'Complete reference'
+description: 'Complete command reference for the Taskdn CLI'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Badge, Aside } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+Quick reference for all CLI commands, options, and behaviors.
 
 ## Commands
 
-## Input Modes
+### list
+
+Query and filter entities.
+
+```bash frame="none"
+tdn list [entity-type] [options]
+```
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `entity-type` | `tasks`, `projects`, or `areas` | `tasks` |
+
+**Filtering Options:**
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--status <status>` | `-s` | Filter by status (comma-separated for OR) |
+| `--project <name>` | `-p` | Filter by project (substring match) |
+| `--area <name>` | `-a` | Filter by area (substring match) |
+| `--due <when>` | `-d` | Filter by due date |
+| `--scheduled <when>` | | Filter by scheduled date |
+| `--overdue` | | Show overdue tasks |
+| `--query <text>` | `-q` | Search in title and body |
+
+**Inclusion Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--include-done` | Include completed entities |
+| `--include-dropped` | Include dropped entities |
+| `--include-closed` | Include done and dropped |
+| `--include-icebox` | Include icebox tasks |
+| `--include-deferred` | Include deferred tasks |
+| `--include-archived` | Include archived entities |
+| `--only-archived` | Show only archived entities |
+
+**Completion Filters:**
+
+| Option | Description |
+|--------|-------------|
+| `--completed-after <date>` | Completed after date |
+| `--completed-before <date>` | Completed before date |
+| `--completed-today` | Completed today |
+| `--completed-this-week` | Completed this week |
+
+**Result Options:**
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--sort <field>` | | Sort by field |
+| `--desc` | | Descending order |
+| `--limit <n>` | `-l` | Limit results |
+
+---
+
+### show
+
+Display full entity details including body content.
+
+```bash frame="none"
+tdn show <target>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `target` | Title (fuzzy match) or file path |
+
+---
+
+### new
+
+Create a new entity.
+
+```bash frame="none"
+tdn new [entity-type] <title> [options]
+```
+
+| Argument | Description | Default |
+|----------|-------------|---------|
+| `entity-type` | `project` or `area` | (creates task) |
+| `title` | Entity title | Required |
+
+**Task Options:**
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--status <status>` | `-s` | Initial status |
+| `--project <name>` | `-p` | Assign to project |
+| `--area <name>` | `-a` | Assign to area |
+| `--due <date>` | `-d` | Due date |
+| `--scheduled <date>` | | Scheduled date |
+| `--defer-until <date>` | | Defer until date |
+| `--dry-run` | | Preview without creating |
+
+**Project Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--status <status>` | Initial status |
+| `--area <name>` | Assign to area |
+| `--start-date <date>` | Start date |
+| `--end-date <date>` | End date |
+
+**Area Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--type <type>` | Area type |
+
+---
+
+### context
+
+Get expanded context with relationships.
+
+```bash frame="none"
+tdn context [entity-type] [target]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `entity-type` | `area`, `project`, or `task` |
+| `target` | Title or path of entity |
+
+Without arguments, returns vault overview.
+
+---
+
+### today
+
+Show today's actionable tasks.
+
+```bash frame="none"
+tdn today
+```
+
+Returns tasks that are: in-progress, overdue, due today, scheduled today, or newly actionable (defer-until = today).
+
+---
+
+### set status
+
+Change entity status.
+
+```bash frame="none"
+tdn set status <targets...> <status>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `targets` | One or more paths or titles |
+| `status` | New status value |
+
+| Option | Description |
+|--------|-------------|
+| `--dry-run` | Preview without modifying |
+
+Automatically manages `completed-at` field.
+
+---
+
+### update
+
+Modify entity fields.
+
+```bash frame="none"
+tdn update <query> [options]
+```
+
+| Argument | Description |
+|----------|-------------|
+| `query` | Title or path of entity |
+
+| Option | Description |
+|--------|-------------|
+| `--set <field=value>` | Set field (repeatable) |
+| `--unset <field>` | Remove field (repeatable) |
+| `--dry-run` | Preview without modifying |
+
+---
+
+### archive
+
+Move entity to archive subdirectory.
+
+```bash frame="none"
+tdn archive <queries...>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `queries` | One or more paths or titles |
+
+| Option | Description |
+|--------|-------------|
+| `--dry-run` | Preview without modifying |
+
+---
+
+### open
+
+Open entity in `$EDITOR`.
+
+```bash frame="none"
+tdn open <query>
+```
+
+Human mode only (not available with `--ai`).
+
+---
+
+### append-body
+
+Append text to entity body.
+
+```bash frame="none"
+tdn append-body <query> <text>
+```
+
+| Argument | Description |
+|----------|-------------|
+| `query` | Title or path of entity |
+| `text` | Text to append |
+
+| Option | Description |
+|--------|-------------|
+| `--dry-run` | Preview without modifying |
+
+Appends with timestamp: `text [YYYY-MM-DD]`
+
+---
+
+### doctor
+
+Vault health check.
+
+```bash frame="none"
+tdn doctor
+```
+
+Validates configuration, file parsing, field values, and references.
+
+---
+
+### config
+
+Show current configuration.
+
+```bash frame="none"
+tdn config
+```
+
+---
+
+### init
+
+Interactive configuration setup.
+
+```bash frame="none"
+tdn init
+```
+
+---
+
+### completion
+
+Manage shell completions.
+
+```bash frame="none"
+tdn completion install    # Auto-install
+tdn complete <shell>      # Generate script (zsh, bash, fish)
+```
+
+---
 
 ## Output Modes
 
+| Flags | Mode | Format | Prompts |
+|-------|------|--------|---------|
+| (none) | Human | Colored terminal | Yes |
+| `--ai` | AI | Structured Markdown | No |
+| `--json` | JSON | JSON | No |
+| `--ai --json` | AI-JSON | Markdown in JSON envelope | No |
+
+### AI Mode Output
+
+Entities appear as:
+
+```markdown frame="none"
+### Entity Title
+
+- **path:** /absolute/path/to/file.md
+- **status:** ready
+- **field:** value
+```
+
+### JSON Mode Output
+
+```json frame="none"
+{
+  "summary": "Description of result",
+  "tasks": [{ "path": "...", "title": "...", "status": "..." }]
+}
+```
+
+### AI-JSON Mode Output
+
+```json frame="none"
+{
+  "contextType": "project",
+  "entity": "Project Name",
+  "summary": "Description",
+  "content": "# Full markdown content...",
+  "references": [{ "name": "...", "type": "...", "path": "..." }]
+}
+```
+
+---
+
+## Entity Lookup
+
+Commands accept titles or file paths.
+
+**Path detection** — Treated as path if:
+- Starts with `/`, `./`, `../`, or `~`
+- Contains path separators
+- Ends with `.md`
+
+**Fuzzy matching** — Title lookups use case-insensitive substring matching.
+
+**AI mode writes** — Write operations require exact file paths in AI mode.
+
+---
+
+## Date Input
+
+| Format | Example | Description |
+|--------|---------|-------------|
+| Keywords | `today`, `tomorrow` | Relative to current date |
+| Weekdays | `monday`, `friday`, `wed` | Next occurrence |
+| Relative | `+1d`, `+3d`, `+1w`, `+2m` | Days/weeks/months from today |
+| Special | `next week` | Monday of next week |
+| ISO 8601 | `2025-01-15` | Exact date |
+
+Output is always ISO 8601 format.
+
+---
+
+## Date Filters
+
+For `--due` and `--scheduled` options:
+
+| Value | Matches |
+|-------|---------|
+| `today` | Exact date match |
+| `tomorrow` | Tomorrow |
+| `this-week` | Within 7 days |
+
+---
+
+## Statuses
+
+### Task Statuses
+
+| Status | Description |
+|--------|-------------|
+| `inbox` | Newly captured, not yet processed |
+| `ready` | Processed and ready to work on |
+| `in-progress` | Currently being worked on |
+| `blocked` | Waiting on external dependency |
+| `icebox` | Intentionally deferred indefinitely |
+| `done` | Completed |
+| `dropped` | Abandoned |
+
+### Project Statuses
+
+| Status | Description |
+|--------|-------------|
+| `planning` | Still being scoped |
+| `ready` | Planned and ready to begin |
+| `in-progress` | Active work happening |
+| `paused` | Temporarily on hold |
+| `blocked` | Cannot proceed |
+| `done` | Completed |
+
+### Area Statuses
+
+| Status | Description |
+|--------|-------------|
+| `active` | Current (default) |
+| `archived` | No longer active |
+
+---
+
+## Filter Logic
+
+**Within a filter type:** OR logic
+
+```bash frame="none"
+--status inbox,ready    # inbox OR ready
+```
+
+**Between filter types:** AND logic
+
+```bash frame="none"
+--status ready --project "Q1"    # ready AND in Q1
+```
+
+---
+
+## Sort Fields
+
+| Field | Entity Types |
+|-------|--------------|
+| `title` | All |
+| `due` | Tasks |
+| `scheduled` | Tasks |
+| `created-at` | Tasks |
+| `updated-at` | Tasks |
+| `start-date` | Projects |
+| `end-date` | Projects |
+
+Undefined values sort last (ascending) or first (descending).
+
+---
+
 ## Error Codes
 
+| Code | Description |
+|------|-------------|
+| `NOT_FOUND` | Entity does not exist |
+| `AMBIGUOUS` | Multiple entities match query |
+| `INVALID_STATUS` | Status value not in allowed list |
+| `INVALID_DATE` | Date format or value invalid |
+| `PARSE_ERROR` | File could not be parsed |
+| `MISSING_FIELD` | Required field absent |
+| `INVALID_PATH` | Path is invalid or inaccessible |
+| `REFERENCE_ERROR` | Referenced entity not found |
+| `PERMISSION_ERROR` | Insufficient permissions |
+| `CONFIG_ERROR` | Configuration issue |
+| `NOT_SUPPORTED` | Operation not supported |
+
+---
+
+## Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| `0` | Success (including empty results) |
+| `1` | Runtime error (file/vault issues) |
+| `2` | Usage error (invalid arguments) |
+
+---
+
 ## Configuration
+
+### Config Files
+
+| Location | Scope |
+|----------|-------|
+| `~/.taskdn.json` | User-wide |
+| `./.taskdn.json` | Local (current directory) |
+
+Local config takes precedence over user config.
+
+### Config Fields
+
+```json frame="none"
+{
+  "tasksDir": "~/notes/tasks",
+  "projectsDir": "~/notes/projects",
+  "areasDir": "~/notes/areas",
+  "ignore": ["*.bak", "README.md"]
+}
+```
+
+| Field | Type | Default |
+|-------|------|---------|
+| `tasksDir` | string | `./tasks` |
+| `projectsDir` | string | `./projects` |
+| `areasDir` | string | `./areas` |
+| `ignore` | string[] | `[]` |
+
+### Environment Variables
+
+| Variable | Config Field |
+|----------|--------------|
+| `TASKDN_TASKS_DIR` | `tasksDir` |
+| `TASKDN_PROJECTS_DIR` | `projectsDir` |
+| `TASKDN_AREAS_DIR` | `areasDir` |
+
+Environment variables override config files.
+
+### Ignore Patterns
+
+Patterns use `.gitignore`-style glob syntax:
+
+| Pattern | Matches |
+|---------|---------|
+| `file.md` | Exact filename |
+| `*.bak` | Any `.bak` file |
+| `temp?.md` | `temp1.md`, `tempA.md` |
+| `[abc]*.md` | Files starting with a, b, or c |
+
+Patterns match filenames only (not paths).
+
+---
+
+## Active Entity Defaults
+
+By default, commands show "active" entities:
+
+**Active tasks:** Status not `done`, `dropped`, or `icebox`; not deferred; not archived
+
+**Active projects:** Status not `done`
+
+**Active areas:** Status `active` or unset
