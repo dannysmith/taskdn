@@ -24,7 +24,7 @@ views:
       - status
       - start-date
     sort:
-      - property: note.status
+      - property: status
         direction: ASC
       - property: file.name
         direction: ASC
