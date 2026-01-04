@@ -14,6 +14,9 @@ export default defineConfig({
         starlightLlmsTxt(),
       ],
       title: 'Taskdn',
+      components: {
+        Footer: './src/components/Footer.astro',
+      },
       logo: {
         src: './src/assets/icon-1024-trans.png',
         alt: 'Taskdn Logo',
