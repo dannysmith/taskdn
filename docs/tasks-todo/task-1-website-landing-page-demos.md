@@ -64,13 +64,13 @@ Each product gets a full-width section containing:
 **Status Badge:** "Coming Soon"
 
 **Description:**
-The task app you wish existed. Feels like Things or Todoist, but your data stays as markdown files on disk. No sync servers, no proprietary database—just a proper interface for files you already own.
+A task app that actually feels good to use—fast, keyboard-driven, thoughtfully designed—but your files stay on disk as markdown. No lock-in. No wondering what happens when the company gets acquired.
 
 **Features:**
-- Global hotkey to capture tasks from anywhere—type naturally with `/project` and `@friday` shortcuts
-- Smart views (Today, Inbox, This Week) that just work—no Dataview queries or configuration
-- Keyboard-first everything—navigate, edit, and create without touching your mouse
-- List view, Kanban boards, or calendar—each view uses whatever layout fits the context
+- Global shortcut captures tasks without breaking your flow
+- Today, Inbox, This Week views work out of the box—no configuration
+- Keyboard-first for people who find clicking slow
+- Lists, Kanban, or calendar—whatever fits how you're thinking
 
 **CTA:** "Learn More" → `/desktop/overview`
 
@@ -97,13 +97,13 @@ If the SVG proves complex, fallback to a styled box with "Demo coming soon" text
 **Status Badge:** None (already available)
 
 **Description:**
-Two interfaces in one. For you: pretty colors, fuzzy search, and `--due friday`. For AI agents: structured markdown output designed for LLM context windows—token-efficient and still useful if truncated.
+Two modes for two audiences. For you: pretty output, fuzzy search, natural language dates. For AI agents: structured markdown designed for context windows—token-efficient, still useful if truncated.
 
 **Features:**
-- `tdn today` shows what needs attention right now—overdue, due today, in progress
-- `tdn context` returns an entire project with its tasks, parent area, and timeline in one call
-- Fuzzy search for humans (`"quarterly"` finds "Review quarterly report"), exact paths for agents
-- Natural language everywhere: `--due "next tuesday"`, `--scheduled "in 3 days"`
+- See what's overdue, due today, and in progress—one command
+- Give AI full context in a single call: project, tasks, timeline, relationships
+- Search the way you'd say it, not how files are named
+- "Next Friday" instead of ISO dates
 
 **CTA:** "Get Started" → `/cli/overview`
 
@@ -187,13 +187,13 @@ Output:
 **Status Badge:** None (already available)
 
 **Description:**
-You're in Obsidian to write, not manage tasks. The plugin stays out of your way—`[[task-name]]` links just render as widgets showing status, project, and due date. Check things off without leaving your note.
+You're in Obsidian to write, not manage tasks. Link to a task and see its status, project, and due date right there. Check it off without opening another file.
 
 **Features:**
-- Wikilinks to tasks become interactive widgets—see status, project, and due date inline
-- Click the checkbox to mark done instantly, right where you are
-- Colored borders show task state at a glance (blue for inbox, yellow for in-progress, red for blocked)
-- Right-click any `- [ ]` checklist item to turn it into a proper Taskdn task file
+- Task links become widgets showing what you need to know
+- One click to mark done—no context switch
+- Colors tell you what's blocked or overdue at a glance
+- Turn any checklist item into a proper task when it grows up
 
 **CTA:** "Install Plugin" → `/obsidian/plugin`
 
@@ -239,13 +239,13 @@ After showing the rendered view, fade/clear and restart from Phase 1.
 **Status Badge:** None (already available)
 
 **Description:**
-Your task files are just markdown—Claude can already read them. The plugin teaches Claude how your system actually works, so you can ask "What's overdue?" instead of explaining frontmatter schemas.
+Claude can already read your markdown files. This teaches it how your system works—so "What's overdue?" gets a real answer, not a frontmatter tutorial.
 
 **Features:**
-- Ask natural questions: "What should I focus on today?", "Show me the Q1 Planning project"
-- Create tasks without context-switching: "Add a task to review the PR, due tomorrow"
-- Get help with the boring stuff—inbox processing, weekly reviews, planning sessions
-- Works from any directory, not just your notes vault
+- Ask naturally: "What should I focus on today?"
+- Create tasks mid-conversation without opening another app
+- Help with the tedious parts—inbox processing, weekly reviews
+- Works from any project directory, not just your vault
 
 **CTA:** "Set Up Claude" → `/claude-code/overview`
 
