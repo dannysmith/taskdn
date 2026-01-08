@@ -63,12 +63,13 @@ import ClaudeDemo from '../components/demos/ClaudeDemo.astro'
     </div>
 
     <section class="concept">
-      <div class="file-example">
-        <div class="file-header">
-          <span class="file-icon">📄</span>
-          <span class="file-name">tasks/review-quarterly-report.md</span>
-        </div>
-        <pre><code><span class="yaml-delimiter">---</span>
+      <div class="concept-grid">
+        <div class="file-example">
+          <div class="file-header">
+            <span class="file-icon">📄</span>
+            <span class="file-name">tasks/review-quarterly-report.md</span>
+          </div>
+          <pre><code><span class="yaml-delimiter">---</span>
 <span class="yaml-key">title:</span> <span class="yaml-string">Review quarterly report</span>
 <span class="yaml-key">status:</span> <span class="yaml-value">in-progress</span>
 <span class="yaml-key">due:</span> <span class="yaml-date">2025-01-15</span>
@@ -80,38 +81,39 @@ import ClaudeDemo from '../components/demos/ClaudeDemo.astro'
 Key points to review:
 - Revenue projections
 - Budget allocations</code></pre>
+        </div>
+
+        <div class="hierarchy-items">
+          <div class="hierarchy-item hierarchy-areas">
+            <span class="hierarchy-icon">🗂️</span>
+            <div class="hierarchy-text">
+              <span class="hierarchy-label">Areas</span>
+              <span class="hierarchy-desc">Ongoing responsibilities</span>
+            </div>
+          </div>
+          <div class="hierarchy-arrow">↓</div>
+          <div class="hierarchy-item hierarchy-projects">
+            <span class="hierarchy-icon">📁</span>
+            <div class="hierarchy-text">
+              <span class="hierarchy-label">Projects</span>
+              <span class="hierarchy-desc">Goals with an end</span>
+            </div>
+          </div>
+          <div class="hierarchy-arrow">↓</div>
+          <div class="hierarchy-item hierarchy-tasks">
+            <span class="hierarchy-icon">✓</span>
+            <div class="hierarchy-text">
+              <span class="hierarchy-label">Tasks</span>
+              <span class="hierarchy-desc">Things you do</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <p class="concept-text">
         Your tasks are just markdown files. Edit them anywhere, version them
         with git, back them up however you like.
       </p>
-    </section>
-
-    <section class="hierarchy">
-      <div class="hierarchy-items">
-        <div class="hierarchy-item">
-          <span class="hierarchy-icon">🗂️</span>
-          <span class="hierarchy-label">Areas</span>
-          <span class="hierarchy-desc">Ongoing responsibilities</span>
-        </div>
-        <span class="hierarchy-arrow">→</span>
-        <div class="hierarchy-item">
-          <span class="hierarchy-icon">📁</span>
-          <span class="hierarchy-label">Projects</span>
-          <span class="hierarchy-desc">Goals with an end</span>
-        </div>
-        <span class="hierarchy-arrow">→</span>
-        <div class="hierarchy-item">
-          <span class="hierarchy-icon">✓</span>
-          <span class="hierarchy-label">Tasks</span>
-          <span class="hierarchy-desc">Things you do</span>
-        </div>
-      </div>
-    </section>
-
-    <section class="suite-header">
-      <h2>The Suite</h2>
     </section>
 
     <ProductSection
@@ -165,7 +167,7 @@ Key points to review:
     </ProductSection>
 
     <ProductSection
-      title="Claude Code"
+      title="Claude Code Plugin"
       icon="🤖"
       description={`Claude can already read your markdown files. This teaches it how your system works—so "What's overdue?" gets a real answer, not a frontmatter tutorial.`}
       features={[
@@ -206,9 +208,8 @@ Key points to review:
 
   /* Constrain hero and concept sections to narrower width */
   .hero,
-  .concept,
-  .hierarchy {
-    max-width: 700px;
+  .concept {
+    max-width: 800px;
     margin-left: auto;
     margin-right: auto;
   }
@@ -290,10 +291,16 @@ Key points to review:
     background: var(--color-bg);
   }
 
-  /* File example section */
+  /* Concept section with file example and hierarchy */
   .concept {
-    text-align: center;
     margin-bottom: 4rem;
+  }
+
+  .concept-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: center;
   }
 
   .file-example {
@@ -369,40 +376,61 @@ Key points to review:
   }
 
   .concept-text {
-    margin-top: 1.25rem;
+    margin-top: 1.5rem;
     color: var(--color-text-muted);
     font-size: 0.9375rem;
-  }
-
-  /* Hierarchy section */
-  .hierarchy {
     text-align: center;
-    margin-bottom: 4rem;
   }
 
+  /* Hierarchy items - stacked vertically with cards */
   .hierarchy-items {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    flex-wrap: wrap;
+    gap: 0.5rem;
   }
 
   .hierarchy-item {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    width: 190px;
+  }
+
+  /* Subtle colored backgrounds for each level */
+  .hierarchy-areas {
+    background: rgba(67, 133, 190, 0.1);
+    border: 1px solid rgba(67, 133, 190, 0.2);
+  }
+
+  .hierarchy-projects {
+    background: rgba(135, 154, 57, 0.1);
+    border: 1px solid rgba(135, 154, 57, 0.2);
+  }
+
+  .hierarchy-tasks {
+    background: rgba(208, 162, 21, 0.1);
+    border: 1px solid rgba(208, 162, 21, 0.2);
   }
 
   .hierarchy-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.25rem;
+    width: 1.75rem;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .hierarchy-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.0625rem;
   }
 
   .hierarchy-label {
     font-weight: 600;
-    font-size: 0.9375rem;
+    font-size: 0.875rem;
     color: var(--color-text);
   }
 
@@ -413,8 +441,40 @@ Key points to review:
 
   .hierarchy-arrow {
     color: var(--color-text-muted);
-    font-size: 1.25rem;
+    font-size: 0.875rem;
     opacity: 0.5;
+    line-height: 1;
+  }
+
+  @media (max-width: 600px) {
+    .concept-grid {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    .hierarchy-items {
+      flex-direction: row;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .hierarchy-item {
+      flex-direction: column;
+      text-align: center;
+      gap: 0.5rem;
+      padding: 0.625rem 0.5rem;
+      width: auto;
+      flex: 1;
+      max-width: 120px;
+    }
+
+    .hierarchy-text {
+      align-items: center;
+    }
+
+    .hierarchy-arrow {
+      transform: rotate(-90deg);
+    }
   }
 
   /* Suite header */
