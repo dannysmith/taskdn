@@ -17,7 +17,7 @@ Tools like Notion have some downsides tho:
 
 File-based apps like Obsidian solve these issues. With the new bases feature, we can fairly easily replicate most Notion setups in Obsidian, and by storing our documents (including areas, projects etc) as markdown files on disk we can interact with them via both the Obsidian app and anything else which can operate on a filesystem containing Markdown files with YAML frontmatter, including AI coding tools.
 
-This works great for documents, but **not for Tasks**. The ideal UI for task management is very different to that required for document management. I want to write my project plans in an Obsidian-like UI, but view and complete tasks in an app like [Things](https://culturedcode.com/things/). This also applies to AI agents: tools like `grep`, `ls`, `ReadFile` & `WriteFile` are fine for working with directories of project docs, but terrible for operations like _"get me all the uncompleted tasks for all projects in my 'Side Projects' area"_. To be effective, agents need an interface where queries like this reliably and quickly return the info in a form appropriate for LLMs.
+This works great for documents, but **not for Tasks**. The ideal UI for task management is very different to that required for document management. I want to write my project plans in an Obsidian-like UI, but view and complete tasks in a proper task management app—something fast, focused, and designed for getting things done. This also applies to AI agents: tools like `grep`, `ls`, `ReadFile` & `WriteFile` are fine for working with directories of project docs, but terrible for operations like _"get me all the uncompleted tasks for all projects in my 'Side Projects' area"_. To be effective, agents need an interface where queries like this reliably and quickly return the info in a form appropriate for LLMs.
 
 ## Goal
 
@@ -154,7 +154,7 @@ See [CLI README](../tdn-cli/README.md)
 
 ### 3. Desktop App
 
-A cross-platform Tauri app for day-to-day task management which feels as slick as [Things](https://culturedcode.com/things/).
+A cross-platform Tauri app for day-to-day task management—fast, beautiful, and keyboard-first.
 
 If they're in _planning mode_ they'll want to see contextual views and have important information surfaced where it's needed. If they're in _doing mode_ they'll want to see and work with their short-term task list without distractions.
 
