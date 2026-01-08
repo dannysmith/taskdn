@@ -38,17 +38,19 @@ const handleAddTask = useCallback(() => {
   setPendingEditItemId(newTaskId)
 }, [createTask, today])
 
-// After (TanStack Query)
+// After (TanStack Query + getState pattern)
 const createTaskMutation = useCreateTask()
 
 const handleAddTask = useCallback(async () => {
+  const { today } = useViewStore.getState()  // Not subscribed - avoids re-renders
   try {
     const newTask = await createTaskMutation.mutateAsync({ scheduled: today })
+    const { setPendingEditItemId } = useTaskDetailStore.getState()
     setPendingEditItemId(newTask.id)
   } catch (error) {
     toast.error('Failed to create task')
   }
-}, [createTaskMutation, today])
+}, [createTaskMutation])  // Stable deps - only the mutation
 ```
 
 This refactoring is straightforward but not purely mechanical. Budget time for it.

@@ -204,14 +204,6 @@ Create benchmarks for:
 - [ ] Cmd shortcuts (not Ctrl)
 - [ ] Quick pane behavior
 
-#### Windows (future)
-- [ ] Title bar style
-- [ ] System tray (if applicable)
-- [ ] Ctrl shortcuts
-
-#### Linux (future)
-- [ ] Various DE compatibility
-- [ ] System tray variations
 
 ### 7. Documentation Updates
 

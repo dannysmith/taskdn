@@ -73,7 +73,7 @@ This means:
 
 ### 1. Rust VaultManager
 
-Port and adapt code from the CLI (`tdn-cli/src/rust/`):
+Port and adapt code from the CLI (`tdn-cli/crates/core/src/`):
 
 **Entity Structs**
 - `Task` - All fields per S1 spec
@@ -389,27 +389,61 @@ tauri-specta generates TypeScript types from Rust structs. These may differ from
 - Rust naming conventions (snake_case in serde) → TypeScript expects camelCase
 - Different optional vs required fields
 
-**Approach:**
-1. Use `#[serde(rename_all = "camelCase")]` on Rust structs for TypeScript compatibility
-2. Use idiomatic Rust types (`Option<T>`, enums, etc.)
-3. If the generated types don't match what components expect, handle it in the data hooks layer
-4. Don't write weird Rust just to match TypeScript expectations
+### Dual Serialization: YAML vs TypeScript
 
-**Example:**
+**Important:** YAML frontmatter uses `kebab-case` (`created-at`, `defer-until`) but TypeScript expects `camelCase` (`createdAt`, `deferUntil`). One struct can't satisfy both.
+
+**Solution:** Follow the CLI pattern with separate internal frontmatter structs:
+
 ```rust
-#[derive(Serialize, Deserialize, specta::Type)]
+// Internal: for YAML frontmatter parsing (not exposed via specta)
+#[derive(Deserialize)]
+#[serde(rename_all = "kebab-case")]
+struct TaskFrontmatter {
+    title: String,
+    status: TaskStatus,
+    created_at: Option<String>,
+    defer_until: Option<String>,
+    // ...
+}
+
+// Public: for TypeScript (exposed via tauri-specta)
+#[derive(Clone, Serialize, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Task {
     pub id: String,
+    pub path: String,
     pub title: String,
     pub status: TaskStatus,
-    pub scheduled: Option<String>,  // Will be `string | null` in TS
-    pub due: Option<String>,
+    pub created_at: Option<String>,  // Will be `createdAt: string | null` in TS
+    pub defer_until: Option<String>,
+    pub body: String,
     // ...
+}
+
+// Conversion in parse function
+impl Task {
+    fn from_frontmatter(path: PathBuf, frontmatter: TaskFrontmatter, body: String) -> Self {
+        Self {
+            id: generate_id(&path),
+            path: path.to_string_lossy().to_string(),
+            title: frontmatter.title,
+            status: frontmatter.status,
+            created_at: frontmatter.created_at,
+            defer_until: frontmatter.defer_until,
+            body,
+            // ...
+        }
+    }
 }
 ```
 
-If components expect `undefined` instead of `null`, handle it in the data layer, not by contorting Rust.
+This approach:
+- Keeps YAML parsing correct (kebab-case)
+- Keeps TypeScript types correct (camelCase)
+- Allows the public struct to have additional computed fields (`id`, `path`)
+
+If components expect `undefined` instead of `null`, handle it in the data hooks layer, not by contorting Rust.
 
 ## Vault Path Configuration
 
@@ -417,6 +451,59 @@ Store vault path in preferences. On first run with no vault configured:
 - App shows empty state with message to configure vault in settings
 - No wizard needed - user opens Preferences → selects vault folder
 - This can be improved later; for now, simple is fine
+
+## Implementation Notes from CLI
+
+These patterns from the CLI codebase (`tdn-cli/crates/core/src/`) should be followed:
+
+### Atomic Writes with fsync
+
+The CLI uses temp file + fsync + atomic rename for durability:
+
+```rust
+pub fn atomic_write(path: &Path, content: &str) -> Result<()> {
+    let temp_path = parent.join(format!(".tmp-{}", uuid_simple()));
+    fs::write(&temp_path, content)?;
+
+    // fsync for durability (non-fatal on Windows)
+    if let Ok(file) = fs::File::open(&temp_path) {
+        let _ = file.sync_all();
+    }
+
+    fs::rename(&temp_path, path)?;
+}
+```
+
+### Security Limits
+
+The CLI enforces limits to prevent DoS:
+- `MAX_FILES_PER_SCAN = 10_000` - Prevents runaway scanning
+- `MAX_PARALLEL_THREADS = 8` - Prevents CPU exhaustion
+
+Consider similar limits in the desktop app.
+
+### WikiLink Parsing
+
+The CLI has a dedicated module for WikiLink extraction (`wikilink.rs`). It handles:
+- Basic: `[[Name]]`
+- With alias: `[[Name|Display Text]]`
+- With heading: `[[Name#Heading]]`
+- Combined: `[[Name#Heading|Display Text]]`
+
+Project/area references in frontmatter are WikiLinks and need this parsing.
+
+### Warnings for Broken References
+
+The CLI returns warnings (not errors) for broken references:
+
+```rust
+pub struct TasksInAreaResult {
+    pub tasks: Vec<Task>,
+    pub warnings: Vec<String>,  // e.g., "Task 'X' references unknown project 'Y'"
+}
+```
+
+For MVP, these can be logged rather than surfaced to the UI, but the pattern is worth preserving for future debugging/UI features.
 
 ## Checklist
 
