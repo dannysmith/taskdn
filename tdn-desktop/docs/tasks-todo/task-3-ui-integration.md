@@ -17,16 +17,40 @@ The UI mockup contains:
 - Order hooks for display ordering
 - Inline editing, keyboard navigation
 
-All of this uses `useAppData()` from the mockup's `AppDataContext`. Task 2's `useVaultData()` hook provides the same API, so migration is largely mechanical.
+The mockup uses `useAppData()` with synchronous mutations. Our data layer uses TanStack Query with async mutations. **Components will need refactoring, not just find-replace.**
 
 ## Integration Process
 
 For each component:
 1. Copy file from `tdn-uimockup/src/components/` to `tdn-desktop/src/components/`
-2. Update import paths (alias may differ)
-3. Replace `import { useAppData } from '@/context/app-data-context'` with `import { useVaultData } from '@/hooks/use-vault-data'`
-4. Replace `useAppData()` calls with `useVaultData()`
-5. Test the component works with real data
+2. Update import paths
+3. Replace `useAppData()` with `useVaultData()` + individual mutation hooks
+4. **Refactor handlers that create entities to use `async/await` with `mutateAsync`**
+5. Add error handling (try/catch, toast notifications)
+6. Test the component works with real data
+
+**Example refactoring:**
+```typescript
+// Before (mockup)
+const handleAddTask = useCallback(() => {
+  const newTaskId = createTask({ scheduled: today })
+  setPendingEditItemId(newTaskId)
+}, [createTask, today])
+
+// After (TanStack Query)
+const createTaskMutation = useCreateTask()
+
+const handleAddTask = useCallback(async () => {
+  try {
+    const newTask = await createTaskMutation.mutateAsync({ scheduled: today })
+    setPendingEditItemId(newTask.id)
+  } catch (error) {
+    toast.error('Failed to create task')
+  }
+}, [createTaskMutation, today])
+```
+
+This refactoring is straightforward but not purely mechanical. Budget time for it.
 
 ## Scope
 
@@ -146,6 +170,9 @@ The order hooks maintain in-memory state for:
 - Today view task ordering (per section)
 - Inbox task ordering
 - Calendar day ordering
+- **Project view task ordering (per project)**
+- **Area view task ordering (per area)**
+- **Kanban column ordering (per project/area)**
 
 **Persistence Strategy:**
 - Store to app data directory (not markdown files)
@@ -156,10 +183,16 @@ The order hooks maintain in-memory state for:
 **Implementation:**
 ```typescript
 interface DisplayOrderState {
+  // Global orders
   sidebarOrder: { areas: string[], projectsByArea: Record<string, string[]> }
   todayOrder: Record<string, string[]>  // sectionId → itemIds
   inboxOrder: string[]
   calendarOrder: Record<string, string[]>  // date → taskIds
+
+  // Per-entity orders (keyed by project/area ID)
+  projectTaskOrders: Record<string, string[]>  // projectId → taskIds
+  areaTaskOrders: Record<string, string[]>     // areaId → taskIds
+  kanbanColumnOrders: Record<string, Record<string, string[]>>  // entityId → status → taskIds
 }
 ```
 
@@ -203,6 +236,24 @@ moveProjectToArea(projectId, fromAreaId, toAreaId)
 ```
 
 With `useVaultData()` providing these mutations backed by real persistence, DnD should work without changes to the DnD code itself.
+
+## Concurrent Edit Handling
+
+**Scenario:** User is editing a task in the detail panel. External tool modifies the same file. File watcher triggers reload.
+
+**Strategy for MVP: Last write wins.**
+
+- If user has unsaved changes and file changes externally, the external change overwrites
+- No conflict detection or dirty flag protection
+- This is acceptable for MVP - most users won't have multiple editors open
+- Can add dirty flag / conflict detection in future if needed
+
+In practice, this means:
+- User edits title in detail panel → triggers mutation → file written
+- External edit happens → file watcher fires → cache invalidates → UI reloads fresh data
+- If user was mid-edit (typing but not saved), their changes are lost
+
+This is a known limitation, not a bug to fix now.
 
 ## Dependencies to Add
 
@@ -249,9 +300,11 @@ Recommended sequence (dependencies → dependents):
 Within each:
 1. Copy component files
 2. Update imports
-3. Swap useAppData → useVaultData
-4. Test in isolation
-5. Test in context
+3. Replace useAppData with useVaultData + mutation hooks
+4. Refactor create handlers to async/await pattern
+5. Add error handling
+6. Test in isolation
+7. Test in context
 
 ## Checklist
 
@@ -303,6 +356,9 @@ Within each:
 - [ ] useTodayOrder with persistence
 - [ ] useInboxOrder with persistence
 - [ ] useCalendarOrder with persistence
+- [ ] useProjectOrder with persistence (per-project task ordering)
+- [ ] useAreaOrder with persistence (per-area task ordering)
+- [ ] useKanbanOrder with persistence (per-view column ordering)
 
 ### Final Integration
 - [ ] All views accessible from sidebar

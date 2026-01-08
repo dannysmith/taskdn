@@ -14,6 +14,38 @@ Taskdn Desktop is a desktop application for managing [S1-compliant](../tdn-specs
 - **Backend**: Tauri v2, Rust
 - **State**: Zustand v5 (global UI), TanStack Query v5 (persistent data)
 
+## UI Mockup
+
+A complete UI mockup exists at `../tdn-uimockup/`. This is a standalone Vite/React app with the same tech stack (React 19, Tailwind v4, shadcn/ui) that contains ~90+ production-quality components: all views, sidebar, task detail panel, kanban boards, calendar views, drag-and-drop, etc.
+
+**Purpose**: The mockup proves the UI design works. It uses mock data via React Context (`AppDataContext`). We are porting these components to the desktop app and connecting them to the real Rust backend.
+
+**Key difference**: The mockup uses synchronous in-memory mutations. The desktop app uses TanStack Query with async mutations backed by Rust/filesystem.
+
+See `docs/tasks-todo/task-1-foundation.md` through `task-4-hardening.md` for the integration plan.
+
+## Design Principle: Build As If From Scratch
+
+When making architectural decisions, ask: **"If we were building this without the mockup, how would we do it?"**
+
+The mockup is a prototype optimized for rapid prototyping (synchronous in-memory operations). The production app should use patterns optimized for correctness, maintainability, and the actual tech stack.
+
+This means:
+- Use idiomatic TanStack Query patterns, not workarounds to match the mockup
+- Use idiomatic Rust/serde patterns, not contortions to match TypeScript types
+- Components will need refactoring - this is expected, not a failure
+
+**Example - async mutations:**
+```typescript
+// Mockup pattern (synchronous, won't work)
+const newTaskId = createTask({ title: 'New task' })
+setPendingEditItemId(newTaskId)
+
+// Correct TanStack Query pattern (async)
+const newTask = await createTaskMutation.mutateAsync({ title: 'New task' })
+setPendingEditItemId(newTask.id)
+```
+
 ## Key Commands
 
 ```bash
