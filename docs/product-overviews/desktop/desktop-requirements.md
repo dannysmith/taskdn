@@ -6,7 +6,7 @@ See [Overview](../../overview.md) for an overview of the whole project.
 
 ## Goal
 
-A fast, beautiful, easy-to-use desktop app which makes [taskdn files](../../../tdn-specs/S1-core.md) feel less like files on disk and exactly like tasks, projects & areas feel in apps like Things & Reminders. Plus a few power features from the best Notion setups for this.
+A fast, beautiful, easy-to-use desktop app which makes [taskdn files](../../../tdn-specs/S1-core.md) feel less like files on disk and exactly like tasks, projects & areas should feel in a proper task management app. Plus a few power features from the best Notion setups for this.
 
 ### Non-Goals
 
@@ -63,7 +63,7 @@ The second major representation of tasks, used when displaying tasks in a list r
 - Add new tasks
 - Change status by checking them off
 
-The interaction model should feel similar to apps like Things.
+The interaction model should feel natural and keyboard-friendly.
 
 ### The Project ListItem
 
@@ -75,7 +75,7 @@ Similar to Project ListItems. No interaction that changes their data is expected
 
 ### The List
 
-A fundamental view type. Lists contain task list items and allow easy adding, reordering, and editing—much like in Things. Lists may also include project or area list items as grouping headers, depending on the view context.
+A fundamental view type. Lists contain task list items and allow easy adding, reordering, and editing. Lists may also include project or area list items as grouping headers, depending on the view context.
 
 ### The Grid
 
@@ -101,7 +101,7 @@ Keyboard navigation must work intuitively across all views. Whether in a Kanban 
 - Edit and create tasks
 - Navigate the main app interface
 
-All of this should be possible without touching the mouse. There is plenty of prior art in apps like Linear, Cello, and Things.
+All of this should be possible without touching the mouse. There is plenty of prior art in apps like Linear and Cello.
 
 ## The Command Palette
 

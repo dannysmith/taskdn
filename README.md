@@ -7,7 +7,7 @@
 
 **[Documentation & Getting Started](https://tdn.danny.is)**
 
-A task-management system for **individuals** that feels as slick as [Things](https://culturedcode.com/things/) while storing data as markdown files (with YAML frontmatter) on disk. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
+A task-management system for **individuals** that stores data as markdown files (with YAML frontmatter) on disk while providing beautiful, purpose-built interfaces for actually managing your tasks. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
 
 **The core idea:** provide the right user interface in the right context.
 
