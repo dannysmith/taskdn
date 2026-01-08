@@ -26,8 +26,9 @@ For each component:
 2. Update import paths
 3. Replace `useAppData()` with `useVaultData()` + individual mutation hooks
 4. **Refactor handlers that create entities to use `async/await` with `mutateAsync`**
-5. Add error handling (try/catch, toast notifications)
-6. Test the component works with real data
+5. **Use `getState()` for any Zustand store values in handlers** (see Task 2 for pattern)
+6. Add error handling (try/catch, toast notifications)
+7. Test the component works with real data
 
 **Example refactoring:**
 ```typescript
@@ -175,29 +176,62 @@ The order hooks maintain in-memory state for:
 - **Kanban column ordering (per project/area)**
 
 **Persistence Strategy:**
-- Store to app data directory (not markdown files)
-- Persist on app quit + periodic saves (every 5 minutes)
-- Handle stale data: if entities no longer exist, discard stale order entries
-- Storage format: JSON in `app_data/display-order.json`
 
-**Implementation:**
-```typescript
-interface DisplayOrderState {
-  // Global orders
-  sidebarOrder: { areas: string[], projectsByArea: Record<string, string[]> }
-  todayOrder: Record<string, string[]>  // sectionId → itemIds
-  inboxOrder: string[]
-  calendarOrder: Record<string, string[]>  // date → taskIds
+Order persistence follows the same Rust + TanStack Query pattern as preferences (see `docs/developer/data-persistence.md`):
 
-  // Per-entity orders (keyed by project/area ID)
-  projectTaskOrders: Record<string, string[]>  // projectId → taskIds
-  areaTaskOrders: Record<string, string[]>     // areaId → taskIds
-  kanbanColumnOrders: Record<string, Record<string, string[]>>  // entityId → status → taskIds
+1. **Rust struct** defines the data shape (`DisplayOrderState`)
+2. **Tauri commands** (`load_display_order`, `save_display_order`) handle file I/O with atomic writes
+3. **TanStack Query hook** (`useDisplayOrder`) wraps the commands for caching and invalidation
+4. **Order hooks** (`useSidebarOrder`, `useTodayOrder`, etc.) are thin wrappers that derive from and update this data
+
+This ensures consistency with the app's data patterns and gets atomic writes for free.
+
+**Rust Struct:**
+```rust
+#[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct DisplayOrderState {
+    // Global orders
+    pub sidebar_order: SidebarOrder,
+    pub today_order: HashMap<String, Vec<String>>,    // sectionId → itemIds
+    pub inbox_order: Vec<String>,
+    pub calendar_order: HashMap<String, Vec<String>>, // date → taskIds
+
+    // Per-entity orders (keyed by project/area ID)
+    pub project_task_orders: HashMap<String, Vec<String>>,
+    pub area_task_orders: HashMap<String, Vec<String>>,
+    pub kanban_column_orders: HashMap<String, HashMap<String, Vec<String>>>,
 }
 ```
 
+**Frontend Hook:**
+```typescript
+// src/services/display-order.ts
+export function useDisplayOrder() {
+  return useQuery({
+    queryKey: ['display-order'],
+    queryFn: async () => unwrapResult(await commands.loadDisplayOrder()),
+  })
+}
+
+export function useUpdateDisplayOrder() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (order: DisplayOrderState) => commands.saveDisplayOrder(order),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['display-order'] }),
+  })
+}
+```
+
+**Save Triggers:**
+- On app quit (via Tauri window close event)
+- Periodic saves (every 5 minutes)
+- Debounced save after order changes (500ms)
+
+**Stale Data Handling:**
+
 On load:
-1. Load from disk
+1. Load from disk via Tauri command
 2. Filter out IDs that no longer exist in vault
 3. Merge new entities at end of lists
 

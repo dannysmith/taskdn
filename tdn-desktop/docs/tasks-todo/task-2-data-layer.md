@@ -204,6 +204,26 @@ const handleAddTask = async () => {
 }
 ```
 
+**Important: getState() for Zustand values in handlers**
+
+If your handler needs values from Zustand stores (e.g., current date, selected view), use `getState()` to avoid render cascades. See `docs/developer/state-management.md` for details.
+
+```typescript
+// ✅ Correct: getState() for Zustand, mutation hook in deps
+const createTaskMutation = useCreateTask()
+
+const handleAddTask = useCallback(async () => {
+  const { today } = useViewStore.getState()  // Not subscribed
+  try {
+    const newTask = await createTaskMutation.mutateAsync({ scheduled: today })
+    const { setPendingEditItemId } = useTaskDetailStore.getState()
+    setPendingEditItemId(newTask.id)
+  } catch (error) {
+    toast.error('Failed to create task')
+  }
+}, [createTaskMutation])  // Stable deps - only the mutation
+```
+
 **Why this works for us:** This is a local Tauri app, not a remote API. The IPC round trip to Rust is ~10-50ms - imperceptible to users. There's no need for complex workarounds like frontend-generated IDs or temp ID juggling.
 
 **Mutation hooks should return the mutation object, not wrap it:**
