@@ -165,17 +165,19 @@ fn get_tasks_by_status(state: State<VaultManager>, status: TaskStatus) -> Result
 **Queries**
 ```typescript
 // src/services/queries/tasks.ts
+import { commands, unwrapResult } from '@/lib/tauri-bindings'
+
 export function useTasks() {
   return useQuery({
     queryKey: ['tasks'],
-    queryFn: () => commands.listTasks(),
+    queryFn: async () => unwrapResult(await commands.listTasks()),
   })
 }
 
 export function useTask(id: string) {
   return useQuery({
     queryKey: ['tasks', id],
-    queryFn: () => commands.getTask({ id }),
+    queryFn: async () => unwrapResult(await commands.getTask({ id })),
   })
 }
 
