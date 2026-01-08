@@ -8,14 +8,26 @@ This is the core technical work of the project. The UI mockup's `AppDataContext`
 
 ## Background
 
-The UI mockup uses `AppDataContext` (React Context) with ~15 mutation functions and ~10 lookup functions, all operating on in-memory mock data. Our goal is to provide the same (or refined) API backed by:
+The UI mockup uses `AppDataContext` (React Context) with ~15 mutation functions and ~10 lookup functions, all operating on in-memory mock data. Our goal is to build a proper data layer using idiomatic patterns for this stack.
 
+**Key components:**
 1. **Rust VaultManager** - Reads/writes markdown files, maintains in-memory index
 2. **Tauri Commands** - Expose operations to the frontend
-3. **TanStack Query** - Caches data, handles mutations with optimistic updates
+3. **TanStack Query** - Caches data, handles mutations
 4. **Event System** - File watcher triggers cache invalidation
 
 Reference: `../docs/product-overviews/desktop/desktop-data-architecture-research.md`
+
+## Design Principle: Build As If From Scratch
+
+When making architectural decisions, ask: **"If we were building this without the mockup, how would we do it?"**
+
+The mockup is a prototype that proves the UI works. It uses patterns optimized for rapid prototyping (synchronous in-memory operations). The production app should use patterns optimized for correctness, maintainability, and the actual tech stack (Tauri + TanStack Query).
+
+This means:
+- Use idiomatic TanStack Query patterns, not workarounds to match the mockup
+- Use idiomatic Rust/serde patterns, not contortions to match TypeScript types
+- Components will need refactoring - this is expected, not a failure
 
 ## Architecture Overview
 
@@ -170,29 +182,80 @@ export function useTask(id: string) {
 // Similar for projects, areas
 ```
 
-**Mutations with Optimistic Updates**
+**Mutations - The Async Pattern**
+
+The mockup uses synchronous mutations that return values immediately:
+```typescript
+// Mockup pattern (won't work with TanStack Query)
+const newTaskId = createTask({ title: 'New task' })
+setPendingEditItemId(newTaskId)  // Uses ID immediately
+```
+
+TanStack Query mutations are async. **Use `mutateAsync` with await:**
+```typescript
+// Correct TanStack Query pattern
+const handleAddTask = async () => {
+  try {
+    const newTask = await createTaskMutation.mutateAsync({ title: 'New task' })
+    setPendingEditItemId(newTask.id)
+  } catch (error) {
+    toast.error('Failed to create task')
+  }
+}
+```
+
+**Why this works for us:** This is a local Tauri app, not a remote API. The IPC round trip to Rust is ~10-50ms - imperceptible to users. There's no need for complex workarounds like frontend-generated IDs or temp ID juggling.
+
+**Mutation hooks should return the mutation object, not wrap it:**
+```typescript
+export function useCreateTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (options: CreateTaskOptions) => commands.createTask(options),
+
+    onSuccess: (newTask) => {
+      // Optimistically add to cache
+      queryClient.setQueryData(['tasks'], (old: Task[] = []) => [...old, newTask])
+    },
+
+    onError: () => {
+      // Invalidate to refetch clean state
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+    },
+  })
+}
+```
+
+Components use it with `mutateAsync`:
+```typescript
+const createTaskMutation = useCreateTask()
+
+const handleAddTask = async () => {
+  const newTask = await createTaskMutation.mutateAsync({ scheduled: today })
+  setPendingEditItemId(newTask.id)
+}
+```
+
+**Mutations for Updates (with Optimistic Updates)**
 ```typescript
 export function useUpdateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (update: TaskUpdate) => commands.updateTask({ task: update }),
+    mutationFn: (update: TaskUpdate) => commands.updateTask(update),
 
-    onMutate: async (newTask) => {
-      await queryClient.cancelQueries({ queryKey: ['tasks', newTask.id] })
-      const previous = queryClient.getQueryData(['tasks', newTask.id])
-      queryClient.setQueryData(['tasks', newTask.id], newTask)
+    onMutate: async (update) => {
+      await queryClient.cancelQueries({ queryKey: ['tasks', update.id] })
+      const previous = queryClient.getQueryData(['tasks', update.id])
+      queryClient.setQueryData(['tasks', update.id], (old: Task) => ({ ...old, ...update }))
       return { previous }
     },
 
-    onError: (err, newTask, context) => {
+    onError: (err, update, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(['tasks', newTask.id], context.previous)
+        queryClient.setQueryData(['tasks', update.id], context.previous)
       }
-    },
-
-    onSettled: () => {
-      // File watcher will handle invalidation via events
     },
   })
 }
@@ -215,46 +278,63 @@ export function useVaultSync() {
 }
 ```
 
-### 4. Data Hooks Adapter
+### 4. Data Hooks
 
-Create hooks that match the `AppDataContext` API for easier component migration:
+Provide hooks for common data access patterns. These don't need to exactly match `AppDataContext` - components will be refactored to use idiomatic patterns.
 
 ```typescript
 // src/hooks/use-vault-data.ts
 export function useVaultData() {
-  const { data: tasks = [] } = useTasks()
-  const { data: projects = [] } = useProjects()
-  const { data: areas = [] } = useAreas()
+  const { data: tasks = [], isLoading: tasksLoading } = useTasks()
+  const { data: projects = [], isLoading: projectsLoading } = useProjects()
+  const { data: areas = [], isLoading: areasLoading } = useAreas()
 
-  const updateTaskMutation = useUpdateTask()
-  const createTaskMutation = useCreateTask()
-  // ... other mutations
+  const isLoading = tasksLoading || projectsLoading || areasLoading
 
-  // Lookup helpers (can be memoized)
+  // Lookup helpers
   const getTaskById = useCallback((id: string) =>
     tasks.find(t => t.id === id), [tasks])
 
   const getProjectById = useCallback((id: string) =>
     projects.find(p => p.id === id), [projects])
 
-  // Mutation wrappers matching AppDataContext API
-  const updateTaskTitle = useCallback((taskId: string, title: string) => {
-    updateTaskMutation.mutate({ id: taskId, title })
-  }, [updateTaskMutation])
+  const getAreaById = useCallback((id: string) =>
+    areas.find(a => a.id === id), [areas])
 
-  // ... etc
+  // Derived data
+  const getTasksByProject = useCallback((projectId: string) =>
+    tasks.filter(t => t.projectId === projectId), [tasks])
+
+  const getProjectsByArea = useCallback((areaId: string) =>
+    projects.filter(p => p.areaId === areaId), [projects])
 
   return {
-    tasks, projects, areas,
+    tasks, projects, areas, isLoading,
     getTaskById, getProjectById, getAreaById,
-    updateTaskTitle, updateTaskScheduled, updateTaskStatus,
-    createTask, toggleTaskStatus,
-    // ... full API
+    getTasksByProject, getProjectsByArea,
   }
 }
 ```
 
-This adapter layer allows components to swap `useAppData()` for `useVaultData()` with minimal changes.
+**Mutations are used directly in components:**
+```typescript
+function MyComponent() {
+  const { tasks, getTaskById } = useVaultData()
+  const createTaskMutation = useCreateTask()
+  const updateTaskMutation = useUpdateTask()
+
+  const handleAddTask = async () => {
+    const newTask = await createTaskMutation.mutateAsync({ ... })
+    // use newTask.id
+  }
+
+  const handleUpdateTitle = (taskId: string, title: string) => {
+    updateTaskMutation.mutate({ id: taskId, title })
+  }
+}
+```
+
+This is more explicit than the mockup's pattern but clearer about what's happening.
 
 ### 5. Test Infrastructure
 
@@ -278,26 +358,43 @@ export async function setupTestVault(config: VaultTestConfig): Promise<string>
 - Unit tests for parsing/writing
 - Integration tests with temp directory vaults
 
-## API Design Notes
+## Type Handling
 
-The mockup's `AppDataContext` has ~25 functions. Before implementation, review whether this is the right granularity:
+**Principle:** Write idiomatic Rust. Handle type mismatches at the boundary.
 
-**Potentially combine:**
-- `updateTaskTitle`, `updateTaskScheduled`, `updateTaskDue`, etc. → single `updateTask(id, fields)`
+tauri-specta generates TypeScript types from Rust structs. These may differ from the mockup's types:
+- Rust `Option<String>` → TypeScript `string | null` (not `undefined`)
+- Rust naming conventions (snake_case in serde) → TypeScript expects camelCase
+- Different optional vs required fields
 
-**Keep separate for optimistic updates:**
-- Each field update might need its own mutation for proper rollback
+**Approach:**
+1. Use `#[serde(rename_all = "camelCase")]` on Rust structs for TypeScript compatibility
+2. Use idiomatic Rust types (`Option<T>`, enums, etc.)
+3. If the generated types don't match what components expect, handle it in the data hooks layer
+4. Don't write weird Rust just to match TypeScript expectations
 
-**Decision:** Start with the current API shape (matches mockup), optimize later if needed. The adapter pattern means we can change the underlying implementation without touching components.
+**Example:**
+```rust
+#[derive(Serialize, Deserialize, specta::Type)]
+#[serde(rename_all = "camelCase")]
+pub struct Task {
+    pub id: String,
+    pub title: String,
+    pub status: TaskStatus,
+    pub scheduled: Option<String>,  // Will be `string | null` in TS
+    pub due: Option<String>,
+    // ...
+}
+```
+
+If components expect `undefined` instead of `null`, handle it in the data layer, not by contorting Rust.
 
 ## Vault Path Configuration
 
-The app needs to know where the vault is. Options:
-1. First-run wizard prompts user to select folder
-2. Store path in preferences (already have preferences system)
-3. Default to a sensible location, allow override in preferences
-
-Implement option 2+3: default location with preference override.
+Store vault path in preferences. On first run with no vault configured:
+- App shows empty state with message to configure vault in settings
+- No wizard needed - user opens Preferences → selects vault folder
+- This can be improved later; for now, simple is fine
 
 ## Checklist
 
