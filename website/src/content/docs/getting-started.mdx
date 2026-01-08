@@ -68,15 +68,7 @@ Key points to review:
 
 #### Task Statuses
 
-| Status                                         | Meaning                                   |
-| ---------------------------------------------- | ----------------------------------------- |
-| <Badge text="inbox" variant="note" />          | Newly captured, not yet processed         |
-| <Badge text="ready" variant="default" />       | Processed and ready to be worked on       |
-| <Badge text="in-progress" variant="caution" /> | Currently being worked on                 |
-| <Badge text="blocked" variant="danger" />      | Cannot proceed due to external dependency |
-| <Badge text="icebox" variant="note" />         | Intentionally deferred indefinitely       |
-| <Badge text="done" variant="success" />        | Completed successfully                    |
-| <Badge text="dropped" variant="danger" />      | Abandoned, will not be completed          |
+Tasks follow a simple workflow: <Badge text="inbox" variant="note" /> for new captures, <Badge text="ready" variant="default" /> once processed, <Badge text="in-progress" variant="caution" /> when you're working on it, then <Badge text="done" variant="success" /> when complete. Use <Badge text="blocked" variant="danger" /> for tasks waiting on something external, <Badge text="icebox" variant="note" /> for things you're intentionally deferring indefinitely, or <Badge text="dropped" variant="danger" /> for tasks you've decided not to do.
 
 ### Projects
 
@@ -96,14 +88,7 @@ This project covers all Q1 planning activities...
 
 #### Project Statuses
 
-| Status                                         | Meaning                          |
-| ---------------------------------------------- | -------------------------------- |
-| <Badge text="planning" variant="note" />       | Still being scoped or planned    |
-| <Badge text="ready" variant="default" />       | Planned and ready to begin       |
-| <Badge text="in-progress" variant="caution" /> | Active work is happening         |
-| <Badge text="paused" variant="caution" />      | Temporarily on hold              |
-| <Badge text="blocked" variant="danger" />      | Cannot proceed due to dependency |
-| <Badge text="done" variant="success" />        | Completed                        |
+Projects have their own workflow: <Badge text="planning" variant="note" /> while scoping, <Badge text="ready" variant="default" /> when planned, <Badge text="in-progress" variant="caution" /> during active work, and <Badge text="done" variant="success" /> when complete. You can also mark projects as <Badge text="paused" variant="caution" /> or <Badge text="blocked" variant="danger" /> when needed.
 
 ### Areas
 
@@ -119,7 +104,7 @@ description: Professional responsibilities and career development.
 Current role, key responsibilities, and long-term goals...
 ```
 
-Areas don't have workflow statuses—they're just `active` or `archived`. Most of the time you won't think about area status at all.
+Areas don't have workflow statuses—they're just `active` or `archived`.
 
 ## The Products
 

@@ -53,21 +53,9 @@ Shows all tasks that need attention today. This is the command you'll probably u
 
 ### What It Does
 
-Runs [`tdn today`](/cli/read-commands#today) and displays the results. The output includes tasks that are:
+Shows tasks that need attention today: in-progress work, overdue items, things due or scheduled for today, and tasks that just became actionable (defer-until equals today). Completed, dropped, deferred, and archived tasks are filtered out.
 
-- **In-progress** — Currently being worked on
-- **Overdue** — Past their due date
-- **Due today** — Due date is today
-- **Scheduled today** — Scheduled for today
-- **Newly actionable** — Defer-until date is today (they just became available)
-
-### What It Excludes
-
-The command filters out tasks you don't need to see right now:
-
-- Done, dropped, and icebox tasks
-- Deferred tasks (defer-until is in the future)
-- Archived tasks
+See [`tdn today`](/cli/read-commands#today) for the full breakdown.
 
 ### Example
 
