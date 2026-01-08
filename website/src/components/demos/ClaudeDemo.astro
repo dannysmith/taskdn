@@ -42,7 +42,9 @@ import WindowChrome from './WindowChrome.astro'
 <template id="claude-static-fallback">
   <div class="terminal-line question-line">
     <span class="prompt">&gt;</span>
-    <span class="question-text">What's next on Q1 Planning? Anything urgent?</span>
+    <span class="question-text"
+      >What's next on Q1 Planning? Anything urgent?</span
+    >
   </div>
   <div class="command-line">
     <span class="checkmark">✓</span>
@@ -51,17 +53,21 @@ import WindowChrome from './WindowChrome.astro'
   <div class="response">
     <div class="response-line">Looking at Q1 Planning:</div>
     <div class="response-line"></div>
-    <div class="response-line warning">⚠️ Urgent: "Fix critical security issue" is 5 days overdue</div>
+    <div class="response-line warning">
+      ⚠️ Urgent: "Fix critical security issue" is 5 days overdue
+    </div>
     <div class="response-line"></div>
     <div class="response-line section">In Progress:</div>
-    <div class="response-line">  - Fix authentication bug (due Jan 18)</div>
-    <div class="response-line">  - Document API v2 endpoints</div>
+    <div class="response-line">- Fix authentication bug (due Jan 18)</div>
+    <div class="response-line">- Document API v2 endpoints</div>
     <div class="response-line"></div>
     <div class="response-line section">Ready to start:</div>
-    <div class="response-line">  - Update deployment scripts</div>
-    <div class="response-line">  - Review PR #847 (due today!)</div>
+    <div class="response-line">- Update deployment scripts</div>
+    <div class="response-line">- Review PR #847 (due today!)</div>
     <div class="response-line"></div>
-    <div class="response-line muted">I'd prioritize the security issue and PR #847 today.</div>
+    <div class="response-line muted">
+      I'd prioritize the security issue and PR #847 today.
+    </div>
   </div>
 </template>
 
@@ -106,16 +112,19 @@ I'd prioritize the security issue and PR #847 today.`
 <div class="response-line"></div>
 <div class="response-line muted">I'd prioritize the security issue and PR #847 today.</div>`
 
+  type AnimationController = ReturnType<typeof createAnimationController>
+
   function init() {
-    const container = document.querySelector('.claude-demo')
+    const container = document.querySelector<HTMLElement>('.claude-demo')
     if (!container) return
 
-    const terminalContent = container.querySelector('.terminal-content')
-    const questionText = container.querySelector('.question-text')
-    const cursor = container.querySelector('.cursor')
-    const thinkingLine = container.querySelector('.thinking-line')
-    const commandLine = container.querySelector('.command-line')
-    const response = container.querySelector('.response')
+    const terminalContent =
+      container.querySelector<HTMLElement>('.terminal-content')
+    const questionText = container.querySelector<HTMLElement>('.question-text')
+    const cursor = container.querySelector<HTMLElement>('.cursor')
+    const thinkingLine = container.querySelector<HTMLElement>('.thinking-line')
+    const commandLine = container.querySelector<HTMLElement>('.command-line')
+    const response = container.querySelector<HTMLElement>('.response')
 
     // Handle reduced motion - show static fallback
     if (checkReducedMotion()) {
@@ -137,15 +146,19 @@ I'd prioritize the security issue and PR #847 today.`
       }
     })
 
-    async function streamWords(element, text, controller) {
+    async function streamWords(
+      element: HTMLElement,
+      text: string,
+      ctrl: AnimationController
+    ) {
       // Split text into words and whitespace, keeping structure
       const tokens = text.split(/(\s+)/)
       element.textContent = ''
 
       for (const token of tokens) {
-        if (controller.signal.aborted) return
-        await controller.waitIfPaused()
-        if (controller.signal.aborted) return
+        if (ctrl.signal.aborted) return
+        await ctrl.waitIfPaused()
+        if (ctrl.signal.aborted) return
 
         element.textContent += token
 
@@ -166,7 +179,8 @@ I'd prioritize the security issue and PR #847 today.`
         if (response) response.innerHTML = ''
 
         // Scene 1: Type user question
-        await typeTextPausable(questionText, question, 40, controller)
+        if (questionText)
+          await typeTextPausable(questionText, question, 40, controller)
         if (controller.signal.aborted) return
 
         // Hide cursor after typing
@@ -198,7 +212,7 @@ I'd prioritize the security issue and PR #847 today.`
         if (controller.signal.aborted) return
 
         // Scene 3: Stream response word-by-word
-        await streamWords(response, responsePlainText, controller)
+        if (response) await streamWords(response, responsePlainText, controller)
         if (controller.signal.aborted) return
 
         // Swap to formatted HTML

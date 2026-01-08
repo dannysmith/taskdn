@@ -108,15 +108,22 @@ import WindowChrome from './WindowChrome.astro'
     },
   ]
 
+  type AnimationController = ReturnType<typeof createAnimationController>
+  type CharData = { text: string; class: string }
+
   function init() {
-    const container = document.querySelector('.obsidian-demo')
+    const container = document.querySelector<HTMLElement>('.obsidian-demo')
     if (!container) return
 
-    const editorView = container.querySelector('.editor-view')
-    const renderedView = container.querySelector('.rendered-view')
-    const line1Text = container.querySelector('.line-1 .editor-text')
-    const line2Text = container.querySelector('.line-2 .editor-text')
-    const cursor = container.querySelector('.cursor')
+    const editorView = container.querySelector<HTMLElement>('.editor-view')
+    const renderedView = container.querySelector<HTMLElement>('.rendered-view')
+    const line1Text = container.querySelector<HTMLElement>(
+      '.line-1 .editor-text'
+    )
+    const line2Text = container.querySelector<HTMLElement>(
+      '.line-2 .editor-text'
+    )
+    const cursor = container.querySelector<HTMLElement>('.cursor')
 
     // Handle reduced motion - show rendered view
     if (checkReducedMotion()) {
@@ -136,18 +143,23 @@ import WindowChrome from './WindowChrome.astro'
       }
     })
 
-    async function typeChar(element, char, charClass) {
+    function typeChar(element: HTMLElement, char: string, charClass: string) {
       const span = document.createElement('span')
       if (charClass) span.className = charClass
       span.textContent = char
       element.appendChild(span)
     }
 
-    async function typeLineChars(element, chars, controller) {
+    async function typeLineChars(
+      element: HTMLElement | null,
+      chars: CharData[],
+      ctrl: AnimationController
+    ) {
+      if (!element) return
       for (const { text, class: charClass } of chars) {
-        if (controller.signal.aborted) return
-        await controller.waitIfPaused()
-        if (controller.signal.aborted) return
+        if (ctrl.signal.aborted) return
+        await ctrl.waitIfPaused()
+        if (ctrl.signal.aborted) return
         typeChar(element, text, charClass)
         await sleep(40)
       }
@@ -168,8 +180,9 @@ import WindowChrome from './WindowChrome.astro'
         if (controller.signal.aborted) return
 
         // Move cursor to second line
-        if (cursor) {
-          const line1Cursor = container.querySelector('.line-1 .cursor')
+        if (cursor && container) {
+          const line1Cursor =
+            container.querySelector<HTMLElement>('.line-1 .cursor')
           const line2 = container.querySelector('.line-2')
           if (line1Cursor) line1Cursor.style.display = 'none'
           // Create cursor in line 2
@@ -199,8 +212,10 @@ import WindowChrome from './WindowChrome.astro'
         if (controller.signal.aborted) return
 
         // Clean up line 2 cursor for next loop
-        const line2Cursor = container.querySelector('.line-2 .cursor')
-        if (line2Cursor) line2Cursor.remove()
+        if (container) {
+          const line2Cursor = container.querySelector('.line-2 .cursor')
+          if (line2Cursor) line2Cursor.remove()
+        }
       }
     }
 

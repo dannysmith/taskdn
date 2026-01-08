@@ -29,18 +29,57 @@ import WindowChrome from './WindowChrome.astro'
     <div class="output-line"></div>
     <div class="output-line heading">TODAY — Wed Jan 15</div>
     <div class="output-line"></div>
-    <div class="output-line section"><span class="emoji">⚠️</span><span class="section-title">OVERDUE (2)</span></div>
-    <div class="output-line task"><span class="task-name">Fix critical security issue</span><span class="task-project">Q1 Planning</span><span class="task-date">due Jan 10</span></div>
-    <div class="output-line task"><span class="task-name">Submit expense report</span><span class="task-project">Work</span><span class="task-date">due Jan 12</span></div>
+    <div class="output-line section">
+      <span class="emoji">⚠️</span><span class="section-title">OVERDUE (2)</span
+      >
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Fix critical security issue</span><span
+        class="task-project">Q1 Planning</span
+      ><span class="task-date">due Jan 10</span>
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Submit expense report</span><span
+        class="task-project">Work</span
+      ><span class="task-date">due Jan 12</span>
+    </div>
     <div class="output-line"></div>
-    <div class="output-line section"><span class="emoji">📅</span><span class="section-title">DUE TODAY (2)</span></div>
-    <div class="output-line task"><span class="task-name">Review PR #847</span><span class="task-project">Q1 Planning</span></div>
-    <div class="output-line task"><span class="task-name">Call insurance company</span><span class="task-project">Personal</span></div>
+    <div class="output-line section">
+      <span class="emoji">📅</span><span class="section-title"
+        >DUE TODAY (2)</span
+      >
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Review PR #847</span><span class="task-project"
+        >Q1 Planning</span
+      >
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Call insurance company</span><span
+        class="task-project">Personal</span
+      >
+    </div>
     <div class="output-line"></div>
-    <div class="output-line section"><span class="emoji">▶️</span><span class="section-title">IN PROGRESS (3)</span></div>
-    <div class="output-line task"><span class="task-name">Fix authentication bug</span><span class="task-project">Q1 Planning</span></div>
-    <div class="output-line task"><span class="task-name">Document API v2 endpoints</span><span class="task-project">Q1 Planning</span></div>
-    <div class="output-line task"><span class="task-name">Get contractor quotes</span><span class="task-project">Home Renovation</span></div>
+    <div class="output-line section">
+      <span class="emoji">▶️</span><span class="section-title"
+        >IN PROGRESS (3)</span
+      >
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Fix authentication bug</span><span
+        class="task-project">Q1 Planning</span
+      >
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Document API v2 endpoints</span><span
+        class="task-project">Q1 Planning</span
+      >
+    </div>
+    <div class="output-line task">
+      <span class="task-name">Get contractor quotes</span><span
+        class="task-project">Home Renovation</span
+      >
+    </div>
   </div>
 </template>
 
@@ -98,7 +137,8 @@ import WindowChrome from './WindowChrome.astro'
       displayTime: 3500,
     },
     {
-      command: 'tdn new "Review quarterly report" --due friday --project "Q1 Planning"',
+      command:
+        'tdn new "Review quarterly report" --due friday --project "Q1 Planning"',
       outputLines: [
         '',
         '<span class="success">✓ Created task: Review quarterly report</span>',
@@ -112,13 +152,14 @@ import WindowChrome from './WindowChrome.astro'
   ]
 
   function init() {
-    const container = document.querySelector('.cli-demo')
+    const container = document.querySelector<HTMLElement>('.cli-demo')
     if (!container) return
 
-    const terminalContent = container.querySelector('.terminal-content')
-    const commandText = container.querySelector('.command-text')
-    const output = container.querySelector('.terminal-output')
-    const cursor = container.querySelector('.cursor')
+    const terminalContent =
+      container.querySelector<HTMLElement>('.terminal-content')
+    const commandText = container.querySelector<HTMLElement>('.command-text')
+    const output = container.querySelector<HTMLElement>('.terminal-output')
+    const cursor = container.querySelector<HTMLElement>('.cursor')
 
     // Handle reduced motion - show static fallback
     if (checkReducedMotion()) {
@@ -153,7 +194,8 @@ import WindowChrome from './WindowChrome.astro'
           if (cursor) cursor.style.display = 'inline-block'
 
           // Type command
-          await typeTextPausable(commandText, scene.command, 45, controller)
+          if (commandText)
+            await typeTextPausable(commandText, scene.command, 45, controller)
           if (controller.signal.aborted) return
 
           // Hide cursor after typing
@@ -164,7 +206,8 @@ import WindowChrome from './WindowChrome.astro'
           if (controller.signal.aborted) return
 
           // Reveal output lines
-          await revealLinesPausable(output, scene.outputLines, 60, controller)
+          if (output)
+            await revealLinesPausable(output, scene.outputLines, 60, controller)
           if (controller.signal.aborted) return
 
           // Display time

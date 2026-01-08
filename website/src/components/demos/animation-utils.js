@@ -1,40 +1,9 @@
+/* global window, document, setTimeout, IntersectionObserver, AbortController */
 /**
  * Shared animation utilities for demo components
  */
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
-/**
- * Type text character by character into an element
- * @param {HTMLElement} element - Target element
- * @param {string} text - Text to type
- * @param {number} charDelay - Delay between characters in ms
- * @param {AbortSignal} signal - Optional abort signal to cancel animation
- */
-export async function typeText(element, text, charDelay = 50, signal = null) {
-  for (const char of text) {
-    if (signal?.aborted) return
-    element.textContent += char
-    await sleep(charDelay)
-  }
-}
-
-/**
- * Reveal lines one by one into a container
- * @param {HTMLElement} container - Container element
- * @param {string[]} lines - Array of HTML strings for each line
- * @param {number} lineDelay - Delay between lines in ms
- * @param {AbortSignal} signal - Optional abort signal to cancel animation
- */
-export async function revealLines(container, lines, lineDelay = 80, signal = null) {
-  for (const line of lines) {
-    if (signal?.aborted) return
-    const el = document.createElement('div')
-    el.innerHTML = line
-    container.appendChild(el)
-    await sleep(lineDelay)
-  }
-}
 
 /**
  * Check if user prefers reduced motion
@@ -61,7 +30,7 @@ export function observeVisibility(element, onVisibilityChange) {
 
 /**
  * Creates an animation controller with pause/resume and abort capabilities
- * @returns {{ pause: () => void, resume: () => void, abort: () => void, isPaused: () => boolean, signal: AbortSignal }}
+ * @returns {{ pause: () => void, resume: () => void, abort: () => void, isPaused: () => boolean, signal: AbortSignal, waitIfPaused: () => Promise<void> }}
  */
 export function createAnimationController() {
   const abortController = new AbortController()
@@ -81,14 +50,12 @@ export function createAnimationController() {
     },
     abort() {
       abortController.abort()
-      // Also resume if paused so loops can exit
       this.resume()
     },
     isPaused() {
       return paused
     },
     signal: abortController.signal,
-    // Wait until not paused
     async waitIfPaused() {
       while (paused && !abortController.signal.aborted) {
         await new Promise((resolve) => {
@@ -109,7 +76,7 @@ export async function pausableSleep(ms, controller) {
   await controller.waitIfPaused()
   if (controller.signal.aborted) return
 
-  // Break up long sleeps so we can respond to pause more quickly
+  // Break up long sleeps to respond to pause quickly
   const interval = 100
   let remaining = ms
   while (remaining > 0 && !controller.signal.aborted) {
@@ -122,10 +89,10 @@ export async function pausableSleep(ms, controller) {
 }
 
 /**
- * Type text with pausable/abortable animation
+ * Type text character by character with pause/abort support
  * @param {HTMLElement} element - Target element
  * @param {string} text - Text to type
- * @param {number} charDelay - Delay between characters
+ * @param {number} charDelay - Delay between characters in ms
  * @param {ReturnType<typeof createAnimationController>} controller - Animation controller
  */
 export async function typeTextPausable(element, text, charDelay, controller) {
@@ -139,13 +106,18 @@ export async function typeTextPausable(element, text, charDelay, controller) {
 }
 
 /**
- * Reveal lines with pausable/abortable animation
+ * Reveal lines one by one with pause/abort support
  * @param {HTMLElement} container - Container element
- * @param {string[]} lines - Array of HTML strings
- * @param {number} lineDelay - Delay between lines
+ * @param {string[]} lines - Array of HTML strings for each line
+ * @param {number} lineDelay - Delay between lines in ms
  * @param {ReturnType<typeof createAnimationController>} controller - Animation controller
  */
-export async function revealLinesPausable(container, lines, lineDelay, controller) {
+export async function revealLinesPausable(
+  container,
+  lines,
+  lineDelay,
+  controller
+) {
   for (const line of lines) {
     if (controller.signal.aborted) return
     await controller.waitIfPaused()
