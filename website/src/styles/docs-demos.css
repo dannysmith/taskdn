@@ -1,0 +1,97 @@
+/* Demo wrapper for animated demos in documentation pages */
+/* Provides CSS variable isolation so demos render correctly in Starlight */
+.demo-wrapper {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin: 1.5rem 0;
+
+  /* Flexoki-inspired palette - dark mode (default) */
+  --color-bg: #100f0f;
+  --color-bg-2: #1c1b1a;
+  --color-text: #cecdc3;
+  --color-text-muted: #878580;
+  --color-accent: #4385be;
+  --color-accent-hover: #5b9fd3;
+  --color-border: #403e3c;
+
+  /* Semantic colors for status indicators */
+  --color-blue: #4385be;
+  --color-green: #879a39;
+  --color-yellow: #d0a215;
+  --color-red: #d14d41;
+
+  /* Font stacks */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+}
+
+/* Compact variant for demos with less content (e.g., Obsidian) */
+.demo-wrapper.demo-compact {
+  aspect-ratio: 16 / 6;
+}
+
+/* Light mode overrides */
+@media (prefers-color-scheme: light) {
+  .demo-wrapper {
+    --color-bg: #fffcf0;
+    --color-bg-2: #f2f0e5;
+    --color-text: #100f0f;
+    --color-text-muted: #6f6e69;
+    --color-accent: #205ea6;
+    --color-accent-hover: #4385be;
+    --color-border: #e6e4d9;
+
+    /* Semantic colors - light mode */
+    --color-blue: #205ea6;
+    --color-green: #66800b;
+    --color-yellow: #ad5c00;
+    --color-red: #af3029;
+  }
+}
+
+/* Ensure demo content fills container without affecting its size */
+.demo-wrapper > * {
+  position: absolute;
+  inset: 0;
+}
+
+/* Reset Starlight's inherited styles within demos */
+.demo-wrapper,
+.demo-wrapper *,
+.demo-wrapper *::before,
+.demo-wrapper *::after {
+  /* Reset box model */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  /* Reset typography to prevent Starlight inheritance */
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+/* Ensure monospace elements AND their children get the correct font */
+.demo-wrapper .window-content,
+.demo-wrapper .window-content *,
+.demo-wrapper .window-title,
+.demo-wrapper .terminal-content,
+.demo-wrapper .terminal-content *,
+.demo-wrapper .editor-view,
+.demo-wrapper .editor-view *,
+.demo-wrapper pre,
+.demo-wrapper code {
+  font-family: var(--font-mono) !important;
+}
+
+/* Re-apply padding that the demos expect (after our reset) */
+.demo-wrapper .window-content {
+  padding: 1rem;
+}
+
+.demo-wrapper .window-titlebar {
+  padding: 0.625rem 0.875rem;
+}

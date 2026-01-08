@@ -7,6 +7,9 @@ import { Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
 import { Image } from 'astro:assets'
 import desktopScreenshot from '@assets/desktop-1.png'
 import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
+import CLIDemo from '@components/demos/CLIDemo.astro'
+import ObsidianDemo from '@components/demos/ObsidianDemo.astro'
+import ClaudeDemo from '@components/demos/ClaudeDemo.astro'
 
 Most task management apps force a choice: use something like Notion and get powerful features but lose ownership of your data, or use plain files and miss out on good UIs. Taskdn is a different approach—your tasks live as markdown files on disk, but you get proper tools to work with them.
 
@@ -126,10 +129,9 @@ A proper task management app, but reading your markdown files. The desktop app i
 
 The CLI has two faces. For humans, it's a fast way to query and update tasks from the terminal: formatting, fuzzy search, natural language dates. For AI agents, [`--ai` mode](/cli/working-with-ai) outputs structured markdown that LLMs can parse easily.
 
-{/* TODO: Add screenshot showing CLI commands and output */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Screenshot coming soon</em>
+<br />
+<div class="demo-wrapper">
+  <CLIDemo />
 </div>
 
 The `context` command is particularly useful for AI workflows—it returns an entity plus all its relationships, so an agent can understand a project's full picture in one call.
@@ -144,7 +146,10 @@ The `context` command is particularly useful for AI workflows—it returns an en
 
 If you use Obsidian, the plugin makes task links show up as widgets with status, due date, and project info. Click to change status without opening the file. You can also turn any checklist item into a proper task file.
 
-<Image src={obsidianScreenshot} alt="Taskdn tasks rendered as interactive widgets in Obsidian" />
+<br />
+<div class="demo-wrapper demo-compact">
+  <ObsidianDemo />
+</div>
 
 <LinkCard
   title="Obsidian Plugin Documentation"
@@ -156,10 +161,9 @@ If you use Obsidian, the plugin makes task links show up as widgets with status,
 
 Load the skill and Claude knows how to work with your tasks. Ask it what's overdue, have it create tasks as you work, or get help planning your week. The `/tdn:today` command shows what needs attention today.
 
-{/* TODO: Add GIF/video showing Claude Code interaction */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Demo video coming soon</em>
+<br />
+<div class="demo-wrapper">
+  <ClaudeDemo />
 </div>
 
 <LinkCard
