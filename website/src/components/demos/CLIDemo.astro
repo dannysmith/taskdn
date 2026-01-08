@@ -1,9 +1,8 @@
 ---
 import WindowChrome from './WindowChrome.astro'
 
-// CLI demo showing tdn today output
-// Phase 1: Static content
-// Phase 2: Will add animation
+// CLI demo showing tdn commands with animation
+// Cycles through: tdn today, tdn context --ai, tdn new
 ---
 
 <div class="cli-demo" aria-hidden="true">
@@ -11,61 +10,190 @@ import WindowChrome from './WindowChrome.astro'
     <div class="terminal-content">
       <div class="terminal-line">
         <span class="prompt">$</span>
-        <span class="command">tdn today</span>
+        <span class="command-text"></span>
         <span class="cursor"></span>
       </div>
-      <div class="terminal-output">
-        <div class="output-line"></div>
-        <div class="output-line heading">TODAY — Wed Jan 15</div>
-        <div class="output-line"></div>
-        <div class="output-line section">
-          <span class="emoji">⚠️</span>
-          <span class="section-title">OVERDUE (2)</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Fix critical security issue</span>
-          <span class="task-project">Q1 Planning</span>
-          <span class="task-date">due Jan 10</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Submit expense report</span>
-          <span class="task-project">Work</span>
-          <span class="task-date">due Jan 12</span>
-        </div>
-        <div class="output-line"></div>
-        <div class="output-line section">
-          <span class="emoji">📅</span>
-          <span class="section-title">DUE TODAY (2)</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Review PR #847</span>
-          <span class="task-project">Q1 Planning</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Call insurance company</span>
-          <span class="task-project">Personal</span>
-        </div>
-        <div class="output-line"></div>
-        <div class="output-line section">
-          <span class="emoji">▶️</span>
-          <span class="section-title">IN PROGRESS (3)</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Fix authentication bug</span>
-          <span class="task-project">Q1 Planning</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Document API v2 endpoints</span>
-          <span class="task-project">Q1 Planning</span>
-        </div>
-        <div class="output-line task">
-          <span class="task-name">Get contractor quotes</span>
-          <span class="task-project">Home Renovation</span>
-        </div>
-      </div>
+      <div class="terminal-output"></div>
     </div>
   </WindowChrome>
 </div>
+
+<!-- Static fallback for reduced motion (Scene 1: tdn today) -->
+<template id="cli-static-fallback">
+  <div class="terminal-line">
+    <span class="prompt">$</span>
+    <span class="command-text">tdn today</span>
+    <span class="cursor"></span>
+  </div>
+  <div class="terminal-output">
+    <div class="output-line"></div>
+    <div class="output-line heading">TODAY — Wed Jan 15</div>
+    <div class="output-line"></div>
+    <div class="output-line section"><span class="emoji">⚠️</span><span class="section-title">OVERDUE (2)</span></div>
+    <div class="output-line task"><span class="task-name">Fix critical security issue</span><span class="task-project">Q1 Planning</span><span class="task-date">due Jan 10</span></div>
+    <div class="output-line task"><span class="task-name">Submit expense report</span><span class="task-project">Work</span><span class="task-date">due Jan 12</span></div>
+    <div class="output-line"></div>
+    <div class="output-line section"><span class="emoji">📅</span><span class="section-title">DUE TODAY (2)</span></div>
+    <div class="output-line task"><span class="task-name">Review PR #847</span><span class="task-project">Q1 Planning</span></div>
+    <div class="output-line task"><span class="task-name">Call insurance company</span><span class="task-project">Personal</span></div>
+    <div class="output-line"></div>
+    <div class="output-line section"><span class="emoji">▶️</span><span class="section-title">IN PROGRESS (3)</span></div>
+    <div class="output-line task"><span class="task-name">Fix authentication bug</span><span class="task-project">Q1 Planning</span></div>
+    <div class="output-line task"><span class="task-name">Document API v2 endpoints</span><span class="task-project">Q1 Planning</span></div>
+    <div class="output-line task"><span class="task-name">Get contractor quotes</span><span class="task-project">Home Renovation</span></div>
+  </div>
+</template>
+
+<script>
+  import {
+    checkReducedMotion,
+    observeVisibility,
+    createAnimationController,
+    pausableSleep,
+    typeTextPausable,
+    revealLinesPausable,
+  } from './animation-utils.js'
+
+  // Scene data with commands and output lines
+  const scenes = [
+    {
+      command: 'tdn today',
+      outputLines: [
+        '',
+        '<span class="heading">TODAY — Wed Jan 15</span>',
+        '',
+        '<span class="section"><span class="emoji">⚠️</span><span class="section-title">OVERDUE (2)</span></span>',
+        '<span class="task"><span class="task-name">Fix critical security issue</span><span class="task-project">Q1 Planning</span><span class="task-date">due Jan 10</span></span>',
+        '<span class="task"><span class="task-name">Submit expense report</span><span class="task-project">Work</span><span class="task-date">due Jan 12</span></span>',
+        '',
+        '<span class="section"><span class="emoji">📅</span><span class="section-title">DUE TODAY (2)</span></span>',
+        '<span class="task"><span class="task-name">Review PR #847</span><span class="task-project">Q1 Planning</span></span>',
+        '<span class="task"><span class="task-name">Call insurance company</span><span class="task-project">Personal</span></span>',
+        '',
+        '<span class="section"><span class="emoji">▶️</span><span class="section-title">IN PROGRESS (3)</span></span>',
+        '<span class="task"><span class="task-name">Fix authentication bug</span><span class="task-project">Q1 Planning</span></span>',
+        '<span class="task"><span class="task-name">Document API v2 endpoints</span><span class="task-project">Q1 Planning</span></span>',
+        '<span class="task"><span class="task-name">Get contractor quotes</span><span class="task-project">Home Renovation</span></span>',
+      ],
+      displayTime: 3500,
+    },
+    {
+      command: 'tdn context --ai',
+      outputLines: [
+        '',
+        '<span class="heading">3 areas · 8 projects · 34 tasks · <span class="emoji">⚠️</span> 2 overdue · <span class="emoji">📅</span> 3 due today</span>',
+        '',
+        '<span class="tree"><span class="emoji">📁</span> Work</span>',
+        '<span class="tree">├── <span class="status-blue">🔵</span> Q1 Planning <span class="tree-status">[in-progress]</span> — 8 tasks</span>',
+        '<span class="tree">│   ├── <span class="emoji">▶️</span> Fix authentication bug</span>',
+        '<span class="tree">│   └── <span class="emoji">▶️</span> Document API v2 endpoints</span>',
+        '<span class="tree">├── <span class="status-green">🟢</span> Client Onboarding <span class="tree-status">[ready]</span> — 4 tasks</span>',
+        '<span class="tree">└── <span class="emoji">📋</span> Direct: 4 tasks</span>',
+        '',
+        '<span class="tree"><span class="emoji">📁</span> Personal</span>',
+        '<span class="tree">├── <span class="status-blue">🔵</span> Home Renovation <span class="tree-status">[in-progress]</span> — 6 tasks</span>',
+        '<span class="tree">│   └── <span class="emoji">▶️</span> Get contractor quotes</span>',
+        '<span class="tree">└── <span class="emoji">📋</span> Direct: 3 tasks</span>',
+      ],
+      displayTime: 3500,
+    },
+    {
+      command: 'tdn new "Review quarterly report" --due friday --project "Q1 Planning"',
+      outputLines: [
+        '',
+        '<span class="success">✓ Created task: Review quarterly report</span>',
+        '<span class="detail">  → due: Fri Jan 17</span>',
+        '<span class="detail">  → project: Q1 Planning</span>',
+        '<span class="detail">  → status: inbox</span>',
+        '<span class="detail">  → path: tasks/review-quarterly-report.md</span>',
+      ],
+      displayTime: 3500,
+    },
+  ]
+
+  function init() {
+    const container = document.querySelector('.cli-demo')
+    if (!container) return
+
+    const terminalContent = container.querySelector('.terminal-content')
+    const commandText = container.querySelector('.command-text')
+    const output = container.querySelector('.terminal-output')
+    const cursor = container.querySelector('.cursor')
+
+    // Handle reduced motion - show static fallback
+    if (checkReducedMotion()) {
+      const fallback = document.getElementById('cli-static-fallback')
+      if (fallback && terminalContent) {
+        terminalContent.innerHTML = fallback.innerHTML
+      }
+      return
+    }
+
+    const controller = createAnimationController()
+
+    // Pause/resume based on visibility
+    const cleanup = observeVisibility(container, (isVisible) => {
+      if (isVisible) {
+        controller.resume()
+      } else {
+        controller.pause()
+      }
+    })
+
+    async function runDemo() {
+      while (!controller.signal.aborted) {
+        for (const scene of scenes) {
+          if (controller.signal.aborted) return
+
+          // Clear terminal
+          if (commandText) commandText.textContent = ''
+          if (output) output.innerHTML = ''
+
+          // Show cursor while typing
+          if (cursor) cursor.style.display = 'inline-block'
+
+          // Type command
+          await typeTextPausable(commandText, scene.command, 45, controller)
+          if (controller.signal.aborted) return
+
+          // Hide cursor after typing
+          if (cursor) cursor.style.display = 'none'
+
+          // Brief pause before output
+          await pausableSleep(300, controller)
+          if (controller.signal.aborted) return
+
+          // Reveal output lines
+          await revealLinesPausable(output, scene.outputLines, 60, controller)
+          if (controller.signal.aborted) return
+
+          // Display time
+          await pausableSleep(scene.displayTime, controller)
+        }
+      }
+    }
+
+    // Start the animation loop
+    runDemo()
+
+    // Cleanup on page navigation (for SPAs)
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        controller.abort()
+        cleanup()
+      },
+      { once: true }
+    )
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    init()
+  }
+</script>
 
 <style>
   .cli-demo {
@@ -88,7 +216,7 @@ import WindowChrome from './WindowChrome.astro'
     color: #878580;
   }
 
-  .command {
+  .command-text {
     color: #cecdc3;
   }
 
@@ -106,6 +234,78 @@ import WindowChrome from './WindowChrome.astro'
     flex-direction: column;
   }
 
+  .terminal-output > div {
+    min-height: 1.4em;
+  }
+
+  /* Output line styling via global classes applied through innerHTML */
+  .terminal-output :global(.heading) {
+    color: #cecdc3;
+    font-weight: 600;
+    margin-bottom: 0.25em;
+  }
+
+  .terminal-output :global(.section) {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+  }
+
+  .terminal-output :global(.section-title) {
+    font-weight: 600;
+    color: #cecdc3;
+  }
+
+  .terminal-output :global(.task) {
+    padding-left: 1.75em;
+    display: flex;
+    gap: 1em;
+  }
+
+  .terminal-output :global(.task-name) {
+    color: #cecdc3;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .terminal-output :global(.task-project) {
+    color: #4385be;
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  .terminal-output :global(.task-date) {
+    color: #878580;
+    white-space: nowrap;
+  }
+
+  /* Tree view (Scene 2) */
+  .terminal-output :global(.tree) {
+    color: #cecdc3;
+  }
+
+  .terminal-output :global(.tree-status) {
+    color: #878580;
+  }
+
+  .terminal-output :global(.status-blue) {
+    color: #4385be;
+  }
+
+  .terminal-output :global(.status-green) {
+    color: #879a39;
+  }
+
+  /* New task (Scene 3) */
+  .terminal-output :global(.success) {
+    color: #879a39;
+  }
+
+  .terminal-output :global(.detail) {
+    color: #878580;
+  }
+
+  /* Static fallback styles (inside template, applied when used) */
   .output-line {
     min-height: 1.4em;
   }
@@ -122,7 +322,7 @@ import WindowChrome from './WindowChrome.astro'
     align-items: center;
   }
 
-  .section-title {
+  .output-line .section-title {
     font-weight: 600;
     color: #cecdc3;
   }
@@ -133,31 +333,33 @@ import WindowChrome from './WindowChrome.astro'
     gap: 1em;
   }
 
-  .task-name {
+  .output-line .task-name {
     color: #cecdc3;
     flex: 1;
     min-width: 0;
   }
 
-  .task-project {
+  .output-line .task-project {
     color: #4385be;
     opacity: 0.8;
     white-space: nowrap;
   }
 
-  .task-date {
+  .output-line .task-date {
     color: #878580;
     white-space: nowrap;
   }
 
   /* Responsive */
   @media (max-width: 600px) {
+    .terminal-output :global(.task),
     .output-line.task {
       flex-wrap: wrap;
       gap: 0.25em 0.75em;
     }
 
-    .task-name {
+    .terminal-output :global(.task-name),
+    .output-line .task-name {
       flex-basis: 100%;
     }
   }
