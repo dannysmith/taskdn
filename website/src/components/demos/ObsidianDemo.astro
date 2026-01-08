@@ -51,7 +51,6 @@ import WindowChrome from './WindowChrome.astro'
     observeVisibility,
     createAnimationController,
     pausableSleep,
-    sleep,
   } from './animation-utils.js'
 
   // Markdown lines to type with syntax highlighting spans
@@ -163,7 +162,7 @@ import WindowChrome from './WindowChrome.astro'
         await ctrl.waitIfPaused()
         if (ctrl.signal.aborted) return
         typeChar(element, text, charClass)
-        await sleep(40)
+        await pausableSleep(40, ctrl)
       }
     }
 
