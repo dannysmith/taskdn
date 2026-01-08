@@ -1,0 +1,388 @@
+---
+import WindowChrome from './WindowChrome.astro'
+
+// Obsidian plugin demo showing typing animation → rendered widget view
+// Phase 1: Type markdown with syntax highlighting
+// Phase 2: Instant cut to rendered widget view, then loop
+---
+
+<div class="obsidian-demo" aria-hidden="true">
+  <WindowChrome variant="editor" title="daily-note.md">
+    <div class="editor-content">
+      <!-- Editor view (typing phase) -->
+      <div class="editor-view">
+        <div class="editor-line line-1">
+          <span class="editor-text"></span>
+          <span class="cursor"></span>
+        </div>
+        <div class="editor-line line-2">
+          <span class="editor-text"></span>
+        </div>
+      </div>
+
+      <!-- Rendered view (widget phase) - hidden initially -->
+      <div class="rendered-view" style="display: none;">
+        <!-- Plain checkbox line -->
+        <div class="obs-line">
+          <span class="obs-checkbox"></span>
+          <span class="obs-text">Buy Milk</span>
+        </div>
+
+        <!-- Task widget line - checkbox outside widget, aligned -->
+        <div class="obs-line">
+          <span class="obs-checkbox"></span>
+          <div class="taskdn-widget" data-status="inbox">
+            <span class="taskdn-title">Finish Q1 Planning Doc</span>
+            <span class="taskdn-meta">
+              <span class="taskdn-project">📁 Q1 Planning</span>
+              <span class="taskdn-due">📅 Jan 23</span>
+            </span>
+            <span class="taskdn-arrow">↗</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </WindowChrome>
+</div>
+
+<script>
+  import {
+    checkReducedMotion,
+    observeVisibility,
+    createAnimationController,
+    pausableSleep,
+  } from './animation-utils.js'
+
+  // Markdown lines to type with syntax highlighting spans
+  const typingSequence = [
+    {
+      line: 1,
+      chars: [
+        { text: '-', class: 'syntax' },
+        { text: ' ', class: '' },
+        { text: '[', class: 'syntax' },
+        { text: ' ', class: '' },
+        { text: ']', class: 'syntax' },
+        { text: ' ', class: '' },
+        { text: 'B', class: '' },
+        { text: 'u', class: '' },
+        { text: 'y', class: '' },
+        { text: ' ', class: '' },
+        { text: 'M', class: '' },
+        { text: 'i', class: '' },
+        { text: 'l', class: '' },
+        { text: 'k', class: '' },
+      ],
+    },
+    {
+      line: 2,
+      chars: [
+        { text: '-', class: 'syntax' },
+        { text: ' ', class: '' },
+        { text: '[', class: 'bracket' },
+        { text: '[', class: 'bracket' },
+        { text: 'F', class: 'link-text' },
+        { text: 'i', class: 'link-text' },
+        { text: 'n', class: 'link-text' },
+        { text: 'i', class: 'link-text' },
+        { text: 's', class: 'link-text' },
+        { text: 'h', class: 'link-text' },
+        { text: ' ', class: 'link-text' },
+        { text: 'Q', class: 'link-text' },
+        { text: '1', class: 'link-text' },
+        { text: ' ', class: 'link-text' },
+        { text: 'P', class: 'link-text' },
+        { text: 'l', class: 'link-text' },
+        { text: 'a', class: 'link-text' },
+        { text: 'n', class: 'link-text' },
+        { text: 'n', class: 'link-text' },
+        { text: 'i', class: 'link-text' },
+        { text: 'n', class: 'link-text' },
+        { text: 'g', class: 'link-text' },
+        { text: ' ', class: 'link-text' },
+        { text: 'D', class: 'link-text' },
+        { text: 'o', class: 'link-text' },
+        { text: 'c', class: 'link-text' },
+        { text: ']', class: 'bracket' },
+        { text: ']', class: 'bracket' },
+      ],
+    },
+  ]
+
+  type AnimationController = ReturnType<typeof createAnimationController>
+  type CharData = { text: string; class: string }
+
+  function init() {
+    const container = document.querySelector<HTMLElement>('.obsidian-demo')
+    if (!container) return
+
+    const editorView = container.querySelector<HTMLElement>('.editor-view')
+    const renderedView = container.querySelector<HTMLElement>('.rendered-view')
+    const line1Text = container.querySelector<HTMLElement>(
+      '.line-1 .editor-text'
+    )
+    const line2Text = container.querySelector<HTMLElement>(
+      '.line-2 .editor-text'
+    )
+    const cursor = container.querySelector<HTMLElement>('.cursor')
+
+    // Handle reduced motion - show rendered view
+    if (checkReducedMotion()) {
+      if (editorView) editorView.style.display = 'none'
+      if (renderedView) renderedView.style.display = ''
+      return
+    }
+
+    const controller = createAnimationController()
+
+    // Pause/resume based on visibility
+    const cleanup = observeVisibility(container, (isVisible) => {
+      if (isVisible) {
+        controller.resume()
+      } else {
+        controller.pause()
+      }
+    })
+
+    function typeChar(element: HTMLElement, char: string, charClass: string) {
+      const span = document.createElement('span')
+      if (charClass) span.className = charClass
+      span.textContent = char
+      element.appendChild(span)
+    }
+
+    async function typeLineChars(
+      element: HTMLElement | null,
+      chars: CharData[],
+      ctrl: AnimationController
+    ) {
+      if (!element) return
+      for (const { text, class: charClass } of chars) {
+        if (ctrl.signal.aborted) return
+        await ctrl.waitIfPaused()
+        if (ctrl.signal.aborted) return
+        typeChar(element, text, charClass)
+        await pausableSleep(40, ctrl)
+      }
+    }
+
+    async function runDemo() {
+      while (!controller.signal.aborted) {
+        // Reset to editor view
+        if (editorView) editorView.style.display = ''
+        if (renderedView) renderedView.style.display = 'none'
+        if (line1Text) line1Text.innerHTML = ''
+        if (line2Text) line2Text.innerHTML = ''
+        if (cursor) cursor.style.display = 'inline-block'
+
+        // Phase 1: Type markdown
+        // Type first line
+        await typeLineChars(line1Text, typingSequence[0].chars, controller)
+        if (controller.signal.aborted) return
+
+        // Move cursor to second line
+        if (cursor && container) {
+          const line1Cursor =
+            container.querySelector<HTMLElement>('.line-1 .cursor')
+          const line2 = container.querySelector('.line-2')
+          if (line1Cursor) line1Cursor.style.display = 'none'
+          // Create cursor in line 2
+          const line2Cursor = document.createElement('span')
+          line2Cursor.className = 'cursor'
+          line2?.appendChild(line2Cursor)
+        }
+
+        // Brief pause between lines
+        await pausableSleep(200, controller)
+        if (controller.signal.aborted) return
+
+        // Type second line
+        await typeLineChars(line2Text, typingSequence[1].chars, controller)
+        if (controller.signal.aborted) return
+
+        // Brief pause before switching views
+        await pausableSleep(500, controller)
+        if (controller.signal.aborted) return
+
+        // Phase 2: Instant cut to rendered view
+        if (editorView) editorView.style.display = 'none'
+        if (renderedView) renderedView.style.display = ''
+
+        // Display rendered view for 3.5 seconds
+        await pausableSleep(3500, controller)
+        if (controller.signal.aborted) return
+
+        // Clean up line 2 cursor for next loop
+        if (container) {
+          const line2Cursor = container.querySelector('.line-2 .cursor')
+          if (line2Cursor) line2Cursor.remove()
+        }
+      }
+    }
+
+    // Start the animation loop
+    runDemo()
+
+    // Cleanup on page navigation (for SPAs)
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        controller.abort()
+        cleanup()
+      },
+      { once: true }
+    )
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    init()
+  }
+</script>
+
+<style>
+  .obsidian-demo {
+    height: 100%;
+    width: 100%;
+  }
+
+  .editor-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  /* Editor view styles */
+  .editor-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .editor-line {
+    display: flex;
+    align-items: center;
+    min-height: 1.5em;
+    font-family: var(--font-mono);
+  }
+
+  .editor-text {
+    display: inline;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.5em;
+    height: 1.1em;
+    background: var(--color-accent);
+    opacity: 0.8;
+    vertical-align: text-bottom;
+  }
+
+  /* Syntax highlighting in editor */
+  .editor-text :global(.syntax) {
+    color: var(--color-text-muted);
+  }
+
+  .editor-text :global(.bracket) {
+    color: var(--color-accent);
+  }
+
+  .editor-text :global(.link-text) {
+    color: var(--color-text);
+  }
+
+  /* Rendered view styles */
+  .rendered-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .obs-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 1.75em;
+  }
+
+  /* Rounded square checkboxes (using span for full styling control) */
+  .obs-checkbox {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border: 1.5px solid var(--color-text-muted);
+    border-radius: 3px;
+    background: transparent;
+    flex-shrink: 0;
+  }
+
+  .obs-text {
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 0.9375em;
+  }
+
+  /* Task widget container - no checkbox inside */
+  .taskdn-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    background-color: var(--color-bg-2);
+    font-family: var(--font-sans);
+  }
+
+  /* Status indicated by left border color */
+  .taskdn-widget[data-status='inbox'] {
+    border-inline-start: 3px solid var(--color-blue);
+  }
+
+  .taskdn-widget[data-status='in-progress'] {
+    border-inline-start: 3px solid var(--color-yellow);
+  }
+
+  .taskdn-widget[data-status='blocked'] {
+    border-inline-start: 3px solid var(--color-red);
+  }
+
+  .taskdn-title {
+    color: var(--color-text);
+    font-size: 0.9375em;
+  }
+
+  .taskdn-meta {
+    display: inline-flex;
+    gap: 0.6em;
+    font-size: 0.8em;
+    color: var(--color-text-muted);
+  }
+
+  .taskdn-arrow {
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    font-size: 0.8em;
+    margin-left: 0.25em;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .obs-text,
+    .taskdn-title {
+      font-size: 0.8em;
+    }
+
+    .taskdn-meta {
+      font-size: 0.7em;
+    }
+
+    .taskdn-widget {
+      flex-wrap: wrap;
+      gap: 0.25em 0.5em;
+    }
+  }
+</style>

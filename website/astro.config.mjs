@@ -14,6 +14,7 @@ export default defineConfig({
         starlightLlmsTxt(),
       ],
       title: 'Taskdn',
+      customCss: ['./src/styles/docs-demos.css'],
       components: {
         Footer: './src/components/Footer.astro',
       },
