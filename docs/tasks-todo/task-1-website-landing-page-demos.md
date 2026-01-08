@@ -326,3 +326,158 @@ Consider creating reusable Astro components:
 - Actual video/GIF files
 - Backend integration (demos are purely frontend)
 - Mobile-specific demo variants (just stack the same demos)
+
+---
+
+# Implementation Plan
+
+## Phase 1: Static Layout & Content
+
+Build out the full section structure with placeholder boxes where demos will go. By the end of this phase, the page should look complete at a glance—just with static demo areas.
+
+### 1.1 Section Layout
+
+Replace the current 2x2 product grid with four full-width sections.
+
+**Structure for each section:**
+- Full-width container with generous vertical padding (think ~80-100px top/bottom)
+- Two-column grid inside: text column and demo column
+- Alternating layout: odd sections have demo on right, even sections have demo on left
+- On mobile (<768px or so): single column, text stacked above demo
+
+**Spacing & rhythm:**
+- Consistent gap between text and demo columns (~40-60px)
+- Clear visual separation between sections—either subtle background color alternation or generous whitespace
+- Text column shouldn't exceed ~500px width for readability
+
+**Consider creating a `ProductSection.astro` component** that accepts:
+- Title, icon, badge (optional), description, features array, CTA text/link
+- Demo slot for the interactive component
+- `reverse` prop to flip the column order
+
+### 1.2 Typography & Content Styling
+
+**Section titles:**
+- Large, bold—bigger than the current product card titles
+- Emoji icon inline or above, sized to feel balanced (not cartoonishly large)
+- Status badge (for Desktop only) should feel like a label, not a banner
+
+**Description paragraph:**
+- Readable size (~18px), comfortable line-height
+- Muted color—not as prominent as the title but clearly readable
+- Max-width to prevent overly long lines
+
+**Feature list:**
+- Styled bullets or custom markers
+- Slightly smaller than description text
+- Enough spacing between items to scan easily
+- Consider subtle left border or indent to set apart from description
+
+**CTA button:**
+- Primary button style matching existing site buttons
+- Enough margin above to breathe
+- Icon optional (arrow or relevant icon)
+
+### 1.3 Demo Placeholders
+
+For now, each demo area gets a styled placeholder box:
+- Aspect ratio that roughly matches what the final demo will be (roughly 16:10 or similar)
+- Subtle border and/or background to define the space
+- Rounded corners matching site aesthetic
+- "Demo coming soon" or similar text centered, muted
+
+The Desktop section's SVG mockup can be built in this phase if straightforward, or left as a placeholder.
+
+### 1.4 Background Illustrations (Optional)
+
+If we proceed with subtle background illustrations:
+- Very low opacity (5-10%)—should be barely noticeable
+- Positioned to not interfere with text readability
+- Consider placing behind the demo column only, or bleeding off the edge
+- Could be simple SVG shapes/icons rather than detailed logos
+
+Skip this if it feels like it's adding clutter. The sections should work without them.
+
+### 1.5 Responsive Behavior
+
+- Test at common breakpoints: mobile (~375px), tablet (~768px), desktop (~1200px+)
+- Ensure text remains readable and demos don't get squashed
+- On narrow viewports, demos should have a reasonable max-height so they don't dominate the screen
+
+---
+
+## Phase 2: Interactive Demos
+
+Each demo is a self-contained component. Build and integrate them one at a time.
+
+### 2.1 CLI Demo
+
+**Requirements from spec:**
+- Terminal window with appropriate chrome (title bar, traffic lights)
+- Three scenes cycling: `tdn today`, `tdn context --ai`, `tdn new`
+- Typing animation for commands
+- Output appears after command is "entered"
+- 5-6 seconds per scene before transition
+- Auto-loops
+
+**Research needed:**
+- Best approach for typing animation (CSS vs JS, character-by-character vs reveal)
+- How to handle the colored/formatted output (pre-styled spans? syntax highlighting library?)
+- Scene transition style (clear and retype? fade? slide?)
+- How to structure the scene data (array of {command, output} objects?)
+
+**Open questions:**
+- Should the terminal have a blinking cursor?
+- How to handle the tree-drawing characters (box-drawing Unicode) in the context output?
+- Should output appear all at once or line-by-line?
+
+### 2.2 Obsidian Demo
+
+**Requirements from spec:**
+- Editor-style window with appropriate chrome
+- Phase 1: Typing the markdown (`- [ ] Buy Milk` and `- [[Finish Q1 Planning Doc]]`)
+- Phase 2: Cut directly to rendered widget view
+- Loop back to Phase 1 after displaying rendered view
+
+**Research needed:**
+- Visual style for the "editor" state—monospace font, line numbers optional, cursor?
+- Visual style for the "rendered" state—what does the task widget actually look like?
+- Transition between states—instant cut? brief fade?
+- Reference the actual Obsidian plugin to match widget styling
+
+**Open questions:**
+- Should the editor view show syntax highlighting for the markdown?
+- How realistic should the Obsidian chrome be? (Could be simplified)
+- Should the checkbox in the rendered view have any hover/interactive appearance (even though it won't actually do anything)?
+
+### 2.3 Claude Code Demo
+
+**Requirements from spec:**
+- Claude Code-style terminal/conversation interface
+- Scene 1: User types a question
+- Scene 2: Spinner/thinking state, shows command being run
+- Scene 3: Claude's response with formatting
+- Auto-loops, optionally rotating through different Q&A pairs
+
+**Research needed:**
+- What does the Claude Code interface actually look like? (Colors, prompt style, response formatting)
+- How to render the "thinking" state—spinner? Animated dots? Pulsing?
+- How to show the command being run (muted text appearing?)
+- Markdown rendering for Claude's response (bold, lists, etc.)
+
+**Open questions:**
+- Should we show a `>` prompt for user input or something else?
+- How distinct should this look from the CLI demo? (Different chrome/colors?)
+- If rotating through multiple Q&A pairs, how many? What questions?
+- Should Claude's response appear all at once or stream in (more realistic but more complex)?
+
+---
+
+## Phase 2.5: Polish & Integration
+
+After all demos are working:
+- Test the full page flow—do the sections feel balanced?
+- Check animation performance (no jank, reasonable CPU usage)
+- Verify `prefers-reduced-motion` behavior
+- Test on actual mobile devices, not just responsive mode
+- Review accessibility (demos are decorative, but page should still be navigable)
