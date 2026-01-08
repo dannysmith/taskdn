@@ -36,7 +36,7 @@ Copy from `tdn-uimockup/src/types/`:
 - `sidebar-order.ts` - Drag ID types for sidebar DnD
 - `calendar-order.ts` - Calendar ordering types
 
-Note: These types are temporary. Once Task 2 generates types via tauri-specta from Rust structs, the entity types (`data.ts`) will be replaced. Navigation and UI-specific types will remain.
+Note: These types are temporary. Once Task 2 generates types via tauri-specta from Rust structs, the entity types (`data.ts`) will be replaced. Navigation and UI-specific types will remain. This should be noted in the code as comments. 
 
 ### Config Files
 
@@ -69,7 +69,7 @@ From `tdn-uimockup/src/components/layout/`:
 - `ContentArea.tsx` - Scrollable content wrapper
 - `DetailSideBar.tsx` - Sliding right panel (integrate with existing `RightSideBar`)
 
-The desktop already has `MainWindow`, `LeftSideBar`, `RightSideBar`. The goal is to integrate mockup patterns without duplicating structure.
+The desktop already has `MainWindow`, `LeftSideBar`, `RightSideBar`. The goal is to integrate mockup patterns without duplicating structure. You may want to ask the user to visually confirm once in t you've integrated these. We can quite probably just use the existing components in the app in place of those brought in from the mockup, just updating them as needed.
 
 ### Zustand Stores
 
@@ -85,7 +85,6 @@ These are independent of entity data and can be used immediately.
 The mockup uses local state for sidebar selection. Consider whether this should:
 - Remain as local state in the app shell
 - Move to a Zustand store for persistence
-- Use URL-based routing (probably overkill for desktop)
 
 For now, local state matching the mockup pattern is fine.
 
