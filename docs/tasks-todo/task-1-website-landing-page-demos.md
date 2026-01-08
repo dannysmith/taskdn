@@ -1,67 +1,57 @@
 # Task: Website Landing Page Demos
 
 Working Dir: `website/`
-Read First: `website/src/content/docs/getting-started.mdx` and any other docs in `website/src/content/docs/` you think you need.
+
+Read First: `website/src/content/docs/getting-started.mdx` and other docs in `website/src/content/docs/` as needed.
 
 ---
+
+# Requirements
 
 ## Overview
 
-Redesign "The Suite" section of the landing page (`/website/src/pages/index.astro`). Replace the current 2x2 grid with four full-width product sections, each featuring an animated demo that shows the product in action.
+Redesign "The Suite" section of the landing page (`/website/src/pages/index.astro`). Replace the current 2x2 grid with four full-width product sections, each featuring an animated demo.
 
 Keep everything above "The Suite" unchanged (hero, file example, hierarchy visualization).
 
----
+## Layout & Styling
 
-## General Layout & Styling
+**Section structure:** Each product gets a full-width section with two columns—text (title, description, features, CTA) and demo.
 
-### Section Structure
+**Ordering and alternation:**
+1. Desktop App — demo on right
+2. CLI — demo on left
+3. Obsidian Plugin — demo on right
+4. Claude Code — demo on left
 
-Each product gets a full-width section containing:
+**Responsive:** On mobile, stack vertically with text above demo.
 
-1. **Text column** — Title, emoji icon, status badge (if applicable), description, feature bullets, CTA button
-2. **Demo column** — Animated HTML/CSS/JS demonstration of the product
+**Visual styling:**
+- Flexoki colors throughout (not a separate terminal dark theme)
+- Terminal/editor chrome (title bar, traffic lights) uses site colors
+- Syntax highlighting uses site palette
+- Background illustrations optional—very faded if included
 
-### Layout
-
-- **Desktop:** Side-by-side, alternating which side the demo appears on:
-  - Section 1 (Desktop): Demo on right
-  - Section 2 (CLI): Demo on left
-  - Section 3 (Obsidian): Demo on right
-  - Section 4 (Claude Code): Demo on left
-- **Mobile/narrow viewports:** Stack vertically with text above demo
-
-### Visual Styling
-
-- Use **Flexoki colors** consistent with the rest of the site (not a separate "terminal dark theme")
-- Terminal/editor demos should have appropriate chrome (title bar with traffic light buttons, rounded corners) but use site colors
-- Syntax highlighting for code/markdown should use the existing site palette
-- Subtle background illustrations are optional and should be very faded/watermarked if included
-
-### Animation Timing
-
-- Each "scene" in a demo should display for **5-6 seconds** before transitioning
-- Typing animations should feel natural but not slow
+**Animation timing:**
+- 5-6 seconds per scene before transitioning
+- Typing animations feel natural, not slow
 - All demos auto-loop
 
----
+## Out of Scope
 
-## Section Order
-
-1. Desktop App (coming soon)
-2. CLI
-3. Obsidian Plugin
-4. Claude Code Plugin
+- Actual video/GIF files
+- Backend integration
+- Mobile-specific demo variants
 
 ---
 
-## Section 1: Desktop App
+## Product Sections
 
-### Content
+### Desktop App
 
 **Title:** Desktop App
 **Icon:** 🖥️
-**Status Badge:** "Coming Soon"
+**Badge:** "Coming Soon"
 
 **Description:**
 A task app that actually feels good to use—fast, keyboard-driven, thoughtfully designed—but your files stay on disk as markdown. No lock-in. No wondering what happens when the company gets acquired.
@@ -74,27 +64,14 @@ A task app that actually feels good to use—fast, keyboard-driven, thoughtfully
 
 **CTA:** "Learn More" → `/desktop/overview`
 
-### Demo
-
-Since the app isn't built yet, show a **simple SVG placeholder**:
-
-- Mac-style window chrome (three dots top-left, title bar)
-- Sidebar with area/project icons
-- Main panel with 4-5 checklist items (some checked, some not)
-- Subtle, clean, monochrome or very muted colors
-- Static (no animation needed)
-
-If the SVG proves complex, fallback to a styled box with "Demo coming soon" text.
+**Demo:** Simple placeholder with "Coming Soon" text.
 
 ---
 
-## Section 2: CLI
-
-### Content
+### CLI
 
 **Title:** Command Line Interface
 **Icon:** ⌨️
-**Status Badge:** None (already available)
 
 **Description:**
 Two modes for two audiences. For you: pretty output, fuzzy search, natural language dates. For AI agents: structured markdown designed for context windows—token-efficient, still useful if truncated.
@@ -107,19 +84,12 @@ Two modes for two audiences. For you: pretty output, fuzzy search, natural langu
 
 **CTA:** "Get Started" → `/cli/overview`
 
-### Demo
+**Demo:** Terminal cycling through three scenes.
 
-A terminal window cycling through three scenes:
-
-#### Scene 1: `tdn today`
-
+**Scene 1 — `tdn today`:**
 ```
 $ tdn today
-```
 
-Output (formatted, colorful for humans):
-
-```
 TODAY — Wed Jan 15
 
 ⚠️  OVERDUE (2)
@@ -136,15 +106,10 @@ TODAY — Wed Jan 15
    Get contractor quotes              Home Renovation
 ```
 
-#### Scene 2: `tdn context --ai`
-
+**Scene 2 — `tdn context --ai`:**
 ```
 $ tdn context --ai
-```
 
-Output (stats line + structure tree only, keep it tight):
-
-```
 3 areas · 8 projects · 34 tasks · ⚠️ 2 overdue · 📅 3 due today
 
 📁 Work
@@ -160,15 +125,10 @@ Output (stats line + structure tree only, keep it tight):
 └── 📋 Direct: 3 tasks
 ```
 
-#### Scene 3: `tdn new`
-
+**Scene 3 — `tdn new`:**
 ```
 $ tdn new "Review quarterly report" --due friday --project "Q1 Planning"
-```
 
-Output:
-
-```
 ✓ Created task: Review quarterly report
   → due: Fri Jan 17
   → project: Q1 Planning
@@ -178,13 +138,10 @@ Output:
 
 ---
 
-## Section 3: Obsidian Plugin
-
-### Content
+### Obsidian Plugin
 
 **Title:** Obsidian Plugin
 **Icon:** 💎
-**Status Badge:** None (already available)
 
 **Description:**
 You're in Obsidian to write, not manage tasks. Link to a task and see its status, project, and due date right there. Check it off without opening another file.
@@ -197,46 +154,31 @@ You're in Obsidian to write, not manage tasks. Link to a task and see its status
 
 **CTA:** "Install Plugin" → `/obsidian/plugin`
 
-### Demo
+**Demo:** Editor window with two phases, looping.
 
-An editor-style window showing the transformation from raw markdown to rendered view.
-
-#### Phase 1: Typing (2-3 seconds)
-
-Show text being typed into an editor:
-
+**Phase 1 — Typing (2-3 seconds):**
 ```
 - [ ] Buy Milk
 - [[Finish Q1 Planning Doc]]
 ```
 
-#### Phase 2: Rendered View (5-6 seconds)
-
-Cut directly to the rendered Obsidian-style view:
-
-- First line: A proper checkbox (unchecked) with "Buy Milk" text
-- Second line: A task widget showing:
+**Phase 2 — Rendered view (5-6 seconds):**
+- First line: Checkbox (unchecked) with "Buy Milk"
+- Second line: Task widget showing:
   - Checkbox (unchecked)
   - Title: "Finish Q1 Planning Doc"
-  - Status indicator (colored border or badge): "in-progress" (yellow/amber)
+  - Status: "in-progress" (yellow/amber indicator)
   - Project: "Q1 Planning"
   - Due: "Jan 15"
 
-The widget should look polished—rounded corners, subtle shadow, clean typography.
-
-#### Loop
-
-After showing the rendered view, fade/clear and restart from Phase 1.
+Instant cut between phases, then loop.
 
 ---
 
-## Section 4: Claude Code Plugin
-
-### Content
+### Claude Code
 
 **Title:** Claude Code
 **Icon:** 🤖
-**Status Badge:** None (already available)
 
 **Description:**
 Claude can already read your markdown files. This teaches it how your system works—so "What's overdue?" gets a real answer, not a frontmatter tutorial.
@@ -249,27 +191,18 @@ Claude can already read your markdown files. This teaches it how your system wor
 
 **CTA:** "Set Up Claude" → `/claude-code/overview`
 
-### Demo
+**Demo:** Terminal-style conversation, single Q&A looping.
 
-A Claude Code-style terminal interface showing a conversation.
-
-#### Scene 1: User Question (typing animation)
-
+**Scene 1 — User question (typing):**
 ```
 > What's next on Q1 Planning? Anything urgent?
 ```
 
-#### Scene 2: Processing (2 seconds)
+**Scene 2 — Processing (~2 seconds):**
+- Spinner or pulsing indicator
+- Muted text: `✓ tdn context project "Q1 Planning" --ai`
 
-Show Claude "thinking" with:
-- A subtle spinner or pulsing indicator
-- Commands being run (muted text):
-  ```
-  ✓ tdn context project "Q1 Planning" --ai
-  ```
-
-#### Scene 3: Response (5-6 seconds)
-
+**Scene 3 — Response (streams in, 5-6 seconds):**
 ```
 Looking at Q1 Planning:
 
@@ -286,46 +219,7 @@ Looking at Q1 Planning:
 I'd prioritize the security issue and PR #847 today.
 ```
 
-#### Loop
-
-Clear and restart from Scene 1. Could optionally rotate through 2-3 different question/response pairs:
-- "What's overdue?"
-- "Create a task to call the dentist, due Friday"
-- "Help me process my inbox"
-
----
-
-## Technical Notes
-
-### Component Structure
-
-Consider creating reusable Astro components:
-
-- `ProductSection.astro` — The full-width section layout with text/demo columns
-- `TerminalDemo.astro` — Animated terminal with typing effect and scene cycling
-- `EditorDemo.astro` — Obsidian-style editor with transformation
-- `ClaudeDemo.astro` — Claude Code conversation interface
-
-### Animation Implementation
-
-- Use CSS animations where possible (typing cursor, transitions)
-- JavaScript for scene cycling and timing
-- Consider using CSS `@keyframes` for typing effects rather than character-by-character JS
-- Ensure animations don't cause layout shifts
-
-### Accessibility
-
-- Demos should have `aria-hidden="true"` (decorative)
-- Ensure text content in the text column conveys all important information
-- Respect `prefers-reduced-motion` — show static final state instead of animations
-
----
-
-## Out of Scope
-
-- Actual video/GIF files
-- Backend integration (demos are purely frontend)
-- Mobile-specific demo variants (just stack the same demos)
+Clear and loop.
 
 ---
 
@@ -333,151 +227,97 @@ Consider creating reusable Astro components:
 
 ## Phase 1: Static Layout & Content
 
-Build out the full section structure with placeholder boxes where demos will go. By the end of this phase, the page should look complete at a glance—just with static demo areas.
+Build the full section structure with placeholder boxes for demos. By the end, the page looks complete—just with static demo areas.
 
 ### 1.1 Section Layout
 
-Replace the current 2x2 product grid with four full-width sections.
+Replace the 2x2 grid with four full-width sections.
 
-**Structure for each section:**
-- Full-width container with generous vertical padding (think ~80-100px top/bottom)
-- Two-column grid inside: text column and demo column
-- Alternating layout: odd sections have demo on right, even sections have demo on left
-- On mobile (<768px or so): single column, text stacked above demo
+- Full-width container, generous vertical padding (~80-100px)
+- Two-column grid: text column (~500px max) and demo column
+- Alternating layout via `reverse` prop or similar
+- Mobile: single column, text above demo
 
-**Spacing & rhythm:**
-- Consistent gap between text and demo columns (~40-60px)
-- Clear visual separation between sections—either subtle background color alternation or generous whitespace
-- Text column shouldn't exceed ~500px width for readability
+Consider a `ProductSection.astro` component accepting title, icon, badge, description, features, CTA, demo slot, and reverse flag.
 
-**Consider creating a `ProductSection.astro` component** that accepts:
-- Title, icon, badge (optional), description, features array, CTA text/link
-- Demo slot for the interactive component
-- `reverse` prop to flip the column order
+### 1.2 Typography & Styling
 
-### 1.2 Typography & Content Styling
+**Titles:** Large, bold. Emoji sized to feel balanced. Badge as label, not banner.
 
-**Section titles:**
-- Large, bold—bigger than the current product card titles
-- Emoji icon inline or above, sized to feel balanced (not cartoonishly large)
-- Status badge (for Desktop only) should feel like a label, not a banner
+**Description:** ~18px, muted color, comfortable line-height.
 
-**Description paragraph:**
-- Readable size (~18px), comfortable line-height
-- Muted color—not as prominent as the title but clearly readable
-- Max-width to prevent overly long lines
+**Features:** Styled bullets, slightly smaller than description, good spacing.
 
-**Feature list:**
-- Styled bullets or custom markers
-- Slightly smaller than description text
-- Enough spacing between items to scan easily
-- Consider subtle left border or indent to set apart from description
-
-**CTA button:**
-- Primary button style matching existing site buttons
-- Enough margin above to breathe
-- Icon optional (arrow or relevant icon)
+**CTA:** Primary button style, enough margin above.
 
 ### 1.3 Demo Placeholders
 
-For now, each demo area gets a styled placeholder box:
-- Aspect ratio that roughly matches what the final demo will be (roughly 16:10 or similar)
-- Subtle border and/or background to define the space
-- Rounded corners matching site aesthetic
-- "Demo coming soon" or similar text centered, muted
+Styled boxes with ~16:10 aspect ratio, subtle border/background, rounded corners.
 
-The Desktop section's SVG mockup can be built in this phase if straightforward, or left as a placeholder.
+Desktop gets "Coming Soon" text. Others get generic placeholders until Phase 2.
 
 ### 1.4 Background Illustrations (Optional)
 
-If we proceed with subtle background illustrations:
-- Very low opacity (5-10%)—should be barely noticeable
-- Positioned to not interfere with text readability
-- Consider placing behind the demo column only, or bleeding off the edge
-- Could be simple SVG shapes/icons rather than detailed logos
+If included: 5-10% opacity, behind demo column or bleeding off edge. Skip if it adds clutter.
 
-Skip this if it feels like it's adding clutter. The sections should work without them.
+### 1.5 Responsive & Accessibility
 
-### 1.5 Responsive Behavior
-
-- Test at common breakpoints: mobile (~375px), tablet (~768px), desktop (~1200px+)
-- Ensure text remains readable and demos don't get squashed
-- On narrow viewports, demos should have a reasonable max-height so they don't dominate the screen
+- Test at 375px, 768px, 1200px+
+- Demos should have `aria-hidden="true"` (decorative)
+- Respect `prefers-reduced-motion`—show static final state
 
 ---
 
 ## Phase 2: Interactive Demos
 
-Each demo is a self-contained component. Build and integrate them one at a time.
+Build each demo as a self-contained component.
 
 ### 2.1 CLI Demo
 
-**Requirements from spec:**
-- Terminal window with appropriate chrome (title bar, traffic lights)
-- Three scenes cycling: `tdn today`, `tdn context --ai`, `tdn new`
-- Typing animation for commands
-- Output appears after command is "entered"
-- 5-6 seconds per scene before transition
-- Auto-loops
+**Resolved decisions:**
+- Cursor: visible, contrasting color, not blinking
+- Output: line-by-line, quickly
+- Transitions: clear screen, type new command
 
-**Research needed:**
-- Best approach for typing animation (CSS vs JS, character-by-character vs reveal)
-- How to handle the colored/formatted output (pre-styled spans? syntax highlighting library?)
-- Scene transition style (clear and retype? fade? slide?)
-- How to structure the scene data (array of {command, output} objects?)
-
-**Open questions:**
-- Should the terminal have a blinking cursor?
-- How to handle the tree-drawing characters (box-drawing Unicode) in the context output?
-- Should output appear all at once or line-by-line?
+**Technical research:**
+- Typing animation approach (CSS vs JS)
+- Colored output handling (pre-styled spans)
+- Scene data structure
+- Box-drawing Unicode font support
 
 ### 2.2 Obsidian Demo
 
-**Requirements from spec:**
-- Editor-style window with appropriate chrome
-- Phase 1: Typing the markdown (`- [ ] Buy Milk` and `- [[Finish Q1 Planning Doc]]`)
-- Phase 2: Cut directly to rendered widget view
-- Loop back to Phase 1 after displaying rendered view
+**Resolved decisions:**
+- Editor state: syntax highlighting (colored brackets, checkbox syntax)
+- Window chrome: simplified (title bar + traffic lights only)
+- Transition: instant cut between phases
+- Widget: closely match actual plugin styling (reference implementation)
 
-**Research needed:**
-- Visual style for the "editor" state—monospace font, line numbers optional, cursor?
-- Visual style for the "rendered" state—what does the task widget actually look like?
-- Transition between states—instant cut? brief fade?
-- Reference the actual Obsidian plugin to match widget styling
-
-**Open questions:**
-- Should the editor view show syntax highlighting for the markdown?
-- How realistic should the Obsidian chrome be? (Could be simplified)
-- Should the checkbox in the rendered view have any hover/interactive appearance (even though it won't actually do anything)?
+**Technical research:**
+- Reference actual plugin widget design
+- Markdown highlighting approach
+- Static checkbox styling
 
 ### 2.3 Claude Code Demo
 
-**Requirements from spec:**
-- Claude Code-style terminal/conversation interface
-- Scene 1: User types a question
-- Scene 2: Spinner/thinking state, shows command being run
-- Scene 3: Claude's response with formatting
-- Auto-loops, optionally rotating through different Q&A pairs
+**Resolved decisions:**
+- Prompt: `>` chevron
+- Visual style: same terminal style as CLI
+- Response: streams in character-by-character
+- Content: single Q&A, loops
 
-**Research needed:**
-- What does the Claude Code interface actually look like? (Colors, prompt style, response formatting)
-- How to render the "thinking" state—spinner? Animated dots? Pulsing?
-- How to show the command being run (muted text appearing?)
-- Markdown rendering for Claude's response (bold, lists, etc.)
-
-**Open questions:**
-- Should we show a `>` prompt for user input or something else?
-- How distinct should this look from the CLI demo? (Different chrome/colors?)
-- If rotating through multiple Q&A pairs, how many? What questions?
-- Should Claude's response appear all at once or stream in (more realistic but more complex)?
+**Technical research:**
+- "Thinking" state rendering (spinner, dots, pulse)
+- Command display (muted text appearing)
+- Streaming animation approach
+- Markdown in response (bold, lists, emoji)
 
 ---
 
 ## Phase 2.5: Polish & Integration
 
-After all demos are working:
-- Test the full page flow—do the sections feel balanced?
-- Check animation performance (no jank, reasonable CPU usage)
-- Verify `prefers-reduced-motion` behavior
-- Test on actual mobile devices, not just responsive mode
-- Review accessibility (demos are decorative, but page should still be navigable)
+- Full page flow—do sections feel balanced?
+- Animation performance (no jank)
+- `prefers-reduced-motion` behavior
+- Test on real mobile devices
+- Accessibility review
