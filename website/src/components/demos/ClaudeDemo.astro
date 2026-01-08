@@ -1,0 +1,379 @@
+---
+import WindowChrome from './WindowChrome.astro'
+
+// Claude Code demo showing Q&A conversation with animation
+// Scene 1: User question types in
+// Scene 2: Thinking indicator + command executed
+// Scene 3: Response streams word-by-word
+---
+
+<div class="claude-demo" aria-hidden="true">
+  <WindowChrome variant="terminal" title="Claude Code">
+    <div class="terminal-content">
+      <!-- User question -->
+      <div class="terminal-line question-line">
+        <span class="prompt">&gt;</span>
+        <span class="question-text"></span>
+        <span class="cursor"></span>
+      </div>
+
+      <!-- Thinking indicator (hidden initially) -->
+      <div class="thinking-line" style="display: none;">
+        <span class="thinking-dots">
+          <span class="dot">.</span>
+          <span class="dot">.</span>
+          <span class="dot">.</span>
+        </span>
+      </div>
+
+      <!-- Command executed (hidden initially) -->
+      <div class="command-line" style="display: none;">
+        <span class="checkmark">✓</span>
+        <span class="command-text">tdn context project "Q1 Planning" --ai</span>
+      </div>
+
+      <!-- Response container -->
+      <div class="response"></div>
+    </div>
+  </WindowChrome>
+</div>
+
+<!-- Static fallback for reduced motion -->
+<template id="claude-static-fallback">
+  <div class="terminal-line question-line">
+    <span class="prompt">&gt;</span>
+    <span class="question-text"
+      >What's next on Q1 Planning? Anything urgent?</span
+    >
+  </div>
+  <div class="command-line">
+    <span class="checkmark">✓</span>
+    <span class="command-text">tdn context project "Q1 Planning" --ai</span>
+  </div>
+  <div class="response">
+    <div class="response-line">Looking at Q1 Planning:</div>
+    <div class="response-line"></div>
+    <div class="response-line warning">
+      ⚠️ Urgent: "Fix critical security issue" is 5 days overdue
+    </div>
+    <div class="response-line"></div>
+    <div class="response-line section">In Progress:</div>
+    <div class="response-line">- Fix authentication bug (due Jan 18)</div>
+    <div class="response-line">- Document API v2 endpoints</div>
+    <div class="response-line"></div>
+    <div class="response-line section">Ready to start:</div>
+    <div class="response-line">- Update deployment scripts</div>
+    <div class="response-line">- Review PR #847 (due today!)</div>
+    <div class="response-line"></div>
+    <div class="response-line muted">
+      I'd prioritize the security issue and PR #847 today.
+    </div>
+  </div>
+</template>
+
+<script>
+  import {
+    checkReducedMotion,
+    observeVisibility,
+    createAnimationController,
+    pausableSleep,
+    typeTextPausable,
+    sleep,
+  } from './animation-utils.js'
+
+  const question = "What's next on Q1 Planning? Anything urgent?"
+
+  // Response as plain words for streaming, then swap to formatted HTML
+  const responsePlainText = `Looking at Q1 Planning:
+
+⚠️ Urgent: "Fix critical security issue" is 5 days overdue
+
+In Progress:
+  - Fix authentication bug (due Jan 18)
+  - Document API v2 endpoints
+
+Ready to start:
+  - Update deployment scripts
+  - Review PR #847 (due today!)
+
+I'd prioritize the security issue and PR #847 today.`
+
+  const responseHTML = `<div class="response-line">Looking at Q1 Planning:</div>
+<div class="response-line"></div>
+<div class="response-line warning">⚠️ Urgent: "Fix critical security issue" is 5 days overdue</div>
+<div class="response-line"></div>
+<div class="response-line section">In Progress:</div>
+<div class="response-line">  - Fix authentication bug (due Jan 18)</div>
+<div class="response-line">  - Document API v2 endpoints</div>
+<div class="response-line"></div>
+<div class="response-line section">Ready to start:</div>
+<div class="response-line">  - Update deployment scripts</div>
+<div class="response-line">  - Review PR #847 (due today!)</div>
+<div class="response-line"></div>
+<div class="response-line muted">I'd prioritize the security issue and PR #847 today.</div>`
+
+  type AnimationController = ReturnType<typeof createAnimationController>
+
+  function init() {
+    const container = document.querySelector<HTMLElement>('.claude-demo')
+    if (!container) return
+
+    const terminalContent =
+      container.querySelector<HTMLElement>('.terminal-content')
+    const questionText = container.querySelector<HTMLElement>('.question-text')
+    const cursor = container.querySelector<HTMLElement>('.cursor')
+    const thinkingLine = container.querySelector<HTMLElement>('.thinking-line')
+    const commandLine = container.querySelector<HTMLElement>('.command-line')
+    const response = container.querySelector<HTMLElement>('.response')
+
+    // Handle reduced motion - show static fallback
+    if (checkReducedMotion()) {
+      const fallback = document.getElementById('claude-static-fallback')
+      if (fallback && terminalContent) {
+        terminalContent.innerHTML = fallback.innerHTML
+      }
+      return
+    }
+
+    const controller = createAnimationController()
+
+    // Pause/resume based on visibility
+    const cleanup = observeVisibility(container, (isVisible) => {
+      if (isVisible) {
+        controller.resume()
+      } else {
+        controller.pause()
+      }
+    })
+
+    async function streamWords(
+      element: HTMLElement,
+      text: string,
+      ctrl: AnimationController
+    ) {
+      // Split text into words and whitespace, keeping structure
+      const tokens = text.split(/(\s+)/)
+      element.textContent = ''
+
+      for (const token of tokens) {
+        if (ctrl.signal.aborted) return
+        await ctrl.waitIfPaused()
+        if (ctrl.signal.aborted) return
+
+        element.textContent += token
+
+        // Only delay on actual words, not whitespace
+        if (token.trim()) {
+          await sleep(45)
+        }
+      }
+    }
+
+    async function runDemo() {
+      while (!controller.signal.aborted) {
+        // Reset state
+        if (questionText) questionText.textContent = ''
+        if (cursor) cursor.style.display = 'inline-block'
+        if (thinkingLine) thinkingLine.style.display = 'none'
+        if (commandLine) commandLine.style.display = 'none'
+        if (response) response.innerHTML = ''
+
+        // Scene 1: Type user question
+        if (questionText)
+          await typeTextPausable(questionText, question, 40, controller)
+        if (controller.signal.aborted) return
+
+        // Hide cursor after typing
+        if (cursor) cursor.style.display = 'none'
+
+        // Brief pause before thinking
+        await pausableSleep(400, controller)
+        if (controller.signal.aborted) return
+
+        // Scene 2: Thinking state
+        if (thinkingLine) thinkingLine.style.display = ''
+
+        // Think for ~1 second
+        await pausableSleep(1000, controller)
+        if (controller.signal.aborted) return
+
+        // Show command executed
+        if (commandLine) commandLine.style.display = ''
+
+        // Think a bit more with command visible
+        await pausableSleep(1000, controller)
+        if (controller.signal.aborted) return
+
+        // Hide thinking
+        if (thinkingLine) thinkingLine.style.display = 'none'
+
+        // Brief pause before response
+        await pausableSleep(200, controller)
+        if (controller.signal.aborted) return
+
+        // Scene 3: Stream response word-by-word
+        if (response) await streamWords(response, responsePlainText, controller)
+        if (controller.signal.aborted) return
+
+        // Swap to formatted HTML
+        await pausableSleep(100, controller)
+        if (controller.signal.aborted) return
+        if (response) response.innerHTML = responseHTML
+
+        // Display final response
+        await pausableSleep(3500, controller)
+      }
+    }
+
+    // Start the animation loop
+    runDemo()
+
+    // Cleanup on page navigation (for SPAs)
+    document.addEventListener(
+      'astro:before-swap',
+      () => {
+        controller.abort()
+        cleanup()
+      },
+      { once: true }
+    )
+  }
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init)
+  } else {
+    init()
+  }
+</script>
+
+<style>
+  .claude-demo {
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Hardcoded dark colors - terminal is always dark */
+  .terminal-content {
+    color: #cecdc3;
+  }
+
+  .terminal-line {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prompt {
+    color: #d0a215;
+  }
+
+  .question-text {
+    color: #cecdc3;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    background: #cecdc3;
+    opacity: 0.7;
+    vertical-align: text-bottom;
+  }
+
+  /* Thinking indicator with pulsing dots */
+  .thinking-line {
+    margin-bottom: 0.5em;
+    color: #878580;
+  }
+
+  .thinking-dots {
+    display: inline-flex;
+    gap: 0.1em;
+  }
+
+  .thinking-dots .dot {
+    animation: pulse 1s ease-in-out infinite;
+  }
+
+  .thinking-dots .dot:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  .thinking-dots .dot:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  .command-line {
+    display: flex;
+    gap: 0.5em;
+    color: #878580;
+    margin-bottom: 1em;
+  }
+
+  .checkmark {
+    color: #879a39;
+  }
+
+  .command-text {
+    opacity: 0.7;
+  }
+
+  .response {
+    line-height: 1.5;
+    white-space: pre-wrap;
+  }
+
+  .response :global(.response-line) {
+    min-height: 1.3em;
+  }
+
+  .response :global(.warning) {
+    color: #d0a215;
+  }
+
+  .response :global(.section) {
+    color: #cecdc3;
+    font-weight: 600;
+  }
+
+  .response :global(.muted) {
+    color: #878580;
+  }
+
+  /* Static fallback styles */
+  .response-line {
+    min-height: 1.3em;
+  }
+
+  .response-line.warning {
+    color: #d0a215;
+  }
+
+  .response-line.section {
+    color: #cecdc3;
+    font-weight: 600;
+  }
+
+  .response-line.muted {
+    color: #878580;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .response,
+    .response :global(.response-line) {
+      white-space: pre-wrap;
+    }
+  }
+</style>

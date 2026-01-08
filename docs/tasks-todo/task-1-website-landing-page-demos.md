@@ -1,0 +1,650 @@
+# Task: Website Landing Page Demos
+
+Working Dir: `website/`
+
+Read First: `website/src/content/docs/getting-started.mdx` and other docs in `website/src/content/docs/` as needed.
+
+---
+
+# Requirements
+
+## Overview
+
+Redesign "The Suite" section of the landing page (`/website/src/pages/index.astro`). Replace the current 2x2 grid with four full-width product sections, each featuring an animated demo.
+
+Keep everything above "The Suite" unchanged (hero, file example, hierarchy visualization).
+
+## Layout & Styling
+
+**Section structure:** Each product gets a full-width section with two columns—text (title, description, features, CTA) and demo.
+
+**Ordering and alternation:**
+1. Desktop App — demo on right
+2. CLI — demo on left
+3. Obsidian Plugin — demo on right
+4. Claude Code — demo on left
+
+**Responsive:** On mobile, stack vertically with text above demo.
+
+**Visual styling:**
+- Flexoki colors throughout
+- Terminal content stays dark in both modes, but adapts:
+  - **Dark mode:** Full dark terminal (`#100f0f` content, `#100f0f` titlebar)
+  - **Light mode:** Light chrome (`#e6e4d9` titlebar), softer dark content (`#343331`)
+- Editor (Obsidian) adapts fully to light/dark mode
+- Traffic light buttons always use standard macOS colors
+- Syntax highlighting uses site palette
+- Background illustrations optional—very faded if included
+
+**Animation timing:**
+- 3-4 seconds per scene before transitioning (unless more time needed to show content)
+- Typing animations feel natural, not slow
+- All demos auto-loop
+- Demos only animate when visible in viewport (pause when scrolled away)
+
+## Out of Scope
+
+- Actual video/GIF files
+- Backend integration
+- Mobile-specific demo variants
+
+---
+
+## Product Sections
+
+### Desktop App
+
+**Title:** Desktop App
+**Icon:** 🖥️
+**Badge:** "Coming Soon"
+
+**Description:**
+A task app that actually feels good to use—fast, keyboard-driven, thoughtfully designed—but your files stay on disk as markdown. No lock-in. No wondering what happens when the company gets acquired.
+
+**Features:**
+- Global shortcut captures tasks without breaking your flow
+- Today, Inbox, This Week views work out of the box—no configuration
+- Keyboard-first for people who find clicking slow
+- Lists, Kanban, or calendar—whatever fits how you're thinking
+
+**CTA:** "Learn More" → `/desktop/overview`
+
+**Demo:** Simple placeholder with "Coming Soon" text.
+
+---
+
+### CLI
+
+**Title:** Command Line Interface
+**Icon:** ⌨️
+
+**Description:**
+Two modes for two audiences. For you: pretty output, fuzzy search, natural language dates. For AI agents: structured markdown designed for context windows—token-efficient, still useful if truncated.
+
+**Features:**
+- See what's overdue, due today, and in progress—one command
+- Give AI full context in a single call: project, tasks, timeline, relationships
+- Search the way you'd say it, not how files are named
+- "Next Friday" instead of ISO dates
+
+**CTA:** "Learn More" → `/cli/overview`
+
+**Demo:** Terminal cycling through three scenes.
+
+**Scene 1 — `tdn today`:**
+```
+$ tdn today
+
+TODAY — Wed Jan 15
+
+⚠️  OVERDUE (2)
+   Fix critical security issue        Q1 Planning    due Jan 10
+   Submit expense report              Work           due Jan 12
+
+📅  DUE TODAY (2)
+   Review PR #847                     Q1 Planning
+   Call insurance company             Personal
+
+▶️  IN PROGRESS (3)
+   Fix authentication bug             Q1 Planning
+   Document API v2 endpoints          Q1 Planning
+   Get contractor quotes              Home Renovation
+```
+
+**Scene 2 — `tdn context --ai`:**
+```
+$ tdn context --ai
+
+3 areas · 8 projects · 34 tasks · ⚠️ 2 overdue · 📅 3 due today
+
+📁 Work
+├── 🔵 Q1 Planning [in-progress] — 8 tasks
+│   ├── ▶️ Fix authentication bug
+│   └── ▶️ Document API v2 endpoints
+├── 🟢 Client Onboarding [ready] — 4 tasks
+└── 📋 Direct: 4 tasks
+
+📁 Personal
+├── 🔵 Home Renovation [in-progress] — 6 tasks
+│   └── ▶️ Get contractor quotes
+└── 📋 Direct: 3 tasks
+```
+
+**Scene 3 — `tdn new`:**
+```
+$ tdn new "Review quarterly report" --due friday --project "Q1 Planning"
+
+✓ Created task: Review quarterly report
+  → due: Fri Jan 17
+  → project: Q1 Planning
+  → status: inbox
+  → path: tasks/review-quarterly-report.md
+```
+
+---
+
+### Obsidian Plugin
+
+**Title:** Obsidian Plugin
+**Icon:** 💎
+
+**Description:**
+You're in Obsidian to write, not manage tasks. Link to a task and see its status, project, and due date right there. Check it off without opening another file.
+
+**Features:**
+- Task links become widgets showing what you need to know
+- One click to mark done—no context switch
+- Colors tell you what's blocked or overdue at a glance
+- Turn any checklist item into a proper task when it grows up
+
+**CTA:** "Learn More" → `/obsidian/plugin`
+
+**Demo:** Editor window with two phases, looping.
+
+**Phase 1 — Typing (2-3 seconds):**
+```
+- [ ] Buy Milk
+- [[Finish Q1 Planning Doc]]
+```
+
+**Phase 2 — Rendered view (3-4 seconds):**
+- First line: Simple rounded-square checkbox (unchecked) with "Buy Milk" — just a native checkbox, no widget
+- Second line: Checkbox OUTSIDE widget (aligned with first checkbox), then task widget showing:
+  - Blue left border (indicates "inbox" status)
+  - Title: "Finish Q1 Planning Doc"
+  - Folder icon + "Q1 Planning" (project badge, muted)
+  - Calendar icon + "Jan 23" (due date, muted)
+  - Small external link arrow at end
+
+The contrast between the plain checkbox and the rich widget is the point — wikilinks to tasks get enhanced, regular checkboxes stay simple. Checkboxes are rounded squares (not circles).
+
+Instant cut between phases, then loop.
+
+---
+
+### Claude Code
+
+**Title:** Claude Code
+**Icon:** 🤖
+
+**Description:**
+Claude can already read your markdown files. This teaches it how your system works—so "What's overdue?" gets a real answer, not a frontmatter tutorial.
+
+**Features:**
+- Ask naturally: "What should I focus on today?"
+- Create tasks mid-conversation without opening another app
+- Help with the tedious parts—inbox processing, weekly reviews
+- Works from any project directory, not just your vault
+
+**CTA:** "Learn More" → `/claude-code/overview`
+
+**Demo:** Terminal-style conversation, single Q&A looping.
+
+**Scene 1 — User question (typing):**
+```
+> What's next on Q1 Planning? Anything urgent?
+```
+
+**Scene 2 — Processing (~2 seconds):**
+- Spinner or pulsing indicator
+- Muted text: `✓ tdn context project "Q1 Planning" --ai`
+
+**Scene 3 — Response (streams in, 3-4 seconds):**
+```
+Looking at Q1 Planning:
+
+⚠️ **Urgent:** "Fix critical security issue" is 5 days overdue
+
+**In Progress:**
+- Fix authentication bug (due Jan 18)
+- Document API v2 endpoints
+
+**Ready to start:**
+- Update deployment scripts
+- Review PR #847 (due today!)
+
+I'd prioritize the security issue and PR #847 today.
+```
+
+Clear and loop.
+
+---
+
+# Implementation Plan
+
+## Phase 1: Static Layout & Content ✅ COMPLETE
+
+Build the full section structure with placeholder boxes for demos. By the end, the page looks complete—just with static demo areas.
+
+### 1.1 Section Layout ✅
+
+Replace the 2x2 grid with four full-width sections.
+
+- Full-width container, generous vertical padding (~80-100px)
+- Two-column grid: text column (~500px max) and demo column
+- Alternating layout via `reverse` prop or similar
+- Mobile: single column, text above demo
+
+Created `ProductSection.astro` component accepting title, icon, badge, description, features, CTA, demo slot, and reverse flag.
+
+### 1.2 Typography & Styling ✅
+
+**Titles:** Large, bold. Emoji sized to feel balanced. Badge as label, not banner.
+
+**Description:** ~18px, muted color, comfortable line-height.
+
+**Features:** Styled bullets, slightly smaller than description, good spacing.
+
+**CTA:** Primary button style with right arrow icon, slides on hover. All say "Learn More".
+
+### 1.3 Demo Placeholders ✅
+
+Styled boxes with ~16:10 aspect ratio, subtle border/background, rounded corners.
+
+Desktop gets "Coming Soon" text. CLI, Obsidian, Claude show static final-state content (will animate in Phase 2).
+
+### 1.4 Background Illustrations (Optional)
+
+Skipped — not needed, looks clean without.
+
+### 1.5 Responsive & Accessibility ✅
+
+- Test at 375px, 768px, 1200px+
+- **Mobile demo scaling:** On narrow viewports, scale down text size inside demos significantly so terminal/editor content remains legible at smaller widths
+- Demos have `aria-hidden="true"` (decorative)
+- Respect `prefers-reduced-motion`—show static final state:
+  - CLI: Show Scene 1 (`tdn today`) output
+  - Obsidian: Show rendered widget view
+  - Claude: Show full response
+
+---
+
+## Phase 2: Interactive Demos
+
+**Approach:** Custom Astro components with vanilla JS. No external libraries—our requirements are specific enough that custom code will be cleaner and more maintainable (~200-300 lines JS total).
+
+### 2.0 Shared Infrastructure
+
+Create these shared pieces first:
+
+**File structure:** (created in Phase 1)
+```
+website/src/components/demos/
+├── WindowChrome.astro      # Shared window frame ✅
+├── DesktopDemo.astro       # Desktop placeholder ✅
+├── CLIDemo.astro           # CLI demo ✅
+├── ObsidianDemo.astro      # Obsidian demo ✅
+├── ClaudeDemo.astro        # Claude Code demo ✅
+├── animation-utils.js      # Shared JS utilities (Phase 2)
+└── demo-styles.css         # Shared demo styles (Phase 2, if needed)
+```
+
+**WindowChrome component:**
+Reusable window frame with traffic light buttons, optional title. Used by all three demos.
+
+```astro
+<div class="window-chrome" data-variant={variant}>
+  <div class="window-titlebar">
+    <div class="window-buttons">
+      <span class="btn-close"></span>
+      <span class="btn-minimize"></span>
+      <span class="btn-maximize"></span>
+    </div>
+    {title && <span class="window-title">{title}</span>}
+  </div>
+  <div class="window-content">
+    <slot />
+  </div>
+</div>
+```
+
+**Animation utilities (animation-utils.js):**
+
+```javascript
+export const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+export async function typeText(element, text, charDelay = 50) {
+  for (const char of text) {
+    element.textContent += char;
+    await sleep(charDelay);
+  }
+}
+
+export async function revealLines(container, lines, lineDelay = 80) {
+  for (const line of lines) {
+    const el = document.createElement('div');
+    el.innerHTML = line;
+    container.appendChild(el);
+    await sleep(lineDelay);
+  }
+}
+
+export function checkReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+// Returns { isVisible, cleanup } - call cleanup on unmount
+export function observeVisibility(element, onVisibilityChange) {
+  const observer = new IntersectionObserver(
+    ([entry]) => onVisibilityChange(entry.isIntersecting),
+    { threshold: 0.1 }
+  );
+  observer.observe(element);
+  return () => observer.disconnect();
+}
+```
+
+---
+
+### 2.1 CLI Demo
+
+**Behavior:**
+- Cursor: solid block (`▌`) via `::after` pseudo-element, contrasting color, not blinking
+- Output: line-by-line reveal (~50-100ms per line)
+- Transitions: clear screen, type new command
+- Timing: ~40-60ms per character when typing commands
+
+**Scene data structure:**
+```javascript
+const scenes = [
+  {
+    command: 'tdn today',
+    outputLines: [
+      '<span class="term-heading">TODAY — Wed Jan 15</span>',
+      '',
+      '<span class="term-emoji">⚠️</span>  <span class="term-section">OVERDUE (2)</span>',
+      '   <span class="term-task">Fix critical security issue</span>        <span class="term-project">Q1 Planning</span>    <span class="term-date">due Jan 10</span>',
+      // ... more lines
+    ],
+    displayTime: 3500
+  },
+  // ... more scenes
+];
+```
+
+**Colored output:** Pre-styled `<span>` elements with CSS classes. No syntax highlighting library.
+
+```css
+.term-emoji { /* inherits color */ }
+.term-section { color: var(--color-text); font-weight: 600; }
+.term-task { color: var(--color-text); }
+.term-project { color: var(--color-accent); opacity: 0.8; }
+.term-date { color: var(--color-text-muted); }
+.term-tree { color: var(--color-text-muted); } /* for ├── └── */
+.term-status-blue { color: var(--color-blue); }
+.term-status-green { color: var(--color-green); }
+```
+
+**Animation loop:**
+```javascript
+async function runDemo() {
+  while (true) {
+    for (const scene of scenes) {
+      clearTerminal();
+      await typeCommand(scene.command);
+      await sleep(300);
+      await revealLines(outputContainer, scene.outputLines);
+      await sleep(scene.displayTime);
+    }
+  }
+}
+```
+
+**Font:** Use a monospace font that supports box-drawing characters (SF Mono, Menlo, Consolas all work).
+
+---
+
+### 2.2 Obsidian Demo
+
+**Behavior:**
+- Phase 1: Type markdown with syntax highlighting (~40ms per char)
+- Phase 2: Instant cut to rendered widget view
+- Loop after 3-4 seconds on rendered view
+
+**Editor state styling:**
+```css
+.editor-checkbox { color: var(--color-text-muted); }  /* - [ ] */
+.editor-bracket { color: var(--color-accent); }        /* [[ ]] */
+.editor-link-text { color: var(--color-text); }        /* link text */
+```
+
+**Rendered view structure:**
+
+Line 1 (plain checkbox):
+```html
+<div class="obs-line">
+  <span class="obs-checkbox"></span>
+  <span>Buy Milk</span>
+</div>
+```
+
+Line 2 (checkbox OUTSIDE widget, aligned):
+```html
+<div class="obs-line">
+  <span class="obs-checkbox"></span>
+  <div class="taskdn-widget" data-status="inbox">
+    <span class="taskdn-title">Finish Q1 Planning Doc</span>
+    <span class="taskdn-meta">
+      <span class="taskdn-project">📁 Q1 Planning</span>
+      <span class="taskdn-due">📅 Jan 23</span>
+    </span>
+    <span class="taskdn-arrow">↗</span>
+  </div>
+</div>
+```
+
+**Widget styling (matches actual plugin):**
+
+```css
+/* Rounded SQUARE checkboxes (using styled span for full control) */
+.obs-checkbox {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  border: 1.5px solid var(--color-text-muted);
+  border-radius: 3px;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+/* Task widget container - checkbox is OUTSIDE */
+.taskdn-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.25em 0.5em;
+  border-radius: 4px;
+  background-color: var(--color-bg-2);
+}
+
+/* Status indicated by left border color */
+.taskdn-widget[data-status="inbox"] {
+  border-inline-start: 3px solid var(--color-blue);
+}
+.taskdn-widget[data-status="in-progress"] {
+  border-inline-start: 3px solid var(--color-yellow);
+}
+.taskdn-widget[data-status="blocked"] {
+  border-inline-start: 3px solid var(--color-red);
+}
+
+.taskdn-title {
+  color: var(--color-text);
+}
+
+.taskdn-meta {
+  display: inline-flex;
+  gap: 0.6em;
+  font-size: 0.85em;
+  color: var(--color-text-muted);
+}
+
+.taskdn-arrow {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  font-size: 0.8em;
+}
+```
+
+**Animation sequence:**
+```javascript
+async function runDemo() {
+  while (true) {
+    // Phase 1: Editor
+    showEditorView();
+    await typeMarkdown();
+    await sleep(500);
+
+    // Phase 2: Rendered (instant cut)
+    showRenderedView();
+    await sleep(3500);
+  }
+}
+```
+
+---
+
+### 2.3 Claude Code Demo
+
+**Behavior:**
+- Same terminal chrome as CLI demo
+- User question types with `>` prompt (~40ms per char)
+- "Thinking" state: pulsing opacity animation (~2 seconds)
+- Command appears as muted text: `✓ tdn context project "Q1 Planning" --ai`
+- Response streams in word-by-word (more realistic than char-by-char for LLM output)
+
+**Thinking state:**
+```css
+.thinking-indicator {
+  animation: pulse 1s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+```
+
+Or animated dots: `Thinking...` with dots appearing one by one.
+
+**Response streaming (simpler approach):**
+
+Stream plain text word-by-word, then swap in formatted HTML at the end. This avoids the complexity of truncating HTML mid-tag.
+
+```javascript
+async function streamResponse(element, plainText, formattedHTML, wordDelay = 60) {
+  const words = plainText.split(/(\s+)/); // Keep whitespace
+  element.textContent = '';
+
+  for (const word of words) {
+    element.textContent += word;
+    if (word.trim()) await sleep(wordDelay); // Only delay on actual words
+  }
+
+  // Swap to formatted version
+  await sleep(100);
+  element.innerHTML = formattedHTML;
+}
+```
+
+**Response formatting:** Pre-styled HTML for the final swap:
+```html
+<div class="claude-response">
+  Looking at Q1 Planning:
+
+  <span class="claude-warning">⚠️ <strong>Urgent:</strong></span> "Fix critical security issue" is 5 days overdue
+
+  <strong>In Progress:</strong>
+  <div class="claude-list">- Fix authentication bug (due Jan 18)</div>
+  <div class="claude-list">- Document API v2 endpoints</div>
+
+  ...
+</div>
+```
+
+**Animation sequence:**
+```javascript
+async function runDemo() {
+  while (true) {
+    clearTerminal();
+
+    // User question
+    await typeWithPrompt('>', 'What\'s next on Q1 Planning? Anything urgent?');
+    await sleep(400);
+
+    // Thinking
+    showThinking();
+    await sleep(1000);
+    showCommand('✓ tdn context project "Q1 Planning" --ai');
+    await sleep(1000);
+    hideThinking();
+
+    // Response (word-by-word streaming)
+    await streamResponse(responseContainer, responsePlainText, responseHTML);
+    await sleep(3500);
+  }
+}
+```
+
+---
+
+## Phase 2.5: Polish & Integration
+
+- Full page flow—do sections feel balanced?
+- **Viewport-based animation control:** Use Intersection Observer to start animations only when demo scrolls into view, pause when scrolled away. This saves CPU and prevents weird mid-animation states.
+- Animation performance (no jank, test with DevTools Performance tab)
+- `prefers-reduced-motion`: show static final state, skip all animations:
+  - CLI: Scene 1 (`tdn today`) output fully rendered
+  - Obsidian: Rendered widget view (not editor/typing view)
+  - Claude: Full response displayed
+- Test on real mobile devices (not just responsive mode)
+- Accessibility: `aria-hidden="true"` on demo containers
+- Verify monospace font renders box-drawing chars correctly across browsers
+- Check animation doesn't cause layout shifts
+
+---
+
+## Prerequisites: Color Variables
+
+The site's `Layout.astro` needs additional Flexoki semantic colors for status indicators:
+
+```css
+:root {
+  /* ...existing vars... */
+  --color-blue: #4385be;
+  --color-green: #879a39;
+  --color-yellow: #d0a215;
+  --color-red: #d14d41;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* ...existing vars... */
+    --color-blue: #205ea6;
+    --color-green: #66800b;
+    --color-yellow: #ad5c00;
+    --color-red: #af3029;
+  }
+}
+```
+
+These are used for status borders, tree indicators, and warning colors throughout the demos.

@@ -1,0 +1,173 @@
+---
+interface Props {
+  title?: string
+  variant?: 'terminal' | 'editor'
+}
+
+const { title, variant = 'terminal' } = Astro.props
+---
+
+<div class:list={['window-chrome', `window-${variant}`]}>
+  <div class="window-titlebar">
+    <div class="window-buttons">
+      <span class="btn btn-close"></span>
+      <span class="btn btn-minimize"></span>
+      <span class="btn btn-maximize"></span>
+    </div>
+    {title && <span class="window-title">{title}</span>}
+  </div>
+  <div class="window-content">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .window-chrome {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .window-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.875rem;
+    flex-shrink: 0;
+  }
+
+  .window-buttons {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .btn {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+
+  .btn-close {
+    background: #ff5f57;
+  }
+
+  .btn-minimize {
+    background: #febc2e;
+  }
+
+  .btn-maximize {
+    background: #28c840;
+  }
+
+  .window-title {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+  }
+
+  .window-content {
+    flex: 1;
+    overflow: hidden;
+    padding: 1rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  /* Terminal variant - dark mode (darker, more contrast) */
+  .window-terminal {
+    background: #1c1b1a;
+  }
+
+  .window-terminal .window-titlebar {
+    background: #100f0f;
+    border-bottom: 1px solid #403e3c;
+  }
+
+  .window-terminal .window-title {
+    color: #878580;
+  }
+
+  .window-terminal .window-content {
+    background: #100f0f;
+    color: #cecdc3;
+  }
+
+  /* Terminal in light mode - light chrome, softer dark content */
+  @media (prefers-color-scheme: light) {
+    .window-terminal {
+      background: #f2f0e5;
+    }
+
+    .window-terminal .window-titlebar {
+      background: #e6e4d9;
+      border-bottom: 1px solid #d9d7cc;
+    }
+
+    .window-terminal .window-title {
+      color: #6f6e69;
+    }
+
+    .window-terminal .window-content {
+      background: #343331;
+      color: #cecdc3;
+    }
+  }
+
+  /* Editor variant - adapts to theme */
+  .window-editor {
+    background: var(--color-bg-2);
+  }
+
+  .window-editor .window-titlebar {
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .window-editor .window-title {
+    color: var(--color-text-muted);
+  }
+
+  .window-editor .window-content {
+    background: var(--color-bg);
+  }
+
+  /* Light mode: editor gets light background */
+  @media (prefers-color-scheme: light) {
+    .window-editor {
+      background: #f2f0e5;
+    }
+
+    .window-editor .window-titlebar {
+      background: #e6e4d9;
+    }
+
+    .window-editor .window-content {
+      background: #fffcf0;
+    }
+  }
+
+  /* Responsive scaling for mobile */
+  @media (max-width: 600px) {
+    .window-content {
+      font-size: 0.625rem;
+      padding: 0.75rem;
+      line-height: 1.4;
+    }
+
+    .window-titlebar {
+      padding: 0.5rem 0.625rem;
+    }
+
+    .btn {
+      width: 10px;
+      height: 10px;
+    }
+
+    .window-title {
+      font-size: 0.625rem;
+    }
+  }
+</style>

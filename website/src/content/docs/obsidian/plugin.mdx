@@ -5,10 +5,14 @@ description: 'Integrate Taskdn with your Obsidian vault'
 
 import { Image } from 'astro:assets'
 import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
+import ObsidianDemo from '@components/demos/ObsidianDemo.astro'
+
+<div class="demo-wrapper demo-compact">
+  <ObsidianDemo />
+</div>
 
 The Obsidian plugin turns wikilinks to task files into interactive widgets. Link to a task from anywhere in your vault and see its status, project, dates, and other metadata inline. Check off tasks without opening the file.
 
-<Image src={obsidianScreenshot} alt="Taskdn tasks rendered as interactive widgets in Obsidian" />
 
 ## Features
 
@@ -37,6 +41,9 @@ Open **Settings → Taskdn** to configure:
 | Exclude patterns | Files to ignore, supports wildcards |
 
 ## Usage
+
+<Image src={obsidianScreenshot} alt="Taskdn tasks rendered as interactive widgets in Obsidian" />
+
 
 Link to task files using standard wikilink syntax:
 

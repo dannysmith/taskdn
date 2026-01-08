@@ -4,14 +4,14 @@ description: 'AI-assisted task management with Claude Code'
 ---
 
 import { Steps, Aside, LinkCard, CardGrid } from '@astrojs/starlight/components'
+import ClaudeDemo from '@components/demos/ClaudeDemo.astro'
+
+<div class="demo-wrapper">
+  <ClaudeDemo />
+</div>
+
 
 [Claude Code](https://docs.anthropic.com/en/docs/claude-code) supports [plugins](https://docs.anthropic.com/en/docs/claude-code/plugins) that extend its capabilities. The Taskdn plugin teaches Claude to work as a productivity assistant. Once installed, Claude understands your task system—it can query what's due, create tasks as you work, help with weekly reviews, and generally act like a knowledgeable GTD coach who happens to also be a capable programmer.
-
-{/* TODO: Add GIF showing Claude helping with task management */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Demo coming soon</em>
-</div>
 
 ## Why Use Claude for Tasks?
 
@@ -123,9 +123,3 @@ Once the plugin is installed, you can ask Claude to help with tasks naturally:
 - "What tasks are blocked?"
 
 Claude will use the `tdn` CLI with the right flags (including [`--ai` mode](/cli/working-with-ai)), or read files directly when that's more appropriate.
-
-{/* TODO: Add screenshot showing a conversation with Claude about tasks */}
-
-<div style="background: var(--sl-color-gray-6); padding: 3rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Screenshot coming soon</em>
-</div>
