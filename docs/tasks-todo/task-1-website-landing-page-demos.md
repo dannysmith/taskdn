@@ -27,8 +27,12 @@ Keep everything above "The Suite" unchanged (hero, file example, hierarchy visua
 **Responsive:** On mobile, stack vertically with text above demo.
 
 **Visual styling:**
-- Flexoki colors throughout (not a separate terminal dark theme)
-- Terminal/editor chrome (title bar, traffic lights) uses site colors
+- Flexoki colors throughout
+- Terminal content stays dark in both modes, but adapts:
+  - **Dark mode:** Full dark terminal (`#100f0f` content, `#100f0f` titlebar)
+  - **Light mode:** Light chrome (`#e6e4d9` titlebar), softer dark content (`#343331`)
+- Editor (Obsidian) adapts fully to light/dark mode
+- Traffic light buttons always use standard macOS colors
 - Syntax highlighting uses site palette
 - Background illustrations optional—very faded if included
 
@@ -83,7 +87,7 @@ Two modes for two audiences. For you: pretty output, fuzzy search, natural langu
 - Search the way you'd say it, not how files are named
 - "Next Friday" instead of ISO dates
 
-**CTA:** "Get Started" → `/cli/overview`
+**CTA:** "Learn More" → `/cli/overview`
 
 **Demo:** Terminal cycling through three scenes.
 
@@ -153,7 +157,7 @@ You're in Obsidian to write, not manage tasks. Link to a task and see its status
 - Colors tell you what's blocked or overdue at a glance
 - Turn any checklist item into a proper task when it grows up
 
-**CTA:** "Install Plugin" → `/obsidian/plugin`
+**CTA:** "Learn More" → `/obsidian/plugin`
 
 **Demo:** Editor window with two phases, looping.
 
@@ -164,16 +168,15 @@ You're in Obsidian to write, not manage tasks. Link to a task and see its status
 ```
 
 **Phase 2 — Rendered view (3-4 seconds):**
-- First line: Simple rounded checkbox (unchecked) with "Buy Milk" — just a native checkbox, no widget
-- Second line: Task widget showing:
-  - Rounded checkbox (unchecked)
+- First line: Simple rounded-square checkbox (unchecked) with "Buy Milk" — just a native checkbox, no widget
+- Second line: Checkbox OUTSIDE widget (aligned with first checkbox), then task widget showing:
   - Blue left border (indicates "inbox" status)
   - Title: "Finish Q1 Planning Doc"
   - Folder icon + "Q1 Planning" (project badge, muted)
   - Calendar icon + "Jan 23" (due date, muted)
   - Small external link arrow at end
 
-The contrast between the plain checkbox and the rich widget is the point — wikilinks to tasks get enhanced, regular checkboxes stay simple.
+The contrast between the plain checkbox and the rich widget is the point — wikilinks to tasks get enhanced, regular checkboxes stay simple. Checkboxes are rounded squares (not circles).
 
 Instant cut between phases, then loop.
 
@@ -193,7 +196,7 @@ Claude can already read your markdown files. This teaches it how your system wor
 - Help with the tedious parts—inbox processing, weekly reviews
 - Works from any project directory, not just your vault
 
-**CTA:** "Set Up Claude" → `/claude-code/overview`
+**CTA:** "Learn More" → `/claude-code/overview`
 
 **Demo:** Terminal-style conversation, single Q&A looping.
 
@@ -229,11 +232,11 @@ Clear and loop.
 
 # Implementation Plan
 
-## Phase 1: Static Layout & Content
+## Phase 1: Static Layout & Content ✅ COMPLETE
 
 Build the full section structure with placeholder boxes for demos. By the end, the page looks complete—just with static demo areas.
 
-### 1.1 Section Layout
+### 1.1 Section Layout ✅
 
 Replace the 2x2 grid with four full-width sections.
 
@@ -242,9 +245,9 @@ Replace the 2x2 grid with four full-width sections.
 - Alternating layout via `reverse` prop or similar
 - Mobile: single column, text above demo
 
-Consider a `ProductSection.astro` component accepting title, icon, badge, description, features, CTA, demo slot, and reverse flag.
+Created `ProductSection.astro` component accepting title, icon, badge, description, features, CTA, demo slot, and reverse flag.
 
-### 1.2 Typography & Styling
+### 1.2 Typography & Styling ✅
 
 **Titles:** Large, bold. Emoji sized to feel balanced. Badge as label, not banner.
 
@@ -252,23 +255,23 @@ Consider a `ProductSection.astro` component accepting title, icon, badge, descri
 
 **Features:** Styled bullets, slightly smaller than description, good spacing.
 
-**CTA:** Primary button style, enough margin above.
+**CTA:** Primary button style with right arrow icon, slides on hover. All say "Learn More".
 
-### 1.3 Demo Placeholders
+### 1.3 Demo Placeholders ✅
 
 Styled boxes with ~16:10 aspect ratio, subtle border/background, rounded corners.
 
-Desktop gets "Coming Soon" text. Others get generic placeholders until Phase 2.
+Desktop gets "Coming Soon" text. CLI, Obsidian, Claude show static final-state content (will animate in Phase 2).
 
 ### 1.4 Background Illustrations (Optional)
 
-If included: 5-10% opacity, behind demo column or bleeding off edge. Skip if it adds clutter.
+Skipped — not needed, looks clean without.
 
-### 1.5 Responsive & Accessibility
+### 1.5 Responsive & Accessibility ✅
 
 - Test at 375px, 768px, 1200px+
 - **Mobile demo scaling:** On narrow viewports, scale down text size inside demos significantly so terminal/editor content remains legible at smaller widths
-- Demos should have `aria-hidden="true"` (decorative)
+- Demos have `aria-hidden="true"` (decorative)
 - Respect `prefers-reduced-motion`—show static final state:
   - CLI: Show Scene 1 (`tdn today`) output
   - Obsidian: Show rendered widget view
@@ -284,15 +287,16 @@ If included: 5-10% opacity, behind demo column or bleeding off edge. Skip if it 
 
 Create these shared pieces first:
 
-**File structure:**
+**File structure:** (created in Phase 1)
 ```
 website/src/components/demos/
-├── WindowChrome.astro      # Shared window frame
-├── TerminalDemo.astro      # CLI demo
-├── EditorDemo.astro        # Obsidian demo
-├── ClaudeDemo.astro        # Claude Code demo
-├── animation-utils.js      # Shared JS utilities
-└── demo-styles.css         # Shared demo styles
+├── WindowChrome.astro      # Shared window frame ✅
+├── DesktopDemo.astro       # Desktop placeholder ✅
+├── CLIDemo.astro           # CLI demo ✅
+├── ObsidianDemo.astro      # Obsidian demo ✅
+├── ClaudeDemo.astro        # Claude Code demo ✅
+├── animation-utils.js      # Shared JS utilities (Phase 2)
+└── demo-styles.css         # Shared demo styles (Phase 2, if needed)
 ```
 
 **WindowChrome component:**
@@ -429,16 +433,16 @@ async function runDemo() {
 Line 1 (plain checkbox):
 ```html
 <div class="obs-line">
-  <input type="checkbox" class="obs-checkbox" />
+  <span class="obs-checkbox"></span>
   <span>Buy Milk</span>
 </div>
 ```
 
-Line 2 (task widget):
+Line 2 (checkbox OUTSIDE widget, aligned):
 ```html
 <div class="obs-line">
+  <span class="obs-checkbox"></span>
   <div class="taskdn-widget" data-status="inbox">
-    <input type="checkbox" class="obs-checkbox" />
     <span class="taskdn-title">Finish Q1 Planning Doc</span>
     <span class="taskdn-meta">
       <span class="taskdn-project">📁 Q1 Planning</span>
@@ -452,30 +456,23 @@ Line 2 (task widget):
 **Widget styling (matches actual plugin):**
 
 ```css
-/* Rounded checkboxes throughout */
+/* Rounded SQUARE checkboxes (using styled span for full control) */
 .obs-checkbox {
-  appearance: none;
-  width: 1em;
-  height: 1em;
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
   border: 1.5px solid var(--color-text-muted);
-  border-radius: 50%;
+  border-radius: 3px;
   background: transparent;
-  cursor: pointer;
   flex-shrink: 0;
 }
 
-.obs-checkbox:checked {
-  background: var(--color-accent);
-  border-color: var(--color-accent);
-}
-
-/* Task widget container */
+/* Task widget container - checkbox is OUTSIDE */
 .taskdn-widget {
   display: inline-flex;
   align-items: center;
   gap: 0.5em;
-  padding: 0.2em 0.5em;
-  padding-inline-start: 0.6em;
+  padding: 0.25em 0.5em;
   border-radius: 4px;
   background-color: var(--color-bg-2);
 }
