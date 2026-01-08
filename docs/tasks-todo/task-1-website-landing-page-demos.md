@@ -33,9 +33,10 @@ Keep everything above "The Suite" unchanged (hero, file example, hierarchy visua
 - Background illustrations optional—very faded if included
 
 **Animation timing:**
-- 5-6 seconds per scene before transitioning
+- 3-4 seconds per scene before transitioning (unless more time needed to show content)
 - Typing animations feel natural, not slow
 - All demos auto-loop
+- Demos only animate when visible in viewport (pause when scrolled away)
 
 ## Out of Scope
 
@@ -162,14 +163,17 @@ You're in Obsidian to write, not manage tasks. Link to a task and see its status
 - [[Finish Q1 Planning Doc]]
 ```
 
-**Phase 2 — Rendered view (5-6 seconds):**
-- First line: Checkbox (unchecked) with "Buy Milk"
+**Phase 2 — Rendered view (3-4 seconds):**
+- First line: Simple rounded checkbox (unchecked) with "Buy Milk" — just a native checkbox, no widget
 - Second line: Task widget showing:
-  - Checkbox (unchecked)
+  - Rounded checkbox (unchecked)
+  - Blue left border (indicates "inbox" status)
   - Title: "Finish Q1 Planning Doc"
-  - Status: "in-progress" (yellow/amber indicator)
-  - Project: "Q1 Planning"
-  - Due: "Jan 15"
+  - Folder icon + "Q1 Planning" (project badge, muted)
+  - Calendar icon + "Jan 23" (due date, muted)
+  - Small external link arrow at end
+
+The contrast between the plain checkbox and the rich widget is the point — wikilinks to tasks get enhanced, regular checkboxes stay simple.
 
 Instant cut between phases, then loop.
 
@@ -202,7 +206,7 @@ Claude can already read your markdown files. This teaches it how your system wor
 - Spinner or pulsing indicator
 - Muted text: `✓ tdn context project "Q1 Planning" --ai`
 
-**Scene 3 — Response (streams in, 5-6 seconds):**
+**Scene 3 — Response (streams in, 3-4 seconds):**
 ```
 Looking at Q1 Planning:
 
@@ -263,8 +267,12 @@ If included: 5-10% opacity, behind demo column or bleeding off edge. Skip if it 
 ### 1.5 Responsive & Accessibility
 
 - Test at 375px, 768px, 1200px+
+- **Mobile demo scaling:** On narrow viewports, scale down text size inside demos significantly so terminal/editor content remains legible at smaller widths
 - Demos should have `aria-hidden="true"` (decorative)
-- Respect `prefers-reduced-motion`—show static final state
+- Respect `prefers-reduced-motion`—show static final state:
+  - CLI: Show Scene 1 (`tdn today`) output
+  - Obsidian: Show rendered widget view
+  - Claude: Show full response
 
 ---
 
@@ -330,6 +338,16 @@ export async function revealLines(container, lines, lineDelay = 80) {
 export function checkReducedMotion() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
+
+// Returns { isVisible, cleanup } - call cleanup on unmount
+export function observeVisibility(element, onVisibilityChange) {
+  const observer = new IntersectionObserver(
+    ([entry]) => onVisibilityChange(entry.isIntersecting),
+    { threshold: 0.1 }
+  );
+  observer.observe(element);
+  return () => observer.disconnect();
+}
 ```
 
 ---
@@ -354,7 +372,7 @@ const scenes = [
       '   <span class="term-task">Fix critical security issue</span>        <span class="term-project">Q1 Planning</span>    <span class="term-date">due Jan 10</span>',
       // ... more lines
     ],
-    displayTime: 5000
+    displayTime: 3500
   },
   // ... more scenes
 ];
@@ -397,7 +415,7 @@ async function runDemo() {
 **Behavior:**
 - Phase 1: Type markdown with syntax highlighting (~40ms per char)
 - Phase 2: Instant cut to rendered widget view
-- Loop after ~5-6 seconds on rendered view
+- Loop after 3-4 seconds on rendered view
 
 **Editor state styling:**
 ```css
@@ -406,20 +424,63 @@ async function runDemo() {
 .editor-link-text { color: var(--color-text); }        /* link text */
 ```
 
-**Widget styling (from actual plugin):**
+**Rendered view structure:**
+
+Line 1 (plain checkbox):
+```html
+<div class="obs-line">
+  <input type="checkbox" class="obs-checkbox" />
+  <span>Buy Milk</span>
+</div>
+```
+
+Line 2 (task widget):
+```html
+<div class="obs-line">
+  <div class="taskdn-widget" data-status="inbox">
+    <input type="checkbox" class="obs-checkbox" />
+    <span class="taskdn-title">Finish Q1 Planning Doc</span>
+    <span class="taskdn-meta">
+      <span class="taskdn-project">📁 Q1 Planning</span>
+      <span class="taskdn-due">📅 Jan 23</span>
+    </span>
+    <span class="taskdn-arrow">↗</span>
+  </div>
+</div>
+```
+
+**Widget styling (matches actual plugin):**
 
 ```css
-.taskdn-widget {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 0.4em;
-  padding: 0.1em 0.4em;
-  border-radius: 4px;
-  background-color: var(--color-bg-2);
-  font-size: 0.95em;
+/* Rounded checkboxes throughout */
+.obs-checkbox {
+  appearance: none;
+  width: 1em;
+  height: 1em;
+  border: 1.5px solid var(--color-text-muted);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  flex-shrink: 0;
 }
 
-/* Status borders */
+.obs-checkbox:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* Task widget container */
+.taskdn-widget {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.2em 0.5em;
+  padding-inline-start: 0.6em;
+  border-radius: 4px;
+  background-color: var(--color-bg-2);
+}
+
+/* Status indicated by left border color */
 .taskdn-widget[data-status="inbox"] {
   border-inline-start: 3px solid var(--color-blue);
 }
@@ -430,24 +491,23 @@ async function runDemo() {
   border-inline-start: 3px solid var(--color-red);
 }
 
-.taskdn-checkbox {
-  width: 1em;
-  height: 1em;
-  accent-color: var(--color-accent);
-}
-
 .taskdn-title {
   color: var(--color-text);
 }
 
 .taskdn-meta {
-  font-size: 0.8em;
+  display: inline-flex;
+  gap: 0.6em;
+  font-size: 0.85em;
   color: var(--color-text-muted);
-  opacity: 0.75;
+}
+
+.taskdn-arrow {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+  font-size: 0.8em;
 }
 ```
-
-Map Obsidian CSS variables to Flexoki site equivalents.
 
 **Animation sequence:**
 ```javascript
@@ -460,7 +520,7 @@ async function runDemo() {
 
     // Phase 2: Rendered (instant cut)
     showRenderedView();
-    await sleep(5500);
+    await sleep(3500);
   }
 }
 ```
@@ -474,7 +534,7 @@ async function runDemo() {
 - User question types with `>` prompt (~40ms per char)
 - "Thinking" state: pulsing opacity animation (~2 seconds)
 - Command appears as muted text: `✓ tdn context project "Q1 Planning" --ai`
-- Response streams in character-by-character (~20-30ms per char)
+- Response streams in word-by-word (more realistic than char-by-char for LLM output)
 
 **Thinking state:**
 ```css
@@ -489,33 +549,39 @@ async function runDemo() {
 
 Or animated dots: `Thinking...` with dots appearing one by one.
 
-**Response streaming:**
+**Response streaming (simpler approach):**
+
+Stream plain text word-by-word, then swap in formatted HTML at the end. This avoids the complexity of truncating HTML mid-tag.
+
 ```javascript
-async function streamResponse(element, html, charDelay = 25) {
-  // Pre-render HTML, then reveal character by character
-  const temp = document.createElement('div');
-  temp.innerHTML = html;
-  const text = temp.textContent;
+async function streamResponse(element, plainText, formattedHTML, wordDelay = 60) {
+  const words = plainText.split(/(\s+)/); // Keep whitespace
+  element.textContent = '';
 
-  let currentIndex = 0;
-  element.innerHTML = '';
-
-  for (const char of text) {
-    currentIndex++;
-    // Re-render HTML up to current position
-    element.innerHTML = truncateHTML(html, currentIndex);
-    await sleep(charDelay);
+  for (const word of words) {
+    element.textContent += word;
+    if (word.trim()) await sleep(wordDelay); // Only delay on actual words
   }
+
+  // Swap to formatted version
+  await sleep(100);
+  element.innerHTML = formattedHTML;
 }
 ```
 
-Alternative simpler approach: stream plain text, then swap in formatted HTML at the end.
-
-**Response formatting:** Pre-styled HTML spans for bold, lists, emoji:
+**Response formatting:** Pre-styled HTML for the final swap:
 ```html
-<span class="claude-bold">Urgent:</span>
-<span class="claude-emoji">⚠️</span>
-<div class="claude-list-item">- Fix authentication bug (due Jan 18)</div>
+<div class="claude-response">
+  Looking at Q1 Planning:
+
+  <span class="claude-warning">⚠️ <strong>Urgent:</strong></span> "Fix critical security issue" is 5 days overdue
+
+  <strong>In Progress:</strong>
+  <div class="claude-list">- Fix authentication bug (due Jan 18)</div>
+  <div class="claude-list">- Document API v2 endpoints</div>
+
+  ...
+</div>
 ```
 
 **Animation sequence:**
@@ -535,9 +601,9 @@ async function runDemo() {
     await sleep(1000);
     hideThinking();
 
-    // Response
-    await streamResponse(responseContainer, responseHTML);
-    await sleep(5000);
+    // Response (word-by-word streaming)
+    await streamResponse(responseContainer, responsePlainText, responseHTML);
+    await sleep(3500);
   }
 }
 ```
@@ -547,9 +613,41 @@ async function runDemo() {
 ## Phase 2.5: Polish & Integration
 
 - Full page flow—do sections feel balanced?
+- **Viewport-based animation control:** Use Intersection Observer to start animations only when demo scrolls into view, pause when scrolled away. This saves CPU and prevents weird mid-animation states.
 - Animation performance (no jank, test with DevTools Performance tab)
-- `prefers-reduced-motion`: show static final state, skip all animations
+- `prefers-reduced-motion`: show static final state, skip all animations:
+  - CLI: Scene 1 (`tdn today`) output fully rendered
+  - Obsidian: Rendered widget view (not editor/typing view)
+  - Claude: Full response displayed
 - Test on real mobile devices (not just responsive mode)
 - Accessibility: `aria-hidden="true"` on demo containers
 - Verify monospace font renders box-drawing chars correctly across browsers
 - Check animation doesn't cause layout shifts
+
+---
+
+## Prerequisites: Color Variables
+
+The site's `Layout.astro` needs additional Flexoki semantic colors for status indicators:
+
+```css
+:root {
+  /* ...existing vars... */
+  --color-blue: #4385be;
+  --color-green: #879a39;
+  --color-yellow: #d0a215;
+  --color-red: #d14d41;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* ...existing vars... */
+    --color-blue: #205ea6;
+    --color-green: #66800b;
+    --color-yellow: #ad5c00;
+    --color-red: #af3029;
+  }
+}
+```
+
+These are used for status borders, tree indicators, and warning colors throughout the demos.
