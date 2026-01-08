@@ -2,6 +2,11 @@
 import Layout from '../layouts/Layout.astro'
 import { Image } from 'astro:assets'
 import splashImage from '../assets/icon-1024-trans.png'
+import ProductSection from '../components/ProductSection.astro'
+import DesktopDemo from '../components/demos/DesktopDemo.astro'
+import CLIDemo from '../components/demos/CLIDemo.astro'
+import ObsidianDemo from '../components/demos/ObsidianDemo.astro'
+import ClaudeDemo from '../components/demos/ClaudeDemo.astro'
 ---
 
 <Layout
@@ -105,35 +110,76 @@ Key points to review:
       </div>
     </section>
 
-    <section class="products">
+    <section class="suite-header">
       <h2>The Suite</h2>
-      <div class="product-grid">
-        <a href="/desktop/overview" class="product">
-          <span class="product-icon">🖥️</span>
-          <span class="product-name">Desktop App</span>
-          <span class="product-desc">Beautiful day-to-day task management</span>
-          <span class="product-status coming-soon">Coming Soon</span>
-        </a>
-        <a href="/cli/overview" class="product">
-          <span class="product-icon">⌨️</span>
-          <span class="product-name">CLI</span>
-          <span class="product-desc">Terminal interface for humans & AI</span>
-          <span class="product-status available">Available</span>
-        </a>
-        <a href="/obsidian/plugin" class="product">
-          <span class="product-icon">💎</span>
-          <span class="product-name">Obsidian Plugin</span>
-          <span class="product-desc">Tasks inside your vault</span>
-          <span class="product-status available">Available</span>
-        </a>
-        <a href="/claude-code/overview" class="product">
-          <span class="product-icon">🤖</span>
-          <span class="product-name">Claude Code</span>
-          <span class="product-desc">AI-assisted task management</span>
-          <span class="product-status available">Available</span>
-        </a>
-      </div>
     </section>
+
+    <ProductSection
+      title="Desktop App"
+      icon="🖥️"
+      badge="Coming Soon"
+      description="A task app that actually feels good to use—fast, keyboard-driven, thoughtfully designed—but your files stay on disk as markdown. No lock-in. No wondering what happens when the company gets acquired."
+      features={[
+        'Global shortcut captures tasks without breaking your flow',
+        'Today, Inbox, This Week views work out of the box—no configuration',
+        'Keyboard-first for people who find clicking slow',
+        'Lists, Kanban, or calendar—whatever fits how you\'re thinking',
+      ]}
+      ctaText="Learn More"
+      ctaHref="/desktop/overview"
+    >
+      <DesktopDemo />
+    </ProductSection>
+
+    <ProductSection
+      title="Command Line Interface"
+      icon="⌨️"
+      description="Two modes for two audiences. For you: pretty output, fuzzy search, natural language dates. For AI agents: structured markdown designed for context windows—token-efficient, still useful if truncated."
+      features={[
+        'See what\'s overdue, due today, and in progress—one command',
+        'Give AI full context in a single call: project, tasks, timeline, relationships',
+        'Search the way you\'d say it, not how files are named',
+        '"Next Friday" instead of ISO dates',
+      ]}
+      ctaText="Learn More"
+      ctaHref="/cli/overview"
+      reverse
+    >
+      <CLIDemo />
+    </ProductSection>
+
+    <ProductSection
+      title="Obsidian Plugin"
+      icon="💎"
+      description="You're in Obsidian to write, not manage tasks. Link to a task and see its status, project, and due date right there. Check it off without opening another file."
+      features={[
+        'Task links become widgets showing what you need to know',
+        'One click to mark done—no context switch',
+        'Colors tell you what\'s blocked or overdue at a glance',
+        'Turn any checklist item into a proper task when it grows up',
+      ]}
+      ctaText="Learn More"
+      ctaHref="/obsidian/plugin"
+    >
+      <ObsidianDemo />
+    </ProductSection>
+
+    <ProductSection
+      title="Claude Code"
+      icon="🤖"
+      description={`Claude can already read your markdown files. This teaches it how your system works—so "What's overdue?" gets a real answer, not a frontmatter tutorial.`}
+      features={[
+        `Ask naturally: "What should I focus on today?"`,
+        'Create tasks mid-conversation without opening another app',
+        'Help with the tedious parts—inbox processing, weekly reviews',
+        'Works from any project directory, not just your vault',
+      ]}
+      ctaText="Learn More"
+      ctaHref="/claude-code/overview"
+      reverse
+    >
+      <ClaudeDemo />
+    </ProductSection>
   </main>
 
   <footer>
@@ -154,8 +200,17 @@ Key points to review:
     flex: 1;
     display: block;
     padding: 2rem;
-    max-width: 700px;
+    max-width: 1200px;
     margin: 0 auto;
+  }
+
+  /* Constrain hero and concept sections to narrower width */
+  .hero,
+  .concept,
+  .hierarchy {
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .hero {
@@ -360,95 +415,19 @@ Key points to review:
     opacity: 0.5;
   }
 
-  /* Products section */
-  .products {
+  /* Suite header */
+  .suite-header {
     text-align: center;
-    margin-bottom: 2rem;
+    padding: 3rem 0 1rem;
+    max-width: 700px;
+    margin: 0 auto;
   }
 
-  .products h2 {
-    font-size: 1.25rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    color: var(--color-text);
-  }
-
-  .product-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-
-  @media (max-width: 600px) {
-    .product-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .product {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 1.25rem;
-    background: var(--color-bg-2);
-    border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    text-align: left;
-    transition: all 0.15s ease;
-  }
-
-  .product:hover {
-    text-decoration: none;
-    border-color: var(--color-text-muted);
-  }
-
-  .product-icon {
+  .suite-header h2 {
     font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .product-name {
     font-weight: 600;
-    font-size: 0.9375rem;
     color: var(--color-text);
-  }
-
-  .product-desc {
-    font-size: 0.8125rem;
-    color: var(--color-text-muted);
-    margin-top: 0.25rem;
-  }
-
-  .product-status {
-    font-size: 0.6875rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-top: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    border-radius: 0.25rem;
-  }
-
-  .product-status.available {
-    background: rgba(135, 154, 57, 0.15);
-    color: #879a39;
-  }
-
-  .product-status.coming-soon {
-    background: rgba(208, 162, 21, 0.15);
-    color: #d0a215;
-  }
-
-  @media (prefers-color-scheme: light) {
-    .product-status.available {
-      background: rgba(102, 128, 11, 0.1);
-      color: #66800b;
-    }
-
-    .product-status.coming-soon {
-      background: rgba(173, 92, 0, 0.1);
-      color: #ad5c00;
-    }
+    margin: 0;
   }
 
   footer {

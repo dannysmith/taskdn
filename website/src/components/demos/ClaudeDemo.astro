@@ -1,0 +1,111 @@
+---
+import WindowChrome from './WindowChrome.astro'
+
+// Claude Code demo showing Q&A conversation
+// Phase 1: Static content
+// Phase 2: Will add animation
+// Uses terminal/monospace styling throughout (Claude Code runs in terminal)
+---
+
+<div class="claude-demo" aria-hidden="true">
+  <WindowChrome variant="terminal" title="Claude Code">
+    <div class="terminal-content">
+      <!-- User question -->
+      <div class="terminal-line">
+        <span class="prompt">&gt;</span>
+        <span class="input">What's next on Q1 Planning? Anything urgent?</span>
+      </div>
+
+      <!-- Command executed -->
+      <div class="terminal-line command-line">
+        <span class="checkmark">✓</span>
+        <span class="command-text">tdn context project "Q1 Planning" --ai</span>
+      </div>
+
+      <!-- Response - plain terminal text -->
+      <div class="response">
+        <div class="response-line">Looking at Q1 Planning:</div>
+        <div class="response-line"></div>
+        <div class="response-line warning">⚠️ Urgent: "Fix critical security issue" is 5 days overdue</div>
+        <div class="response-line"></div>
+        <div class="response-line section">In Progress:</div>
+        <div class="response-line">  - Fix authentication bug (due Jan 18)</div>
+        <div class="response-line">  - Document API v2 endpoints</div>
+        <div class="response-line"></div>
+        <div class="response-line section">Ready to start:</div>
+        <div class="response-line">  - Update deployment scripts</div>
+        <div class="response-line">  - Review PR #847 (due today!)</div>
+        <div class="response-line"></div>
+        <div class="response-line muted">I'd prioritize the security issue and PR #847 today.</div>
+      </div>
+    </div>
+  </WindowChrome>
+</div>
+
+<style>
+  .claude-demo {
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Hardcoded dark colors - terminal is always dark */
+  .terminal-content {
+    color: #cecdc3;
+  }
+
+  .terminal-line {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
+  }
+
+  .prompt {
+    color: #d0a215;
+  }
+
+  .input {
+    color: #cecdc3;
+  }
+
+  .command-line {
+    color: #878580;
+    margin-bottom: 1em;
+  }
+
+  .checkmark {
+    color: #879a39;
+  }
+
+  .command-text {
+    opacity: 0.7;
+  }
+
+  .response {
+    line-height: 1.5;
+  }
+
+  .response-line {
+    min-height: 1.3em;
+    white-space: pre;
+  }
+
+  .response-line.warning {
+    color: #d0a215;
+  }
+
+  .response-line.section {
+    color: #cecdc3;
+    font-weight: 600;
+  }
+
+  .response-line.muted {
+    color: #878580;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .response-line {
+      white-space: pre-wrap;
+    }
+  }
+</style>

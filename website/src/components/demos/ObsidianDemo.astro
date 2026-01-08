@@ -1,0 +1,130 @@
+---
+import WindowChrome from './WindowChrome.astro'
+
+// Obsidian plugin demo showing rendered widget view
+// Phase 1: Static content
+// Phase 2: Will add typing animation
+---
+
+<div class="obsidian-demo" aria-hidden="true">
+  <WindowChrome variant="editor" title="daily-note.md">
+    <div class="editor-content">
+      <!-- Plain checkbox line -->
+      <div class="obs-line">
+        <span class="obs-checkbox"></span>
+        <span class="obs-text">Buy Milk</span>
+      </div>
+
+      <!-- Task widget line - checkbox outside widget, aligned -->
+      <div class="obs-line">
+        <span class="obs-checkbox"></span>
+        <div class="taskdn-widget" data-status="inbox">
+          <span class="taskdn-title">Finish Q1 Planning Doc</span>
+          <span class="taskdn-meta">
+            <span class="taskdn-project">📁 Q1 Planning</span>
+            <span class="taskdn-due">📅 Jan 23</span>
+          </span>
+          <span class="taskdn-arrow">↗</span>
+        </div>
+      </div>
+    </div>
+  </WindowChrome>
+</div>
+
+<style>
+  .obsidian-demo {
+    height: 100%;
+    width: 100%;
+  }
+
+  .editor-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  .obs-line {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-height: 1.75em;
+  }
+
+  /* Rounded square checkboxes (using span for full styling control) */
+  .obs-checkbox {
+    display: inline-block;
+    width: 0.9em;
+    height: 0.9em;
+    border: 1.5px solid var(--color-text-muted);
+    border-radius: 3px;
+    background: transparent;
+    flex-shrink: 0;
+  }
+
+  .obs-text {
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 0.9375em;
+  }
+
+  /* Task widget container - no checkbox inside */
+  .taskdn-widget {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    background-color: var(--color-bg-2);
+    font-family: var(--font-sans);
+  }
+
+  /* Status indicated by left border color */
+  .taskdn-widget[data-status='inbox'] {
+    border-inline-start: 3px solid var(--color-blue);
+  }
+
+  .taskdn-widget[data-status='in-progress'] {
+    border-inline-start: 3px solid var(--color-yellow);
+  }
+
+  .taskdn-widget[data-status='blocked'] {
+    border-inline-start: 3px solid var(--color-red);
+  }
+
+  .taskdn-title {
+    color: var(--color-text);
+    font-size: 0.9375em;
+  }
+
+  .taskdn-meta {
+    display: inline-flex;
+    gap: 0.6em;
+    font-size: 0.8em;
+    color: var(--color-text-muted);
+  }
+
+  .taskdn-arrow {
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    font-size: 0.8em;
+    margin-left: 0.25em;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .obs-text,
+    .taskdn-title {
+      font-size: 0.8em;
+    }
+
+    .taskdn-meta {
+      font-size: 0.7em;
+    }
+
+    .taskdn-widget {
+      flex-wrap: wrap;
+      gap: 0.25em 0.5em;
+    }
+  }
+</style>

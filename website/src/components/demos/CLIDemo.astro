@@ -1,0 +1,164 @@
+---
+import WindowChrome from './WindowChrome.astro'
+
+// CLI demo showing tdn today output
+// Phase 1: Static content
+// Phase 2: Will add animation
+---
+
+<div class="cli-demo" aria-hidden="true">
+  <WindowChrome variant="terminal" title="Terminal">
+    <div class="terminal-content">
+      <div class="terminal-line">
+        <span class="prompt">$</span>
+        <span class="command">tdn today</span>
+        <span class="cursor"></span>
+      </div>
+      <div class="terminal-output">
+        <div class="output-line"></div>
+        <div class="output-line heading">TODAY — Wed Jan 15</div>
+        <div class="output-line"></div>
+        <div class="output-line section">
+          <span class="emoji">⚠️</span>
+          <span class="section-title">OVERDUE (2)</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Fix critical security issue</span>
+          <span class="task-project">Q1 Planning</span>
+          <span class="task-date">due Jan 10</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Submit expense report</span>
+          <span class="task-project">Work</span>
+          <span class="task-date">due Jan 12</span>
+        </div>
+        <div class="output-line"></div>
+        <div class="output-line section">
+          <span class="emoji">📅</span>
+          <span class="section-title">DUE TODAY (2)</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Review PR #847</span>
+          <span class="task-project">Q1 Planning</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Call insurance company</span>
+          <span class="task-project">Personal</span>
+        </div>
+        <div class="output-line"></div>
+        <div class="output-line section">
+          <span class="emoji">▶️</span>
+          <span class="section-title">IN PROGRESS (3)</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Fix authentication bug</span>
+          <span class="task-project">Q1 Planning</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Document API v2 endpoints</span>
+          <span class="task-project">Q1 Planning</span>
+        </div>
+        <div class="output-line task">
+          <span class="task-name">Get contractor quotes</span>
+          <span class="task-project">Home Renovation</span>
+        </div>
+      </div>
+    </div>
+  </WindowChrome>
+</div>
+
+<style>
+  .cli-demo {
+    height: 100%;
+    width: 100%;
+  }
+
+  /* Hardcoded dark colors - terminal is always dark */
+  .terminal-content {
+    color: #cecdc3;
+  }
+
+  .terminal-line {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 0.75em;
+  }
+
+  .prompt {
+    color: #878580;
+  }
+
+  .command {
+    color: #cecdc3;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    background: #cecdc3;
+    opacity: 0.7;
+    vertical-align: text-bottom;
+  }
+
+  .terminal-output {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .output-line {
+    min-height: 1.4em;
+  }
+
+  .output-line.heading {
+    color: #cecdc3;
+    font-weight: 600;
+    margin-bottom: 0.25em;
+  }
+
+  .output-line.section {
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+  }
+
+  .section-title {
+    font-weight: 600;
+    color: #cecdc3;
+  }
+
+  .output-line.task {
+    padding-left: 1.75em;
+    display: flex;
+    gap: 1em;
+  }
+
+  .task-name {
+    color: #cecdc3;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .task-project {
+    color: #4385be;
+    opacity: 0.8;
+    white-space: nowrap;
+  }
+
+  .task-date {
+    color: #878580;
+    white-space: nowrap;
+  }
+
+  /* Responsive */
+  @media (max-width: 600px) {
+    .output-line.task {
+      flex-wrap: wrap;
+      gap: 0.25em 0.75em;
+    }
+
+    .task-name {
+      flex-basis: 100%;
+    }
+  }
+</style>

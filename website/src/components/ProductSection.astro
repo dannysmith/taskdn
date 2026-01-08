@@ -1,0 +1,218 @@
+---
+interface Props {
+  title: string
+  icon: string
+  description: string
+  features: string[]
+  ctaText: string
+  ctaHref: string
+  badge?: string
+  reverse?: boolean
+}
+
+const {
+  title,
+  icon,
+  description,
+  features,
+  ctaText,
+  ctaHref,
+  badge,
+  reverse = false,
+} = Astro.props
+---
+
+<section class:list={['product-section', { reverse }]}>
+  <div class="product-content">
+    <div class="product-header">
+      <span class="product-icon">{icon}</span>
+      <h2 class="product-title">{title}</h2>
+      {badge && <span class="product-badge">{badge}</span>}
+    </div>
+
+    <p class="product-description">{description}</p>
+
+    <ul class="product-features">
+      {features.map((feature) => <li>{feature}</li>)}
+    </ul>
+
+    <a href={ctaHref} class="product-cta">
+      {ctaText}
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M5 12h14"></path>
+        <path d="m12 5 7 7-7 7"></path>
+      </svg>
+    </a>
+  </div>
+
+  <div class="product-demo">
+    <slot />
+  </div>
+</section>
+
+<style>
+  .product-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+    padding: 5rem 0;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .product-section.reverse {
+    direction: rtl;
+  }
+
+  .product-section.reverse > * {
+    direction: ltr;
+  }
+
+  .product-content {
+    max-width: 480px;
+  }
+
+  .product-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .product-icon {
+    font-size: 1.75rem;
+  }
+
+  .product-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--color-text);
+    margin: 0;
+  }
+
+  .product-badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.25rem;
+    background: rgba(208, 162, 21, 0.15);
+    color: var(--color-yellow);
+  }
+
+  .product-description {
+    font-size: 1.0625rem;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .product-features {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 2rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .product-features li {
+    font-size: 0.9375rem;
+    color: var(--color-text);
+    padding-left: 1.5rem;
+    position: relative;
+    line-height: 1.5;
+  }
+
+  .product-features li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.5em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--color-accent);
+    opacity: 0.7;
+  }
+
+  .product-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    background: var(--color-accent);
+    color: white;
+    transition: all 0.15s ease;
+  }
+
+  .product-cta svg {
+    transition: transform 0.15s ease;
+  }
+
+  .product-cta:hover {
+    background: var(--color-accent-hover);
+    color: white;
+    text-decoration: none;
+  }
+
+  .product-cta:hover svg {
+    transform: translateX(3px);
+  }
+
+  .product-demo {
+    aspect-ratio: 16 / 10;
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .product-section {
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      padding: 3rem 1.5rem;
+    }
+
+    .product-section.reverse {
+      direction: ltr;
+    }
+
+    .product-content {
+      max-width: none;
+      text-align: center;
+    }
+
+    .product-header {
+      justify-content: center;
+    }
+
+    .product-features {
+      text-align: left;
+      max-width: 400px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .product-cta {
+      margin: 0 auto;
+    }
+
+    .product-demo {
+      max-width: 500px;
+      margin: 0 auto;
+      width: 100%;
+    }
+  }
+</style>
