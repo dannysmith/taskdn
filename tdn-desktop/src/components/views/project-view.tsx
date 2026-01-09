@@ -1,10 +1,13 @@
 import * as React from 'react'
 
 import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
-import type { Task } from '@/lib/tauri-bindings'
+import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useViewMode } from '@/store/view-mode-store'
 import { useProjectOrder } from '@/hooks/use-project-order'
+import { useKanbanOrder } from '@/hooks/use-kanban-order'
 import { DraggableTaskList } from '@/components/tasks/task-list'
+import { KanbanBoard, useCollapsedColumns } from '@/components/kanban'
 import { EmptyState } from '@/components/ui/empty-state'
 import { CollapsibleNotesSection } from '@/components/ui/collapsible-notes'
 
@@ -13,10 +16,12 @@ import { CollapsibleNotesSection } from '@/components/ui/collapsible-notes'
  *
  * Projects are finishable efforts with a clear outcome (e.g., "Launch website",
  * "Plan vacation"). This view displays:
- * 1. Project notes (collapsible) - goals, context, reference material (TODO)
+ * 1. Project notes (collapsible) - goals, context, reference material
  * 2. Tasks section - all tasks belonging to this project
  *
- * Currently supports list mode only. Kanban mode will be added later.
+ * Supports two view modes (toggled via ViewHeader):
+ * - "list" → DraggableTaskList with inline editing and reordering
+ * - "kanban" → KanbanBoard with tasks grouped by status columns
  *
  * The project status pill in ViewHeader allows changing project status
  * (planning, ready, in-progress, blocked, done, dropped).
@@ -26,10 +31,12 @@ interface ProjectViewProps {
 }
 
 export function ProjectView({ projectId }: ProjectViewProps) {
-  const { tasks, projects } = useVaultData()
+  const { tasks, projects, areas } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
   const openTask = useTaskDetailStore(state => state.openTask)
+  const { viewMode } = useViewMode('project')
+  const { collapsedColumns, toggleColumn } = useCollapsedColumns()
 
   // Find the project
   const project = React.useMemo(() => {
@@ -44,9 +51,48 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     return tasks.filter(t => t.project?.includes(project.title))
   }, [tasks, project])
 
-  // Manage display order for project tasks
+  // Build tasksByStatus map for kanban view
+  const tasksByStatus = React.useMemo(() => {
+    const map = new Map<TaskStatus, Task[]>()
+    for (const task of projectTasks) {
+      const existing = map.get(task.status) ?? []
+      existing.push(task)
+      map.set(task.status, existing)
+    }
+    return map
+  }, [projectTasks])
+
+  // Manage display order for list view
   const { setOrder, getOrderedTasks } = useProjectOrder(projectId, projectTasks)
   const orderedTasks = getOrderedTasks()
+
+  // Manage kanban column order
+  const { setColumnOrder, getOrderedTasks: getKanbanOrderedTasks } =
+    useKanbanOrder(`project-${projectId}`, tasksByStatus)
+
+  // Helper: get task by ID
+  const getTaskById = React.useCallback(
+    (taskId: string) => tasks.find(t => t.id === taskId),
+    [tasks]
+  )
+
+  // Helper: extract title from WikiLink format [[Title]]
+  const extractTitle = React.useCallback((wikilink: string): string => {
+    if (wikilink.startsWith('[[') && wikilink.endsWith(']]')) {
+      return wikilink.slice(2, -2)
+    }
+    return wikilink
+  }, [])
+
+  // Helper: get area name from WikiLink
+  const getAreaName = React.useCallback(
+    (wikilink: string): string | undefined => {
+      const title = extractTitle(wikilink)
+      const area = areas.find(a => a.title === title)
+      return area?.title
+    },
+    [areas, extractTitle]
+  )
 
   const handleReorder = React.useCallback(
     (reorderedTasks: Task[]) => {
@@ -94,6 +140,57 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     [tasks, updateTask]
   )
 
+  const handleStatusChange = React.useCallback(
+    (taskId: string, newStatus: TaskStatus) => {
+      updateTask.mutate({
+        id: taskId,
+        title: null,
+        status: newStatus,
+        project: null,
+        area: null,
+        scheduled: null,
+        due: null,
+        deferUntil: null,
+        body: null,
+      })
+    },
+    [updateTask]
+  )
+
+  const handleScheduledChange = React.useCallback(
+    (taskId: string, date: string | undefined) => {
+      updateTask.mutate({
+        id: taskId,
+        title: null,
+        status: null,
+        project: null,
+        area: null,
+        scheduled: date ?? null,
+        due: null,
+        deferUntil: null,
+        body: null,
+      })
+    },
+    [updateTask]
+  )
+
+  const handleDueChange = React.useCallback(
+    (taskId: string, date: string | undefined) => {
+      updateTask.mutate({
+        id: taskId,
+        title: null,
+        status: null,
+        project: null,
+        area: null,
+        scheduled: null,
+        due: date ?? null,
+        deferUntil: null,
+        body: null,
+      })
+    },
+    [updateTask]
+  )
+
   const handleOpenDetail = React.useCallback(
     (taskId: string) => {
       openTask(taskId)
@@ -117,6 +214,31 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     [createTask, projectId, project?.area]
   )
 
+  const handleKanbanCreateTask = React.useCallback(
+    (status: TaskStatus): string | undefined => {
+      createTask.mutate({
+        title: '',
+        status,
+        projectId,
+        areaId: project?.area ?? null,
+        scheduled: null,
+        due: null,
+        deferUntil: null,
+      })
+      // Return undefined - we can't get the ID synchronously with mutate
+      // The card will get auto-focused via editingTaskId state in KanbanBoard
+      return undefined
+    },
+    [createTask, projectId, project?.area]
+  )
+
+  const handleKanbanReorder = React.useCallback(
+    (status: TaskStatus, reorderedTasks: Task[]) => {
+      setColumnOrder(status, reorderedTasks)
+    },
+    [setColumnOrder]
+  )
+
   // Combine description and body for notes
   // (hoisted before early return to satisfy React hooks rules)
   const projectNotes = React.useMemo(() => {
@@ -126,6 +248,24 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     if (project.body) parts.push(project.body)
     return parts.join('\n\n')
   }, [project])
+
+  // Build ordered tasksByStatus for kanban (applying column ordering)
+  const orderedTasksByStatus = React.useMemo(() => {
+    const result = new Map<TaskStatus, Task[]>()
+    for (const [status] of tasksByStatus) {
+      result.set(status, getKanbanOrderedTasks(status))
+    }
+    return result
+  }, [tasksByStatus, getKanbanOrderedTasks])
+
+  // Flatten ordered tasks for KanbanBoard (it builds its own map internally)
+  const kanbanTasks = React.useMemo(() => {
+    const result: Task[] = []
+    for (const [, tasks] of orderedTasksByStatus) {
+      result.push(...tasks)
+    }
+    return result
+  }, [orderedTasksByStatus])
 
   if (!project) {
     return (
@@ -149,22 +289,39 @@ export function ProjectView({ projectId }: ProjectViewProps) {
           Tasks
         </h2>
 
-        {orderedTasks.length > 0 ? (
-          <DraggableTaskList
-            tasks={orderedTasks}
-            projectId={`project-${projectId}`}
-            onTasksReorder={handleReorder}
-            onTaskTitleChange={handleTitleChange}
-            onTaskStatusToggle={handleStatusToggle}
-            onTaskOpenDetail={handleOpenDetail}
-            onCreateTask={handleCreateTask}
-            showScheduled={true}
-            showDue={true}
-          />
+        {viewMode === 'list' ? (
+          orderedTasks.length > 0 ? (
+            <DraggableTaskList
+              tasks={orderedTasks}
+              projectId={`project-${projectId}`}
+              onTasksReorder={handleReorder}
+              onTaskTitleChange={handleTitleChange}
+              onTaskStatusToggle={handleStatusToggle}
+              onTaskOpenDetail={handleOpenDetail}
+              onCreateTask={handleCreateTask}
+              showScheduled={true}
+              showDue={true}
+            />
+          ) : (
+            <EmptyState
+              title="No tasks yet"
+              description="Press ⌘N to create a task in this project."
+            />
+          )
         ) : (
-          <EmptyState
-            title="No tasks yet"
-            description="Press ⌘N to create a task in this project."
+          <KanbanBoard
+            tasks={kanbanTasks}
+            collapsedColumns={collapsedColumns}
+            onColumnCollapseChange={toggleColumn}
+            onTaskStatusChange={handleStatusChange}
+            onTasksReorder={handleKanbanReorder}
+            getTaskById={getTaskById}
+            getAreaName={getAreaName}
+            onTaskTitleChange={handleTitleChange}
+            onTaskScheduledChange={handleScheduledChange}
+            onTaskDueChange={handleDueChange}
+            onTaskEditClick={handleOpenDetail}
+            onCreateTask={handleKanbanCreateTask}
           />
         )}
       </section>

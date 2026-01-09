@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { useNavigationStore } from '@/store/navigation-store'
+import { useViewMode, type ViewModeKey } from '@/store/view-mode-store'
 import { useVaultData, useUpdateProject } from '@/services/vault'
 import { ViewHeader } from './ViewHeader'
 import {
@@ -10,6 +11,7 @@ import {
   WeekView,
 } from '@/components/views'
 import { ProjectStatusPill } from '@/components/projects'
+import { ViewToggle } from '@/components/ui/view-toggle'
 import type { ProjectStatus } from '@/lib/tauri-bindings'
 
 /**
@@ -74,6 +76,24 @@ export function MainWindowContent() {
     return 'Unknown'
   }
 
+  // Determine if this view supports mode switching
+  const getViewModeKey = (): ViewModeKey | null => {
+    if (!selection) return null
+
+    if (selection.type === 'nav' && selection.id === 'this-week') {
+      return 'this-week'
+    }
+    if (selection.type === 'project') {
+      return 'project'
+    }
+    if (selection.type === 'area') {
+      return 'area'
+    }
+    return null
+  }
+
+  const viewModeKey = getViewModeKey()
+
   // Render the appropriate view based on selection
   const renderContent = () => {
     if (!selection) {
@@ -108,7 +128,10 @@ export function MainWindowContent() {
 
   return (
     <div className={cn('flex h-full flex-col bg-background')}>
-      <ViewHeader title={getViewTitle()}>
+      <ViewHeader
+        title={getViewTitle()}
+        actions={viewModeKey && <HeaderViewToggle viewModeKey={viewModeKey} />}
+      >
         {currentProject && (
           <ProjectStatusPill
             status={currentProject.status ?? 'in-progress'}
@@ -118,6 +141,18 @@ export function MainWindowContent() {
       </ViewHeader>
       <div className="flex-1 overflow-auto p-4">{renderContent()}</div>
     </div>
+  )
+}
+
+/** Helper component to use the view mode hook (can't use hooks conditionally) */
+function HeaderViewToggle({ viewModeKey }: { viewModeKey: ViewModeKey }) {
+  const { viewMode, setViewMode, availableModes } = useViewMode(viewModeKey)
+  return (
+    <ViewToggle
+      value={viewMode}
+      onChange={setViewMode}
+      availableModes={availableModes}
+    />
   )
 }
 
