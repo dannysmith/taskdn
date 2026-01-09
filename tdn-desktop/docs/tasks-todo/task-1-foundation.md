@@ -1,5 +1,7 @@
 # Task 1: Foundation
 
+**Status: COMPLETED** (2025-01-09)
+
 ## Purpose
 
 Bring over all structural pieces from the UI mockup (`../tdn-uimockup`) that don't require entity data. After this phase, the app compiles with correct styling, types, and structure but shows an empty shell - no tasks, projects, or areas displayed yet.
@@ -36,7 +38,7 @@ Copy from `tdn-uimockup/src/types/`:
 - `sidebar-order.ts` - Drag ID types for sidebar DnD
 - `calendar-order.ts` - Calendar ordering types
 
-Note: These types are temporary. Once Task 2 generates types via tauri-specta from Rust structs, the entity types (`data.ts`) will be replaced. Navigation and UI-specific types will remain. This should be noted in the code as comments. 
+Note: These types are temporary. Once Task 2 generates types via tauri-specta from Rust structs, the entity types (`data.ts`) will be replaced. Navigation and UI-specific types will remain. This should be noted in the code as comments.
 
 ### Config Files
 
@@ -50,6 +52,7 @@ Copy from `tdn-uimockup/src/config/`:
 Review `tdn-uimockup/src/components/ui/` and copy components not already in `tdn-desktop/src/components/ui/`:
 
 Likely candidates:
+
 - `empty-state.tsx` - Placeholder for empty views
 - `view-toggle.tsx` - List/kanban/calendar toggle
 - `date-button.tsx` - Date picker trigger with popover
@@ -65,6 +68,7 @@ Compare existing components - some may need updates to match mockup versions.
 Adapt mockup layout components to work with desktop's existing `MainWindow`:
 
 From `tdn-uimockup/src/components/layout/`:
+
 - `ViewHeader.tsx` - Top bar with title, status badges, view toggle
 - `ContentArea.tsx` - Scrollable content wrapper
 - `DetailSideBar.tsx` - Sliding right panel (integrate with existing `RightSideBar`)
@@ -83,6 +87,7 @@ These are independent of entity data and can be used immediately.
 ### Navigation State
 
 The mockup uses local state for sidebar selection. Consider whether this should:
+
 - Remain as local state in the app shell
 - Move to a Zustand store for persistence
 
@@ -93,6 +98,7 @@ For now, local state matching the mockup pattern is fine.
 ### MainWindow Adaptation
 
 Current structure:
+
 ```
 MainWindow
 ├── TitleBar
@@ -104,6 +110,7 @@ MainWindow
 ```
 
 Target structure after this phase:
+
 ```
 MainWindow
 ├── TitleBar
@@ -119,10 +126,11 @@ MainWindow
 ### Existing ui-store
 
 The desktop has `src/store/ui-store.ts` with:
+
 - `leftSidebarVisible`, `rightSidebarVisible`
 - `commandPaletteOpen`, `preferencesOpen`
 
-New stores should coexist. `task-detail-store` controls *what* is in the right sidebar; `ui-store.rightSidebarVisible` controls *whether* it's shown.
+New stores should coexist. `task-detail-store` controls _what_ is in the right sidebar; `ui-store.rightSidebarVisible` controls _whether_ it's shown.
 
 ## Out of Scope
 
@@ -133,14 +141,47 @@ New stores should coexist. `task-detail-store` controls *what* is in the right s
 
 ## Checklist
 
-- [ ] Merge CSS tokens into theme-variables.css
-- [ ] Copy type definitions
-- [ ] Copy config files
-- [ ] Copy/update UI primitive components
-- [ ] Adapt layout components
-- [ ] Copy Zustand stores
-- [ ] Verify app compiles and runs
-- [ ] Run `bun run check:all`
+- [x] Merge CSS tokens into theme-variables.css
+- [x] Copy type definitions
+- [x] Copy config files
+- [x] Copy/update UI primitive components
+- [x] Adapt layout components
+- [x] Copy Zustand stores
+- [x] Verify app compiles and runs
+- [x] Run `bun run check:all`
+
+## Completion Notes
+
+### Files Created
+
+**Types** (`src/types/`):
+
+- `data.ts`, `navigation.ts`, `headings.ts`, `sidebar-order.ts`, `calendar-order.ts`, `index.ts`
+
+**Config** (`src/config/`):
+
+- `status.ts`, `heading-colors.ts`, `index.ts`
+
+**UI Components** (`src/components/ui/`):
+
+- `empty-state.tsx`, `view-toggle.tsx`, `progress-circle.tsx`, `date-button.tsx`, `searchable-select.tsx`
+
+**Layout Components** (`src/components/layout/`):
+
+- `ViewHeader.tsx`, `ContentArea.tsx`
+
+**Stores** (`src/store/`):
+
+- `task-detail-store.ts`, `view-mode-store.ts`
+
+### Deferred to Task 3
+
+The following components were skipped because they depend on Milkdown (markdown editor):
+
+- `collapsible-notes.tsx` - Expandable notes panel for areas/projects
+- `markdown-preview.tsx` - Read-only markdown renderer
+
+These are tracked in Task 3's checklist under "UI Components Deferred from Task 1".
 
 ## Dependencies
 

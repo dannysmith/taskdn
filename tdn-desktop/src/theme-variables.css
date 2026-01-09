@@ -7,10 +7,69 @@
  */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Custom text size for small UI elements (badges, labels, metadata) */
+  --text-2xs: 0.625rem; /* 10px */
+  --text-2xs--line-height: 1rem;
+
+  /* Custom container breakpoints for compact card layouts
+     These handle responsive card layouts at sizes smaller than @3xs (256px) */
+  --container-4xs: 5rem; /* 80px - ultra-compact (calendar cells) */
+  --container-5xs: 7.5rem; /* 120px - task card row layout */
+  --container-6xs: 8.75rem; /* 140px - task card compact threshold */
+  --container-7xs: 11.25rem; /* 180px - area/project cards expand */
+  --container-8xs: 12.5rem; /* 200px - area/project cards row layout */
+
+  /* Taskdn icon colors */
+  --color-icon-today: var(--icon-today);
+  --color-icon-week: var(--icon-week);
+  --color-icon-inbox: var(--icon-inbox);
+  --color-icon-calendar: var(--icon-calendar);
+  --color-icon-folder: var(--icon-folder);
+  --color-icon-folder-none: var(--icon-folder-none);
+  --color-progress: var(--progress);
+
+  /* Taskdn status colors */
+  --color-status-inbox: var(--status-inbox);
+  --color-status-planning: var(--status-planning);
+  --color-status-icebox: var(--status-icebox);
+  --color-status-ready: var(--status-ready);
+  --color-status-in-progress: var(--status-in-progress);
+  --color-status-paused: var(--status-paused);
+  --color-status-blocked: var(--status-blocked);
+  --color-status-dropped: var(--status-dropped);
+  --color-status-done: var(--status-done);
+
+  /* Taskdn entity accent colors */
+  --color-entity-project: var(--entity-project);
+  --color-entity-area: var(--entity-area);
+
+  /* Taskdn date colors */
+  --color-date-due: var(--date-due);
+  --color-date-overdue: var(--date-overdue);
+
+  /* Taskdn area type colors */
+  --color-area-type-1: var(--area-type-1);
+  --color-area-type-2: var(--area-type-2);
+  --color-area-type-3: var(--area-type-3);
+  --color-area-type-4: var(--area-type-4);
+  --color-area-type-5: var(--area-type-5);
+  --color-area-type-6: var(--area-type-6);
+
+  /* Taskdn heading colors */
+  --color-heading-blue: var(--heading-blue);
+  --color-heading-teal: var(--heading-teal);
+  --color-heading-purple: var(--heading-purple);
+  --color-heading-amber: var(--heading-amber);
+  --color-heading-pink: var(--heading-pink);
+  --color-heading-green: var(--heading-green);
+  --color-heading-red: var(--heading-red);
+
+  /* Standard shadcn colors */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -56,10 +115,10 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --primary: oklch(0.488 0.243 264.376);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -76,24 +135,74 @@
   --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.546 0.245 262.881);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* ==========================================================================
+     TASKDN CUSTOM TOKENS
+     These extend the base shadcn theme for task management UI.
+     ========================================================================== */
+
+  /* Icon colors - nav item icons in sidebar */
+  --icon-today: oklch(0.75 0.18 85);
+  --icon-week: oklch(0.6 0.18 300);
+  --icon-inbox: oklch(0.55 0.2 260);
+  --icon-calendar: oklch(0.55 0.2 25);
+  --icon-folder: oklch(0.55 0.18 155);
+  --icon-folder-none: oklch(0.55 0.18 45);
+  --progress: oklch(0.65 0.15 250);
+
+  /* Status colors - used by status pills, checkboxes, kanban columns */
+  --status-inbox: oklch(0.55 0.2 260);
+  --status-planning: oklch(0.55 0.2 260);
+  --status-icebox: oklch(0.6 0.18 250);
+  --status-ready: oklch(0.55 0 0);
+  --status-in-progress: oklch(0.58 0.22 75);
+  --status-paused: oklch(0.65 0.15 70);
+  --status-blocked: oklch(0.5 0.2 25);
+  --status-dropped: oklch(0.55 0.15 25);
+  --status-done: oklch(0.55 0.18 155);
+
+  /* Entity accent colors - subtle tints for project/area UI */
+  --entity-project: oklch(0.6 0.15 300);
+  --entity-area: oklch(0.55 0.15 180);
+
+  /* Date colors - semantic colors for due date display */
+  --date-due: oklch(0.6 0.18 25);
+  --date-overdue: oklch(0.55 0.22 25);
+
+  /* Area type colors - category badges for user-defined area types */
+  --area-type-1: oklch(0.55 0.17 160);
+  --area-type-2: oklch(0.55 0.18 260);
+  --area-type-3: oklch(0.55 0.17 300);
+  --area-type-4: oklch(0.58 0.16 75);
+  --area-type-5: oklch(0.55 0.18 25);
+  --area-type-6: oklch(0.55 0.15 180);
+
+  /* Heading colors - for visual section dividers in task lists */
+  --heading-blue: oklch(0.55 0.2 260);
+  --heading-teal: oklch(0.55 0.15 180);
+  --heading-purple: oklch(0.55 0.18 300);
+  --heading-amber: oklch(0.58 0.18 75);
+  --heading-pink: oklch(0.6 0.18 350);
+  --heading-green: oklch(0.55 0.18 155);
+  --heading-red: oklch(0.55 0.2 25);
 }
 
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.24 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.24 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary: oklch(0.6 0.2 264);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.274 0.006 286.033);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
@@ -110,10 +219,57 @@
   --chart-5: oklch(0.424 0.199 265.638);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.623 0.214 259.815);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
   --sidebar-accent: oklch(0.269 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* TASKDN CUSTOM TOKENS (dark mode overrides) */
+
+  /* Icon colors - nav item icons in sidebar */
+  --icon-today: oklch(0.8 0.16 85);
+  --icon-week: oklch(0.75 0.16 300);
+  --icon-inbox: oklch(0.7 0.18 260);
+  --icon-calendar: oklch(0.7 0.18 25);
+  --icon-folder: oklch(0.7 0.16 155);
+  --icon-folder-none: oklch(0.7 0.16 45);
+  --progress: oklch(0.7 0.12 250);
+
+  /* Status colors - used by status pills, checkboxes, kanban columns */
+  --status-inbox: oklch(0.7 0.18 260);
+  --status-planning: oklch(0.7 0.18 260);
+  --status-icebox: oklch(0.8 0.08 260);
+  --status-ready: oklch(0.6 0 0);
+  --status-in-progress: oklch(0.75 0.2 75);
+  --status-paused: oklch(0.8 0.12 70);
+  --status-blocked: oklch(0.65 0.18 25);
+  --status-dropped: oklch(0.7 0.15 25);
+  --status-done: oklch(0.7 0.16 155);
+
+  /* Entity accent colors - subtle tints for project/area UI */
+  --entity-project: oklch(0.7 0.12 300);
+  --entity-area: oklch(0.65 0.12 180);
+
+  /* Date colors - semantic colors for due date display */
+  --date-due: oklch(0.7 0.16 25);
+  --date-overdue: oklch(0.65 0.2 25);
+
+  /* Area type colors - category badges for user-defined area types */
+  --area-type-1: oklch(0.7 0.14 160);
+  --area-type-2: oklch(0.7 0.16 260);
+  --area-type-3: oklch(0.7 0.14 300);
+  --area-type-4: oklch(0.75 0.14 75);
+  --area-type-5: oklch(0.7 0.16 25);
+  --area-type-6: oklch(0.65 0.12 180);
+
+  /* Heading colors - for visual section dividers in task lists */
+  --heading-blue: oklch(0.7 0.18 260);
+  --heading-teal: oklch(0.65 0.12 180);
+  --heading-purple: oklch(0.7 0.15 300);
+  --heading-amber: oklch(0.75 0.16 75);
+  --heading-pink: oklch(0.75 0.15 350);
+  --heading-green: oklch(0.7 0.16 155);
+  --heading-red: oklch(0.7 0.18 25);
 }
