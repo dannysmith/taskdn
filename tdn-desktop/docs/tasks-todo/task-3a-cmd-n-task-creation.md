@@ -799,16 +799,31 @@ _Space for tracking progress across sessions. Update after each work session._
 ### Session 2: 2026-01-09
 
 - [x] Phase 4 complete (OrderedItemList)
+- [x] Fixed drag-drop issues discovered during testing
 - Notes:
   - Added useTaskCreationStore import to ordered-item-list.tsx
   - Added activation/deactivation effect - activates only when a task (not heading) is selected
   - Added e.stopPropagation() to prevent double-fire with global handler
-  - TypeScript and ESLint checks pass
+  - **Drag-drop fixes (unrelated to Cmd+N but discovered during testing):**
+    - Added `canDropInContainer` callback to TaskDndContext for flexible drop validation
+    - TodayView now only allows drops into "scheduled-today" section
+    - Gap animation no longer shows for non-droppable containers
+    - Added cross-container gap support to OrderedItemList (was missing)
+    - Added `showGapBefore` prop to TaskListItem
+  - **Tested Cmd+N - still broken in AreaView and ProjectView**
+    - Selection shift bug still occurs (task appears selected but isn't actually)
+    - Same issue in both views - suggests DraggableTaskList is the problem
+  - **Decision:** Phase 5 (DraggableTaskList cleanup) is now required, not optional
+    - No need for backwards compatibility - just make it work
+    - Start with ProjectView (simpler, no cross-container drag) then apply to AreaView
 
 ### Session 3: [Date]
 
-- [ ] Phase 5 complete (optional DraggableTaskList cleanup)
-- [ ] Phase 6 complete (selection shift bug fix)
+- [ ] Phase 5: Migrate DraggableTaskList to new API (required)
+  - [ ] Fix ProjectView first (simpler case)
+  - [ ] Apply fix to AreaView
+  - [ ] Remove legacy API from task-creation-store if no longer needed
+- [ ] Phase 6 complete (selection shift bug - may be fixed by Phase 5)
 - [ ] Notes:
 
 ### Session 4: [Date]
