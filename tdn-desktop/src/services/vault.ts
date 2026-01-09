@@ -222,6 +222,8 @@ export function useCreateTask() {
       return result.data
     },
     onSuccess: newTask => {
+      markMutationComplete()
+
       // Update the tasks list cache with the new task
       queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
         if (!oldTasks) return [newTask]
@@ -311,6 +313,8 @@ export function useUpdateTask() {
       }
     },
     onSuccess: updatedTask => {
+      markMutationComplete()
+
       // Update with the actual server response
       queryClient.setQueryData(vaultQueryKeys.task(updatedTask.id), updatedTask)
       queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
@@ -343,6 +347,8 @@ export function useCreateProject() {
       return result.data
     },
     onSuccess: newProject => {
+      markMutationComplete()
+
       queryClient.setQueryData<Project[]>(
         vaultQueryKeys.projects(),
         oldProjects => {
@@ -443,6 +449,8 @@ export function useUpdateProject() {
       }
     },
     onSuccess: updatedProject => {
+      markMutationComplete()
+
       // Update with the actual server response
       queryClient.setQueryData(
         vaultQueryKeys.project(updatedProject.id),
@@ -466,6 +474,18 @@ export function useUpdateProject() {
 // =============================================================================
 
 /**
+ * Tracks when we last performed a mutation.
+ * Used to debounce file watcher events caused by our own writes.
+ */
+let lastMutationTime = 0
+const MUTATION_DEBOUNCE_MS = 500
+
+/** Call this when a mutation completes to prevent file watcher from re-invalidating */
+export function markMutationComplete() {
+  lastMutationTime = Date.now()
+}
+
+/**
  * Hook to initialize the vault and set up event listeners.
  * Should be called once at the app root level.
  */
@@ -478,7 +498,20 @@ export function useVaultInitialization() {
 
     const setupListener = async () => {
       unlisten = await listen('vault-changed', () => {
-        logger.info('Vault changed event received, refreshing queries')
+        // Skip if we just did a mutation (our own write triggered this)
+        const timeSinceMutation = Date.now() - lastMutationTime
+        if (timeSinceMutation < MUTATION_DEBOUNCE_MS) {
+          logger.debug('Ignoring vault-changed event (recent mutation)', {
+            timeSinceMutation,
+          })
+          // Still refresh the Rust index, but don't invalidate React Query cache
+          commands.refreshVault()
+          return
+        }
+
+        logger.info(
+          'Vault changed event received (external), refreshing queries'
+        )
 
         // Refresh the vault data from disk
         commands.refreshVault().then(result => {
