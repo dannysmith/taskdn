@@ -30,6 +30,38 @@ import {
   LOOSE_TASKS_SWIMLANE_ID,
 } from '@/components/kanban'
 
+// -----------------------------------------------------------------------------
+// Helper Functions
+// -----------------------------------------------------------------------------
+
+/**
+ * Pure function to apply stored order to a task list.
+ * Same logic as useProjectOrder.getOrderedTasks() but usable for multiple projects.
+ */
+function applyStoredOrder(tasks: Task[], storedOrder: string[] | null): Task[] {
+  if (!storedOrder) return tasks
+
+  const taskMap = new Map(tasks.map(t => [t.id, t]))
+  const currentTaskIds = new Set(tasks.map(t => t.id))
+
+  // Keep existing order for tasks that still exist
+  const preservedOrder = storedOrder.filter(id => currentTaskIds.has(id))
+
+  // Find new tasks not in order yet
+  const existingIds = new Set(storedOrder)
+  const newTaskIds = tasks.filter(t => !existingIds.has(t.id)).map(t => t.id)
+
+  // Build ordered task array
+  const orderedIds = [...preservedOrder, ...newTaskIds]
+  return orderedIds
+    .map(id => taskMap.get(id))
+    .filter((t): t is Task => t !== undefined)
+}
+
+// -----------------------------------------------------------------------------
+// Component
+// -----------------------------------------------------------------------------
+
 /**
  * AreaView - Shows all projects and tasks within a life area.
  *
@@ -70,6 +102,9 @@ export function AreaView({ areaId }: AreaViewProps) {
   const { viewMode } = useViewMode('area')
   const { collapsedColumns, toggleColumn } = useAreaCollapsedColumns()
 
+  // Get project task order from Zustand (used to apply stored order in tasksByProject)
+  const projectTaskOrder = useDisplayOrderStore(state => state.projectTaskOrder)
+
   // Find the area
   const area = React.useMemo(() => {
     return areas.find(a => a.id === areaId)
@@ -103,15 +138,25 @@ export function AreaView({ areaId }: AreaViewProps) {
   const looseTasksProjectId = getLooseTasksProjectId(areaId)
   const tasksByProject = React.useMemo(() => {
     const map = new Map<string, Task[]>()
-    // Add loose tasks with pseudo-project ID
+    // Add loose tasks with pseudo-project ID (already ordered via useAreaOrder)
     map.set(looseTasksProjectId, orderedLooseTasks)
-    // Add regular project tasks
+    // Add regular project tasks with stored order applied
     for (const project of areaProjects) {
-      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
-      map.set(project.id, projectTasks)
+      const rawProjectTasks = tasks.filter(t =>
+        t.project?.includes(project.title)
+      )
+      const storedOrder = projectTaskOrder?.[project.id] ?? null
+      const orderedProjectTasks = applyStoredOrder(rawProjectTasks, storedOrder)
+      map.set(project.id, orderedProjectTasks)
     }
     return map
-  }, [areaProjects, tasks, looseTasksProjectId, orderedLooseTasks])
+  }, [
+    areaProjects,
+    tasks,
+    looseTasksProjectId,
+    orderedLooseTasks,
+    projectTaskOrder,
+  ])
 
   // Build tasksByStatus map for kanban view
   const tasksByStatus = React.useMemo(() => {
@@ -336,13 +381,15 @@ export function AreaView({ areaId }: AreaViewProps) {
   )
 
   // Handler for moving a task between projects
+  // Updates both entity data (vault) and order arrays (Zustand)
   const handleTaskMove = React.useCallback(
     (
       taskId: string,
-      _fromProjectId: string,
+      fromProjectId: string,
       toProjectId: string,
-      _insertBeforeTaskId: string | null
+      insertBeforeTaskId: string | null
     ) => {
+      // 1. Update entity data (project WikiLink)
       if (isLooseTasksProjectId(toProjectId)) {
         // Moving to loose tasks: clear project but keep area
         updateTask.mutate({
@@ -373,8 +420,53 @@ export function AreaView({ areaId }: AreaViewProps) {
           })
         }
       }
+
+      // 2. Update order arrays (following TodayView's pattern)
+      const { setProjectTaskOrder, setAreaTaskOrder } =
+        useDisplayOrderStore.getState()
+
+      // Get current ordered task IDs from tasksByProject
+      const sourceTaskIds = (tasksByProject.get(fromProjectId) ?? []).map(
+        t => t.id
+      )
+      const targetTaskIds = (tasksByProject.get(toProjectId) ?? []).map(
+        t => t.id
+      )
+
+      // 2a. Remove from source order
+      const newSourceOrder = sourceTaskIds.filter(id => id !== taskId)
+      if (isLooseTasksProjectId(fromProjectId)) {
+        setAreaTaskOrder(areaId, newSourceOrder)
+      } else {
+        setProjectTaskOrder(fromProjectId, newSourceOrder)
+      }
+
+      // 2b. Insert into target order at correct position
+      let newTargetOrder: string[]
+      if (insertBeforeTaskId) {
+        const insertIndex = targetTaskIds.indexOf(insertBeforeTaskId)
+        if (insertIndex !== -1) {
+          newTargetOrder = [
+            ...targetTaskIds.slice(0, insertIndex),
+            taskId,
+            ...targetTaskIds.slice(insertIndex),
+          ]
+        } else {
+          // insertBeforeTaskId not found, append to end
+          newTargetOrder = [...targetTaskIds, taskId]
+        }
+      } else {
+        // No insertBeforeTaskId, append to end
+        newTargetOrder = [...targetTaskIds, taskId]
+      }
+
+      if (isLooseTasksProjectId(toProjectId)) {
+        setAreaTaskOrder(areaId, newTargetOrder)
+      } else {
+        setProjectTaskOrder(toProjectId, newTargetOrder)
+      }
     },
-    [updateTask, area, projects]
+    [updateTask, area, projects, tasksByProject, areaId]
   )
 
   // Combine description and body for notes
