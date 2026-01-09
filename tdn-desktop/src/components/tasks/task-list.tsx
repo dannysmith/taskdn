@@ -86,6 +86,13 @@ interface TaskListProps extends BaseTaskListProps {
   /** External editing state (for parent-controlled editing) */
   editingTaskId?: string | null
   onEditingTaskIdChange?: (taskId: string | null) => void
+  /**
+   * Task ID to auto-select and focus for editing.
+   * Used when a new task is created via view default handler.
+   */
+  autoEditItemId?: string | null
+  /** Called when auto-edit is consumed (to clear the pending ID) */
+  onAutoEditConsumed?: () => void
 }
 
 /**
@@ -116,6 +123,8 @@ export function TaskList({
   onSelectedIndexChange,
   editingTaskId: externalEditingTaskId,
   onEditingTaskIdChange,
+  autoEditItemId,
+  onAutoEditConsumed,
 }: TaskListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null)
 
@@ -205,6 +214,28 @@ export function TaskList({
       containerRef.current.focus()
     }
   }, [selectedIndex, editingTaskId])
+
+  // Auto-edit: when autoEditItemId is set, find the task and start editing
+  // This is used when a task is created via the view's default handler
+  React.useEffect(() => {
+    if (!autoEditItemId) return
+
+    // Find the task in the list
+    const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
+    if (taskIndex !== -1) {
+      // Select and edit the task
+      setSelectedIndex(taskIndex)
+      setEditingTaskId(autoEditItemId)
+      // Notify that we consumed the auto-edit
+      onAutoEditConsumed?.()
+    }
+  }, [
+    autoEditItemId,
+    tasks,
+    setSelectedIndex,
+    setEditingTaskId,
+    onAutoEditConsumed,
+  ])
 
   // Register with task creation store when this list has a selection
   // This enables Cmd+N to create tasks after the selected task via the global handler
@@ -557,7 +588,15 @@ function SortableTaskItem({
 // DraggableTaskList - Standalone component with its own DndContext
 // -----------------------------------------------------------------------------
 
-type DraggableTaskListProps = BaseTaskListProps
+interface DraggableTaskListProps extends BaseTaskListProps {
+  /**
+   * Task ID to auto-select and focus for editing.
+   * Used when a new task is created via view default handler.
+   */
+  autoEditItemId?: string | null
+  /** Called when auto-edit is consumed (to clear the pending ID) */
+  onAutoEditConsumed?: () => void
+}
 
 /**
  * A standalone task list with its own DndContext for drag-and-drop.
@@ -576,51 +615,28 @@ export function DraggableTaskList({
   getContextName,
   showScheduled = true,
   showDue = true,
+  autoEditItemId,
+  onAutoEditConsumed,
 }: DraggableTaskListProps) {
   const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
   const [editingTaskId, setEditingTaskId] = React.useState<string | null>(null)
 
-  // Register with global task creation store for Cmd+N support
-  // Uses refs to avoid re-registering on every render
-  const onCreateTaskRef = React.useRef(onCreateTask)
+  // Auto-edit: when autoEditItemId is set, find the task and start editing
+  // This is used when a task is created via the view's default handler
   React.useEffect(() => {
-    onCreateTaskRef.current = onCreateTask
-  }, [onCreateTask])
+    if (!autoEditItemId) return
 
-  React.useEffect(() => {
-    if (!onCreateTaskRef.current) return
-
-    const { registerContext, unregisterContext } =
-      useTaskCreationStore.getState()
-
-    // Stable wrapper that uses ref
-    const stableCreateHandler = (afterTaskId: string | null) => {
-      return onCreateTaskRef.current?.(afterTaskId)
+    // Find the task in the list
+    const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
+    if (taskIndex !== -1) {
+      // Select and edit the task
+      setSelectedIndex(taskIndex)
+      setEditingTaskId(autoEditItemId)
+      // Notify that we consumed the auto-edit
+      onAutoEditConsumed?.()
     }
-
-    registerContext({
-      createTaskHandler: stableCreateHandler,
-      setEditingTaskId,
-      setSelectedIndex,
-      taskCount: tasks.length,
-    })
-
-    return () => {
-      unregisterContext()
-    }
-  }, [tasks.length])
-
-  // Update selection in store when it changes
-  React.useEffect(() => {
-    const selectedTaskId =
-      selectedIndex !== null && tasks[selectedIndex]
-        ? tasks[selectedIndex].id
-        : null
-    useTaskCreationStore
-      .getState()
-      .updateSelection(selectedTaskId, selectedIndex)
-  }, [selectedIndex, tasks])
+  }, [autoEditItemId, tasks, onAutoEditConsumed])
 
   // Sensors for drag and drop - only PointerSensor
   const sensors = useSensors(
