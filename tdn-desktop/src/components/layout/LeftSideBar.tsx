@@ -1,16 +1,25 @@
-import { cn } from '@/lib/utils'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/sidebar/app-sidebar'
+import { useNavigationStore } from '@/store/navigation-store'
 
-interface LeftSideBarProps {
-  children?: React.ReactNode
-  className?: string
-}
+/**
+ * LeftSideBar - Container for the app sidebar.
+ *
+ * Wraps the AppSidebar with SidebarProvider and connects it to navigation state.
+ * Renders within MainWindow's ResizablePanel.
+ */
+export function LeftSideBar() {
+  const selection = useNavigationStore(state => state.selection)
+  const setSelection = useNavigationStore(state => state.setSelection)
 
-export function LeftSideBar({ children, className }: LeftSideBarProps) {
   return (
-    <div
-      className={cn('flex h-full flex-col border-r bg-background', className)}
-    >
-      {children}
-    </div>
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar
+        selection={selection}
+        onSelectionChange={setSelection}
+        collapsible="none"
+        className="h-full"
+      />
+    </SidebarProvider>
   )
 }
