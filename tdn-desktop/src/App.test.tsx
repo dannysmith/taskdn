@@ -7,9 +7,10 @@ import App from './App'
 describe('App', () => {
   it('renders main window layout', () => {
     render(<App />)
-    expect(
-      screen.getByRole('heading', { name: /hello world/i })
-    ).toBeInTheDocument()
+    // Default view is "Today" from navigation store
+    // Multiple "Today" elements exist (sidebar nav + view header)
+    const headings = screen.getAllByRole('heading', { name: /today/i })
+    expect(headings.length).toBeGreaterThan(0)
   })
 
   it('renders title bar with traffic light buttons', () => {
