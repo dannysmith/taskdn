@@ -139,10 +139,11 @@ Do nothing
 
 ```typescript
 interface TaskCreationState {
-  // View-level default (fallback when no task selected)
+  // === NEW: View-level default (fallback when no task selected) ===
   viewDefaultHandler: CreateTaskHandler | null
+  viewDefaultOnTaskCreated: ((taskId: string) => void) | null  // For triggering edit mode
 
-  // List-level (when a task is selected in a specific list)
+  // === NEW: List-level (when a task is selected in a specific list) ===
   activeListId: string | null
   activeListHandler: CreateTaskHandler | null
   activeListSelectedTaskId: string | null
@@ -152,8 +153,19 @@ interface TaskCreationState {
     taskCount: number
   } | null
 
-  // Actions
-  registerViewDefault: (handler: CreateTaskHandler | null) => void
+  // === LEGACY: Keep for backward compat with DraggableTaskList ===
+  createTaskHandler: CreateTaskHandler | null
+  selectedTaskId: string | null
+  setEditingTaskId: ((id: string | null) => void) | null
+  setSelectedIndex: ((index: number | null) => void) | null
+  insertInOrderHandler: ((newId: string, afterId: string | null) => void) | null
+  taskCount: number
+
+  // === NEW Actions ===
+  registerViewDefault: (config: {
+    handler: CreateTaskHandler
+    onTaskCreated?: (taskId: string) => void  // Called after creation for edit mode
+  } | null) => void
   activateList: (listId: string, context: {
     handler: CreateTaskHandler
     selectedTaskId: string
@@ -163,9 +175,26 @@ interface TaskCreationState {
   }) => void
   deactivateList: (listId: string) => void
   updateActiveListSelection: (taskId: string | null, index: number | null) => void
+
+  // === LEGACY Actions (keep working) ===
+  registerContext: (context: {...}) => void
+  unregisterContext: () => void
+  updateSelection: (taskId: string | null, index: number | null) => void
+
+  // === Unified trigger ===
   triggerCreate: () => Promise<string | undefined>
 }
 ```
+
+**Priority in `triggerCreate`:**
+```
+activeListHandler → viewDefaultHandler → createTaskHandler (legacy)
+```
+
+**Edit mode handling:**
+- Active list: `triggerCreate` calls `activeListCallbacks.setEditingTaskId(newTaskId)`
+- View default: `triggerCreate` calls `viewDefaultOnTaskCreated(newTaskId)` (view sets `pendingEditItemId`)
+- Legacy: `triggerCreate` calls `setEditingTaskId(newTaskId)` (existing behavior)
 
 ### View Default Handlers
 
@@ -225,20 +254,71 @@ When multiple lists exist (e.g., Area view with 5 project groups):
 **File:** `src/store/task-creation-store.ts`
 
 **Changes:**
-1. Add new state fields: `viewDefaultHandler`, `activeListId`, `activeListHandler`, `activeListSelectedTaskId`, `activeListCallbacks`
-2. Add new actions: `registerViewDefault`, `activateList`, `deactivateList`, `updateActiveListSelection`
-3. Refactor `triggerCreate` to check activeListHandler first, then viewDefaultHandler
-4. Keep existing API (`registerContext`, `unregisterContext`) as aliases for backward compatibility during transition
-5. Add debug logging (can be removed later) to trace registration flow
 
-**Backward Compatibility:**
-- `registerContext` → calls `activateList` with a generated ID
-- `unregisterContext` → calls `deactivateList`
-- This allows DraggableTaskList to continue working unchanged during transition
+1. **Add new state fields** (don't remove existing ones):
+   - `viewDefaultHandler: CreateTaskHandler | null`
+   - `viewDefaultOnTaskCreated: ((taskId: string) => void) | null`
+   - `activeListId: string | null`
+   - `activeListHandler: CreateTaskHandler | null`
+   - `activeListSelectedTaskId: string | null`
+   - `activeListCallbacks: {...} | null`
 
-**Testing:**
-- Unit test triggerCreate with various combinations of handlers
-- Test that deactivateList only clears matching listId
+2. **Add new actions:**
+   - `registerViewDefault(config | null)` - stores handler + onTaskCreated callback
+   - `activateList(listId, context)` - sets active list fields
+   - `deactivateList(listId)` - clears active list **only if listId matches**
+   - `updateActiveListSelection(taskId, index)` - updates selection within active list
+
+3. **Keep legacy fields and actions unchanged:**
+   - `createTaskHandler`, `selectedTaskId`, `setEditingTaskId`, etc.
+   - `registerContext()`, `unregisterContext()`, `updateSelection()`
+   - DraggableTaskList continues using these without modification
+
+4. **Refactor `triggerCreate`:**
+   ```typescript
+   triggerCreate: async () => {
+     const state = get()
+
+     // Priority: activeList → viewDefault → legacy
+     if (state.activeListHandler) {
+       const afterTaskId = state.activeListSelectedTaskId
+       const newTaskId = await state.activeListHandler(afterTaskId)
+       if (newTaskId && state.activeListCallbacks?.setEditingTaskId) {
+         state.activeListCallbacks.setEditingTaskId(newTaskId)
+       }
+       return newTaskId
+     }
+
+     if (state.viewDefaultHandler) {
+       const newTaskId = await state.viewDefaultHandler(null)  // No afterTaskId
+       if (newTaskId && state.viewDefaultOnTaskCreated) {
+         state.viewDefaultOnTaskCreated(newTaskId)  // Triggers edit mode in view
+       }
+       return newTaskId
+     }
+
+     // Legacy fallback (existing code)
+     if (state.createTaskHandler) {
+       // ... existing implementation
+     }
+
+     return undefined
+   }
+   ```
+
+5. **Optional: Add debug logging** (remove before merge):
+   ```typescript
+   console.log('[TaskCreationStore] triggerCreate:', {
+     hasActiveList: !!state.activeListHandler,
+     hasViewDefault: !!state.viewDefaultHandler,
+     hasLegacy: !!state.createTaskHandler,
+   })
+   ```
+
+**Why keep legacy fields:**
+- DraggableTaskList works today and uses the legacy API
+- Migrating it can happen later (or never - it's not broken)
+- Avoids risk of breaking working views (Inbox, Project) while fixing broken ones
 
 ---
 
@@ -251,38 +331,57 @@ When multiple lists exist (e.g., Area view with 5 project groups):
 - `src/components/views/inbox-view.tsx`
 - `src/components/views/project-view.tsx`
 
+**Key Insight: Reuse existing handlers**
+
+Each view already has a `handleCreate...` function for its default section. These handlers already:
+- Create tasks with correct defaults
+- Update order arrays (insert after or append)
+- Return the new task ID
+
+We just need to register them as view defaults and add the `onTaskCreated` callback for edit mode.
+
 **Pattern for each view:**
 ```typescript
-// At top of component
-const handleDefaultCreate = useCallback(async () => {
-  // Create task with appropriate defaults for this view
-  const newTask = await createTask.mutateAsync({...})
-  // Insert at end of default section
-  // Return task ID
-  return newTask.id
-}, [createTask, ...])
+// Views already have pendingEditItemId state for header button "+ Task"
+const [pendingEditItemId, setPendingEditItemId] = useState<string | null>(null)
 
-// Register as view default
+// Existing handler (already works, just need to register it)
+const handleCreateInDefaultSection = useCallback(async (afterTaskId: string | null) => {
+  const newTask = await createTask.mutateAsync({...})
+  // ... order update logic (append if afterTaskId is null)
+  return newTask.id
+}, [...])
+
+// NEW: Register as view default with edit mode callback
 useEffect(() => {
-  useTaskCreationStore.getState().registerViewDefault(handleDefaultCreate)
+  useTaskCreationStore.getState().registerViewDefault({
+    handler: handleCreateInDefaultSection,
+    onTaskCreated: (taskId) => setPendingEditItemId(taskId),
+  })
+  // No cleanup needed - next view will overwrite, or we'll update on re-render
+  // Explicit null on unmount is optional but cleaner:
   return () => useTaskCreationStore.getState().registerViewDefault(null)
-}, [handleDefaultCreate])
+}, [handleCreateInDefaultSection])  // Note: may fire frequently, but that's OK
 ```
 
-**View-Specific Logic:**
+**View-Specific Details:**
 
-| View | Default Create Logic |
-|------|---------------------|
-| TodayView | `scheduled: today`, insert at end of Scheduled section order |
-| AreaView | `area: areaId`, insert at end of loose tasks order |
-| NoAreaView | No project/area, insert at end of orphan tasks order |
-| InboxView | `status: inbox`, insert at end of inbox order |
-| ProjectView | `project: projectId`, insert at end of project order |
+| View | Existing Handler to Reuse | Default Section |
+|------|--------------------------|-----------------|
+| TodayView | `handleCreateScheduledTask` | Scheduled for Today |
+| AreaView | `handleCreateLooseTask` | Loose Tasks |
+| NoAreaView | `handleCreateOrphanTask` | Loose Tasks (orphan) |
+| InboxView | `handleCreateTask` | Inbox list |
+| ProjectView | `handleCreateTask` | Project task list |
 
-**Testing:**
+**Note on InboxView and ProjectView:**
+These views use DraggableTaskList which already registers via the legacy API. Adding view default registration provides a backup, but the legacy registration takes priority for these views. This is fine - both paths create in the same place.
+
+**Verification (manual):**
 - Open each view with no task selected
 - Press Cmd+N
 - Verify task created in correct section with correct defaults
+- Verify task enters edit mode (cursor in title)
 
 ---
 
@@ -291,17 +390,22 @@ useEffect(() => {
 **File:** `src/components/tasks/task-list.tsx`
 
 **Changes to TaskList component:**
-1. Add effect to activate list when selection exists
-2. Add effect to deactivate list when selection clears
-3. Use `projectId` prop as the unique list identifier
+
+1. **Add activation/deactivation effect with proper guards and cleanup:**
 
 ```typescript
 // Add near other effects in TaskList
 useEffect(() => {
   if (!onCreateTask) return
 
-  if (selectedIndex !== null && tasks[selectedIndex]) {
-    // Has selection - activate this list
+  // Guard: Ensure selectedIndex is valid (tasks array can shrink)
+  const hasValidSelection =
+    selectedIndex !== null &&
+    selectedIndex < tasks.length &&
+    tasks[selectedIndex] !== undefined
+
+  if (hasValidSelection) {
+    // Has valid selection - activate this list
     useTaskCreationStore.getState().activateList(projectId, {
       handler: (afterTaskId) => onCreateTask(afterTaskId),
       selectedTaskId: tasks[selectedIndex].id,
@@ -313,26 +417,53 @@ useEffect(() => {
     // No selection - deactivate (reverts to view default)
     useTaskCreationStore.getState().deactivateList(projectId)
   }
-}, [projectId, selectedIndex, tasks, onCreateTask, setEditingTaskId, setSelectedIndex])
 
-// Also update selection in store for accurate afterTaskId
-useEffect(() => {
-  const selectedTaskId = selectedIndex !== null && tasks[selectedIndex]
-    ? tasks[selectedIndex].id
-    : null
-  useTaskCreationStore.getState().updateActiveListSelection(selectedTaskId, selectedIndex)
-}, [selectedIndex, tasks])
+  // Cleanup: deactivate when this list unmounts
+  return () => {
+    useTaskCreationStore.getState().deactivateList(projectId)
+  }
+}, [projectId, selectedIndex, tasks.length, onCreateTask, setEditingTaskId, setSelectedIndex])
+// Note: Using tasks.length instead of tasks to reduce effect frequency
 ```
 
-**Keep existing local keyboard handler** but ensure it works correctly:
-- Local handler fires when container is focused
-- Should call `e.stopPropagation()` after handling to prevent global double-fire
-- Global handler is fallback when container not focused
+2. **Update selection tracking (separate effect for clarity):**
 
-**Testing:**
+```typescript
+useEffect(() => {
+  // Only update if this list is currently active
+  const { activeListId } = useTaskCreationStore.getState()
+  if (activeListId !== projectId) return
+
+  const selectedTaskId =
+    selectedIndex !== null && selectedIndex < tasks.length && tasks[selectedIndex]
+      ? tasks[selectedIndex].id
+      : null
+  useTaskCreationStore.getState().updateActiveListSelection(selectedTaskId, selectedIndex)
+}, [projectId, selectedIndex, tasks])
+```
+
+3. **Update local keyboard handler to prevent double-fire:**
+
+In the existing `handleKeyDown` function, after handling Cmd+N:
+```typescript
+case 'n':
+case 'N':
+  if (isMeta && onCreateTask) {
+    e.preventDefault()
+    e.stopPropagation()  // ADD: Prevent global handler from also firing
+    // ... existing create logic
+  }
+  break
+```
+
+**Why `tasks.length` in dependencies:**
+Using `tasks.length` instead of `tasks` reduces effect frequency. The activation logic only cares whether the selected task exists, not the full array contents.
+
+**Verification (manual):**
 - In Area view, select a task in a project group
 - Press Cmd+N
 - Verify task created in that project, after selected task
+- Verify task enters edit mode
 
 ---
 
@@ -340,16 +471,49 @@ useEffect(() => {
 
 **File:** `src/components/tasks/ordered-item-list.tsx`
 
-**Same pattern as Phase 3:**
-1. Add activation effect when selection exists
-2. Add deactivation effect when selection clears
-3. Use `containerId` prop as unique list identifier
-4. Ensure local keyboard handler calls `e.stopPropagation()` after handling
+**Same pattern as Phase 3, adapted for OrderedItemList:**
 
-**Testing:**
+1. **Add activation/deactivation effect:**
+
+```typescript
+useEffect(() => {
+  if (!onCreateTask) return
+
+  // OrderedItemList uses selectedItemId (string) not selectedIndex (number)
+  // Find the task if selected item is a task (not a heading)
+  const selectedTask = selectedItemId
+    ? items.find(item => item.type === 'task' && item.id === selectedItemId)
+    : null
+
+  if (selectedTask && selectedTask.type === 'task') {
+    useTaskCreationStore.getState().activateList(containerId, {
+      handler: (afterTaskId) => onCreateTask(afterTaskId),
+      selectedTaskId: selectedTask.id,
+      setEditingTaskId: setEditingItemId,  // Adapted name
+      setSelectedIndex: null,  // OrderedItemList uses ID-based selection
+      taskCount: items.filter(i => i.type === 'task').length,
+    })
+  } else {
+    useTaskCreationStore.getState().deactivateList(containerId)
+  }
+
+  return () => {
+    useTaskCreationStore.getState().deactivateList(containerId)
+  }
+}, [containerId, selectedItemId, items.length, onCreateTask, setEditingItemId])
+```
+
+2. **Update local keyboard handler:**
+
+In the existing `handleKeyDown`, add `e.stopPropagation()` after handling Cmd+N.
+
+**Note:** OrderedItemList manages selection by ID (`selectedItemId`) rather than index. The activation context adapts accordingly - `setSelectedIndex` may be null since the pattern is different.
+
+**Verification (manual):**
 - In Today view, select a task in "Scheduled for Today" section
 - Press Cmd+N
 - Verify task created in that section, after selected task
+- Verify task enters edit mode
 
 ---
 
@@ -370,58 +534,88 @@ useEffect(() => {
 
 ### Phase 6: Fix Selection Shift Bug
 
-**Investigation needed:**
+**Likely Cause:**
 
-The "selection shift" behavior (pressing Cmd+N causes a different task to appear selected) needs debugging:
+The "selection shift" (pressing Cmd+N causes a different task to appear with blue background) is probably browser `:focus` styling, not React selection state. Here's why:
 
-1. Add console logging to trace which handlers fire
-2. Check if dnd-kit's keyboard navigation is interfering
-3. Check if browser focus is moving to a sortable item's focusable element
+1. Global handler fires, calls `e.preventDefault()`, calls `triggerCreate()`
+2. `triggerCreate()` does nothing (no handler registered in current broken state)
+3. Browser's focus management moves focus to a focusable element (sortable items have `tabIndex`)
+4. CSS `:focus` styles show the "selected" appearance
+5. But React's `selectedIndex` state wasn't updated
 
-**Possible fixes:**
-- Ensure `e.preventDefault()` is called before any focus can shift
-- Add `e.stopPropagation()` to prevent event from reaching dnd-kit listeners
-- Review ARIA attributes on sortable items
+**First Fix (may resolve entirely):**
 
-**Testing:**
+Once Phases 1-4 are complete, `triggerCreate()` will actually create a task. Focus will move to the new task's title input. The bug may simply go away.
+
+**If bug persists, try:**
+
+1. **Add `e.stopPropagation()` to global handler:**
+
+```typescript
+// src/hooks/use-keyboard-shortcuts.ts
+case 'n':
+case 'N': {
+  if (e.defaultPrevented) break
+  // ... input check
+  e.preventDefault()
+  e.stopPropagation()  // ADD: Prevent event from reaching other listeners
+  useTaskCreationStore.getState().triggerCreate()
+  break
+}
+```
+
+2. **If still happening, investigate with logging:**
+
+```typescript
+// Temporarily add to global handler:
+console.log('[Cmd+N] Global handler fired', {
+  activeElement: document.activeElement,
+  target: e.target,
+})
+
+// Add to TaskList handleKeyDown:
+console.log('[Cmd+N] Local handler fired', {
+  hasFocus: containerRef.current === document.activeElement,
+})
+```
+
+3. **Nuclear option (if nothing else works):**
+
+Add `outline: none` to sortable items. This hurts accessibility but eliminates the visual bug. Only use as last resort.
+
+**Verification:**
 - Press Cmd+N in Area view with task selected
-- Verify no visual selection shift occurs
-- Verify task is created correctly
+- Verify no spurious visual selection shift
+- Verify task is created correctly and enters edit mode
 
 ---
 
-### Phase 7: Testing and Edge Cases
+### Phase 7: Manual Verification & Cleanup
 
-**Comprehensive Test Matrix:**
+**Manual Verification Checklist:**
 
-| Scenario | View | Selection State | Expected Result |
-|----------|------|----------------|-----------------|
-| 1 | Inbox | Task selected | Create after selected, edit mode |
-| 2 | Inbox | No selection | Create at end, edit mode |
-| 3 | Project (list) | Task selected | Create after selected, edit mode |
-| 4 | Project (list) | No selection | Create at end, edit mode |
-| 5 | Today - Scheduled | Task selected | Create after selected, edit mode |
-| 6 | Today - Overdue | Task selected | Create in Overdue section, after selected |
-| 7 | Today | No selection | Create in Scheduled at end |
-| 8 | Area - Loose Tasks | Task selected | Create after selected |
-| 9 | Area - Project Group | Task selected | Create in that project, after selected |
-| 10 | Area | No selection | Create in Loose Tasks at end |
-| 11 | NoArea - Loose Tasks | Task selected | Create after selected |
-| 12 | NoArea - Project Group | Task selected | Create in that project, after selected |
-| 13 | NoArea | No selection | Create in Loose Tasks at end |
+Run through these scenarios after implementation:
 
-**Edge Cases:**
+- [ ] Inbox: Cmd+N with task selected → creates after, edit mode
+- [ ] Inbox: Cmd+N with no selection → creates at end, edit mode
+- [ ] Project (list): Cmd+N with task selected → creates after, edit mode
+- [ ] Project (list): Cmd+N with no selection → creates at end, edit mode
+- [ ] Today: Cmd+N with task in Scheduled selected → creates after, edit mode
+- [ ] Today: Cmd+N with task in Overdue selected → creates in Overdue, after
+- [ ] Today: Cmd+N with no selection → creates in Scheduled at end
+- [ ] Area: Cmd+N with task in project group selected → creates in that project
+- [ ] Area: Cmd+N with no selection → creates in Loose Tasks
+- [ ] NoArea: Same as Area
+- [ ] Empty view: Cmd+N creates in default section
+- [ ] While editing task title: Cmd+N is ignored
+- [ ] Cancel with Escape: Empty task is deleted
 
-| Case | Expected Behavior |
-|------|-------------------|
-| Empty view (no tasks anywhere) | Create in default section |
-| Editing task title when Cmd+N pressed | Ignore (global handler skips inputs) |
-| Task detail panel open | Cmd+N should still work (focus not on input) |
-| Section collapsed | Create still works, section should expand |
-| Cancel new task (Escape) | Delete the empty task, restore previous selection |
+**Cleanup:**
 
-**Verify Delete-on-Cancel:**
-The existing code tracks `newlyCreatedTaskId` and `editConfirmedRef` to delete tasks canceled with Escape. Ensure this still works after changes.
+1. Remove any debug logging added during implementation
+2. Verify no console warnings/errors
+3. Run `bun run check:all` to ensure no lint/type issues
 
 ---
 
@@ -452,6 +646,51 @@ The Quick Add pane (separate window) creates tasks via different mechanism. This
 
 ---
 
+## Tests to Add (Copy to Testing Task)
+
+When adding automated tests for this feature, cover:
+
+### Unit Tests: `task-creation-store.ts`
+
+```
+- triggerCreate() with activeListHandler set → calls activeListHandler
+- triggerCreate() with only viewDefaultHandler set → calls viewDefaultHandler
+- triggerCreate() with only legacy createTaskHandler set → calls legacy handler
+- triggerCreate() with no handlers → returns undefined
+- activateList() overwrites previous activeList
+- deactivateList(id) only clears if id matches activeListId
+- deactivateList(id) is no-op if id doesn't match
+- registerViewDefault(null) clears view default
+- Edit mode callbacks are called after successful creation
+```
+
+### Integration Tests: Task Creation Flow
+
+```
+- Cmd+N in Inbox creates task with status: inbox
+- Cmd+N in Project creates task with project link
+- Cmd+N in Today creates task with scheduled: today
+- Cmd+N after selected task inserts at correct position
+- Cmd+N with no selection appends to end
+- Cmd+N while editing is ignored (input check)
+- Escape after Cmd+N deletes empty task
+- Task enters edit mode after creation
+- Blur clears selection and deactivates list
+- Clicking between lists switches active list correctly
+```
+
+### Edge Case Tests
+
+```
+- View switch during async task creation (stale callback safety)
+- Rapid Cmd+N presses (debounce/queue behavior)
+- Cmd+N on collapsed section (should work, expand section)
+- Empty view Cmd+N (creates in default section)
+- Multi-list view: selection in List A, click List B, Cmd+N → creates in List B
+```
+
+---
+
 ## Files to Modify
 
 ### Phase 1
@@ -465,7 +704,7 @@ The Quick Add pane (separate window) creates tasks via different mechanism. This
 - `src/components/views/project-view.tsx`
 
 ### Phase 3
-- `src/components/tasks/task-list.tsx`
+- `src/components/tasks/task-list.tsx` (TaskList component)
 
 ### Phase 4
 - `src/components/tasks/ordered-item-list.tsx`
@@ -474,7 +713,8 @@ The Quick Add pane (separate window) creates tasks via different mechanism. This
 - `src/components/tasks/task-list.tsx` (DraggableTaskList section)
 
 ### Phase 6
-- Debugging, may touch multiple files
+- `src/hooks/use-keyboard-shortcuts.ts` (add stopPropagation)
+- Possibly CSS files if focus styling needs adjustment
 
 ---
 
@@ -487,6 +727,22 @@ The Quick Add pane (separate window) creates tasks via different mechanism. This
 5. Cancel (Escape) before confirming deletes the new empty task
 6. Existing functionality preserved (drag-drop, reordering, etc.)
 7. Architecture supports future kanban/calendar extension
+
+---
+
+## Known Risks & Watchouts
+
+Things identified during planning that need attention during implementation:
+
+1. **Effect dependency on `tasks` array**: The `tasks` prop creates a new array reference each render. Using `tasks.length` in effect dependencies reduces churn, but verify it's sufficient for correctness.
+
+2. **Blur behavior assumption**: The plan assumes clicking in List B triggers blur on List A, which clears List A's selection. Verify this actually happens with the current TaskList implementation. If `relatedTarget` handling is buggy, the multi-list activation model breaks.
+
+3. **Effect order matters**: The selection guard in Phase 3 protects against stale `selectedIndex`, but only if our effect runs after the existing index-fix-up effect. Effects run in definition order within a component - verify our new effect is placed correctly.
+
+4. **Async handler + unmount**: If view unmounts while `triggerCreate` is awaiting the handler, callbacks may be stale. React setState on unmounted components is a no-op (with warning), so this should be safe, but watch for warnings in console.
+
+5. **View default handler changes frequently**: The handler depends on order arrays that change often. This causes frequent `registerViewDefault` calls. Should be cheap (Zustand updates are fast), but watch for performance issues in complex views.
 
 ---
 
