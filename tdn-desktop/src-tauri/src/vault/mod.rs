@@ -30,4 +30,4 @@ pub use scanner::{
     parse_area_file, parse_project_file, parse_task_file, scan_areas, scan_projects, scan_tasks,
     VaultConfig,
 };
-pub use writer::{create_project_file, create_task_file, update_task};
+pub use writer::{create_project_file, create_task_file, update_project, update_task};

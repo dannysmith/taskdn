@@ -18,6 +18,7 @@ import {
   type CreateTaskOptions,
   type CreateProjectOptions,
   type TaskUpdate,
+  type ProjectUpdate,
   type VaultError,
 } from '@/lib/tauri-bindings'
 
@@ -352,6 +353,109 @@ export function useCreateProject() {
       queryClient.setQueryData(
         vaultQueryKeys.project(newProject.id),
         newProject
+      )
+    },
+  })
+}
+
+/**
+ * Hook to update an existing project.
+ */
+export function useUpdateProject() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (update: ProjectUpdate): Promise<Project> => {
+      logger.debug('Updating project', { id: update.id })
+      const result = await commands.updateProject(update)
+
+      if (result.status === 'error') {
+        throw new Error(handleVaultError(result.error, 'Updating project'))
+      }
+
+      logger.info('Project updated', { id: result.data.id })
+      return result.data
+    },
+    onMutate: async update => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: vaultQueryKeys.projects() })
+      await queryClient.cancelQueries({
+        queryKey: vaultQueryKeys.project(update.id),
+      })
+
+      // Snapshot the previous values
+      const previousProjects = queryClient.getQueryData<Project[]>(
+        vaultQueryKeys.projects()
+      )
+      const previousProject = queryClient.getQueryData<Project>(
+        vaultQueryKeys.project(update.id)
+      )
+
+      // Optimistically update the project
+      if (previousProject) {
+        const optimisticProject: Project = {
+          ...previousProject,
+          ...(update.title !== null && { title: update.title }),
+          ...(update.status !== null && { status: update.status }),
+          ...(update.area !== null && { area: update.area || null }),
+          ...(update.description !== null && {
+            description: update.description || null,
+          }),
+          ...(update.startDate !== null && {
+            startDate: update.startDate || null,
+          }),
+          ...(update.endDate !== null && { endDate: update.endDate || null }),
+          ...(update.body !== null && { body: update.body }),
+        }
+
+        queryClient.setQueryData(
+          vaultQueryKeys.project(update.id),
+          optimisticProject
+        )
+
+        // Update the project in the list
+        queryClient.setQueryData<Project[]>(
+          vaultQueryKeys.projects(),
+          oldProjects => {
+            if (!oldProjects) return oldProjects
+            return oldProjects.map(p =>
+              p.id === update.id ? optimisticProject : p
+            )
+          }
+        )
+      }
+
+      return { previousProjects, previousProject }
+    },
+    onError: (_error, update, context) => {
+      // Rollback on error
+      if (context?.previousProjects) {
+        queryClient.setQueryData(
+          vaultQueryKeys.projects(),
+          context.previousProjects
+        )
+      }
+      if (context?.previousProject) {
+        queryClient.setQueryData(
+          vaultQueryKeys.project(update.id),
+          context.previousProject
+        )
+      }
+    },
+    onSuccess: updatedProject => {
+      // Update with the actual server response
+      queryClient.setQueryData(
+        vaultQueryKeys.project(updatedProject.id),
+        updatedProject
+      )
+      queryClient.setQueryData<Project[]>(
+        vaultQueryKeys.projects(),
+        oldProjects => {
+          if (!oldProjects) return oldProjects
+          return oldProjects.map(p =>
+            p.id === updatedProject.id ? updatedProject : p
+          )
+        }
       )
     },
   })

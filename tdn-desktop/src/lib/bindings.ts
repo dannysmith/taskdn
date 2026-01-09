@@ -316,6 +316,17 @@ async updateTask(update: TaskUpdate) : Promise<Result<Task, VaultError>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Update an existing project
+ */
+async updateProject(update: ProjectUpdate) : Promise<Result<Project, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_project", { update }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -483,6 +494,10 @@ body: string }
  * Project status enum matching S1 spec Section 4.5
  */
 export type ProjectStatus = "planning" | "ready" | "blocked" | "in-progress" | "paused" | "done"
+/**
+ * Fields that can be updated on a project
+ */
+export type ProjectUpdate = { id: string; title: string | null; status: ProjectStatus | null; area: string | null; description: string | null; startDate: string | null; endDate: string | null; body: string | null }
 /**
  * Error types for recovery operations (typed for frontend matching)
  */

@@ -12,7 +12,7 @@ use std::path::Path;
 use crate::vault::wikilink::ensure_wikilink;
 use crate::vault::{
     parse_project_file, parse_task_file, CreateProjectOptions, CreateTaskOptions, Project,
-    ProjectStatus, Task, TaskStatus, TaskUpdate, VaultError,
+    ProjectStatus, ProjectUpdate, Task, TaskStatus, TaskUpdate, VaultError,
 };
 use chrono::Utc;
 use gray_matter::{engine::YAML, Matter};
@@ -550,6 +550,92 @@ pub fn update_task(task: &Task, update: TaskUpdate) -> Result<Task, VaultError> 
 
     // Parse and return the updated task
     parse_task_file(&task.path)
+}
+
+/// Update a project by ID.
+pub fn update_project(project: &Project, update: ProjectUpdate) -> Result<Project, VaultError> {
+    let mut updates = Vec::new();
+
+    if let Some(title) = update.title {
+        updates.push(FieldUpdate {
+            field: "title".to_string(),
+            value: Some(title),
+        });
+    }
+
+    if let Some(status) = update.status {
+        let status_str = match status {
+            ProjectStatus::Planning => "planning",
+            ProjectStatus::Ready => "ready",
+            ProjectStatus::Blocked => "blocked",
+            ProjectStatus::InProgress => "in-progress",
+            ProjectStatus::Paused => "paused",
+            ProjectStatus::Done => "done",
+        };
+        updates.push(FieldUpdate {
+            field: "status".to_string(),
+            value: Some(status_str.to_string()),
+        });
+    }
+
+    if let Some(area) = update.area {
+        updates.push(FieldUpdate {
+            field: "area".to_string(),
+            value: if area.is_empty() { None } else { Some(area) },
+        });
+    }
+
+    if let Some(description) = update.description {
+        updates.push(FieldUpdate {
+            field: "description".to_string(),
+            value: if description.is_empty() {
+                None
+            } else {
+                Some(description)
+            },
+        });
+    }
+
+    if let Some(start_date) = update.start_date {
+        updates.push(FieldUpdate {
+            field: "start-date".to_string(),
+            value: if start_date.is_empty() {
+                None
+            } else {
+                Some(start_date)
+            },
+        });
+    }
+
+    if let Some(end_date) = update.end_date {
+        updates.push(FieldUpdate {
+            field: "end-date".to_string(),
+            value: if end_date.is_empty() {
+                None
+            } else {
+                Some(end_date)
+            },
+        });
+    }
+
+    if !updates.is_empty() {
+        update_file_fields(&project.path, updates)?;
+    }
+
+    // Handle body update separately (if provided)
+    if let Some(new_body) = update.body {
+        let content = fs::read_to_string(&project.path)
+            .map_err(|e| VaultError::read_error(&project.path, e.to_string()))?;
+
+        let (mapping, _old_body) = parse_file_parts(&content)?;
+        let frontmatter = serialize_yaml(&mapping)?;
+        let new_content = reconstruct_file(&frontmatter, &new_body);
+
+        atomic_write(Path::new(&project.path), &new_content)?;
+    }
+
+    // Parse and return the updated project
+    parse_project_file(&project.path)
 }
 
 #[cfg(test)]

@@ -1,6 +1,11 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { arrayMove } from '@dnd-kit/sortable'
-import { useVaultData, useVaultHelpers } from '@/services/vault'
+import {
+  useVaultData,
+  useVaultHelpers,
+  useUpdateProject,
+} from '@/services/vault'
+import { useDisplayOrderStore } from '@/store/display-order-store'
 import type { SidebarOrder } from '@/types/sidebar-order'
 import { ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
 
@@ -8,47 +13,46 @@ import { ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
  * Manages sidebar display order separately from entity data.
  *
  * This hook tracks the visual ordering of areas and projects in the sidebar,
- * allowing drag-and-drop reordering without modifying the underlying entities.
+ * allowing drag-and-drop reordering without modifying the underlying entities
+ * (except when moving projects to a different area, which updates the vault).
  *
- * Adapted from the mockup to use TanStack Query hooks (useVaultData)
- * instead of synchronous AppDataContext.
+ * Order state is stored in Zustand (session-persistent, survives unmount).
+ * When no manual reorder has occurred (null), items display in natural order.
  *
- * The order state tracks manual reordering. When no manual reorder has occurred,
- * items are displayed in their natural order from the data source.
- *
- * @returns Object with ordered data and reorder functions
+ * Key behaviors:
+ * - Reordering within an area: Updates visual order only (Zustand)
+ * - Moving project to different area: Updates visual order AND calls mutation
+ *   to persist the area change to the vault file
  */
 export function useSidebarOrder() {
   const { areas, projects } = useVaultData()
   const { getActiveAreas } = useVaultHelpers()
+  const updateProjectMutation = useUpdateProject()
 
   // Get active (non-archived) areas
   const activeAreas = getActiveAreas()
 
-  // Manual reorder overrides (null = use natural order from data)
-  const [areaOrderOverride, setAreaOrderOverride] = useState<string[] | null>(
-    null
+  // Get order state from Zustand (using selector syntax for performance)
+  const sidebarAreaOrder = useDisplayOrderStore(state => state.sidebarAreaOrder)
+  const sidebarProjectOrder = useDisplayOrderStore(
+    state => state.sidebarProjectOrder
   )
-  const [projectOrderOverride, setProjectOrderOverride] = useState<Record<
-    string,
-    string[]
-  > | null>(null)
 
   // Compute effective area order
   const effectiveAreaOrder = useMemo(() => {
-    if (areaOrderOverride) {
+    if (sidebarAreaOrder) {
       // Filter to only include IDs that still exist in data
-      return areaOrderOverride.filter(id => activeAreas.some(a => a.id === id))
+      return sidebarAreaOrder.filter(id => activeAreas.some(a => a.id === id))
     }
     return activeAreas.map(a => a.id)
-  }, [areaOrderOverride, activeAreas])
+  }, [sidebarAreaOrder, activeAreas])
 
   // Compute effective project order for a container
   const getEffectiveProjectOrder = useCallback(
     (containerId: string): string[] => {
-      if (projectOrderOverride?.[containerId]) {
+      if (sidebarProjectOrder?.[containerId]) {
         // Filter to only include IDs that still exist
-        return projectOrderOverride[containerId].filter(id =>
+        return sidebarProjectOrder[containerId].filter(id =>
           projects.some(p => p.id === id)
         )
       }
@@ -62,7 +66,7 @@ export function useSidebarOrder() {
       if (!area) return []
       return projects.filter(p => p.area?.includes(area.title)).map(p => p.id)
     },
-    [projectOrderOverride, projects, areas]
+    [sidebarProjectOrder, projects, areas]
   )
 
   // Build order object for compatibility
@@ -76,7 +80,7 @@ export function useSidebarOrder() {
     return { areaOrder: effectiveAreaOrder, projectOrder }
   }, [effectiveAreaOrder, activeAreas, getEffectiveProjectOrder])
 
-  // Reorder areas
+  // Reorder areas (visual order only)
   const reorderAreas = useCallback(
     (activeId: string, overId: string) => {
       const currentOrder = effectiveAreaOrder
@@ -84,12 +88,13 @@ export function useSidebarOrder() {
       const newIndex = currentOrder.indexOf(overId)
       if (oldIndex === -1 || newIndex === -1) return
 
-      setAreaOrderOverride(arrayMove(currentOrder, oldIndex, newIndex))
+      const { setSidebarAreaOrder } = useDisplayOrderStore.getState()
+      setSidebarAreaOrder(arrayMove(currentOrder, oldIndex, newIndex))
     },
     [effectiveAreaOrder]
   )
 
-  // Reorder projects within the same container
+  // Reorder projects within the same container (visual order only)
   const reorderProjectsInArea = useCallback(
     (containerId: string, activeId: string, overId: string) => {
       const containerProjects = getEffectiveProjectOrder(containerId)
@@ -97,16 +102,17 @@ export function useSidebarOrder() {
       const newIndex = containerProjects.indexOf(overId)
       if (oldIndex === -1 || newIndex === -1) return
 
-      setProjectOrderOverride(prev => ({
-        ...prev,
-        [containerId]: arrayMove(containerProjects, oldIndex, newIndex),
-      }))
+      const { setSidebarProjectOrder } = useDisplayOrderStore.getState()
+      setSidebarProjectOrder(
+        containerId,
+        arrayMove(containerProjects, oldIndex, newIndex)
+      )
     },
     [getEffectiveProjectOrder]
   )
 
-  // Move project to a different area (updates display order only for now)
-  // TODO: Call updateProjectArea mutation to persist the change
+  // Move project to a different area
+  // This updates BOTH visual order AND persists the area change to vault
   const moveProjectToArea = useCallback(
     (
       projectId: string,
@@ -127,17 +133,39 @@ export function useSidebarOrder() {
       const targetIndex = insertIndex ?? toProjects.length
       toProjects.splice(targetIndex, 0, projectId)
 
-      setProjectOrderOverride(prev => ({
-        ...prev,
+      // Update visual order in Zustand
+      const { setSidebarProjectOrderBatch } = useDisplayOrderStore.getState()
+      setSidebarProjectOrderBatch({
         [fromContainerId]: fromProjects,
         [toContainerId]: toProjects,
-      }))
+      })
 
-      // TODO: Call updateProjectArea mutation to persist the change
-      // const newAreaId = toContainerId === ORPHAN_CONTAINER_ID ? null : toContainerId
-      // updateProjectArea(projectId, newAreaId)
+      // Persist the area change to vault
+      // Area value should be the wikilink format, or empty string to clear
+      let newAreaValue: string
+      if (toContainerId === ORPHAN_CONTAINER_ID) {
+        // Moving to orphan = clearing the area
+        newAreaValue = ''
+      } else {
+        // Moving to an area = set area to the area's title (will be converted to wikilink)
+        const targetArea = areas.find(a => a.id === toContainerId)
+        newAreaValue = targetArea?.title ?? ''
+      }
+
+      // Call mutation to update the project file
+      updateProjectMutation.mutate({
+        id: projectId,
+        area: newAreaValue,
+        // All other fields null = don't change
+        title: null,
+        status: null,
+        description: null,
+        startDate: null,
+        endDate: null,
+        body: null,
+      })
     },
-    [getEffectiveProjectOrder]
+    [getEffectiveProjectOrder, areas, updateProjectMutation]
   )
 
   // Get ordered areas (returns Area objects in display order)

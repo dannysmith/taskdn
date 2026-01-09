@@ -375,13 +375,86 @@ Within each:
 6. Test in isolation
 7. Test in context
 
-## Checklist
+## Current Progress
+
+### What's Done ✅
+
+**Sidebar:**
+
+- [x] Copy sidebar components (app-sidebar.tsx, draggable-area.tsx, draggable-project.tsx)
+- [x] Integrate with MainWindow's LeftSideBar slot
+- [x] Wire navigation state (navigation-store.ts)
+- [x] Visual DnD works (reorder areas, reorder projects, move projects between areas)
+- [x] Fixed project filtering bug (wikilink vs ID matching)
+- [x] Fixed styling (fill container, consistent icons, removed internal collapse)
+
+**InboxView:**
+
+- [x] InboxView component with task list
+- [x] Keyboard navigation (arrows, Enter to edit, Space to toggle, Escape)
+- [x] Cmd+N creates new task with immediate focus/edit mode
+- [x] Async mutations work correctly with mutateAsync
+
+**Task Components (partial):**
+
+- [x] task-status-checkbox.tsx
+- [x] task-item.tsx (with inline editing, selection, metadata display)
+- [x] task-list.tsx (DraggableTaskList with dnd-kit)
+- [x] date-utils.ts (formatRelativeDate, isOverdue, isToday)
+
+**Dependencies:**
+
+- [x] @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/modifiers already added
+
+### What's Broken/Incomplete ⚠️
+
+**Disk persistence for order (deferred):**
+
+- Order is session-persistent (survives component unmount via Zustand)
+- Order is lost on app restart (disk persistence not yet implemented)
+- Architecture is ready - just needs Rust commands + TanStack Query hooks
+
+### What Was Fixed ✅ (2026-01-09)
+
+**State Management & Mutations:**
+
+1. **Added `update_project` Rust command** (src-tauri/src/commands/vault.rs)
+   - Follows `update_task` pattern
+   - Uses existing `ProjectUpdate` struct
+   - Updates area, status, title, description, dates, body
+
+2. **Added `useUpdateProject` hook** (src/services/vault.ts)
+   - Full optimistic updates with rollback
+   - Follows `useUpdateTask` pattern
+
+3. **Created `display-order-store.ts` (Zustand)**
+   - `sidebarAreaOrder`, `sidebarProjectOrder` for sidebar
+   - `inboxOrder` for inbox view
+   - Session-persistent (survives component unmount)
+
+4. **Fixed `use-sidebar-order.ts`**
+   - Now uses Zustand store instead of useState
+   - `moveProjectToArea()` now calls `useUpdateProject.mutate()` to persist area change
+
+5. **Fixed `use-inbox-order.ts`**
+   - Now uses Zustand store instead of useState
+
+### Future: Disk Persistence for Order
+
+When needed:
+
+- Rust `DisplayOrderState` struct
+- `load_display_order`/`save_display_order` commands
+- TanStack Query wrapper
+- Save on quit, periodic, debounced after changes
+
+## Remaining Checklist
 
 ### Core Setup
 
-- [ ] Add DnD dependencies (dnd-kit)
+- [x] Add DnD dependencies (dnd-kit)
 - [ ] Add Milkdown dependencies
-- [ ] Set up order persistence system
+- [x] Set up order persistence system (session-level via Zustand; disk persistence deferred)
 - [ ] Set up heading persistence system
 
 ### UI Components Deferred from Task 1
@@ -395,14 +468,15 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 
 ### Sidebar
 
-- [ ] Copy sidebar components
-- [ ] Integrate with MainWindow
-- [ ] Wire navigation state
-- [ ] Test area/project DnD
+- [x] Copy sidebar components
+- [x] Integrate with MainWindow
+- [x] Wire navigation state
+- [x] moveProjectToArea calls updateProject mutation (persists to vault)
+- [x] Order hooks use Zustand store (session-persistent)
 
 ### Views
 
-- [ ] InboxView
+- [x] InboxView (working, order session-persistent)
 - [ ] TodayView (with headings)
 - [ ] ProjectView (list mode)
 - [ ] ProjectView (kanban mode)
@@ -415,10 +489,11 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 
 ### Task Components
 
-- [ ] TaskItem, TaskListItem, TaskList
-- [ ] TaskStatusCheckbox, TaskStatusPill
+- [x] TaskItem, TaskList (partial - DraggableTaskList done)
+- [x] TaskStatusCheckbox
+- [ ] TaskStatusPill
 - [ ] TaskDetailPanel
-- [ ] TaskDndContext
+- [ ] TaskDndContext (shared context for cross-list DnD)
 - [ ] Section components
 - [ ] MilkdownEditor integration
 
@@ -437,19 +512,21 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 
 ### Order Hooks
 
-- [ ] useSidebarOrder with persistence
-- [ ] useTodayOrder with persistence
-- [ ] useInboxOrder with persistence
-- [ ] useCalendarOrder with persistence
-- [ ] useProjectOrder with persistence (per-project task ordering)
-- [ ] useAreaOrder with persistence (per-area task ordering)
-- [ ] useKanbanOrder with persistence (per-view column ordering)
+- [x] useSidebarOrder uses Zustand store (session-persistent)
+- [x] useInboxOrder uses Zustand store (session-persistent)
+- [x] display-order-store.ts created (Zustand store for all order state)
+- [ ] useTodayOrder with Zustand
+- [ ] useCalendarOrder with Zustand
+- [ ] useProjectOrder with Zustand (per-project task ordering)
+- [ ] useAreaOrder with Zustand (per-area task ordering)
+- [ ] useKanbanOrder with Zustand (per-view column ordering)
+- [ ] Disk persistence layer (Rust commands + TanStack Query) - deferred
 
 ### Final Integration
 
 - [ ] All views accessible from sidebar
 - [ ] TaskDetailPanel opens from any context
-- [ ] All DnD operations persist
+- [ ] All DnD operations persist to correct location (order→settings, entity changes→vault)
 - [ ] Order persists across restarts
 - [ ] External file changes update UI
 - [ ] Run `bun run check:all`
