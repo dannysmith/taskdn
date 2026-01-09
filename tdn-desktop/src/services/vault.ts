@@ -608,16 +608,27 @@ export function useVaultHelpers() {
     getAreaById: (id: string) => areasById.get(id),
 
     // Relationship helpers
-    getProjectsByAreaId: (areaId: string) =>
-      projects.filter(p => p.area?.includes(areaId)),
+    // Note: Wikilinks use TITLES (e.g., "[[Finance]]"), not hash IDs.
+    // To match, look up the entity by ID, then use its title in includes().
+    getProjectsByAreaId: (areaId: string) => {
+      const area = areasById.get(areaId)
+      if (!area) return []
+      return projects.filter(p => p.area?.includes(area.title))
+    },
 
     getOrphanProjects: () => projects.filter(p => !p.area),
 
-    getTasksByProjectId: (projectId: string) =>
-      tasks.filter(t => t.project?.includes(projectId)),
+    getTasksByProjectId: (projectId: string) => {
+      const project = projectsById.get(projectId)
+      if (!project) return []
+      return tasks.filter(t => t.project?.includes(project.title))
+    },
 
-    getAreaDirectTasks: (areaId: string) =>
-      tasks.filter(t => t.area?.includes(areaId) && !t.project),
+    getAreaDirectTasks: (areaId: string) => {
+      const area = areasById.get(areaId)
+      if (!area) return []
+      return tasks.filter(t => t.area?.includes(area.title) && !t.project)
+    },
 
     getOrphanTasks: () => tasks.filter(t => !t.project && !t.area),
 
@@ -628,7 +639,9 @@ export function useVaultHelpers() {
 
     // Stats helpers
     getProjectCompletion: (projectId: string) => {
-      const projectTasks = tasks.filter(t => t.project?.includes(projectId))
+      const project = projectsById.get(projectId)
+      if (!project) return 0
+      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
       if (projectTasks.length === 0) return 0
 
       const completedCount = projectTasks.filter(
@@ -639,7 +652,9 @@ export function useVaultHelpers() {
     },
 
     getTaskCounts: (projectId: string) => {
-      const projectTasks = tasks.filter(t => t.project?.includes(projectId))
+      const project = projectsById.get(projectId)
+      if (!project) return { taskCount: 0, completedTaskCount: 0 }
+      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
       const completedCount = projectTasks.filter(
         t => t.status === 'done' || t.status === 'dropped'
       ).length
