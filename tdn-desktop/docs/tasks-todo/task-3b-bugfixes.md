@@ -6,6 +6,7 @@ After implementing Task 3 (UI Integration) we have a few bugfixes and tweaks to 
 - [x] Escape works for cancelling (ie deleting) newly created tasks.
 - [ ] Cmd + N tasks (see seperate task doc)
 - [ ] In the mockup we originally had the right sidebar only appear when the little chevron in a circle was clicked. Now it's entirely contained in our RightsideBar component, Which can be toggled to be visible and hidden with a keyboard shortcut, we should leave the Chevron functionality, but we should also make it so that if a task is currently selected (in any kind of view) The right sidebar shows the currently selected task. If no task is selected, it should simply show the last task that was selected, i.e. no change to current behavior.
+- [ ] The preferences JSON file includes an "ignore" fields, which lists all the filepaths which should be ignored in the tasks_dir, areas_dir and projects_dir. We should make sure that all of the Rust scanners properly ignore these files. Um so I guess we should be passing in this ignore list to Rust in the same way we pass in the other configuration. Uh beyond doing that, we shouldn't need to care about this at all when it comes to TypeScript or JavaScript because we're not gonna get files that match those returned at all. Um But what we do need to do is update the preferences pane, probably just in the general pane, so that users can add or remove these ignored fields, And this should obviously just read and write from the preferences file as you'd expect. 
 - [ ] UI Cleaning - user directed
 
 ## Reviews & Cleanup
