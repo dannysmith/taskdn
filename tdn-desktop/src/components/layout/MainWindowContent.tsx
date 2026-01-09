@@ -4,6 +4,7 @@ import { useViewMode, type ViewModeKey } from '@/store/view-mode-store'
 import { useVaultData, useUpdateProject } from '@/services/vault'
 import { ViewHeader } from './ViewHeader'
 import {
+  AreaView,
   CalendarView,
   InboxView,
   ProjectView,
@@ -117,7 +118,11 @@ export function MainWindowContent() {
       return <ProjectView projectId={selection.id} />
     }
 
-    // Area or no-area views
+    if (selection.type === 'area') {
+      return <AreaView areaId={selection.id} />
+    }
+
+    // no-area view
     return (
       <PlaceholderView
         message={`${getViewTitle()} view coming soon`}

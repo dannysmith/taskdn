@@ -37,6 +37,38 @@ import { HeadingDragPreview } from '@/components/headings'
  */
 
 // -----------------------------------------------------------------------------
+// Loose Tasks Helpers
+// -----------------------------------------------------------------------------
+
+const LOOSE_TASKS_PREFIX = '__loose-tasks-'
+
+/**
+ * Creates a pseudo-project ID for loose tasks in an area.
+ * Used to integrate loose tasks with the cross-project drag system.
+ */
+export function getLooseTasksProjectId(areaId: string): string {
+  return `${LOOSE_TASKS_PREFIX}${areaId}__`
+}
+
+/**
+ * Checks if a project ID is a loose tasks pseudo-project.
+ */
+export function isLooseTasksProjectId(projectId: string): boolean {
+  return projectId.startsWith(LOOSE_TASKS_PREFIX)
+}
+
+/**
+ * Extracts the area ID from a loose tasks pseudo-project ID.
+ * Returns undefined if not a loose tasks project ID.
+ */
+export function getAreaIdFromLooseTasksProjectId(
+  projectId: string
+): string | undefined {
+  if (!isLooseTasksProjectId(projectId)) return undefined
+  return projectId.slice(LOOSE_TASKS_PREFIX.length, -2) // Remove prefix and trailing __
+}
+
+// -----------------------------------------------------------------------------
 // Types
 // -----------------------------------------------------------------------------
 

@@ -608,6 +608,66 @@ Within each:
    - Added kanbanColumnOrder storage
    - Added setKanbanColumnOrder action
 
+**ProjectView & WeekView Kanban Mode (2026-01-09):**
+
+1. **Wired ProjectView kanban mode** (src/components/views/project-view.tsx)
+   - Added useViewMode('project') for list/kanban toggle
+   - Added useCollapsedColumns for column state
+   - Added useKanbanOrder for per-column ordering
+   - Handlers: handleStatusChange, handleScheduledChange, handleDueChange
+   - View switches between DraggableTaskList and KanbanBoard
+
+2. **Wired WeekView kanban mode** (src/components/views/week-view.tsx)
+   - Added useViewMode('this-week') for calendar/kanban toggle
+   - Filters tasks to those with scheduled/due dates in current week
+   - Added getProjectName/getAreaName helpers for WikiLink format
+   - Navigation handlers for clicking project/area names in kanban cards
+   - View switches between WeekCalendar and KanbanBoard
+
+3. **Added ViewToggle to MainWindowContent** (src/components/layout/MainWindowContent.tsx)
+   - HeaderViewToggle helper component uses useViewMode hook
+   - ViewToggle passed via actions prop to ViewHeader
+   - Shows toggle for: this-week (calendar/kanban), project (list/kanban), area (list/kanban)
+
+4. **Fixed Kanban DnD "snap back" bug** (src/components/kanban/kanban-dnd-context.tsx)
+   - Set dropAnimation={null} on DragOverlay
+   - Prevents overlay animating back to original position when moving between columns
+
+**AreaView Implementation (2026-01-09):**
+
+1. **Added loose tasks helpers** (src/components/tasks/task-dnd-context.tsx)
+   - `getLooseTasksProjectId(areaId)` - Creates pseudo-project ID for area-direct tasks
+   - `isLooseTasksProjectId(projectId)` - Checks if ID is loose tasks pseudo-ID
+   - `getAreaIdFromLooseTasksProjectId(projectId)` - Extracts areaId from pseudo-ID
+
+2. **Added ProjectHeader component** (src/components/tasks/project-header.tsx)
+   - Collapsible header row for projects in list views
+   - Shows expand/collapse chevron, status indicator, title, status badge
+   - Click to expand/collapse, double-click to navigate to project
+
+3. **Added ProjectTaskGroup component** (src/components/tasks/project-task-group.tsx)
+   - Collapsible project header with task list underneath
+   - EmptyProjectDropZone for cross-project drag-and-drop
+   - Used in AreaView list mode
+
+4. **Added useAreaOrder hook** (src/hooks/use-area-order.ts)
+   - Per-area task ordering using Zustand display-order-store
+   - Session-persistent ordering for loose tasks
+
+5. **Updated display-order-store.ts**
+   - Added `areaTaskOrder` state and `setAreaTaskOrder` action
+
+6. **Added AreaView component** (src/components/views/area-view.tsx)
+   - Two view modes: list and kanban
+   - List mode: CollapsibleNotesSection + Active Projects grid + ProjectTaskGroup for each project + SectionTaskGroup for loose tasks
+   - Kanban mode: AreaKanbanBoard with project swimlanes
+   - Cross-project drag-and-drop via TaskDndContext
+   - Dragging between projects updates task.project WikiLink
+
+7. **Wired AreaView into MainWindowContent**
+   - AreaView renders when selection.type === 'area'
+   - ViewToggle shows for area views (list/kanban modes)
+
 ### Future: Disk Persistence for Order
 
 When needed:
@@ -646,12 +706,12 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] InboxView (working, order session-persistent)
 - [x] TodayView (three sections: Scheduled, Overdue/Due, Became Available)
 - [x] ProjectView (list mode) - uses useProjectOrder hook, status pill, collapsible notes
-- [ ] ProjectView (kanban mode)
-- [ ] AreaView (list mode)
-- [ ] AreaView (kanban mode)
+- [x] ProjectView (kanban mode) - uses KanbanBoard, useKanbanOrder, view toggle in header
+- [x] AreaView (list mode) - uses ProjectTaskGroup, SectionTaskGroup, TaskDndContext for cross-project DnD
+- [x] AreaView (kanban mode) - uses AreaKanbanBoard with project swimlanes
 - [ ] NoAreaView
 - [x] WeekView (calendar mode) - 7-day column layout with DnD scheduling
-- [ ] WeekView (kanban mode)
+- [x] WeekView (kanban mode) - filters to this week's tasks, view toggle in header
 - [x] CalendarView - month grid with DnD scheduling
 
 ### Task Components
@@ -700,7 +760,7 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] useTodayOrder with Zustand (per-section task ordering)
 - [x] useCalendarOrder hook (per-day task ordering for calendar views)
 - [x] useProjectOrder with Zustand (per-project task ordering)
-- [ ] useAreaOrder with Zustand (per-area task ordering)
+- [x] useAreaOrder with Zustand (per-area task ordering)
 - [x] useKanbanOrder with Zustand (per-view column ordering)
 - [ ] Disk persistence layer (Rust commands + TanStack Query) - deferred
 
