@@ -4,7 +4,7 @@
 
 Cmd+N should create a new task in the current view context. When a task is selected, create below it. When nothing is selected, create in the view's default section.
 
-**Current Status:** Broken in most views. Only works reliably in Inbox and Project views.
+**Current Status:** Partially implemented. Core issues remain - see "Remaining Issues" section at bottom.
 
 ---
 
@@ -817,16 +817,134 @@ _Space for tracking progress across sessions. Update after each work session._
     - No need for backwards compatibility - just make it work
     - Start with ProjectView (simpler, no cross-container drag) then apply to AreaView
 
-### Session 3: [Date]
+### Session 3: 2026-01-09
 
-- [ ] Phase 5: Migrate DraggableTaskList to new API (required)
-  - [ ] Fix ProjectView first (simpler case)
-  - [ ] Apply fix to AreaView
-  - [ ] Remove legacy API from task-creation-store if no longer needed
-- [ ] Phase 6 complete (selection shift bug - may be fixed by Phase 5)
-- [ ] Notes:
+- [x] Phase 5: Migrate DraggableTaskList to new API
+  - [x] Removed legacy `registerContext`/`unregisterContext` from DraggableTaskList
+  - [x] Added `autoEditItemId` + `onAutoEditConsumed` props to DraggableTaskList
+  - [x] Added `autoEditItemId` + `onAutoEditConsumed` props to TaskList
+  - [x] Updated SectionTaskGroup to pass these props to TaskList and DraggableTaskList
+  - [x] Added view default handler to ProjectView with `pendingEditItemId` state
+  - [ ] Legacy API fields kept in task-creation-store (not removed, but no longer used)
+- [ ] Phase 6: Selection shift bug - NOT fixed
+- Notes:
+  - Removed legacy registration, added `autoEditItemId` pattern for view-default case
+  - All checks pass
+  - **Manual testing revealed core issues remain** (see "Remaining Issues" section below)
 
 ### Session 4: [Date]
 
-- [ ] Phase 7 testing complete
+- [ ] Debug and fix remaining issues
 - [ ] Notes:
+
+---
+
+## Remaining Issues (Post Session 3)
+
+Manual testing after Session 3 revealed that the core problems were NOT fixed. The architectural changes made (dual-handler pattern, autoEditItemId) are likely correct foundations, but something else is preventing them from working.
+
+### Test Results
+
+| View | With Task Selected | Without Selection |
+|------|-------------------|-------------------|
+| Inbox | Not tested | Cmd+N does nothing |
+| Project (list) | Selection shift bug (next task gets focus styling, not actually selected) | Cmd+N does nothing |
+| Today | Works correctly | Works correctly |
+| Area | Same as Project - selection shift bug | Cmd+N does nothing |
+| Empty Project | N/A | Cmd+N does nothing |
+
+### What Works
+
+- **TodayView**: Both with-selection and no-selection cases work correctly
+- This view uses `OrderedItemList` and `TaskList` via `SectionTaskGroup`
+- Has view default registration for "Scheduled for Today" section
+
+### What Doesn't Work
+
+1. **InboxView** - No selection case does nothing
+   - Likely missing view default registration (was never added)
+   - Uses `DraggableTaskList`
+
+2. **ProjectView** - Both cases broken
+   - Selection shift bug persists (different task gets browser focus styling)
+   - No-selection case does nothing despite view default being added
+   - Uses `DraggableTaskList`
+
+3. **AreaView** - Same as ProjectView
+   - Selection shift bug in project groups
+   - No-selection should work (view default was already there for Loose Tasks) but may not be
+   - Uses `TaskList` via `ProjectTaskGroup` for project groups
+   - Uses `TaskList` via `SectionTaskGroup` for Loose Tasks
+
+### Key Observations
+
+1. **TodayView works, ProjectView/AreaView don't** - The difference:
+   - TodayView uses `TaskList` directly (via `SectionTaskGroup`)
+   - ProjectView uses `DraggableTaskList` which wraps `TaskList`
+   - AreaView uses both: `TaskList` for project groups, `SectionTaskGroup` for loose tasks
+
+2. **Selection shift bug still present** - The browser focus styling moves to a different element when Cmd+N is pressed. This suggests:
+   - The global keyboard handler is firing
+   - Something is calling `e.preventDefault()` but not actually creating a task
+   - Browser focus management is moving focus to another focusable element (sortable items have `tabIndex`)
+
+3. **View default handlers may not be registering correctly** - Need to verify:
+   - Is `registerViewDefault` being called?
+   - Is the handler stored in the store?
+   - Is `triggerCreate` seeing the handler?
+
+### Investigation Needed for Session 4
+
+1. **Add debug logging to trace the flow:**
+   ```typescript
+   // In use-keyboard-shortcuts.ts (global handler)
+   console.log('[Cmd+N] Global handler', { target: e.target })
+
+   // In task-creation-store.ts triggerCreate
+   console.log('[triggerCreate]', {
+     hasActiveList: !!state.activeListHandler,
+     hasViewDefault: !!state.viewDefaultHandler,
+     hasLegacy: !!state.createTaskHandler,
+   })
+
+   // In ProjectView useEffect for registerViewDefault
+   console.log('[ProjectView] Registering view default')
+   ```
+
+2. **Check if InboxView needs view default registration** - It was never added
+
+3. **Compare TodayView vs ProjectView in detail:**
+   - How do their TaskList instances differ?
+   - Is the issue in DraggableTaskList's wrapper behavior?
+   - Does DraggableTaskList's empty state prevent view default from working?
+
+4. **Focus management investigation:**
+   - Why does focus move to another element?
+   - Is `stopPropagation()` being called correctly in local handlers?
+   - Does the container actually have focus when Cmd+N is pressed?
+
+### Possible Root Causes to Investigate
+
+1. **DraggableTaskList's wrapper interferes with keyboard handling**
+   - The outer DndContext may be capturing events
+   - The empty state div may prevent proper event flow
+
+2. **View default registration timing**
+   - Effects may run in wrong order
+   - Handler references may be stale
+
+3. **TaskList activation/deactivation race conditions**
+   - When TaskList deactivates, does view default get used?
+   - Is there a timing issue between deactivation and triggerCreate?
+
+4. **Focus not on the right element**
+   - For local handler to fire, TaskList container needs focus
+   - If focus is elsewhere, global handler fires but may not have context
+
+### Files to Investigate
+
+- `src/hooks/use-keyboard-shortcuts.ts` - Global Cmd+N handler
+- `src/store/task-creation-store.ts` - triggerCreate logic
+- `src/components/tasks/task-list.tsx` - DraggableTaskList and TaskList
+- `src/components/views/inbox-view.tsx` - Missing view default?
+- `src/components/views/project-view.tsx` - View default registration

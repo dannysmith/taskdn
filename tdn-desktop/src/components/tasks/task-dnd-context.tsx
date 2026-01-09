@@ -187,7 +187,10 @@ interface TaskDndContextProps {
    * Used to prevent visual feedback (gap animation) for disallowed drops.
    * If not provided, all cross-container drops show visual feedback.
    */
-  canDropInContainer?: (sourceContainerId: string, targetContainerId: string) => boolean
+  canDropInContainer?: (
+    sourceContainerId: string,
+    targetContainerId: string
+  ) => boolean
 }
 
 // -----------------------------------------------------------------------------
@@ -310,7 +313,10 @@ export function TaskDndContext({
     }
 
     // Check if drop is allowed in this container
-    if (canDropInContainer && !canDropInContainer(dragPreview.sourceContainerId, targetContainerId)) {
+    if (
+      canDropInContainer &&
+      !canDropInContainer(dragPreview.sourceContainerId, targetContainerId)
+    ) {
       setCrossContainerHover(null)
       return
     }

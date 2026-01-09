@@ -8,6 +8,7 @@ import {
 } from '@/services/vault'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useViewMode } from '@/store/view-mode-store'
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import { useProjectOrder } from '@/hooks/use-project-order'
@@ -44,6 +45,11 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   const openTask = useTaskDetailStore(state => state.openTask)
   const { viewMode } = useViewMode('project')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
+
+  // State for auto-editing newly created tasks
+  const [pendingEditItemId, setPendingEditItemId] = React.useState<
+    string | null
+  >(null)
 
   // Find the project
   const project = React.useMemo(() => {
@@ -254,6 +260,24 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     [deleteTask]
   )
 
+  // Clear pending edit after it's consumed
+  const handleAutoEditConsumed = React.useCallback(() => {
+    setPendingEditItemId(null)
+  }, [])
+
+  // Register view default handler for Cmd+N task creation
+  // When no task is selected, Cmd+N creates a new task at the end
+  React.useEffect(() => {
+    useTaskCreationStore.getState().registerViewDefault({
+      handler: handleCreateTask,
+      onTaskCreated: taskId => setPendingEditItemId(taskId),
+    })
+
+    return () => {
+      useTaskCreationStore.getState().registerViewDefault(null)
+    }
+  }, [handleCreateTask])
+
   const handleKanbanCreateTask = React.useCallback(
     (status: TaskStatus): string | undefined => {
       createTask.mutate({
@@ -342,6 +366,8 @@ export function ProjectView({ projectId }: ProjectViewProps) {
               onDeleteTask={handleDeleteTask}
               showScheduled={true}
               showDue={true}
+              autoEditItemId={pendingEditItemId}
+              onAutoEditConsumed={handleAutoEditConsumed}
             />
           ) : (
             <EmptyState

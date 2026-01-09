@@ -194,6 +194,8 @@ export function SectionTaskGroup(props: SectionTaskGroupProps) {
                 getContextName={getContextName}
                 showScheduled={showScheduled}
                 showDue={showDue}
+                autoEditItemId={autoEditItemId}
+                onAutoEditConsumed={onAutoEditConsumed}
               />
             ) : (
               // Task-only mode with internal DnD
@@ -209,6 +211,8 @@ export function SectionTaskGroup(props: SectionTaskGroupProps) {
                 getContextName={getContextName}
                 showScheduled={showScheduled}
                 showDue={showDue}
+                autoEditItemId={autoEditItemId}
+                onAutoEditConsumed={onAutoEditConsumed}
               />
             )
           ) : useExternalDnd || isMixedItemsMode ? (
