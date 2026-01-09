@@ -121,10 +121,12 @@ export function AreaView({ areaId }: AreaViewProps) {
   }, [getAreaDirectTasks, areaId])
 
   // Split projects into active (for grid)
+  // Note: projects with null status default to 'planning' per S1 spec
   const activeProjects = React.useMemo(() => {
-    return areaProjects.filter(p =>
-      ACTIVE_STATUSES.includes(p.status as (typeof ACTIVE_STATUSES)[number])
-    )
+    return areaProjects.filter(p => {
+      const status = p.status ?? 'planning'
+      return ACTIVE_STATUSES.includes(status as (typeof ACTIVE_STATUSES)[number])
+    })
   }, [areaProjects])
 
   // Manage display order for loose tasks
