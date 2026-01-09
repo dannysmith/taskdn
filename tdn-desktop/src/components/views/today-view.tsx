@@ -109,6 +109,14 @@ export function TodayView() {
     [headings]
   )
 
+  // Only allow drops into "scheduled-today" section
+  const canDropInContainer = React.useCallback(
+    (_sourceContainerId: string, targetContainerId: string) => {
+      return targetContainerId === 'scheduled-today'
+    },
+    []
+  )
+
   // Get context name (project/area) for a task
   // Note: task.project and task.area are WikiLink format (e.g., "[[My Project]]")
   // so we match against the title using includes()
@@ -553,6 +561,7 @@ export function TodayView() {
       onItemsReorder={handleDragItemsReorder}
       getTaskById={getTaskById}
       getHeadingById={getHeadingById}
+      canDropInContainer={canDropInContainer}
     >
       <div className="space-y-6">
         {/* Scheduled for Today - with heading support */}
