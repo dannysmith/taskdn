@@ -2,7 +2,13 @@ import { cn } from '@/lib/utils'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useVaultData, useUpdateProject } from '@/services/vault'
 import { ViewHeader } from './ViewHeader'
-import { InboxView, ProjectView, TodayView } from '@/components/views'
+import {
+  CalendarView,
+  InboxView,
+  ProjectView,
+  TodayView,
+  WeekView,
+} from '@/components/views'
 import { ProjectStatusPill } from '@/components/projects'
 import type { ProjectStatus } from '@/lib/tauri-bindings'
 
@@ -81,9 +87,9 @@ export function MainWindowContent() {
         case 'today':
           return <TodayView />
         case 'this-week':
-          return <PlaceholderView message="This Week view coming soon" />
+          return <WeekView />
         case 'calendar':
-          return <PlaceholderView message="Calendar view coming soon" />
+          return <CalendarView />
       }
     }
 
