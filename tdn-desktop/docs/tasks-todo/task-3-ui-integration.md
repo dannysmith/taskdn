@@ -513,7 +513,7 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 
 - [x] InboxView (working, order session-persistent)
 - [ ] TodayView (with headings)
-- [ ] ProjectView (list mode)
+- [x] ProjectView (list mode) - uses useProjectOrder hook
 - [ ] ProjectView (kanban mode)
 - [ ] AreaView (list mode)
 - [ ] AreaView (kanban mode)
@@ -552,7 +552,7 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 - [x] display-order-store.ts created (Zustand store for all order state)
 - [ ] useTodayOrder with Zustand
 - [ ] useCalendarOrder with Zustand
-- [ ] useProjectOrder with Zustand (per-project task ordering)
+- [x] useProjectOrder with Zustand (per-project task ordering)
 - [ ] useAreaOrder with Zustand (per-area task ordering)
 - [ ] useKanbanOrder with Zustand (per-view column ordering)
 - [ ] Disk persistence layer (Rust commands + TanStack Query) - deferred

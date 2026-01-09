@@ -1,7 +1,8 @@
 import { cn } from '@/lib/utils'
 import { useNavigationStore } from '@/store/navigation-store'
+import { useVaultData } from '@/services/vault'
 import { ViewHeader } from './ViewHeader'
-import { InboxView } from '@/components/views'
+import { InboxView, ProjectView } from '@/components/views'
 
 /**
  * MainWindowContent - Primary content area that renders the active view.
@@ -10,6 +11,7 @@ import { InboxView } from '@/components/views'
  */
 export function MainWindowContent() {
   const selection = useNavigationStore(state => state.selection)
+  const { projects, areas } = useVaultData()
 
   // Determine the view title based on selection
   const getViewTitle = () => {
@@ -28,10 +30,14 @@ export function MainWindowContent() {
             return 'Calendar'
         }
         break
-      case 'area':
-        return `Area: ${selection.id}`
-      case 'project':
-        return `Project: ${selection.id}`
+      case 'area': {
+        const area = areas.find(a => a.id === selection.id)
+        return area?.title ?? 'Area'
+      }
+      case 'project': {
+        const project = projects.find(p => p.id === selection.id)
+        return project?.title ?? 'Project'
+      }
       case 'no-area':
         return 'No Area'
     }
@@ -57,7 +63,11 @@ export function MainWindowContent() {
       }
     }
 
-    // Area, project, or no-area views
+    if (selection.type === 'project') {
+      return <ProjectView projectId={selection.id} />
+    }
+
+    // Area or no-area views
     return (
       <PlaceholderView
         message={`${getViewTitle()} view coming soon`}

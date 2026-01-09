@@ -30,6 +30,9 @@ interface DisplayOrderState {
   // Inbox ordering
   inboxOrder: string[] | null
 
+  // Project task ordering (per-project)
+  projectTaskOrder: Record<string, string[]> | null
+
   // Actions for sidebar
   setSidebarAreaOrder: (order: string[]) => void
   setSidebarProjectOrder: (containerId: string, order: string[]) => void
@@ -37,6 +40,9 @@ interface DisplayOrderState {
 
   // Actions for inbox
   setInboxOrder: (order: string[]) => void
+
+  // Actions for project tasks
+  setProjectTaskOrder: (projectId: string, order: string[]) => void
 
   // Reset (for testing or clearing)
   resetAllOrder: () => void
@@ -53,6 +59,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
       sidebarAreaOrder: null,
       sidebarProjectOrder: null,
       inboxOrder: null,
+      projectTaskOrder: null,
 
       // Sidebar actions
       setSidebarAreaOrder: order =>
@@ -86,6 +93,19 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
       setInboxOrder: order =>
         set({ inboxOrder: order }, undefined, 'setInboxOrder'),
 
+      // Project task actions
+      setProjectTaskOrder: (projectId, order) =>
+        set(
+          state => ({
+            projectTaskOrder: {
+              ...state.projectTaskOrder,
+              [projectId]: order,
+            },
+          }),
+          undefined,
+          'setProjectTaskOrder'
+        ),
+
       // Reset
       resetAllOrder: () =>
         set(
@@ -93,6 +113,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
             sidebarAreaOrder: null,
             sidebarProjectOrder: null,
             inboxOrder: null,
+            projectTaskOrder: null,
           },
           undefined,
           'resetAllOrder'
