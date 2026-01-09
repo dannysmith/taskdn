@@ -11,6 +11,7 @@ import {
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useViewMode } from '@/store/view-mode-store'
 import { useAreaOrder } from '@/hooks/use-area-order'
@@ -103,6 +104,11 @@ export function AreaView({ areaId }: AreaViewProps) {
   const setSelection = useNavigationStore(state => state.setSelection)
   const { viewMode } = useViewMode('area')
   const { collapsedColumns, toggleColumn } = useAreaCollapsedColumns()
+
+  // State for auto-editing newly created items
+  const [pendingEditItemId, setPendingEditItemId] = React.useState<
+    string | null
+  >(null)
 
   // Get project task order from Zustand (used to apply stored order in tasksByProject)
   const projectTaskOrder = useDisplayOrderStore(state => state.projectTaskOrder)
@@ -420,6 +426,24 @@ export function AreaView({ areaId }: AreaViewProps) {
     [deleteTask]
   )
 
+  // Clear pending edit after it's consumed
+  const handleAutoEditConsumed = React.useCallback(() => {
+    setPendingEditItemId(null)
+  }, [])
+
+  // Register view default handler for Cmd+N task creation
+  // When no task is selected, Cmd+N creates a new task in "Loose Tasks"
+  React.useEffect(() => {
+    useTaskCreationStore.getState().registerViewDefault({
+      handler: handleCreateLooseTask,
+      onTaskCreated: taskId => setPendingEditItemId(taskId),
+    })
+
+    return () => {
+      useTaskCreationStore.getState().registerViewDefault(null)
+    }
+  }, [handleCreateLooseTask])
+
   // Handler for reordering tasks within a container
   const handleTasksReorder = React.useCallback(
     (projectId: string, reorderedTasks: Task[]) => {
@@ -659,6 +683,8 @@ export function AreaView({ areaId }: AreaViewProps) {
                 showDue={true}
                 defaultExpanded={true}
                 useExternalDnd={true}
+                autoEditItemId={pendingEditItemId}
+                onAutoEditConsumed={handleAutoEditConsumed}
               />
 
               {areaProjects.map(project => {

@@ -206,6 +206,44 @@ export function TaskList({
     }
   }, [selectedIndex, editingTaskId])
 
+  // Register with task creation store when this list has a selection
+  // This enables Cmd+N to create tasks after the selected task via the global handler
+  React.useEffect(() => {
+    if (!onCreateTask) return
+
+    // Get the selected task (may be undefined if index is out of range)
+    const selectedTask =
+      selectedIndex !== null && selectedIndex < tasks.length
+        ? tasks[selectedIndex]
+        : undefined
+
+    if (selectedTask) {
+      // Has valid selection - activate this list
+      useTaskCreationStore.getState().activateList(projectId, {
+        handler: afterTaskId => onCreateTask(afterTaskId),
+        selectedTaskId: selectedTask.id,
+        setEditingTaskId,
+        setSelectedIndex,
+        taskCount: tasks.length,
+      })
+    } else {
+      // No selection - deactivate (reverts to view default)
+      useTaskCreationStore.getState().deactivateList(projectId)
+    }
+
+    // Cleanup: deactivate when this list unmounts
+    return () => {
+      useTaskCreationStore.getState().deactivateList(projectId)
+    }
+  }, [
+    projectId,
+    selectedIndex,
+    tasks,
+    onCreateTask,
+    setEditingTaskId,
+    setSelectedIndex,
+  ])
+
   // Keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Don't handle keyboard events while editing
@@ -277,6 +315,7 @@ export function TaskList({
       case 'N':
         if (isMeta && onCreateTask) {
           e.preventDefault()
+          e.stopPropagation() // Prevent global handler from also firing
           const afterTaskId =
             selectedIndex !== null && tasks[selectedIndex]
               ? tasks[selectedIndex].id

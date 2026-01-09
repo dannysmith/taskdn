@@ -493,7 +493,8 @@ impl VaultManager {
         let result = std::fs::remove_file(&task.path);
         self.set_writing(false);
 
-        result.map_err(|e| VaultError::write_error(&task.path, format!("Failed to delete: {e}")))?;
+        result
+            .map_err(|e| VaultError::write_error(&task.path, format!("Failed to delete: {e}")))?;
 
         // Remove from index
         {

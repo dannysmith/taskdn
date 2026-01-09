@@ -57,22 +57,22 @@ View (TodayView, AreaView, etc.)
 
 ### Which Components Register with the Store
 
-| Component | Registers? | Notes |
-|-----------|------------|-------|
-| DraggableTaskList | **Yes** | Registers on mount, unregisters on unmount |
-| TaskList | **No** | Only has local keyboard handler |
-| OrderedItemList | **No** | Only has local keyboard handler |
+| Component         | Registers? | Notes                                      |
+| ----------------- | ---------- | ------------------------------------------ |
+| DraggableTaskList | **Yes**    | Registers on mount, unregisters on unmount |
+| TaskList          | **No**     | Only has local keyboard handler            |
+| OrderedItemList   | **No**     | Only has local keyboard handler            |
 
 ### View-Component Mapping
 
-| View | Primary List Component | Global Cmd+N Works? |
-|------|----------------------|-------------------|
-| Inbox | DraggableTaskList | Yes |
-| Project (list mode) | DraggableTaskList | Yes |
-| Project (kanban) | KanbanBoard | No (not implemented) |
-| Today - all sections | TaskList or OrderedItemList | No |
-| Area - all sections | TaskList | No |
-| NoArea - all sections | TaskList | No |
+| View                  | Primary List Component      | Global Cmd+N Works?  |
+| --------------------- | --------------------------- | -------------------- |
+| Inbox                 | DraggableTaskList           | Yes                  |
+| Project (list mode)   | DraggableTaskList           | Yes                  |
+| Project (kanban)      | KanbanBoard                 | No (not implemented) |
+| Today - all sections  | TaskList or OrderedItemList | No                   |
+| Area - all sections   | TaskList                    | No                   |
+| NoArea - all sections | TaskList                    | No                   |
 
 ---
 
@@ -88,21 +88,23 @@ The global Cmd+N handler calls `triggerCreate()`, but `triggerCreate()` only wor
 
 ### Observed Symptoms
 
-| View | With Task Selected | Without Selection |
-|------|-------------------|-------------------|
-| Inbox | Works | Works |
-| Today | Nothing happens | Nothing happens |
-| Area/NoArea | Strange "selection shift" | Nothing happens |
-| Project (list) | Works | Works |
+| View           | With Task Selected        | Without Selection |
+| -------------- | ------------------------- | ----------------- |
+| Inbox          | Works                     | Works             |
+| Today          | Nothing happens           | Nothing happens   |
+| Area/NoArea    | Strange "selection shift" | Nothing happens   |
+| Project (list) | Works                     | Works             |
 
 ### The "Selection Shift" Bug
 
 When pressing Cmd+N in Area/Project views with a task selected, a different task appears to gain browser focus styling (blue background) but:
+
 - React selection state isn't properly updated
 - Subsequent keyboard shortcuts don't work
 - Clicking anywhere resets to normal
 
 This is likely caused by:
+
 1. Global handler fires, calls `e.preventDefault()`, calls `triggerCreate()`
 2. `triggerCreate()` does nothing (no handler registered)
 3. Some browser/dnd-kit focus behavior shifts focus to another element
@@ -187,11 +189,13 @@ interface TaskCreationState {
 ```
 
 **Priority in `triggerCreate`:**
+
 ```
 activeListHandler → viewDefaultHandler → createTaskHandler (legacy)
 ```
 
 **Edit mode handling:**
+
 - Active list: `triggerCreate` calls `activeListCallbacks.setEditingTaskId(newTaskId)`
 - View default: `triggerCreate` calls `viewDefaultOnTaskCreated(newTaskId)` (view sets `pendingEditItemId`)
 - Legacy: `triggerCreate` calls `setEditingTaskId(newTaskId)` (existing behavior)
@@ -200,13 +204,13 @@ activeListHandler → viewDefaultHandler → createTaskHandler (legacy)
 
 Each view registers its default handler on mount:
 
-| View | Default Section | Handler |
-|------|----------------|---------|
-| TodayView | Scheduled for Today | `handleCreateScheduledTask` (creates with `scheduled: today`) |
-| AreaView | Loose Tasks | `handleCreateLooseTask` (creates with `area: areaId`) |
-| NoAreaView | Loose Tasks | `handleCreateOrphanTask` (creates with no project/area) |
-| InboxView | Inbox list | `handleCreateTask` (creates with `status: inbox`) |
-| ProjectView | Project list | `handleCreateTask` (creates with `project: projectId`) |
+| View        | Default Section     | Handler                                                       |
+| ----------- | ------------------- | ------------------------------------------------------------- |
+| TodayView   | Scheduled for Today | `handleCreateScheduledTask` (creates with `scheduled: today`) |
+| AreaView    | Loose Tasks         | `handleCreateLooseTask` (creates with `area: areaId`)         |
+| NoAreaView  | Loose Tasks         | `handleCreateOrphanTask` (creates with no project/area)       |
+| InboxView   | Inbox list          | `handleCreateTask` (creates with `status: inbox`)             |
+| ProjectView | Project list        | `handleCreateTask` (creates with `project: projectId`)        |
 
 ### List Activation/Deactivation
 
@@ -275,6 +279,7 @@ When multiple lists exist (e.g., Area view with 5 project groups):
    - DraggableTaskList continues using these without modification
 
 4. **Refactor `triggerCreate`:**
+
    ```typescript
    triggerCreate: async () => {
      const state = get()
@@ -290,9 +295,9 @@ When multiple lists exist (e.g., Area view with 5 project groups):
      }
 
      if (state.viewDefaultHandler) {
-       const newTaskId = await state.viewDefaultHandler(null)  // No afterTaskId
+       const newTaskId = await state.viewDefaultHandler(null) // No afterTaskId
        if (newTaskId && state.viewDefaultOnTaskCreated) {
-         state.viewDefaultOnTaskCreated(newTaskId)  // Triggers edit mode in view
+         state.viewDefaultOnTaskCreated(newTaskId) // Triggers edit mode in view
        }
        return newTaskId
      }
@@ -316,6 +321,7 @@ When multiple lists exist (e.g., Area view with 5 project groups):
    ```
 
 **Why keep legacy fields:**
+
 - DraggableTaskList works today and uses the legacy API
 - Migrating it can happen later (or never - it's not broken)
 - Avoids risk of breaking working views (Inbox, Project) while fixing broken ones
@@ -325,6 +331,7 @@ When multiple lists exist (e.g., Area view with 5 project groups):
 ### Phase 2: Add View Default Handlers
 
 **Files:**
+
 - `src/components/views/today-view.tsx`
 - `src/components/views/area-view.tsx`
 - `src/components/views/no-area-view.tsx`
@@ -334,6 +341,7 @@ When multiple lists exist (e.g., Area view with 5 project groups):
 **Key Insight: Reuse existing handlers**
 
 Each view already has a `handleCreate...` function for its default section. These handlers already:
+
 - Create tasks with correct defaults
 - Update order arrays (insert after or append)
 - Return the new task ID
@@ -341,6 +349,7 @@ Each view already has a `handleCreate...` function for its default section. Thes
 We just need to register them as view defaults and add the `onTaskCreated` callback for edit mode.
 
 **Pattern for each view:**
+
 ```typescript
 // Views already have pendingEditItemId state for header button "+ Task"
 const [pendingEditItemId, setPendingEditItemId] = useState<string | null>(null)
@@ -366,18 +375,19 @@ useEffect(() => {
 
 **View-Specific Details:**
 
-| View | Existing Handler to Reuse | Default Section |
-|------|--------------------------|-----------------|
-| TodayView | `handleCreateScheduledTask` | Scheduled for Today |
-| AreaView | `handleCreateLooseTask` | Loose Tasks |
-| NoAreaView | `handleCreateOrphanTask` | Loose Tasks (orphan) |
-| InboxView | `handleCreateTask` | Inbox list |
-| ProjectView | `handleCreateTask` | Project task list |
+| View        | Existing Handler to Reuse   | Default Section      |
+| ----------- | --------------------------- | -------------------- |
+| TodayView   | `handleCreateScheduledTask` | Scheduled for Today  |
+| AreaView    | `handleCreateLooseTask`     | Loose Tasks          |
+| NoAreaView  | `handleCreateOrphanTask`    | Loose Tasks (orphan) |
+| InboxView   | `handleCreateTask`          | Inbox list           |
+| ProjectView | `handleCreateTask`          | Project task list    |
 
 **Note on InboxView and ProjectView:**
 These views use DraggableTaskList which already registers via the legacy API. Adding view default registration provides a backup, but the legacy registration takes priority for these views. This is fine - both paths create in the same place.
 
 **Verification (manual):**
+
 - Open each view with no task selected
 - Press Cmd+N
 - Verify task created in correct section with correct defaults
@@ -407,7 +417,7 @@ useEffect(() => {
   if (hasValidSelection) {
     // Has valid selection - activate this list
     useTaskCreationStore.getState().activateList(projectId, {
-      handler: (afterTaskId) => onCreateTask(afterTaskId),
+      handler: afterTaskId => onCreateTask(afterTaskId),
       selectedTaskId: tasks[selectedIndex].id,
       setEditingTaskId,
       setSelectedIndex,
@@ -422,7 +432,14 @@ useEffect(() => {
   return () => {
     useTaskCreationStore.getState().deactivateList(projectId)
   }
-}, [projectId, selectedIndex, tasks.length, onCreateTask, setEditingTaskId, setSelectedIndex])
+}, [
+  projectId,
+  selectedIndex,
+  tasks.length,
+  onCreateTask,
+  setEditingTaskId,
+  setSelectedIndex,
+])
 // Note: Using tasks.length instead of tasks to reduce effect frequency
 ```
 
@@ -435,16 +452,21 @@ useEffect(() => {
   if (activeListId !== projectId) return
 
   const selectedTaskId =
-    selectedIndex !== null && selectedIndex < tasks.length && tasks[selectedIndex]
+    selectedIndex !== null &&
+    selectedIndex < tasks.length &&
+    tasks[selectedIndex]
       ? tasks[selectedIndex].id
       : null
-  useTaskCreationStore.getState().updateActiveListSelection(selectedTaskId, selectedIndex)
+  useTaskCreationStore
+    .getState()
+    .updateActiveListSelection(selectedTaskId, selectedIndex)
 }, [projectId, selectedIndex, tasks])
 ```
 
 3. **Update local keyboard handler to prevent double-fire:**
 
 In the existing `handleKeyDown` function, after handling Cmd+N:
+
 ```typescript
 case 'n':
 case 'N':
@@ -460,6 +482,7 @@ case 'N':
 Using `tasks.length` instead of `tasks` reduces effect frequency. The activation logic only cares whether the selected task exists, not the full array contents.
 
 **Verification (manual):**
+
 - In Area view, select a task in a project group
 - Press Cmd+N
 - Verify task created in that project, after selected task
@@ -487,10 +510,10 @@ useEffect(() => {
 
   if (selectedTask && selectedTask.type === 'task') {
     useTaskCreationStore.getState().activateList(containerId, {
-      handler: (afterTaskId) => onCreateTask(afterTaskId),
+      handler: afterTaskId => onCreateTask(afterTaskId),
       selectedTaskId: selectedTask.id,
-      setEditingTaskId: setEditingItemId,  // Adapted name
-      setSelectedIndex: null,  // OrderedItemList uses ID-based selection
+      setEditingTaskId: setEditingItemId, // Adapted name
+      setSelectedIndex: null, // OrderedItemList uses ID-based selection
       taskCount: items.filter(i => i.type === 'task').length,
     })
   } else {
@@ -510,6 +533,7 @@ In the existing `handleKeyDown`, add `e.stopPropagation()` after handling Cmd+N.
 **Note:** OrderedItemList manages selection by ID (`selectedItemId`) rather than index. The activation context adapts accordingly - `setSelectedIndex` may be null since the pattern is different.
 
 **Verification (manual):**
+
 - In Today view, select a task in "Scheduled for Today" section
 - Press Cmd+N
 - Verify task created in that section, after selected task
@@ -524,6 +548,7 @@ In the existing `handleKeyDown`, add `e.stopPropagation()` after handling Cmd+N.
 **Current:** DraggableTaskList uses the old `registerContext`/`unregisterContext` API.
 
 **Options:**
+
 1. **Keep as-is:** Backward compatibility layer handles it
 2. **Migrate:** Update to use new `activateList`/`deactivateList` API
 3. **Remove registration:** Since it wraps TaskList which now registers, might be redundant
@@ -585,6 +610,7 @@ console.log('[Cmd+N] Local handler fired', {
 Add `outline: none` to sortable items. This hurts accessibility but eliminates the visual bug. Only use as last resort.
 
 **Verification:**
+
 - Press Cmd+N in Area view with task selected
 - Verify no spurious visual selection shift
 - Verify task is created correctly and enters edit mode
@@ -630,12 +656,14 @@ Currently skipped. To add Cmd+N support for kanban:
 3. New tasks would need column-based positioning
 
 The dual-handler architecture supports this:
+
 - KanbanBoard registers as view default when in kanban mode
 - Individual kanban columns could activate when clicked (optional enhancement)
 
 ### Calendar View Support
 
 Similar approach:
+
 - CalendarView registers default handler
 - New tasks created on currently visible/selected date
 - Time-based positioning if applicable
@@ -694,9 +722,11 @@ When adding automated tests for this feature, cover:
 ## Files to Modify
 
 ### Phase 1
+
 - `src/store/task-creation-store.ts`
 
 ### Phase 2
+
 - `src/components/views/today-view.tsx`
 - `src/components/views/area-view.tsx`
 - `src/components/views/no-area-view.tsx`
@@ -704,15 +734,19 @@ When adding automated tests for this feature, cover:
 - `src/components/views/project-view.tsx`
 
 ### Phase 3
+
 - `src/components/tasks/task-list.tsx` (TaskList component)
 
 ### Phase 4
+
 - `src/components/tasks/ordered-item-list.tsx`
 
 ### Phase 5 (Optional)
+
 - `src/components/tasks/task-list.tsx` (DraggableTaskList section)
 
 ### Phase 6
+
 - `src/hooks/use-keyboard-shortcuts.ts` (add stopPropagation)
 - Possibly CSS files if focus styling needs adjustment
 
@@ -751,18 +785,22 @@ Things identified during planning that need attention during implementation:
 _Space for tracking progress across sessions. Update after each work session._
 
 ### Session 1: [Date]
+
 - [ ] Phase 1 complete
 - [ ] Notes:
 
 ### Session 2: [Date]
+
 - [ ] Phase 2 complete
 - [ ] Notes:
 
 ### Session 3: [Date]
+
 - [ ] Phases 3-4 complete
 - [ ] Notes:
 
 ### Session 4: [Date]
+
 - [ ] Phase 6 complete (bug fix)
 - [ ] Phase 7 testing complete
 - [ ] Notes:
