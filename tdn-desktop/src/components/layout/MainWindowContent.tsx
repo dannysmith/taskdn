@@ -1,8 +1,10 @@
 import { cn } from '@/lib/utils'
 import { useNavigationStore } from '@/store/navigation-store'
-import { useVaultData } from '@/services/vault'
+import { useVaultData, useUpdateProject } from '@/services/vault'
 import { ViewHeader } from './ViewHeader'
 import { InboxView, ProjectView } from '@/components/views'
+import { ProjectStatusPill } from '@/components/projects'
+import type { ProjectStatus } from '@/lib/tauri-bindings'
 
 /**
  * MainWindowContent - Primary content area that renders the active view.
@@ -12,6 +14,28 @@ import { InboxView, ProjectView } from '@/components/views'
 export function MainWindowContent() {
   const selection = useNavigationStore(state => state.selection)
   const { projects, areas } = useVaultData()
+  const updateProject = useUpdateProject()
+
+  // Get current project if in project view
+  const currentProject =
+    selection?.type === 'project'
+      ? projects.find(p => p.id === selection.id)
+      : null
+
+  // Handle project status change
+  const handleProjectStatusChange = (newStatus: ProjectStatus) => {
+    if (!currentProject) return
+    updateProject.mutate({
+      id: currentProject.id,
+      status: newStatus,
+      title: null,
+      area: null,
+      description: null,
+      startDate: null,
+      endDate: null,
+      body: null,
+    })
+  }
 
   // Determine the view title based on selection
   const getViewTitle = () => {
@@ -78,7 +102,14 @@ export function MainWindowContent() {
 
   return (
     <div className={cn('flex h-full flex-col bg-background')}>
-      <ViewHeader title={getViewTitle()} />
+      <ViewHeader title={getViewTitle()}>
+        {currentProject && (
+          <ProjectStatusPill
+            status={currentProject.status ?? 'in-progress'}
+            onStatusChange={handleProjectStatusChange}
+          />
+        )}
+      </ViewHeader>
       <div className="flex-1 overflow-auto p-4">{renderContent()}</div>
     </div>
   )

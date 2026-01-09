@@ -44,9 +44,7 @@ export function ViewHeader({
       <h1 className="shrink-0 truncate text-lg font-semibold @sm:text-xl">
         {title}
       </h1>
-      {children && (
-        <div className="hidden overflow-hidden @lg:block">{children}</div>
-      )}
+      {children && <div className="shrink-0">{children}</div>}
       {actions && <div className="ms-auto shrink-0">{actions}</div>}
     </header>
   )
