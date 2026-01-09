@@ -9,6 +9,7 @@ import {
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useViewMode } from '@/store/view-mode-store'
+import { useDisplayOrderStore } from '@/store/display-order-store'
 import { useProjectOrder } from '@/hooks/use-project-order'
 import { useKanbanOrder } from '@/hooks/use-kanban-order'
 import { DraggableTaskList } from '@/components/tasks/task-list'
@@ -205,7 +206,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   )
 
   const handleCreateTask = React.useCallback(
-    async (_afterTaskId: string | null): Promise<string | undefined> => {
+    async (afterTaskId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
@@ -215,9 +216,35 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         due: null,
         deferUntil: null,
       })
+
+      // Insert new task at the correct position in the order
+      const currentOrder = orderedTasks.map(t => t.id)
+      let newOrder: string[]
+
+      if (afterTaskId) {
+        const insertIndex = currentOrder.indexOf(afterTaskId)
+        if (insertIndex !== -1) {
+          // Insert after the selected task
+          newOrder = [
+            ...currentOrder.slice(0, insertIndex + 1),
+            newTask.id,
+            ...currentOrder.slice(insertIndex + 1),
+          ]
+        } else {
+          // afterTaskId not found, append to end
+          newOrder = [...currentOrder, newTask.id]
+        }
+      } else {
+        // No selection, append to end
+        newOrder = [...currentOrder, newTask.id]
+      }
+
+      // Update the order store directly
+      useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
+
       return newTask.id
     },
-    [createTask, projectId, project?.area]
+    [createTask, projectId, project?.area, orderedTasks]
   )
 
   const handleDeleteTask = React.useCallback(
