@@ -3,7 +3,7 @@
  * Defines labels and color classes for each status value.
  */
 
-import type { TaskStatus, ProjectStatus } from '@/types/data'
+import type { TaskStatus, ProjectStatus } from '@/lib/tauri-bindings'
 
 export interface StatusConfig {
   label: string

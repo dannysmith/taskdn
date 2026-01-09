@@ -1,16 +1,16 @@
 import { cn } from '@/lib/utils'
+import { TaskDetailPanel } from '@/components/tasks/task-detail-panel'
 
 interface RightSideBarProps {
-  children?: React.ReactNode
   className?: string
 }
 
-export function RightSideBar({ children, className }: RightSideBarProps) {
+export function RightSideBar({ className }: RightSideBarProps) {
   return (
     <div
       className={cn('flex h-full flex-col border-l bg-background', className)}
     >
-      {children}
+      <TaskDetailPanel />
     </div>
   )
 }
