@@ -2,7 +2,12 @@ import * as React from 'react'
 import { Sun, Flag, Sunrise } from 'lucide-react'
 import { arrayMove } from '@dnd-kit/sortable'
 
-import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
+import {
+  useVaultData,
+  useUpdateTask,
+  useCreateTask,
+  useDeleteTask,
+} from '@/services/vault'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useTodayOrder, type TodaySectionId } from '@/hooks/use-today-order'
@@ -30,6 +35,7 @@ export function TodayView() {
   const { tasks, projects, areas } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
+  const deleteTask = useDeleteTask()
   const openTask = useTaskDetailStore(state => state.openTask)
 
   // State for auto-editing newly created items
@@ -444,6 +450,13 @@ export function TodayView() {
     [createTask, today]
   )
 
+  const handleDeleteTask = React.useCallback(
+    (taskId: string) => {
+      deleteTask.mutate(taskId)
+    },
+    [deleteTask]
+  )
+
   // Check if there are any tasks to show
   const hasAnyItems =
     orderedScheduledItems.length > 0 ||
@@ -471,6 +484,7 @@ export function TodayView() {
           onTaskStatusToggle={handleStatusToggle}
           onTaskOpenDetail={handleOpenDetail}
           onCreateTask={handleCreateScheduledTask}
+          onDeleteTask={handleDeleteTask}
           onAddTask={handleAddScheduledTask}
           onAddHeading={handleAddHeading}
           onHeadingTitleChange={handleHeadingTitleChange}
@@ -496,6 +510,7 @@ export function TodayView() {
             onTaskStatusToggle={handleStatusToggle}
             onTaskOpenDetail={handleOpenDetail}
             onCreateTask={handleCreateDueTask}
+            onDeleteTask={handleDeleteTask}
             getContextName={getTaskContextName}
             showScheduled={true}
             showDue={true}
@@ -516,6 +531,7 @@ export function TodayView() {
             onTaskStatusToggle={handleStatusToggle}
             onTaskOpenDetail={handleOpenDetail}
             onCreateTask={handleCreateAvailableTask}
+            onDeleteTask={handleDeleteTask}
             getContextName={getTaskContextName}
             showScheduled={true}
             showDue={true}

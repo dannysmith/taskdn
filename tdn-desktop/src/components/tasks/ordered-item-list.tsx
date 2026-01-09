@@ -47,6 +47,8 @@ interface OrderedItemListProps {
   onCreateTask?: (
     afterItemId: string | null
   ) => string | undefined | Promise<string | undefined>
+  /** Called when a newly created task is canceled (Escape before confirming) */
+  onDeleteTask?: (taskId: string) => void | Promise<void>
 
   // Heading handlers
   onHeadingTitleChange: (headingId: string, newTitle: string) => void
@@ -97,6 +99,7 @@ export function OrderedItemList({
   onTaskStatusToggle,
   onTaskOpenDetail,
   onCreateTask,
+  onDeleteTask,
   onHeadingTitleChange,
   onHeadingColorChange,
   onHeadingDelete,
@@ -120,6 +123,16 @@ export function OrderedItemList({
   const [internalEditingItemId, setInternalEditingItemId] = React.useState<
     string | null
   >(null)
+
+  // Track newly created tasks that haven't been confirmed yet
+  const [newlyCreatedTaskId, setNewlyCreatedTaskId] = React.useState<
+    string | null
+  >(null)
+  const [previousSelectedIndex, setPreviousSelectedIndex] = React.useState<
+    number | null
+  >(null)
+  // Track if edit was confirmed (Enter/blur) vs canceled (Escape)
+  const editConfirmedRef = React.useRef(false)
 
   // Use external state if provided, otherwise internal
   const selectedIndex =
@@ -295,10 +308,18 @@ export function OrderedItemList({
           // Capture current index for the async callback
           const currentIndex = selectedIndex
           const currentLength = items.length
+
+          // Save the previous selection so we can restore it if task is canceled
+          setPreviousSelectedIndex(currentIndex)
+          // Reset the confirm flag for the new edit session
+          editConfirmedRef.current = false
+
           const result = onCreateTask(afterItemId)
           // Handle both sync and async returns
           const handleNewTask = (newTaskId: string | undefined) => {
             if (newTaskId) {
+              // Track this as a newly created task
+              setNewlyCreatedTaskId(newTaskId)
               setEditingItemId(newTaskId)
               if (currentIndex !== null) {
                 setSelectedIndex(currentIndex + 1)
@@ -327,7 +348,33 @@ export function OrderedItemList({
     setEditingItemId(itemId)
   }
 
+  // Called when edit is confirmed with Enter or blur
+  const handleConfirmEdit = () => {
+    editConfirmedRef.current = true
+    // Clear the newly created tracking since edit was confirmed
+    setNewlyCreatedTaskId(null)
+    setPreviousSelectedIndex(null)
+  }
+
   const handleEndEdit = () => {
+    // Check if this was a newly created task that was canceled (Escape)
+    const wasNewlyCreated =
+      newlyCreatedTaskId && editingItemId === newlyCreatedTaskId
+    const wasCanceled = !editConfirmedRef.current
+
+    if (wasNewlyCreated && wasCanceled && onDeleteTask) {
+      // Delete the canceled new task
+      const taskIdToDelete = newlyCreatedTaskId
+      onDeleteTask(taskIdToDelete)
+      // Restore previous selection
+      setSelectedIndex(previousSelectedIndex)
+    }
+
+    // Reset tracking state
+    setNewlyCreatedTaskId(null)
+    setPreviousSelectedIndex(null)
+    editConfirmedRef.current = false
+
     setEditingItemId(null)
     containerRef.current?.focus()
   }
@@ -378,6 +425,7 @@ export function OrderedItemList({
                   onSelect={() => handleSelect(index)}
                   onStartEdit={() => handleStartEdit(item.id)}
                   onEndEdit={handleEndEdit}
+                  onConfirmEdit={handleConfirmEdit}
                   onTitleChange={newTitle =>
                     onTaskTitleChange(item.id, newTitle)
                   }
