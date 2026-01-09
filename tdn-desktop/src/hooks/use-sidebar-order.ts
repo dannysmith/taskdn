@@ -13,14 +13,10 @@ import { ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
  * Adapted from the mockup to use TanStack Query hooks (useVaultData)
  * instead of synchronous AppDataContext.
  *
- * @returns Object with ordered data and reorder functions:
- *   - `order` - Internal display-order state (SidebarOrder)
- *   - `orderedAreas` - Area objects in display order
- *   - `orderedOrphanProjects` - Projects without an area, in display order
- *   - `getOrderedProjects(containerId)` - Get projects for an area in display order
- *   - `reorderAreas(activeId, overId)` - Swap two areas in the sidebar
- *   - `reorderProjectsInArea(containerId, activeId, overId)` - Reorder within an area
- *   - `moveProjectToArea(projectId, fromId, toId, insertIndex?)` - Move project to new area
+ * The order state tracks manual reordering. When no manual reorder has occurred,
+ * items are displayed in their natural order from the data source.
+ *
+ * @returns Object with ordered data and reorder functions
  */
 export function useSidebarOrder() {
   const { areas, projects } = useVaultData()
@@ -29,60 +25,80 @@ export function useSidebarOrder() {
   // Get active (non-archived) areas
   const activeAreas = getActiveAreas()
 
-  // Initialize order from current data
-  const [order, setOrder] = useState<SidebarOrder>(() => {
-    const areaOrder = activeAreas.map(a => a.id)
+  // Manual reorder overrides (null = use natural order from data)
+  const [areaOrderOverride, setAreaOrderOverride] = useState<string[] | null>(
+    null
+  )
+  const [projectOrderOverride, setProjectOrderOverride] = useState<Record<
+    string,
+    string[]
+  > | null>(null)
 
-    const projectOrder: Record<string, string[]> = {}
-
-    // Projects for each area
-    for (const area of activeAreas) {
-      projectOrder[area.id] = projects
-        .filter(p => p.area?.includes(area.id))
-        .map(p => p.id)
+  // Compute effective area order
+  const effectiveAreaOrder = useMemo(() => {
+    if (areaOrderOverride) {
+      // Filter to only include IDs that still exist in data
+      return areaOrderOverride.filter(id => activeAreas.some(a => a.id === id))
     }
+    return activeAreas.map(a => a.id)
+  }, [areaOrderOverride, activeAreas])
 
-    // Orphan projects
-    projectOrder[ORPHAN_CONTAINER_ID] = projects
-      .filter(p => !p.area)
-      .map(p => p.id)
+  // Compute effective project order for a container
+  const getEffectiveProjectOrder = useCallback(
+    (containerId: string): string[] => {
+      if (projectOrderOverride?.[containerId]) {
+        // Filter to only include IDs that still exist
+        return projectOrderOverride[containerId].filter(id =>
+          projects.some(p => p.id === id)
+        )
+      }
+      // Default: projects in natural order
+      if (containerId === ORPHAN_CONTAINER_ID) {
+        return projects.filter(p => !p.area).map(p => p.id)
+      }
+      return projects.filter(p => p.area?.includes(containerId)).map(p => p.id)
+    },
+    [projectOrderOverride, projects]
+  )
 
-    return { areaOrder, projectOrder }
-  })
+  // Build order object for compatibility
+  const order = useMemo<SidebarOrder>(() => {
+    const projectOrder: Record<string, string[]> = {}
+    for (const area of activeAreas) {
+      projectOrder[area.id] = getEffectiveProjectOrder(area.id)
+    }
+    projectOrder[ORPHAN_CONTAINER_ID] =
+      getEffectiveProjectOrder(ORPHAN_CONTAINER_ID)
+    return { areaOrder: effectiveAreaOrder, projectOrder }
+  }, [effectiveAreaOrder, activeAreas, getEffectiveProjectOrder])
 
   // Reorder areas
-  const reorderAreas = useCallback((activeId: string, overId: string) => {
-    setOrder(prev => {
-      const oldIndex = prev.areaOrder.indexOf(activeId)
-      const newIndex = prev.areaOrder.indexOf(overId)
-      if (oldIndex === -1 || newIndex === -1) return prev
+  const reorderAreas = useCallback(
+    (activeId: string, overId: string) => {
+      const currentOrder = effectiveAreaOrder
+      const oldIndex = currentOrder.indexOf(activeId)
+      const newIndex = currentOrder.indexOf(overId)
+      if (oldIndex === -1 || newIndex === -1) return
 
-      return {
-        ...prev,
-        areaOrder: arrayMove(prev.areaOrder, oldIndex, newIndex),
-      }
-    })
-  }, [])
+      setAreaOrderOverride(arrayMove(currentOrder, oldIndex, newIndex))
+    },
+    [effectiveAreaOrder]
+  )
 
   // Reorder projects within the same container
   const reorderProjectsInArea = useCallback(
     (containerId: string, activeId: string, overId: string) => {
-      setOrder(prev => {
-        const containerProjects = prev.projectOrder[containerId] ?? []
-        const oldIndex = containerProjects.indexOf(activeId)
-        const newIndex = containerProjects.indexOf(overId)
-        if (oldIndex === -1 || newIndex === -1) return prev
+      const containerProjects = getEffectiveProjectOrder(containerId)
+      const oldIndex = containerProjects.indexOf(activeId)
+      const newIndex = containerProjects.indexOf(overId)
+      if (oldIndex === -1 || newIndex === -1) return
 
-        return {
-          ...prev,
-          projectOrder: {
-            ...prev.projectOrder,
-            [containerId]: arrayMove(containerProjects, oldIndex, newIndex),
-          },
-        }
-      })
+      setProjectOrderOverride(prev => ({
+        ...prev,
+        [containerId]: arrayMove(containerProjects, oldIndex, newIndex),
+      }))
     },
-    []
+    [getEffectiveProjectOrder]
   )
 
   // Move project to a different area (updates display order only for now)
@@ -94,36 +110,30 @@ export function useSidebarOrder() {
       toContainerId: string,
       insertIndex?: number
     ) => {
-      // Update display order
-      setOrder(prev => {
-        const fromProjects = [...(prev.projectOrder[fromContainerId] ?? [])]
-        const toProjects = [...(prev.projectOrder[toContainerId] ?? [])]
+      const fromProjects = [...getEffectiveProjectOrder(fromContainerId)]
+      const toProjects = [...getEffectiveProjectOrder(toContainerId)]
 
-        // Remove from source
-        const sourceIndex = fromProjects.indexOf(projectId)
-        if (sourceIndex !== -1) {
-          fromProjects.splice(sourceIndex, 1)
-        }
+      // Remove from source
+      const sourceIndex = fromProjects.indexOf(projectId)
+      if (sourceIndex !== -1) {
+        fromProjects.splice(sourceIndex, 1)
+      }
 
-        // Add to target at specified index or end
-        const targetIndex = insertIndex ?? toProjects.length
-        toProjects.splice(targetIndex, 0, projectId)
+      // Add to target at specified index or end
+      const targetIndex = insertIndex ?? toProjects.length
+      toProjects.splice(targetIndex, 0, projectId)
 
-        return {
-          ...prev,
-          projectOrder: {
-            ...prev.projectOrder,
-            [fromContainerId]: fromProjects,
-            [toContainerId]: toProjects,
-          },
-        }
-      })
+      setProjectOrderOverride(prev => ({
+        ...prev,
+        [fromContainerId]: fromProjects,
+        [toContainerId]: toProjects,
+      }))
 
       // TODO: Call updateProjectArea mutation to persist the change
       // const newAreaId = toContainerId === ORPHAN_CONTAINER_ID ? null : toContainerId
       // updateProjectArea(projectId, newAreaId)
     },
-    []
+    [getEffectiveProjectOrder]
   )
 
   // Get ordered areas (returns Area objects in display order)

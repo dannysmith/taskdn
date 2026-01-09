@@ -24,17 +24,50 @@ fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
 /// Load the saved quick pane shortcut from preferences, returning None on any failure.
 /// Used at startup before the full preferences system is available.
 pub fn load_quick_pane_shortcut(app: &AppHandle) -> Option<String> {
-    let path = get_preferences_path(app).ok()?;
+    load_preferences_sync(app)
+        .ok()
+        .and_then(|p| p.quick_pane_shortcut)
+}
+
+/// Vault directory configuration from preferences.
+pub struct VaultDirs {
+    pub tasks_dir: String,
+    pub projects_dir: String,
+    pub areas_dir: String,
+    pub ignore: Option<Vec<String>>,
+}
+
+/// Load vault directories from preferences, returning None if not all paths are configured.
+/// Used at startup to auto-initialize the vault.
+pub fn load_vault_dirs(app: &AppHandle) -> Option<VaultDirs> {
+    let prefs = load_preferences_sync(app).ok()?;
+
+    // All three directories must be configured
+    let tasks_dir = prefs.tasks_dir?;
+    let projects_dir = prefs.projects_dir?;
+    let areas_dir = prefs.areas_dir?;
+
+    Some(VaultDirs {
+        tasks_dir,
+        projects_dir,
+        areas_dir,
+        ignore: prefs.ignore,
+    })
+}
+
+/// Synchronously load preferences from disk.
+/// Used at startup before async runtime is fully available.
+fn load_preferences_sync(app: &AppHandle) -> Result<AppPreferences, ()> {
+    let path = get_preferences_path(app).map_err(|_| ())?;
     if !path.exists() {
-        return None;
+        return Err(());
     }
     let contents = std::fs::read_to_string(&path)
         .inspect_err(|e| log::warn!("Failed to read preferences: {e}"))
-        .ok()?;
-    let prefs: AppPreferences = serde_json::from_str(&contents)
+        .map_err(|_| ())?;
+    serde_json::from_str(&contents)
         .inspect_err(|e| log::warn!("Failed to parse preferences: {e}"))
-        .ok()?;
-    prefs.quick_pane_shortcut
+        .map_err(|_| ())
 }
 
 /// Simple greeting command for demonstration purposes.

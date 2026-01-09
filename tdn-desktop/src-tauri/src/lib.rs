@@ -132,6 +132,31 @@ pub fn run() {
                 // Non-fatal: app can still run without quick pane
             }
 
+            // Initialize vault from saved preferences
+            if let Some(vault_dirs) = commands::preferences::load_vault_dirs(app.handle()) {
+                log::info!(
+                    "Initializing vault from preferences: tasks={}, projects={}, areas={}",
+                    vault_dirs.tasks_dir,
+                    vault_dirs.projects_dir,
+                    vault_dirs.areas_dir
+                );
+                let vault_manager = app.state::<VaultManager>();
+                let config = vault::VaultConfig::from_dirs(
+                    vault_dirs.tasks_dir,
+                    vault_dirs.projects_dir,
+                    vault_dirs.areas_dir,
+                    vault_dirs.ignore,
+                );
+                if let Err(e) = vault_manager.initialize(config, app.handle().clone()) {
+                    log::error!("Failed to initialize vault: {e:?}");
+                    // Non-fatal: user can configure paths in preferences
+                }
+            } else {
+                log::info!(
+                    "Vault not configured - user needs to set directory paths in preferences"
+                );
+            }
+
             // NOTE: Application menu is built from JavaScript for i18n support
             // See src/lib/menu.ts for the menu implementation
 
