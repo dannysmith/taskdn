@@ -201,15 +201,36 @@ export function useArea(id: string) {
 // =============================================================================
 
 /**
- * Hook to create a new task.
+ * Options for creating a task with optimistic updates.
+ * Extends CreateTaskOptions with a tempId for immediate cache insertion.
+ */
+export type CreateTaskWithTempId = CreateTaskOptions & {
+  /** Temporary ID for optimistic updates. Generate with crypto.randomUUID() */
+  tempId: string
+}
+
+/**
+ * Hook to create a new task with optimistic updates.
+ *
+ * The caller must provide a `tempId` which is used to immediately add the task
+ * to the cache before the mutation completes. This enables instant edit mode.
+ *
+ * Flow:
+ * 1. Caller generates tempId and updates order store
+ * 2. Mutation starts, onMutate adds temp task to cache
+ * 3. Task appears in orderedTasks immediately
+ * 4. Mutation completes, temp task replaced with real task
+ * 5. Caller's onSuccess replaces tempId with realId in order store
  */
 export function useCreateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (options: CreateTaskOptions): Promise<Task> => {
-      logger.debug('Creating task', { options })
-      const result = await commands.createTask(options)
+    mutationFn: async (options: CreateTaskWithTempId): Promise<Task> => {
+      // Strip tempId before sending to Rust (it doesn't know about it)
+      const { tempId: _tempId, ...createOptions } = options
+      logger.debug('Creating task', { options: createOptions })
+      const result = await commands.createTask(createOptions)
 
       if (result.status === 'error') {
         throw new Error(handleVaultError(result.error, 'Creating task'))
@@ -221,17 +242,61 @@ export function useCreateTask() {
       })
       return result.data
     },
-    onSuccess: newTask => {
+
+    onMutate: async options => {
+      // Cancel any outgoing refetches to avoid overwriting our optimistic update
+      await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
+
+      // Snapshot current data for rollback
+      const previousTasks = queryClient.getQueryData<Task[]>(
+        vaultQueryKeys.tasks()
+      )
+
+      // Create optimistic task with temp ID
+      const tempTask: Task = {
+        id: options.tempId,
+        path: `temp://${options.tempId}`, // Placeholder path
+        title: options.title ?? '',
+        status: options.status ?? 'inbox',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        completedAt: null,
+        due: options.due ?? null,
+        scheduled: options.scheduled ?? null,
+        deferUntil: options.deferUntil ?? null,
+        // Note: CreateTaskOptions uses projectId/areaId, but Task uses project/area (wikilinks)
+        // For optimistic update, we set these to null - they'll be set correctly when real task arrives
+        area: null,
+        project: null,
+        body: '',
+      }
+
+      // Add temp task to cache
+      queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks =>
+        oldTasks ? [...oldTasks, tempTask] : [tempTask]
+      )
+
+      return { previousTasks, tempId: options.tempId }
+    },
+
+    onSuccess: (realTask, _variables, context) => {
       markMutationComplete()
 
-      // Update the tasks list cache with the new task
+      // Replace temp task with real task in the list cache
       queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
-        if (!oldTasks) return [newTask]
-        return [...oldTasks, newTask]
+        if (!oldTasks) return [realTask]
+        return oldTasks.map(t => (t.id === context?.tempId ? realTask : t))
       })
 
-      // Also set the individual task cache
-      queryClient.setQueryData(vaultQueryKeys.task(newTask.id), newTask)
+      // Set individual task cache with real task
+      queryClient.setQueryData(vaultQueryKeys.task(realTask.id), realTask)
+    },
+
+    onError: (_error, _variables, context) => {
+      // Rollback on error
+      if (context?.previousTasks) {
+        queryClient.setQueryData(vaultQueryKeys.tasks(), context.previousTasks)
+      }
     },
   })
 }

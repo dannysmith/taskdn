@@ -212,18 +212,11 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   )
 
   const handleCreateTask = React.useCallback(
-    async (afterTaskId: string | null): Promise<string | undefined> => {
-      const newTask = await createTask.mutateAsync({
-        title: '',
-        status: 'ready',
-        projectId,
-        areaId: project?.area ?? null,
-        scheduled: null,
-        due: null,
-        deferUntil: null,
-      })
+    (afterTaskId: string | null): string => {
+      // 1. Generate temp ID upfront for optimistic updates
+      const tempId = crypto.randomUUID()
 
-      // Insert new task at the correct position in the order
+      // 2. Calculate new order with temp ID
       const currentOrder = orderedTasks.map(t => t.id)
       let newOrder: string[]
 
@@ -233,22 +226,63 @@ export function ProjectView({ projectId }: ProjectViewProps) {
           // Insert after the selected task
           newOrder = [
             ...currentOrder.slice(0, insertIndex + 1),
-            newTask.id,
+            tempId,
             ...currentOrder.slice(insertIndex + 1),
           ]
         } else {
           // afterTaskId not found, append to end
-          newOrder = [...currentOrder, newTask.id]
+          newOrder = [...currentOrder, tempId]
         }
       } else {
         // No selection, append to end
-        newOrder = [...currentOrder, newTask.id]
+        newOrder = [...currentOrder, tempId]
       }
 
-      // Update the order store directly
+      // 3. Update order store immediately with temp ID
       useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
 
-      return newTask.id
+      // 4. Start mutation (onMutate adds temp task to cache synchronously)
+      createTask.mutate(
+        {
+          tempId,
+          title: '',
+          status: 'ready',
+          projectId,
+          areaId: project?.area ?? null,
+          scheduled: null,
+          due: null,
+          deferUntil: null,
+        },
+        {
+          onSuccess: realTask => {
+            // 5. Replace temp ID with real ID in order store
+            const order =
+              useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
+            if (order) {
+              const updatedOrder = order.map(id =>
+                id === tempId ? realTask.id : id
+              )
+              useDisplayOrderStore
+                .getState()
+                .setProjectTaskOrder(projectId, updatedOrder)
+            }
+          },
+          onError: () => {
+            // 6. Remove temp ID from order store on failure
+            const order =
+              useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
+            if (order) {
+              const revertedOrder = order.filter(id => id !== tempId)
+              useDisplayOrderStore
+                .getState()
+                .setProjectTaskOrder(projectId, revertedOrder)
+            }
+          },
+        }
+      )
+
+      // 7. Return temp ID immediately for edit mode
+      return tempId
     },
     [createTask, projectId, project?.area, orderedTasks]
   )
@@ -268,24 +302,23 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   // Register view default handler for Cmd+N task creation
   // When no task is selected, Cmd+N creates a new task at the end
   React.useEffect(() => {
-    console.log('[ProjectView] Registering view default handler')
     useTaskCreationStore.getState().registerViewDefault({
       handler: handleCreateTask,
       onTaskCreated: taskId => {
-        console.log('[ProjectView] onTaskCreated callback:', taskId)
         setPendingEditItemId(taskId)
       },
     })
 
     return () => {
-      console.log('[ProjectView] Unregistering view default handler')
       useTaskCreationStore.getState().registerViewDefault(null)
     }
   }, [handleCreateTask])
 
   const handleKanbanCreateTask = React.useCallback(
-    (status: TaskStatus): string | undefined => {
+    (status: TaskStatus): string => {
+      const tempId = crypto.randomUUID()
       createTask.mutate({
+        tempId,
         title: '',
         status,
         projectId,
@@ -294,9 +327,8 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         due: null,
         deferUntil: null,
       })
-      // Return undefined - we can't get the ID synchronously with mutate
-      // The card will get auto-focused via editingTaskId state in KanbanBoard
-      return undefined
+      // Return temp ID for immediate edit mode
+      return tempId
     },
     [createTask, projectId, project?.area]
   )

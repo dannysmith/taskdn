@@ -246,8 +246,10 @@ export function WeekView() {
   )
 
   const handleCreateTask = React.useCallback(
-    (scheduledDate: string): string | undefined => {
+    (scheduledDate: string): string => {
+      const tempId = crypto.randomUUID()
       createTask.mutate({
+        tempId,
         title: '',
         status: 'ready',
         projectId: null,
@@ -256,14 +258,16 @@ export function WeekView() {
         due: null,
         deferUntil: null,
       })
-      return undefined
+      return tempId
     },
     [createTask]
   )
 
   const handleKanbanCreateTask = React.useCallback(
-    (status: TaskStatus): string | undefined => {
+    (status: TaskStatus): string => {
+      const tempId = crypto.randomUUID()
       createTask.mutate({
+        tempId,
         title: '',
         status,
         projectId: null,
@@ -272,7 +276,7 @@ export function WeekView() {
         due: null,
         deferUntil: null,
       })
-      return undefined
+      return tempId
     },
     [createTask]
   )

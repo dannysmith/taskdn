@@ -206,18 +206,10 @@ export function AreaView({ areaId }: AreaViewProps) {
 
   // Handler for creating loose tasks (no project)
   const handleCreateLooseTask = React.useCallback(
-    async (afterTaskId: string | null): Promise<string | undefined> => {
-      const newTask = await createTask.mutateAsync({
-        title: '',
-        status: 'ready',
-        projectId: null,
-        areaId: areaId,
-        scheduled: null,
-        due: null,
-        deferUntil: null,
-      })
+    (afterTaskId: string | null): string => {
+      const tempId = crypto.randomUUID()
 
-      // Insert new task at the correct position in the order
+      // Calculate new order with temp ID
       const currentOrder = orderedLooseTasks.map(t => t.id)
       let newOrder: string[]
 
@@ -226,19 +218,56 @@ export function AreaView({ areaId }: AreaViewProps) {
         if (insertIndex !== -1) {
           newOrder = [
             ...currentOrder.slice(0, insertIndex + 1),
-            newTask.id,
+            tempId,
             ...currentOrder.slice(insertIndex + 1),
           ]
         } else {
-          newOrder = [...currentOrder, newTask.id]
+          newOrder = [...currentOrder, tempId]
         }
       } else {
-        newOrder = [...currentOrder, newTask.id]
+        newOrder = [...currentOrder, tempId]
       }
 
       useDisplayOrderStore.getState().setAreaTaskOrder(areaId, newOrder)
 
-      return newTask.id
+      createTask.mutate(
+        {
+          tempId,
+          title: '',
+          status: 'ready',
+          projectId: null,
+          areaId: areaId,
+          scheduled: null,
+          due: null,
+          deferUntil: null,
+        },
+        {
+          onSuccess: realTask => {
+            const order =
+              useDisplayOrderStore.getState().areaTaskOrder?.[areaId]
+            if (order) {
+              const updatedOrder = order.map(id =>
+                id === tempId ? realTask.id : id
+              )
+              useDisplayOrderStore
+                .getState()
+                .setAreaTaskOrder(areaId, updatedOrder)
+            }
+          },
+          onError: () => {
+            const order =
+              useDisplayOrderStore.getState().areaTaskOrder?.[areaId]
+            if (order) {
+              const revertedOrder = order.filter(id => id !== tempId)
+              useDisplayOrderStore
+                .getState()
+                .setAreaTaskOrder(areaId, revertedOrder)
+            }
+          },
+        }
+      )
+
+      return tempId
     },
     [createTask, areaId, orderedLooseTasks]
   )
@@ -246,19 +275,11 @@ export function AreaView({ areaId }: AreaViewProps) {
   // Factory function to create task creation handlers for each project
   const makeCreateTaskHandler = React.useCallback(
     (projectId: string) =>
-      async (afterTaskId: string | null): Promise<string | undefined> => {
+      (afterTaskId: string | null): string => {
+        const tempId = crypto.randomUUID()
         const project = projects.find(p => p.id === projectId)
-        const newTask = await createTask.mutateAsync({
-          title: '',
-          status: 'ready',
-          projectId,
-          areaId: project?.area ?? null,
-          scheduled: null,
-          due: null,
-          deferUntil: null,
-        })
 
-        // Insert new task at the correct position in the project's order
+        // Calculate new order with temp ID
         const projectTasks = tasksByProject.get(projectId) ?? []
         const currentOrder = projectTasks.map(t => t.id)
         let newOrder: string[]
@@ -268,19 +289,56 @@ export function AreaView({ areaId }: AreaViewProps) {
           if (insertIndex !== -1) {
             newOrder = [
               ...currentOrder.slice(0, insertIndex + 1),
-              newTask.id,
+              tempId,
               ...currentOrder.slice(insertIndex + 1),
             ]
           } else {
-            newOrder = [...currentOrder, newTask.id]
+            newOrder = [...currentOrder, tempId]
           }
         } else {
-          newOrder = [...currentOrder, newTask.id]
+          newOrder = [...currentOrder, tempId]
         }
 
         useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
 
-        return newTask.id
+        createTask.mutate(
+          {
+            tempId,
+            title: '',
+            status: 'ready',
+            projectId,
+            areaId: project?.area ?? null,
+            scheduled: null,
+            due: null,
+            deferUntil: null,
+          },
+          {
+            onSuccess: realTask => {
+              const order =
+                useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
+              if (order) {
+                const updatedOrder = order.map(id =>
+                  id === tempId ? realTask.id : id
+                )
+                useDisplayOrderStore
+                  .getState()
+                  .setProjectTaskOrder(projectId, updatedOrder)
+              }
+            },
+            onError: () => {
+              const order =
+                useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
+              if (order) {
+                const revertedOrder = order.filter(id => id !== tempId)
+                useDisplayOrderStore
+                  .getState()
+                  .setProjectTaskOrder(projectId, revertedOrder)
+              }
+            },
+          }
+        )
+
+        return tempId
       },
     [createTask, projects, tasksByProject]
   )
