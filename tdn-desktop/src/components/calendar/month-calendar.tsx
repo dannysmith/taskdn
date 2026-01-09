@@ -5,7 +5,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  closestCenter,
+  pointerWithin,
   defaultDropAnimationSideEffects,
   type DragStartEvent,
   type DragEndEvent,
@@ -369,7 +369,7 @@ export function MonthCalendar({
       {/* Calendar grid */}
       <DndContext
         sensors={sensors}
-        collisionDetection={closestCenter}
+        collisionDetection={pointerWithin}
         onDragStart={handleDragStart}
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
