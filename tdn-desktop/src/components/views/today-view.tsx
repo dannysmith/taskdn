@@ -1,13 +1,16 @@
 import * as React from 'react'
 import { Sun, Flag, Sunrise } from 'lucide-react'
+import { arrayMove } from '@dnd-kit/sortable'
 
 import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useTodayOrder, type TodaySectionId } from '@/hooks/use-today-order'
 import { SectionTaskGroup } from '@/components/tasks/section-task-group'
+import { TaskDndContext } from '@/components/tasks/task-dnd-context'
 import { EmptyState } from '@/components/ui/empty-state'
 import { isOverdue, isToday } from '@/lib/date-utils'
+import { toHeadingId, type HeadingColor } from '@/types/headings'
 
 /**
  * TodayView - Shows tasks that need attention today.
@@ -17,14 +20,22 @@ import { isOverdue, isToday } from '@/lib/date-utils'
  * 2. "Overdue or Due Today" - Tasks whose due date has passed or is today
  * 3. "Became Available Today" - Tasks whose deferUntil date is today
  *
- * Each section has its own drag-and-drop for reordering.
+ * The "Scheduled for Today" section supports inline headings for manual
+ * organization. Tasks can be dragged between sections (only TO scheduled).
+ * Tasks can also be reordered within sections.
+ *
  * Display order is managed by useTodayOrder hook, separate from entity data.
  */
 export function TodayView() {
-  const { tasks } = useVaultData()
+  const { tasks, projects, areas } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
   const openTask = useTaskDetailStore(state => state.openTask)
+
+  // State for auto-editing newly created items
+  const [pendingEditItemId, setPendingEditItemId] = React.useState<
+    string | null
+  >(null)
 
   // Get today's date in ISO format (YYYY-MM-DD)
   const today = new Date().toISOString().slice(0, 10)
@@ -63,24 +74,228 @@ export function TodayView() {
     })
   }, [tasks, today])
 
-  // Manage display order for each section
-  const { setSectionOrder, getOrderedTasks } = useTodayOrder({
+  // Manage display order for each section (with heading support)
+  const {
+    headings,
+    setSectionTaskOrder,
+    setSectionItemOrder,
+    getOrderedTasks,
+    getOrderedItems,
+    createHeading,
+    updateHeading,
+    deleteHeading,
+  } = useTodayOrder({
     scheduledToday,
     overdueOrDueToday,
     becameAvailableToday,
   })
 
-  // Get ordered tasks for each section
-  const orderedScheduledToday = getOrderedTasks('scheduled-today')
+  // Get task by ID for drag preview
+  const getTaskById = React.useCallback(
+    (taskId: string) => tasks.find(t => t.id === taskId),
+    [tasks]
+  )
+
+  // Get heading by ID for drag preview
+  const getHeadingById = React.useCallback(
+    (headingId: string) => headings[headingId],
+    [headings]
+  )
+
+  // Get context name (project/area) for a task
+  const getTaskContextName = React.useCallback(
+    (task: Task): string | undefined => {
+      if (task.project) {
+        const project = projects.find(p => p.id === task.project)
+        return project?.title
+      }
+      if (task.area) {
+        const area = areas.find(a => a.id === task.area)
+        return area?.title
+      }
+      return undefined
+    },
+    [projects, areas]
+  )
+
+  // Get ordered items for "Scheduled for Today" (supports headings)
+  const orderedScheduledItems = getOrderedItems('scheduled-today')
+  // Get ordered tasks for other sections (task-only mode)
   const orderedOverdueOrDueToday = getOrderedTasks('overdue-due-today')
   const orderedBecameAvailableToday = getOrderedTasks('became-available-today')
 
-  // Handlers
-  const handleReorder = React.useCallback(
-    (sectionId: TodaySectionId) => (reorderedTasks: Task[]) => {
-      setSectionOrder(sectionId, reorderedTasks)
+  // Also need task-only version for TaskDndContext compatibility
+  const orderedScheduledTasks = React.useMemo(
+    () =>
+      orderedScheduledItems
+        .filter(item => item.type === 'task')
+        .map(item => item.data as Task),
+    [orderedScheduledItems]
+  )
+
+  // Create tasksBySection map for TaskDndContext (sections act as "projects")
+  const tasksBySection = React.useMemo(() => {
+    const map = new Map<string, Task[]>()
+    map.set('scheduled-today', orderedScheduledTasks)
+    map.set('overdue-due-today', orderedOverdueOrDueToday)
+    map.set('became-available-today', orderedBecameAvailableToday)
+    return map
+  }, [
+    orderedScheduledTasks,
+    orderedOverdueOrDueToday,
+    orderedBecameAvailableToday,
+  ])
+
+  // Handler for cross-section task move (TaskDndContext callback)
+  const handleTaskMove = React.useCallback(
+    (
+      taskId: string,
+      _fromSectionId: string,
+      toSectionId: string,
+      insertBeforeTaskId: string | null
+    ) => {
+      // Only allow moving TO "scheduled-today"
+      if (toSectionId !== 'scheduled-today') return
+
+      // Update the scheduled date
+      updateTask.mutate({
+        id: taskId,
+        title: null,
+        status: null,
+        project: null,
+        area: null,
+        scheduled: today,
+        due: null,
+        deferUntil: null,
+        body: null,
+      })
+
+      // Build current order IDs (preserving headings with their prefix)
+      const currentOrderIds = orderedScheduledItems.map(item =>
+        item.type === 'heading' ? toHeadingId(item.id) : item.id
+      )
+
+      let newOrderIds: string[]
+
+      if (insertBeforeTaskId) {
+        // Find where to insert (insertBeforeTaskId is a task ID without prefix)
+        const insertIndex = currentOrderIds.indexOf(insertBeforeTaskId)
+        if (insertIndex !== -1) {
+          newOrderIds = [
+            ...currentOrderIds.slice(0, insertIndex),
+            taskId,
+            ...currentOrderIds.slice(insertIndex),
+          ]
+        } else {
+          newOrderIds = [...currentOrderIds, taskId]
+        }
+      } else {
+        // Append to end
+        newOrderIds = [...currentOrderIds, taskId]
+      }
+
+      // Use setSectionItemOrder to preserve headings
+      setSectionItemOrder('scheduled-today', newOrderIds)
     },
-    [setSectionOrder]
+    [updateTask, today, orderedScheduledItems, setSectionItemOrder]
+  )
+
+  // Handler for same-section reordering (TaskDndContext callback)
+  const handleTasksReorder = React.useCallback(
+    (sectionId: string, reorderedTasks: Task[]) => {
+      setSectionTaskOrder(sectionId as TodaySectionId, reorderedTasks)
+    },
+    [setSectionTaskOrder]
+  )
+
+  // Factory for reorder handlers (for task-only sections)
+  const makeReorderHandler = React.useCallback(
+    (sectionId: TodaySectionId) => (reorderedTasks: Task[]) => {
+      setSectionTaskOrder(sectionId, reorderedTasks)
+    },
+    [setSectionTaskOrder]
+  )
+
+  // Handler for mixed items reorder (Scheduled for Today section)
+  const handleScheduledItemsReorder = React.useCallback(
+    (orderedIds: string[]) => {
+      setSectionItemOrder('scheduled-today', orderedIds)
+    },
+    [setSectionItemOrder]
+  )
+
+  // Handler for drag-based reordering (TaskDndContext callback)
+  // Converts drag IDs back to order IDs and applies the reorder
+  const handleDragItemsReorder = React.useCallback(
+    (containerId: string, activeDragId: string, overDragId: string) => {
+      // Parse drag ID to extract type and item ID
+      // Drag ID format: "type-containerId-itemId"
+      const parseDragId = (
+        dragId: string
+      ): { type: 'heading' | 'task'; id: string } | null => {
+        const headingPrefix = `heading-${containerId}-`
+        if (dragId.startsWith(headingPrefix)) {
+          return { type: 'heading', id: dragId.slice(headingPrefix.length) }
+        }
+        const taskPrefix = `task-${containerId}-`
+        if (dragId.startsWith(taskPrefix)) {
+          return { type: 'task', id: dragId.slice(taskPrefix.length) }
+        }
+        return null
+      }
+
+      // Convert parsed drag ID to order ID format
+      const toOrderId = (parsed: {
+        type: 'heading' | 'task'
+        id: string
+      }): string => {
+        return parsed.type === 'heading' ? toHeadingId(parsed.id) : parsed.id
+      }
+
+      const activeParsed = parseDragId(activeDragId)
+      const overParsed = parseDragId(overDragId)
+
+      if (!activeParsed || !overParsed) return
+
+      const activeOrderId = toOrderId(activeParsed)
+      const overOrderId = toOrderId(overParsed)
+
+      // Get current order for the section
+      const currentItems =
+        containerId === 'scheduled-today'
+          ? orderedScheduledItems
+          : containerId === 'overdue-due-today'
+            ? orderedOverdueOrDueToday.map(t => ({
+                type: 'task' as const,
+                id: t.id,
+                data: t,
+              }))
+            : orderedBecameAvailableToday.map(t => ({
+                type: 'task' as const,
+                id: t.id,
+                data: t,
+              }))
+
+      // Build current order IDs
+      const currentOrderIds = currentItems.map(item =>
+        item.type === 'heading' ? toHeadingId(item.id) : item.id
+      )
+
+      // Find indices and apply arrayMove
+      const oldIndex = currentOrderIds.indexOf(activeOrderId)
+      const newIndex = currentOrderIds.indexOf(overOrderId)
+
+      if (oldIndex === -1 || newIndex === -1) return
+
+      const newOrderIds = arrayMove(currentOrderIds, oldIndex, newIndex)
+      setSectionItemOrder(containerId as TodaySectionId, newOrderIds)
+    },
+    [
+      orderedScheduledItems,
+      orderedOverdueOrDueToday,
+      orderedBecameAvailableToday,
+      setSectionItemOrder,
+    ]
   )
 
   const handleTitleChange = React.useCallback(
@@ -128,9 +343,9 @@ export function TodayView() {
     [openTask]
   )
 
-  // Create task handlers for each section
+  // Create task handler for "Scheduled for Today" section
   const handleCreateScheduledTask = React.useCallback(
-    async (_afterTaskId: string | null): Promise<string | undefined> => {
+    async (_afterItemId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
@@ -145,6 +360,55 @@ export function TodayView() {
     [createTask, today]
   )
 
+  // Add task from header button
+  const handleAddScheduledTask = React.useCallback(async () => {
+    const newTask = await createTask.mutateAsync({
+      title: '',
+      status: 'ready',
+      projectId: null,
+      areaId: null,
+      scheduled: today,
+      due: null,
+      deferUntil: null,
+    })
+    // Trigger auto-edit for the new task
+    setPendingEditItemId(newTask.id)
+  }, [createTask, today])
+
+  // Heading handlers for Scheduled section
+  const handleAddHeading = React.useCallback(() => {
+    const headingId = createHeading('scheduled-today')
+    // Trigger auto-edit for the new heading
+    setPendingEditItemId(headingId)
+  }, [createHeading])
+
+  // Clear pending edit after it's consumed
+  const handleAutoEditConsumed = React.useCallback(() => {
+    setPendingEditItemId(null)
+  }, [])
+
+  const handleHeadingTitleChange = React.useCallback(
+    (headingId: string, newTitle: string) => {
+      updateHeading(headingId, { title: newTitle })
+    },
+    [updateHeading]
+  )
+
+  const handleHeadingColorChange = React.useCallback(
+    (headingId: string, color: HeadingColor) => {
+      updateHeading(headingId, { color })
+    },
+    [updateHeading]
+  )
+
+  const handleHeadingDelete = React.useCallback(
+    (headingId: string) => {
+      deleteHeading('scheduled-today', headingId)
+    },
+    [deleteHeading]
+  )
+
+  // Create task handler for due/overdue section (set due date to today)
   const handleCreateDueTask = React.useCallback(
     async (_afterTaskId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
@@ -161,73 +425,111 @@ export function TodayView() {
     [createTask, today]
   )
 
+  // Create task handler for "became available" section (schedule for today)
+  const handleCreateAvailableTask = React.useCallback(
+    async (_afterTaskId: string | null): Promise<string | undefined> => {
+      const newTask = await createTask.mutateAsync({
+        title: '',
+        status: 'ready',
+        projectId: null,
+        areaId: null,
+        scheduled: today,
+        due: null,
+        deferUntil: null,
+      })
+      return newTask.id
+    },
+    [createTask, today]
+  )
+
   // Check if there are any tasks to show
   const hasAnyItems =
-    orderedScheduledToday.length > 0 ||
+    orderedScheduledItems.length > 0 ||
     orderedOverdueOrDueToday.length > 0 ||
     orderedBecameAvailableToday.length > 0
 
   return (
-    <div className="space-y-6">
-      {/* Scheduled for Today */}
-      <SectionTaskGroup
-        sectionId="scheduled-today"
-        title="Scheduled for Today"
-        icon={<Sun className="size-4" />}
-        tasks={orderedScheduledToday}
-        onTasksReorder={handleReorder('scheduled-today')}
-        onTaskTitleChange={handleTitleChange}
-        onTaskStatusToggle={handleStatusToggle}
-        onTaskOpenDetail={handleOpenDetail}
-        onCreateTask={handleCreateScheduledTask}
-        showScheduled={false}
-        showDue={true}
-        defaultExpanded={true}
-      />
-
-      {/* Overdue or Due Today */}
-      {orderedOverdueOrDueToday.length > 0 && (
+    <TaskDndContext
+      tasksByProject={tasksBySection}
+      onTaskMove={handleTaskMove}
+      onTasksReorder={handleTasksReorder}
+      onItemsReorder={handleDragItemsReorder}
+      getTaskById={getTaskById}
+      getHeadingById={getHeadingById}
+    >
+      <div className="space-y-6">
+        {/* Scheduled for Today - with heading support */}
         <SectionTaskGroup
-          sectionId="overdue-due-today"
-          title="Overdue or Due Today"
-          icon={<Flag className="size-4" />}
-          tasks={orderedOverdueOrDueToday}
-          onTasksReorder={handleReorder('overdue-due-today')}
-          onTaskTitleChange={handleTitleChange}
-          onTaskStatusToggle={handleStatusToggle}
-          onTaskOpenDetail={handleOpenDetail}
-          onCreateTask={handleCreateDueTask}
-          showScheduled={true}
-          showDue={true}
-          defaultExpanded={true}
-        />
-      )}
-
-      {/* Became Available Today */}
-      {orderedBecameAvailableToday.length > 0 && (
-        <SectionTaskGroup
-          sectionId="became-available-today"
-          title="Became Available Today"
-          icon={<Sunrise className="size-4" />}
-          tasks={orderedBecameAvailableToday}
-          onTasksReorder={handleReorder('became-available-today')}
+          sectionId="scheduled-today"
+          title="Scheduled for Today"
+          icon={<Sun className="size-4" />}
+          orderedItems={orderedScheduledItems}
+          onItemsReorder={handleScheduledItemsReorder}
           onTaskTitleChange={handleTitleChange}
           onTaskStatusToggle={handleStatusToggle}
           onTaskOpenDetail={handleOpenDetail}
           onCreateTask={handleCreateScheduledTask}
-          showScheduled={true}
+          onAddTask={handleAddScheduledTask}
+          onAddHeading={handleAddHeading}
+          onHeadingTitleChange={handleHeadingTitleChange}
+          onHeadingColorChange={handleHeadingColorChange}
+          onHeadingDelete={handleHeadingDelete}
+          getContextName={getTaskContextName}
+          showScheduled={false}
           showDue={true}
           defaultExpanded={true}
+          autoEditItemId={pendingEditItemId}
+          onAutoEditConsumed={handleAutoEditConsumed}
         />
-      )}
 
-      {/* Empty state */}
-      {!hasAnyItems && (
-        <EmptyState
-          title="Nothing scheduled for today"
-          description="Schedule tasks or set due dates to see them here."
-        />
-      )}
-    </div>
+        {/* Overdue or Due Today - task only */}
+        {orderedOverdueOrDueToday.length > 0 && (
+          <SectionTaskGroup
+            sectionId="overdue-due-today"
+            title="Overdue or Due Today"
+            icon={<Flag className="size-4" />}
+            tasks={orderedOverdueOrDueToday}
+            onTasksReorder={makeReorderHandler('overdue-due-today')}
+            onTaskTitleChange={handleTitleChange}
+            onTaskStatusToggle={handleStatusToggle}
+            onTaskOpenDetail={handleOpenDetail}
+            onCreateTask={handleCreateDueTask}
+            getContextName={getTaskContextName}
+            showScheduled={true}
+            showDue={true}
+            defaultExpanded={true}
+            useExternalDnd={true}
+          />
+        )}
+
+        {/* Became Available Today - task only */}
+        {orderedBecameAvailableToday.length > 0 && (
+          <SectionTaskGroup
+            sectionId="became-available-today"
+            title="Became Available Today"
+            icon={<Sunrise className="size-4" />}
+            tasks={orderedBecameAvailableToday}
+            onTasksReorder={makeReorderHandler('became-available-today')}
+            onTaskTitleChange={handleTitleChange}
+            onTaskStatusToggle={handleStatusToggle}
+            onTaskOpenDetail={handleOpenDetail}
+            onCreateTask={handleCreateAvailableTask}
+            getContextName={getTaskContextName}
+            showScheduled={true}
+            showDue={true}
+            defaultExpanded={true}
+            useExternalDnd={true}
+          />
+        )}
+
+        {/* Empty state */}
+        {!hasAnyItems && (
+          <EmptyState
+            title="Nothing scheduled for today"
+            description="Schedule tasks or set due dates to see them here."
+          />
+        )}
+      </div>
+    </TaskDndContext>
   )
 }

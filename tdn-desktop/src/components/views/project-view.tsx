@@ -117,6 +117,16 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     [createTask, projectId, project?.area]
   )
 
+  // Combine description and body for notes
+  // (hoisted before early return to satisfy React hooks rules)
+  const projectNotes = React.useMemo(() => {
+    if (!project) return ''
+    const parts: string[] = []
+    if (project.description) parts.push(project.description)
+    if (project.body) parts.push(project.body)
+    return parts.join('\n\n')
+  }, [project])
+
   if (!project) {
     return (
       <div className="space-y-4">
@@ -127,14 +137,6 @@ export function ProjectView({ projectId }: ProjectViewProps) {
       </div>
     )
   }
-
-  // Combine description and body for notes
-  const projectNotes = React.useMemo(() => {
-    const parts: string[] = []
-    if (project.description) parts.push(project.description)
-    if (project.body) parts.push(project.body)
-    return parts.join('\n\n')
-  }, [project.description, project.body])
 
   return (
     <div className="space-y-6">
@@ -150,7 +152,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         {orderedTasks.length > 0 ? (
           <DraggableTaskList
             tasks={orderedTasks}
-            listId={`project-${projectId}`}
+            projectId={`project-${projectId}`}
             onTasksReorder={handleReorder}
             onTaskTitleChange={handleTitleChange}
             onTaskStatusToggle={handleStatusToggle}

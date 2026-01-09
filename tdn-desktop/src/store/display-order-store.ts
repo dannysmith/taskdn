@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
+import type { Heading } from '@/types/headings'
 
 /**
  * Display Order Store - Manages visual ordering of entities separate from data.
@@ -42,6 +43,9 @@ interface DisplayOrderState {
   // Today view section ordering (per-section)
   todaySectionOrder: Partial<Record<TodaySectionId, string[]>> | null
 
+  // Today view headings (UI-only, session-persistent)
+  todayHeadings: Record<string, Heading> | null
+
   // Actions for sidebar
   setSidebarAreaOrder: (order: string[]) => void
   setSidebarProjectOrder: (containerId: string, order: string[]) => void
@@ -55,6 +59,10 @@ interface DisplayOrderState {
 
   // Actions for today sections
   setTodaySectionOrder: (sectionId: TodaySectionId, order: string[]) => void
+
+  // Actions for today headings
+  setTodayHeading: (headingId: string, heading: Heading) => void
+  deleteTodayHeading: (headingId: string) => void
 
   // Reset (for testing or clearing)
   resetAllOrder: () => void
@@ -73,6 +81,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
       inboxOrder: null,
       projectTaskOrder: null,
       todaySectionOrder: null,
+      todayHeadings: null,
 
       // Sidebar actions
       setSidebarAreaOrder: order =>
@@ -132,6 +141,30 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
           'setTodaySectionOrder'
         ),
 
+      // Today heading actions
+      setTodayHeading: (headingId, heading) =>
+        set(
+          state => ({
+            todayHeadings: {
+              ...state.todayHeadings,
+              [headingId]: heading,
+            },
+          }),
+          undefined,
+          'setTodayHeading'
+        ),
+
+      deleteTodayHeading: headingId =>
+        set(
+          state => {
+            if (!state.todayHeadings) return state
+            const { [headingId]: _, ...rest } = state.todayHeadings
+            return { todayHeadings: Object.keys(rest).length > 0 ? rest : null }
+          },
+          undefined,
+          'deleteTodayHeading'
+        ),
+
       // Reset
       resetAllOrder: () =>
         set(
@@ -141,6 +174,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
             inboxOrder: null,
             projectTaskOrder: null,
             todaySectionOrder: null,
+            todayHeadings: null,
           },
           undefined,
           'resetAllOrder'

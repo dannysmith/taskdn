@@ -1,4 +1,4 @@
-import { ChevronRight, Plus } from 'lucide-react'
+import { ChevronRight, Plus, PlusCircle } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
  * - Expand/collapse toggle (chevron rotates when expanded)
  * - Optional icon before title
  * - Task count badge on the right
- * - Optional "+ Task" action button
+ * - Optional "+ Task" and "+ Heading" action buttons
  *
  * Click anywhere on the header to expand/collapse. Action buttons stop
  * propagation so they don't trigger collapse.
@@ -24,6 +24,8 @@ interface SectionHeaderProps {
   onToggleExpand: () => void
   /** If provided, shows a "+ Task" button */
   onAddTask?: () => void
+  /** If provided, shows a "+ Heading" button */
+  onAddHeading?: () => void
   className?: string
 }
 
@@ -34,6 +36,7 @@ export function SectionHeader({
   isExpanded,
   onToggleExpand,
   onAddTask,
+  onAddHeading,
   className,
 }: SectionHeaderProps) {
   return (
@@ -63,24 +66,44 @@ export function SectionHeader({
       </span>
 
       {/* Action buttons - stay fixed size */}
-      {onAddTask && (
+      {(onAddTask || onAddHeading) && (
         <div className="flex items-center gap-0.5 shrink-0">
-          <button
-            type="button"
-            onClick={e => {
-              e.stopPropagation()
-              onAddTask()
-            }}
-            className={cn(
-              'flex items-center gap-1 px-1.5 py-0.5 rounded text-xs',
-              'text-muted-foreground hover:text-foreground',
-              'hover:bg-muted transition-colors'
-            )}
-            title="Add task"
-          >
-            <Plus className="size-3" />
-            <span className="sr-only">Task</span>
-          </button>
+          {onAddHeading && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                onAddHeading()
+              }}
+              className={cn(
+                'flex items-center gap-1 px-1.5 py-0.5 rounded text-xs',
+                'text-muted-foreground hover:text-foreground',
+                'hover:bg-muted transition-colors'
+              )}
+              title="Add heading"
+            >
+              <PlusCircle className="size-3" />
+              <span className="sr-only">Heading</span>
+            </button>
+          )}
+          {onAddTask && (
+            <button
+              type="button"
+              onClick={e => {
+                e.stopPropagation()
+                onAddTask()
+              }}
+              className={cn(
+                'flex items-center gap-1 px-1.5 py-0.5 rounded text-xs',
+                'text-muted-foreground hover:text-foreground',
+                'hover:bg-muted transition-colors'
+              )}
+              title="Add task"
+            >
+              <Plus className="size-3" />
+              <span className="sr-only">Task</span>
+            </button>
+          )}
         </div>
       )}
 
