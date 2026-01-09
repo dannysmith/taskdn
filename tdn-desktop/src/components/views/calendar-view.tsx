@@ -73,10 +73,11 @@ export function CalendarView() {
   )
 
   const handleCreateTask = React.useCallback(
-    (scheduledDate: string): string | undefined => {
-      // Create task asynchronously but return undefined since we can't await here
-      // The MonthCalendar will handle the editing state via its own mechanism
+    (scheduledDate: string): string => {
+      // Generate temp ID for optimistic updates
+      const tempId = crypto.randomUUID()
       createTask.mutate({
+        tempId,
         title: '',
         status: 'ready',
         projectId: null,
@@ -85,7 +86,7 @@ export function CalendarView() {
         due: null,
         deferUntil: null,
       })
-      return undefined
+      return tempId
     },
     [createTask]
   )

@@ -241,7 +241,6 @@ export function TaskList({
   // This enables Cmd+N to create tasks after the selected task via the global handler
   React.useEffect(() => {
     if (!onCreateTask) {
-      console.log(`[TaskList:${projectId}] No onCreateTask - skipping registration`)
       return
     }
 
@@ -253,7 +252,6 @@ export function TaskList({
 
     if (selectedTask) {
       // Has valid selection - activate this list
-      console.log(`[TaskList:${projectId}] Activating with selection:`, selectedTask.id)
       useTaskCreationStore.getState().activateList(projectId, {
         handler: afterTaskId => onCreateTask(afterTaskId),
         selectedTaskId: selectedTask.id,
@@ -263,13 +261,11 @@ export function TaskList({
       })
     } else {
       // No selection - deactivate (reverts to view default)
-      console.log(`[TaskList:${projectId}] Deactivating (no selection)`)
       useTaskCreationStore.getState().deactivateList(projectId)
     }
 
     // Cleanup: deactivate when this list unmounts
     return () => {
-      console.log(`[TaskList:${projectId}] Cleanup - deactivating`)
       useTaskCreationStore.getState().deactivateList(projectId)
     }
   }, [
@@ -350,13 +346,7 @@ export function TaskList({
 
       case 'n':
       case 'N':
-        console.log(`[TaskList:${projectId}] Local Cmd+N handler`, {
-          isMeta,
-          hasOnCreateTask: !!onCreateTask,
-          selectedIndex,
-        })
         if (isMeta && onCreateTask) {
-          console.log(`[TaskList:${projectId}] Handling locally (stopPropagation)`)
           e.preventDefault()
           e.stopPropagation() // Prevent global handler from also firing
           const afterTaskId =
@@ -643,12 +633,8 @@ export function DraggableTaskList({
   React.useEffect(() => {
     if (!autoEditItemId) return
 
-    console.log('[DraggableTaskList] autoEditItemId set:', autoEditItemId)
-    console.log('[DraggableTaskList] tasks count:', tasks.length)
-
     // Find the task in the list
     const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
-    console.log('[DraggableTaskList] Found at index:', taskIndex)
 
     if (taskIndex !== -1) {
       // Select and edit the task

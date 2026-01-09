@@ -299,18 +299,8 @@ export const useTaskCreationStore = create<TaskCreationState>()(
       triggerCreate: async () => {
         const state = get()
 
-        // DEBUG: Log state snapshot
-        console.log('[triggerCreate] State snapshot:', {
-          hasActiveListHandler: !!state.activeListHandler,
-          activeListId: state.activeListId,
-          activeListSelectedTaskId: state.activeListSelectedTaskId,
-          hasViewDefaultHandler: !!state.viewDefaultHandler,
-          hasLegacyHandler: !!state.createTaskHandler,
-        })
-
         // Priority 1: Active list handler (when a task is selected in a list)
         if (state.activeListHandler) {
-          console.log('[triggerCreate] Using activeListHandler')
           const afterTaskId = state.activeListSelectedTaskId
           const result = state.activeListHandler(afterTaskId)
           const newTaskId = result instanceof Promise ? await result : result
@@ -324,13 +314,10 @@ export const useTaskCreationStore = create<TaskCreationState>()(
 
         // Priority 2: View default handler (when no task selected)
         if (state.viewDefaultHandler) {
-          console.log('[triggerCreate] Using viewDefaultHandler')
           const result = state.viewDefaultHandler(null) // No afterTaskId for view default
           const newTaskId = result instanceof Promise ? await result : result
-          console.log('[triggerCreate] viewDefaultHandler returned:', newTaskId)
 
           if (newTaskId && state.viewDefaultOnTaskCreated) {
-            console.log('[triggerCreate] Calling viewDefaultOnTaskCreated')
             state.viewDefaultOnTaskCreated(newTaskId) // Triggers edit mode in view
           }
 
@@ -339,7 +326,6 @@ export const useTaskCreationStore = create<TaskCreationState>()(
 
         // Priority 3: Legacy handler (for DraggableTaskList backward compat)
         if (state.createTaskHandler) {
-          console.log('[triggerCreate] Using legacy createTaskHandler')
           const afterTaskId = state.selectedTaskId
           const result = state.createTaskHandler(afterTaskId)
           const newTaskId = result instanceof Promise ? await result : result

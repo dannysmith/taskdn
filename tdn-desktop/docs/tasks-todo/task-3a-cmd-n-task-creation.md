@@ -45,12 +45,14 @@ Do nothing
 ```
 
 **Key state fields:**
+
 - `viewDefaultHandler` - Registered by views on mount (e.g., ProjectView registers to create in its task list)
 - `viewDefaultOnTaskCreated` - Callback to trigger edit mode after creation
 - `activeListHandler` - Registered by TaskList when it has a selection
 - `activeListSelectedTaskId` - The task to insert after
 
 **Key actions:**
+
 - `registerViewDefault(config)` - Views call on mount
 - `activateList(listId, context)` - TaskList calls when it has a selection
 - `deactivateList(listId)` - TaskList calls when selection clears
@@ -72,13 +74,13 @@ View (TodayView, AreaView, ProjectView, etc.)
 
 ### View Default Handlers
 
-| View        | Default Section     | Creates With                    |
-|-------------|--------------------|---------------------------------|
-| TodayView   | Scheduled for Today | `scheduled: today`              |
-| AreaView    | Loose Tasks         | `area: areaId`                  |
-| NoAreaView  | Loose Tasks         | No project/area (orphan)        |
-| InboxView   | Inbox list          | `status: inbox`                 |
-| ProjectView | Project list        | `project: projectId`            |
+| View        | Default Section     | Creates With             |
+| ----------- | ------------------- | ------------------------ |
+| TodayView   | Scheduled for Today | `scheduled: today`       |
+| AreaView    | Loose Tasks         | `area: areaId`           |
+| NoAreaView  | Loose Tasks         | No project/area (orphan) |
+| InboxView   | Inbox list          | `status: inbox`          |
+| ProjectView | Project list        | `project: projectId`     |
 
 ---
 
@@ -101,12 +103,12 @@ View (TodayView, AreaView, ProjectView, etc.)
 
 ### What Works
 
-| View    | With Selection | Without Selection |
-|---------|---------------|-------------------|
-| Today   | ✅ Works       | ✅ Works           |
-| Project | Task created, no edit mode | Task created, no edit mode |
-| Inbox   | Not tested    | Nothing happens (missing registration) |
-| Area    | Task created, no edit mode | Task created, no edit mode |
+| View    | With Selection             | Without Selection                      |
+| ------- | -------------------------- | -------------------------------------- |
+| Today   | ✅ Works                   | ✅ Works                               |
+| Project | Task created, no edit mode | Task created, no edit mode             |
+| Inbox   | Not tested                 | Nothing happens (missing registration) |
+| Area    | Task created, no edit mode | Task created, no edit mode             |
 
 ---
 
@@ -147,10 +149,12 @@ When we create a task, we update **two sources of truth**:
 2. **Vault data** (TanStack Query) - updated asynchronously via invalidation/refetch
 
 The `orderedTasks` array that components receive is derived from the **intersection** of both:
+
 - Tasks that exist in the order array AND
 - Tasks that exist in the query cache
 
 Timeline:
+
 1. Task created in backend
 2. Order store updated (sync) - new task ID added to order
 3. `pendingEditItemId` set (sync)
@@ -177,12 +181,12 @@ The correct fix is to use TanStack Query's optimistic update pattern. When we cr
 
 The vault uses **separate queries**, not a single nested object:
 
-| Query Key | Returns | Constant |
-|-----------|---------|----------|
-| `['vault', 'tasks']` | `Task[]` | `vaultQueryKeys.tasks()` |
-| `['vault', 'projects']` | `Project[]` | `vaultQueryKeys.projects()` |
-| `['vault', 'areas']` | `Area[]` | `vaultQueryKeys.areas()` |
-| `['vault', 'tasks', id]` | `Task` | `vaultQueryKeys.task(id)` |
+| Query Key                | Returns     | Constant                    |
+| ------------------------ | ----------- | --------------------------- |
+| `['vault', 'tasks']`     | `Task[]`    | `vaultQueryKeys.tasks()`    |
+| `['vault', 'projects']`  | `Project[]` | `vaultQueryKeys.projects()` |
+| `['vault', 'areas']`     | `Area[]`    | `vaultQueryKeys.areas()`    |
+| `['vault', 'tasks', id]` | `Task`      | `vaultQueryKeys.task(id)`   |
 
 **There is no single `['vault']` query.** Always use `vaultQueryKeys.tasks()` for the task list.
 
@@ -192,12 +196,14 @@ The vault uses **separate queries**, not a single nested object:
 const mutation = useMutation({
   mutationFn: createTask,
 
-  onMutate: async (newTaskData) => {
+  onMutate: async newTaskData => {
     // 1. Cancel any outgoing refetches to avoid overwriting our optimistic update
     await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
 
     // 2. Snapshot current data for rollback
-    const previousTasks = queryClient.getQueryData<Task[]>(vaultQueryKeys.tasks())
+    const previousTasks = queryClient.getQueryData<Task[]>(
+      vaultQueryKeys.tasks()
+    )
 
     // 3. Generate temp ID (caller provides this - see "Temp ID Flow" below)
     const tempId = newTaskData.tempId
@@ -207,7 +213,7 @@ const mutation = useMutation({
       id: tempId,
       title: newTaskData.title ?? '',
       status: newTaskData.status ?? 'next',
-      path: `temp://${tempId}`,  // Placeholder path
+      path: `temp://${tempId}`, // Placeholder path
       body: '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -219,7 +225,7 @@ const mutation = useMutation({
       project: newTaskData.project ?? null,
     }
 
-    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), (old) =>
+    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), old =>
       old ? [...old, tempTask] : [tempTask]
     )
 
@@ -228,8 +234,9 @@ const mutation = useMutation({
 
   onSuccess: (realTask, variables, context) => {
     // 5. Replace temp task with real data from server
-    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), (old) =>
-      old?.map(t => t.id === context?.tempId ? realTask : t) ?? []
+    queryClient.setQueryData<Task[]>(
+      vaultQueryKeys.tasks(),
+      old => old?.map(t => (t.id === context?.tempId ? realTask : t)) ?? []
     )
     // Also set individual task cache
     queryClient.setQueryData(vaultQueryKeys.task(realTask.id), realTask)
@@ -250,19 +257,19 @@ The `Task` type requires all these fields. The temp task must include them with 
 
 ```typescript
 interface Task {
-  id: string           // Use temp UUID from caller
-  title: string        // From options, or empty string
-  status: TaskStatus   // From options, or 'next'
-  path: string         // Placeholder: `temp://${tempId}`
-  body: string         // Empty string
-  createdAt: string | null   // Current ISO date
-  updatedAt: string | null   // Current ISO date
+  id: string // Use temp UUID from caller
+  title: string // From options, or empty string
+  status: TaskStatus // From options, or 'next'
+  path: string // Placeholder: `temp://${tempId}`
+  body: string // Empty string
+  createdAt: string | null // Current ISO date
+  updatedAt: string | null // Current ISO date
   completedAt: string | null // null
-  due: string | null         // From options
-  scheduled: string | null   // From options
-  deferUntil: string | null  // From options
-  area: string | null        // From options
-  project: string | null     // From options
+  due: string | null // From options
+  scheduled: string | null // From options
+  deferUntil: string | null // From options
+  area: string | null // From options
+  project: string | null // From options
 }
 ```
 
@@ -307,20 +314,28 @@ const handleCreateTask = async (afterTaskId: string | null) => {
   createTask.mutate(
     { ...taskOptions, tempId },
     {
-      onSuccess: (realTask) => {
+      onSuccess: realTask => {
         // 4. Replace temp ID with real ID in order store
-        const order = useDisplayOrderStore.getState().projectTaskOrder[projectId]
+        const order =
+          useDisplayOrderStore.getState().projectTaskOrder[projectId]
         if (order) {
-          const updatedOrder = order.map(id => id === tempId ? realTask.id : id)
-          useDisplayOrderStore.getState().setProjectTaskOrder(projectId, updatedOrder)
+          const updatedOrder = order.map(id =>
+            id === tempId ? realTask.id : id
+          )
+          useDisplayOrderStore
+            .getState()
+            .setProjectTaskOrder(projectId, updatedOrder)
         }
       },
       onError: () => {
         // 5. Remove temp ID from order store on failure
-        const order = useDisplayOrderStore.getState().projectTaskOrder[projectId]
+        const order =
+          useDisplayOrderStore.getState().projectTaskOrder[projectId]
         if (order) {
           const revertedOrder = order.filter(id => id !== tempId)
-          useDisplayOrderStore.getState().setProjectTaskOrder(projectId, revertedOrder)
+          useDisplayOrderStore
+            .getState()
+            .setProjectTaskOrder(projectId, revertedOrder)
         }
       },
     }
@@ -363,12 +378,14 @@ React.useEffect(() => {
 #### Step 4: Update Other Views
 
 Apply the same temp ID flow pattern to:
+
 - `src/components/views/project-view.tsx`
 - `src/components/views/today-view.tsx`
 - `src/components/views/area-view.tsx`
 - `src/components/views/no-area-view.tsx`
 
 Each view's `handleCreateTask` needs to:
+
 1. Generate temp ID upfront
 2. Update its order store immediately
 3. Use `mutate()` instead of `mutateAsync()`
@@ -380,13 +397,13 @@ Each view's `handleCreateTask` needs to:
 
 After implementation, verify:
 
-| View    | With Selection | Without Selection | Empty View |
-|---------|---------------|-------------------|------------|
-| Inbox   | Creates after, edit mode | Creates at end, edit mode | Creates, edit mode |
-| Project | Creates after, edit mode | Creates at end, edit mode | Creates, edit mode |
-| Today   | Creates after, edit mode | Creates in Scheduled, edit mode | Creates, edit mode |
+| View    | With Selection                        | Without Selection                 | Empty View         |
+| ------- | ------------------------------------- | --------------------------------- | ------------------ |
+| Inbox   | Creates after, edit mode              | Creates at end, edit mode         | Creates, edit mode |
+| Project | Creates after, edit mode              | Creates at end, edit mode         | Creates, edit mode |
+| Today   | Creates after, edit mode              | Creates in Scheduled, edit mode   | Creates, edit mode |
 | Area    | Creates after (in project), edit mode | Creates in Loose Tasks, edit mode | Creates, edit mode |
-| NoArea  | Creates after, edit mode | Creates in Loose Tasks, edit mode | Creates, edit mode |
+| NoArea  | Creates after, edit mode              | Creates in Loose Tasks, edit mode | Creates, edit mode |
 
 #### Step 6: Cleanup
 
@@ -403,6 +420,7 @@ After implementation, verify:
 User presses Cmd+N twice rapidly before first mutation completes.
 
 **Expected behavior:**
+
 - Two temp tasks appear immediately
 - First mutation completes → first temp ID replaced with real ID
 - Second mutation completes → second temp ID replaced with real ID
@@ -415,6 +433,7 @@ User presses Cmd+N twice rapidly before first mutation completes.
 User starts typing in the new task while mutation is still pending.
 
 **Expected behavior:**
+
 - User types with temp ID task
 - Mutation completes, temp ID → real ID swap
 - Focus and editing state preserved
@@ -428,6 +447,7 @@ User starts typing in the new task while mutation is still pending.
 User presses Escape before confirming the new task.
 
 **Expected behavior:**
+
 - TaskList's `handleCancelEdit` is called
 - Calls `onDeleteTask(tempId)`
 - `useDeleteTask` removes the temp task from cache
@@ -440,6 +460,7 @@ User presses Escape before confirming the new task.
 Backend fails to create the task (e.g., filesystem error).
 
 **Expected behavior:**
+
 - `onError` callback fires
 - Query cache rolled back (temp task removed)
 - Order store reverted (temp ID removed)
@@ -451,6 +472,7 @@ Backend fails to create the task (e.g., filesystem error).
 User presses Cmd+N, then immediately navigates to another view.
 
 **Expected behavior:**
+
 - Original view unmounts, unregisters its handler
 - Mutation continues in background
 - New view mounts, registers its handler
@@ -463,16 +485,19 @@ User presses Cmd+N, then immediately navigates to another view.
 ## Files to Modify
 
 ### Core Changes
+
 - `src/services/vault.ts` (lines 206-237) - Add optimistic update logic to `useCreateTask`
 - `src/components/views/inbox-view.tsx` - Add missing view default registration
 
 ### View Handler Updates (temp ID flow)
+
 - `src/components/views/project-view.tsx` - Update `handleCreateTask`
 - `src/components/views/today-view.tsx` - Update `handleCreateTask`
 - `src/components/views/area-view.tsx` - Update `handleCreateTask`
 - `src/components/views/no-area-view.tsx` - Update `handleCreateTask`
 
 ### Cleanup (remove debug logging)
+
 - `src/store/task-creation-store.ts` (lines 303-309, 313, 327, 330, 333-334, 342)
 - `src/components/tasks/task-list.tsx` (lines 244, 256, 266, 272, 353, 359)
 - `src/components/views/project-view.tsx` (lines 271, 275, 281)
@@ -494,6 +519,7 @@ User presses Cmd+N, then immediately navigates to another view.
 ## Session History
 
 ### Sessions 1-3 (2026-01-09)
+
 - Implemented dual-handler architecture in task-creation-store
 - Added view default registration to all views except InboxView
 - Added list activation/deactivation to TaskList and OrderedItemList
@@ -502,6 +528,7 @@ User presses Cmd+N, then immediately navigates to another view.
 - Initial hypothesis: registration or handler issues
 
 ### Session 4 (2026-01-09)
+
 - Added comprehensive debug logging
 - Identified the actual problem: race condition between task creation and query cache
 - Tasks are created successfully, but not in the cache when we try to find them
@@ -509,6 +536,7 @@ User presses Cmd+N, then immediately navigates to another view.
 - Documented the root cause and designed optimistic updates solution
 
 ### Session 5 (2026-01-09)
+
 - Thoroughly reviewed implementation plan with codebase exploration
 - **Identified critical issues:**
   - Query key examples were wrong (used `['vault']` instead of `vaultQueryKeys.tasks()`)
@@ -521,6 +549,7 @@ User presses Cmd+N, then immediately navigates to another view.
 - Updated task doc with corrections
 
 ### Session 6 (Next)
+
 - Implement the plan as documented
 - Start with `useCreateTask` optimistic updates
 - Then update view handlers with temp ID flow
@@ -558,6 +587,7 @@ src/components/views/project-view.tsx:271, 275, 281
 ### Why This Works
 
 The key insight is that **both** sources of truth get the temp ID synchronously:
+
 - Order store: updated in step 2 (before mutation)
 - Query cache: updated in step 4 (in `onMutate`, before async work)
 

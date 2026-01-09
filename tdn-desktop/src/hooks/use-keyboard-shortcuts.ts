@@ -47,7 +47,9 @@ export function useKeyboardShortcuts(commandContext: CommandContext) {
 
             // Skip if already handled by a component (e.g., TaskList with focus)
             if (e.defaultPrevented) {
-              console.log('[Cmd+N] Skipping - already handled (defaultPrevented)')
+              console.log(
+                '[Cmd+N] Skipping - already handled (defaultPrevented)'
+              )
               break
             }
 
