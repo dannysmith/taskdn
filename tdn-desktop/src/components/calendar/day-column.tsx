@@ -170,15 +170,16 @@ export function DayColumn({
           })}
         </SortableContext>
 
-        {/* Empty state / drop zone indicator */}
-        {tasks.length === 0 && (
-          <div
-            className={cn(
-              'h-full min-h-[100px] rounded-lg border-2 border-dashed border-transparent transition-colors',
-              (isOver || isDropTarget) && 'border-primary/30'
-            )}
-          />
-        )}
+        {/* Drop zone - always present to catch drops, visible styling when empty or hovering */}
+        <div
+          className={cn(
+            'flex-1 min-h-[60px] rounded-lg border-2 border-dashed transition-colors',
+            tasks.length === 0
+              ? 'border-transparent'
+              : 'border-transparent',
+            (isOver || isDropTarget) && 'border-primary/30 bg-primary/5'
+          )}
+        />
 
         {/* Add task button */}
         {onCreateTask && (

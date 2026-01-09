@@ -129,15 +129,14 @@ export function MonthDayCell({
           })}
         </SortableContext>
 
-        {/* Empty state / drop zone indicator */}
-        {tasks.length === 0 && (
-          <div
-            className={cn(
-              'h-full min-h-10 rounded border border-dashed border-transparent transition-colors',
-              (isOver || isDropTarget) && 'border-primary/30'
-            )}
-          />
-        )}
+        {/* Drop zone - always present to catch drops */}
+        <div
+          className={cn(
+            'flex-1 min-h-6 rounded border border-dashed transition-colors',
+            tasks.length === 0 ? 'border-transparent' : 'border-transparent',
+            (isOver || isDropTarget) && 'border-primary/30 bg-primary/5'
+          )}
+        />
       </div>
     </div>
   )
