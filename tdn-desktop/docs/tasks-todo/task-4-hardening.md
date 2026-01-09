@@ -90,7 +90,6 @@ export async function withTempVault(
 - User interactions trigger correct mutations
 - Loading and error states display properly
 
-
 ### 2. Edge Cases
 
 #### Data Edge Cases

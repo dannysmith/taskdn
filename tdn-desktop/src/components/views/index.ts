@@ -1,3 +1,4 @@
+export { AreaView } from './area-view'
 export { CalendarView } from './calendar-view'
 export { InboxView } from './inbox-view'
 export { ProjectView } from './project-view'

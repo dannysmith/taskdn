@@ -55,6 +55,9 @@ interface DisplayOrderState {
   // Project task ordering (per-project)
   projectTaskOrder: Record<string, string[]> | null
 
+  // Area task ordering (per-area, for loose tasks and per-project within area)
+  areaTaskOrder: Record<string, string[]> | null
+
   // Today view section ordering (per-section)
   todaySectionOrder: Partial<Record<TodaySectionId, string[]>> | null
 
@@ -74,6 +77,9 @@ interface DisplayOrderState {
 
   // Actions for project tasks
   setProjectTaskOrder: (projectId: string, order: string[]) => void
+
+  // Actions for area tasks
+  setAreaTaskOrder: (areaId: string, order: string[]) => void
 
   // Actions for today sections
   setTodaySectionOrder: (sectionId: TodaySectionId, order: string[]) => void
@@ -105,6 +111,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
       sidebarProjectOrder: null,
       inboxOrder: null,
       projectTaskOrder: null,
+      areaTaskOrder: null,
       todaySectionOrder: null,
       todayHeadings: null,
       kanbanColumnOrder: null,
@@ -152,6 +159,19 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
           }),
           undefined,
           'setProjectTaskOrder'
+        ),
+
+      // Area task actions
+      setAreaTaskOrder: (areaId, order) =>
+        set(
+          state => ({
+            areaTaskOrder: {
+              ...state.areaTaskOrder,
+              [areaId]: order,
+            },
+          }),
+          undefined,
+          'setAreaTaskOrder'
         ),
 
       // Today section actions
@@ -215,6 +235,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
             sidebarProjectOrder: null,
             inboxOrder: null,
             projectTaskOrder: null,
+            areaTaskOrder: null,
             todaySectionOrder: null,
             todayHeadings: null,
             kanbanColumnOrder: null,
