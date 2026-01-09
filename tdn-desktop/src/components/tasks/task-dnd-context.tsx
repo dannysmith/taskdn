@@ -447,8 +447,8 @@ export function TaskDndContext({
       >
         {children}
 
-        {/* Drag Overlay */}
-        <DragOverlay dropAnimation={dropAnimation}>
+        {/* Drag Overlay - disable animation for cross-container moves to prevent snap-back */}
+        <DragOverlay dropAnimation={crossContainerHover ? null : dropAnimation}>
           {dragPreview &&
             (dragPreview.type === 'task' ? (
               <TaskDragPreview task={dragPreview.task} />
