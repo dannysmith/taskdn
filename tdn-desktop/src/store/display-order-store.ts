@@ -22,6 +22,12 @@ import { devtools } from 'zustand/middleware'
 // Types
 // -----------------------------------------------------------------------------
 
+/** Section identifiers for Today view */
+export type TodaySectionId =
+  | 'scheduled-today'
+  | 'overdue-due-today'
+  | 'became-available-today'
+
 interface DisplayOrderState {
   // Sidebar ordering
   sidebarAreaOrder: string[] | null
@@ -33,6 +39,9 @@ interface DisplayOrderState {
   // Project task ordering (per-project)
   projectTaskOrder: Record<string, string[]> | null
 
+  // Today view section ordering (per-section)
+  todaySectionOrder: Partial<Record<TodaySectionId, string[]>> | null
+
   // Actions for sidebar
   setSidebarAreaOrder: (order: string[]) => void
   setSidebarProjectOrder: (containerId: string, order: string[]) => void
@@ -43,6 +52,9 @@ interface DisplayOrderState {
 
   // Actions for project tasks
   setProjectTaskOrder: (projectId: string, order: string[]) => void
+
+  // Actions for today sections
+  setTodaySectionOrder: (sectionId: TodaySectionId, order: string[]) => void
 
   // Reset (for testing or clearing)
   resetAllOrder: () => void
@@ -60,6 +72,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
       sidebarProjectOrder: null,
       inboxOrder: null,
       projectTaskOrder: null,
+      todaySectionOrder: null,
 
       // Sidebar actions
       setSidebarAreaOrder: order =>
@@ -106,6 +119,19 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
           'setProjectTaskOrder'
         ),
 
+      // Today section actions
+      setTodaySectionOrder: (sectionId, order) =>
+        set(
+          state => ({
+            todaySectionOrder: {
+              ...state.todaySectionOrder,
+              [sectionId]: order,
+            },
+          }),
+          undefined,
+          'setTodaySectionOrder'
+        ),
+
       // Reset
       resetAllOrder: () =>
         set(
@@ -114,6 +140,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
             sidebarProjectOrder: null,
             inboxOrder: null,
             projectTaskOrder: null,
+            todaySectionOrder: null,
           },
           undefined,
           'resetAllOrder'

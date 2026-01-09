@@ -416,6 +416,29 @@ Within each:
 
 ### What Was Fixed ✅ (2026-01-09)
 
+**ProjectView & Wikilink Matching:**
+
+1. **Fixed wikilink vs ID matching bug in vault.ts**
+   - `getTasksByProjectId`, `getProjectsByAreaId`, `getAreaDirectTasks`, `getProjectCompletion`, `getTaskCounts`
+   - Wikilinks use TITLES (e.g., `[[Japan Trip 2025]]`), not hash IDs
+   - Now correctly looks up entity by ID, then matches by title
+
+2. **Added ProjectStatusPill** (src/components/projects/project-status-pill.tsx)
+   - Status dropdown for changing project status in ViewHeader
+   - Defaults to "Active" (in-progress) when no status set
+
+3. **Added CollapsibleNotesSection** (src/components/ui/collapsible-notes.tsx)
+   - Expandable notes panel for project description + body
+   - Uses LazyMilkdownPreview for formatted markdown rendering
+   - Shows collapsed preview (first 1-2 lines) when collapsed
+
+4. **Added useProjectOrder hook** (src/hooks/use-project-order.ts)
+   - Per-project task ordering using Zustand display-order-store
+   - Session-persistent ordering
+
+5. **Completed markdown-preview CSS** (src/App.css)
+   - Added missing rules for blockquote, links, hr, strong, pre code
+
 **State Management & Mutations:**
 
 1. **Added `update_project` Rust command** (src-tauri/src/commands/vault.rs)
@@ -474,6 +497,32 @@ Within each:
    - `markMutationComplete()` prevents our own writes from triggering cache invalidation
    - 500ms debounce window after mutations
 
+**TodayView Implementation (2026-01-09):**
+
+1. **Added useTodayOrder hook** (src/hooks/use-today-order.ts)
+   - Per-section task ordering using Zustand display-order-store
+   - Three sections: scheduled-today, overdue-due-today, became-available-today
+   - Session-persistent ordering
+
+2. **Added SectionHeader component** (src/components/tasks/section-header.tsx)
+   - Collapsible header with expand/collapse chevron
+   - Optional icon, title, task count badge
+   - Optional "+ Task" button
+
+3. **Added SectionTaskGroup component** (src/components/tasks/section-task-group.tsx)
+   - Combines SectionHeader with DraggableTaskList
+   - Simplified version for TodayView sections
+
+4. **Added TodayView component** (src/components/views/today-view.tsx)
+   - Three sections: Scheduled for Today, Overdue or Due Today, Became Available Today
+   - Each section has its own DnD ordering
+   - Create task handlers set appropriate dates
+   - Empty state when no tasks match
+
+5. **Updated display-order-store.ts**
+   - Added TodaySectionId type
+   - Added todaySectionOrder state and setTodaySectionOrder action
+
 ### Future: Disk Persistence for Order
 
 When needed:
@@ -496,10 +545,8 @@ When needed:
 
 These components were skipped during Task 1 (Foundation) because they depend on Milkdown:
 
-- [ ] `collapsible-notes.tsx` - Expandable notes panel for areas/projects (uses MarkdownPreview)
-- [ ] `markdown-preview.tsx` - Read-only markdown renderer (uses LazyMilkdownPreview)
-
-Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
+- [x] `collapsible-notes.tsx` - Expandable notes panel for areas/projects (uses LazyMilkdownPreview)
+- [x] Uses existing LazyMilkdownPreview from lazy-milkdown-editor.tsx (no separate markdown-preview.tsx needed)
 
 ### Sidebar
 
@@ -512,8 +559,8 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 ### Views
 
 - [x] InboxView (working, order session-persistent)
-- [ ] TodayView (with headings)
-- [x] ProjectView (list mode) - uses useProjectOrder hook
+- [x] TodayView (three sections: Scheduled, Overdue/Due, Became Available)
+- [x] ProjectView (list mode) - uses useProjectOrder hook, status pill, collapsible notes
 - [ ] ProjectView (kanban mode)
 - [ ] AreaView (list mode)
 - [ ] AreaView (kanban mode)
@@ -529,8 +576,9 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 - [x] TaskStatusPill
 - [x] TaskDetailPanel (full editing interface in right sidebar)
 - [x] MilkdownEditor integration (lazy-loaded, with task list shortcuts)
+- [x] SectionHeader (collapsible header with icon, title, count)
+- [x] SectionTaskGroup (section with draggable task list)
 - [ ] TaskDndContext (shared context for cross-list DnD)
-- [ ] Section components
 
 ### Kanban
 
@@ -550,7 +598,7 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 - [x] useSidebarOrder uses Zustand store (session-persistent)
 - [x] useInboxOrder uses Zustand store (session-persistent)
 - [x] display-order-store.ts created (Zustand store for all order state)
-- [ ] useTodayOrder with Zustand
+- [x] useTodayOrder with Zustand (per-section task ordering)
 - [ ] useCalendarOrder with Zustand
 - [x] useProjectOrder with Zustand (per-project task ordering)
 - [ ] useAreaOrder with Zustand (per-area task ordering)
