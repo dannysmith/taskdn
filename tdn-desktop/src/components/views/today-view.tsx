@@ -413,6 +413,8 @@ export function TodayView() {
               id === tempId ? realTask.id : id
             )
             setSectionItemOrder('scheduled-today', updatedOrder)
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             // 6. Remove temp ID from order store on failure
@@ -461,6 +463,8 @@ export function TodayView() {
             id === tempId ? realTask.id : id
           )
           setSectionItemOrder('scheduled-today', updatedOrder)
+          // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+          setPendingEditItemId(realTask.id)
         },
         onError: () => {
           const currentItems = orderedScheduledItems.map(item =>
@@ -553,6 +557,8 @@ export function TodayView() {
               id === tempId ? realTask.id : id
             )
             setSectionItemOrder('overdue-due-today', updatedOrder)
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             const order = orderedOverdueOrDueToday.map(t => t.id)
@@ -611,6 +617,8 @@ export function TodayView() {
               id === tempId ? realTask.id : id
             )
             setSectionItemOrder('became-available-today', updatedOrder)
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             const order = orderedBecameAvailableToday.map(t => t.id)

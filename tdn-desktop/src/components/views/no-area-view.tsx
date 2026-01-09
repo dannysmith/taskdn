@@ -231,6 +231,8 @@ export function NoAreaView() {
                 .getState()
                 .setAreaTaskOrder(ORPHAN_AREA_ID, updatedOrder)
             }
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             const order =
@@ -302,6 +304,8 @@ export function NoAreaView() {
                   .getState()
                   .setProjectTaskOrder(projectId, updatedOrder)
               }
+              // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+              setPendingEditItemId(realTask.id)
             },
             onError: () => {
               const order =
