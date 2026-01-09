@@ -31,11 +31,13 @@ When making architectural decisions, ask: **"If we were building this without th
 The mockup is a prototype optimized for rapid prototyping (synchronous in-memory operations). The production app should use patterns optimized for correctness, maintainability, and the actual tech stack.
 
 This means:
+
 - Use idiomatic TanStack Query patterns, not workarounds to match the mockup
 - Use idiomatic Rust/serde patterns, not contortions to match TypeScript types
 - Components will need refactoring - this is expected, not a failure
 
 **Example - async mutations:**
+
 ```typescript
 // Mockup pattern (synchronous, won't work)
 const newTaskId = createTask({ title: 'New task' })

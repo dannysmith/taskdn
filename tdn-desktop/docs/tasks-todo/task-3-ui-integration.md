@@ -9,6 +9,7 @@ This phase leverages the substantial work already done in the mockup. The compon
 ## Background
 
 The UI mockup contains:
+
 - 7 view components (Today, Week, Inbox, Calendar, Area, Project, NoArea)
 - Full sidebar with draggable areas and projects
 - Task components (lists, cards, detail panel)
@@ -22,6 +23,7 @@ The mockup uses `useAppData()` with synchronous mutations. Our data layer uses T
 ## Integration Process
 
 For each component:
+
 1. Copy file from `tdn-uimockup/src/components/` to `tdn-desktop/src/components/`
 2. Update import paths
 3. Replace `useAppData()` with `useVaultData()` + individual mutation hooks
@@ -31,6 +33,7 @@ For each component:
 7. Test the component works with real data
 
 **Example refactoring:**
+
 ```typescript
 // Before (mockup)
 const handleAddTask = useCallback(() => {
@@ -42,7 +45,7 @@ const handleAddTask = useCallback(() => {
 const createTaskMutation = useCreateTask()
 
 const handleAddTask = useCallback(async () => {
-  const { today } = useViewStore.getState()  // Not subscribed - avoids re-renders
+  const { today } = useViewStore.getState() // Not subscribed - avoids re-renders
   try {
     const newTask = await createTaskMutation.mutateAsync({ scheduled: today })
     const { setPendingEditItemId } = useTaskDetailStore.getState()
@@ -50,7 +53,7 @@ const handleAddTask = useCallback(async () => {
   } catch (error) {
     toast.error('Failed to create task')
   }
-}, [createTaskMutation])  // Stable deps - only the mutation
+}, [createTaskMutation]) // Stable deps - only the mutation
 ```
 
 This refactoring is straightforward but not purely mechanical. Budget time for it.
@@ -60,16 +63,19 @@ This refactoring is straightforward but not purely mechanical. Budget time for i
 ### 1. Sidebar Components
 
 **Files to copy:**
+
 - `sidebar/left-sidebar.tsx` (AppSidebar)
 - `sidebar/draggable-area.tsx`
 - `sidebar/draggable-project.tsx`
 
 **Integration:**
+
 - Wire to MainWindow's LeftSideBar slot
 - Connect selection state to view routing
 - Verify DnD works with real mutations
 
 **DnD Actions:**
+
 - `moveProjectToArea` - Changes project's areaId
 - `reorderProjectsInArea` - Local order state (see Order Persistence below)
 - `reorderAreas` - Local order state
@@ -77,6 +83,7 @@ This refactoring is straightforward but not purely mechanical. Budget time for i
 ### 2. View Components
 
 Copy all from `views/`:
+
 - `inbox-view.tsx` - Simplest, good first test
 - `today-view.tsx` - Sections, headings support
 - `project-view.tsx` - List + kanban modes
@@ -86,12 +93,14 @@ Copy all from `views/`:
 - `calendar-view.tsx` - Month grid
 
 **Integration:**
+
 - Create view router in MainWindowContent (like mockup's MainContent)
 - Pass navigation callbacks for entity linking
 
 ### 3. Task Components
 
 Copy all from `tasks/`:
+
 - `task-item.tsx` - Pure presentation
 - `task-list-item.tsx` - With sortable wrapper
 - `sortable-task-item.tsx` - DnD bindings
@@ -109,24 +118,28 @@ Copy all from `tasks/`:
 - `milkdown-editor.tsx` - Markdown editor
 
 **Dependencies:**
+
 - `@dnd-kit/core`, `@dnd-kit/sortable` - Already in mockup deps
 - `@milkdown/kit` - Markdown editor
 
 ### 4. Kanban Components
 
 Copy all from `kanban/`:
+
 - `kanban-board.tsx`
 - `kanban-column.tsx`
 - `area-kanban-board.tsx`
 - `kanban-dnd-context.tsx`
 
 **DnD Actions:**
+
 - Moving task between columns → status change
 - Reordering within column → local order state
 
 ### 5. Calendar Components
 
 Copy all from `calendar/`:
+
 - `month-calendar.tsx`
 - `week-calendar.tsx`
 - `month-day-cell.tsx`
@@ -134,11 +147,13 @@ Copy all from `calendar/`:
 - `draggable-task-card.tsx`
 
 **DnD Actions:**
+
 - Dragging task to different day → `updateTaskScheduled`
 
 ### 6. Card Components
 
 Copy from `cards/`:
+
 - `task-card.tsx` - For kanban/calendar
 - `project-card.tsx` - For area view grids
 - `area-card.tsx` - If used
@@ -146,12 +161,14 @@ Copy from `cards/`:
 ### 7. Project Components
 
 Copy from `projects/`:
+
 - `project-status-pill.tsx`
 - `project-status-badges.tsx`
 
 ### 8. Heading Components
 
 Copy from `headings/`:
+
 - `heading-list-item.tsx`
 - `heading-color-picker.tsx`
 - `heading-drag-preview.tsx`
@@ -159,6 +176,7 @@ Copy from `headings/`:
 ### 9. Order Hooks
 
 Copy from `hooks/`:
+
 - `use-sidebar-order.ts`
 - `use-today-order.ts`
 - `use-inbox-order.ts`
@@ -169,6 +187,7 @@ These manage display ordering separate from entity data.
 ## Order Persistence
 
 The order hooks maintain in-memory state for:
+
 - Sidebar area/project ordering
 - Today view task ordering (per section)
 - Inbox task ordering
@@ -189,6 +208,7 @@ Order persistence follows the same Rust + TanStack Query pattern as preferences 
 This ensures consistency with the app's data patterns and gets atomic writes for free.
 
 **Rust Struct:**
+
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize, Type, Default)]
 #[serde(rename_all = "camelCase")]
@@ -207,6 +227,7 @@ pub struct DisplayOrderState {
 ```
 
 **Frontend Hook:**
+
 ```typescript
 // src/services/display-order.ts
 export function useDisplayOrder() {
@@ -220,12 +241,14 @@ export function useUpdateDisplayOrder() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (order: DisplayOrderState) => commands.saveDisplayOrder(order),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['display-order'] }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['display-order'] }),
   })
 }
 ```
 
 **Save Triggers:**
+
 - On app quit (via Tauri window close event)
 - Periodic saves (every 5 minutes)
 - Debounced save after order changes (500ms)
@@ -233,11 +256,13 @@ export function useUpdateDisplayOrder() {
 **Stale Data Handling:**
 
 On load:
+
 1. Load from disk via Tauri command
 2. Filter out IDs that no longer exist in vault
 3. Merge new entities at end of lists
 
 On external vault change:
+
 1. Re-filter order state to remove deleted entities
 2. Add any new entities
 
@@ -246,17 +271,20 @@ On external vault change:
 TodayView supports inline headings for organizing tasks. These are UI-only constructs (not in markdown files).
 
 **Persistence Strategy:**
+
 - Same as order persistence - store in app data directory
 - Part of `display-order.json` or separate `headings.json`
 - Each heading has: id, title, color, containerId (which section)
 
 **On external vault change:**
+
 - Headings remain (they're not tied to specific tasks)
 - If section is empty, keep headings (user might want them)
 
 ## DnD Integration
 
 The mockup's DnD calls mutation functions:
+
 ```typescript
 // Sidebar
 moveProjectToArea(projectId, fromAreaId, toAreaId)
@@ -285,6 +313,7 @@ With `useVaultData()` providing these mutations backed by real persistence, DnD 
 - Can add dirty flag / conflict detection in future if needed
 
 In practice, this means:
+
 - User edits title in detail panel → triggers mutation → file written
 - External edit happens → file watcher fires → cache invalidates → UI reloads fresh data
 - If user was mid-edit (typing but not saved), their changes are lost
@@ -294,6 +323,7 @@ This is a known limitation, not a bug to fix now.
 ## Dependencies to Add
 
 Check `tdn-uimockup/package.json` for packages to add to desktop:
+
 - `@dnd-kit/core`
 - `@dnd-kit/sortable`
 - `@dnd-kit/modifiers`
@@ -303,6 +333,7 @@ Check `tdn-uimockup/package.json` for packages to add to desktop:
 ## Testing Strategy
 
 ### Manual Testing with dummy-demo-vault
+
 1. Point app at `dummy-demo-vault`
 2. Test each view renders correctly
 3. Test DnD operations persist correctly
@@ -310,6 +341,7 @@ Check `tdn-uimockup/package.json` for packages to add to desktop:
 5. Reset vault between test runs: `./scripts/reset-dummy-vault.sh`
 
 ### Integration Tests
+
 - Component renders with mock data
 - Mutation hooks trigger correctly
 - Order state persists across reloads
@@ -334,6 +366,7 @@ Recommended sequence (dependencies → dependents):
 14. **CalendarView** - Month view
 
 Within each:
+
 1. Copy component files
 2. Update imports
 3. Replace useAppData with useVaultData + mutation hooks
@@ -345,18 +378,30 @@ Within each:
 ## Checklist
 
 ### Core Setup
+
 - [ ] Add DnD dependencies (dnd-kit)
 - [ ] Add Milkdown dependencies
 - [ ] Set up order persistence system
 - [ ] Set up heading persistence system
 
+### UI Components Deferred from Task 1
+
+These components were skipped during Task 1 (Foundation) because they depend on Milkdown:
+
+- [ ] `collapsible-notes.tsx` - Expandable notes panel for areas/projects (uses MarkdownPreview)
+- [ ] `markdown-preview.tsx` - Read-only markdown renderer (uses LazyMilkdownPreview)
+
+Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
+
 ### Sidebar
+
 - [ ] Copy sidebar components
 - [ ] Integrate with MainWindow
 - [ ] Wire navigation state
 - [ ] Test area/project DnD
 
 ### Views
+
 - [ ] InboxView
 - [ ] TodayView (with headings)
 - [ ] ProjectView (list mode)
@@ -369,6 +414,7 @@ Within each:
 - [ ] CalendarView
 
 ### Task Components
+
 - [ ] TaskItem, TaskListItem, TaskList
 - [ ] TaskStatusCheckbox, TaskStatusPill
 - [ ] TaskDetailPanel
@@ -377,17 +423,20 @@ Within each:
 - [ ] MilkdownEditor integration
 
 ### Kanban
+
 - [ ] KanbanBoard, KanbanColumn
 - [ ] AreaKanbanBoard
 - [ ] KanbanDndContext
 - [ ] Cross-column DnD (status changes)
 
 ### Calendar
+
 - [ ] MonthCalendar, MonthDayCell
 - [ ] WeekCalendar, DayColumn
 - [ ] Drag-to-schedule functionality
 
 ### Order Hooks
+
 - [ ] useSidebarOrder with persistence
 - [ ] useTodayOrder with persistence
 - [ ] useInboxOrder with persistence
@@ -397,6 +446,7 @@ Within each:
 - [ ] useKanbanOrder with persistence (per-view column ordering)
 
 ### Final Integration
+
 - [ ] All views accessible from sidebar
 - [ ] TaskDetailPanel opens from any context
 - [ ] All DnD operations persist
