@@ -1,7 +1,13 @@
+import { useMemo } from 'react'
+
 import { cn } from '@/lib/utils'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useViewMode, type ViewModeKey } from '@/store/view-mode-store'
-import { useVaultData, useUpdateProject } from '@/services/vault'
+import {
+  useVaultData,
+  useVaultHelpers,
+  useUpdateProject,
+} from '@/services/vault'
 import { ViewHeader } from './ViewHeader'
 import {
   AreaView,
@@ -11,7 +17,7 @@ import {
   TodayView,
   WeekView,
 } from '@/components/views'
-import { ProjectStatusPill } from '@/components/projects'
+import { ProjectStatusBadges, ProjectStatusPill } from '@/components/projects'
 import { ViewToggle } from '@/components/ui/view-toggle'
 import type { ProjectStatus } from '@/lib/tauri-bindings'
 
@@ -23,6 +29,7 @@ import type { ProjectStatus } from '@/lib/tauri-bindings'
 export function MainWindowContent() {
   const selection = useNavigationStore(state => state.selection)
   const { projects, areas } = useVaultData()
+  const { getProjectsByAreaId } = useVaultHelpers()
   const updateProject = useUpdateProject()
 
   // Get current project if in project view
@@ -30,6 +37,21 @@ export function MainWindowContent() {
     selection?.type === 'project'
       ? projects.find(p => p.id === selection.id)
       : null
+
+  // Compute project status counts for area view
+  const projectStatusCounts = useMemo(() => {
+    if (selection?.type !== 'area') return null
+
+    const areaProjects = getProjectsByAreaId(selection.id)
+    const counts: Record<string, number> = {}
+
+    for (const project of areaProjects) {
+      const status = project.status ?? 'planning'
+      counts[status] = (counts[status] ?? 0) + 1
+    }
+
+    return counts
+  }, [selection, getProjectsByAreaId])
 
   // Handle project status change
   const handleProjectStatusChange = (newStatus: ProjectStatus) => {
@@ -137,6 +159,12 @@ export function MainWindowContent() {
         title={getViewTitle()}
         actions={viewModeKey && <HeaderViewToggle viewModeKey={viewModeKey} />}
       >
+        {projectStatusCounts && (
+          <ProjectStatusBadges
+            counts={projectStatusCounts}
+            className="hidden @lg:flex"
+          />
+        )}
         {currentProject && (
           <ProjectStatusPill
             status={currentProject.status ?? 'in-progress'}
