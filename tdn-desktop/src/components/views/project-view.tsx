@@ -6,6 +6,7 @@ import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useProjectOrder } from '@/hooks/use-project-order'
 import { DraggableTaskList } from '@/components/tasks/task-list'
 import { EmptyState } from '@/components/ui/empty-state'
+import { CollapsibleNotesSection } from '@/components/ui/collapsible-notes'
 
 /**
  * ProjectView - Displays all tasks within a single project.
@@ -127,9 +128,18 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     )
   }
 
+  // Combine description and body for notes
+  const projectNotes = React.useMemo(() => {
+    const parts: string[] = []
+    if (project.description) parts.push(project.description)
+    if (project.body) parts.push(project.body)
+    return parts.join('\n\n')
+  }, [project.description, project.body])
+
   return (
     <div className="space-y-6">
-      {/* TODO: Project Notes (collapsible) - requires CollapsibleNotesSection */}
+      {/* Project Notes (collapsible) */}
+      {projectNotes && <CollapsibleNotesSection notes={projectNotes} />}
 
       {/* Tasks Section */}
       <section>
