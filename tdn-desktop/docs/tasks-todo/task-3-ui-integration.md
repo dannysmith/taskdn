@@ -684,7 +684,6 @@ When needed:
 - [x] Add DnD dependencies (dnd-kit)
 - [x] Add Milkdown dependencies
 - [x] Set up order persistence system (session-level via Zustand; disk persistence deferred)
-- [ ] Set up heading persistence system
 
 ### UI Components Deferred from Task 1
 
@@ -762,14 +761,12 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] useProjectOrder with Zustand (per-project task ordering)
 - [x] useAreaOrder with Zustand (per-area task ordering)
 - [x] useKanbanOrder with Zustand (per-view column ordering)
-- [ ] Disk persistence layer (Rust commands + TanStack Query) - deferred
+- [ ] Disk persistence layer (Rust commands + TanStack Query) - deferred to later
 
 ### Final Integration
 
-- [ ] All views accessible from sidebar
+- [x] All views accessible from sidebar
 - [x] TaskDetailPanel opens from any context (clicking chevron opens panel, shows right sidebar)
-- [ ] All DnD operations persist to correct location (order→settings, entity changes→vault)
-- [ ] Order persists across restarts
 - [x] External file changes update UI (via useVaultInitialization + file watcher)
 - [x] Run `bun run check:all` (passing)
 
