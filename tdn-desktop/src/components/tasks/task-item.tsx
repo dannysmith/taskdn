@@ -66,6 +66,8 @@ export function TaskItem({
   const [editValue, setEditValue] = React.useState(task.title)
   // Track when we're canceling an edit (Escape) so blur handler doesn't save
   const cancelingRef = React.useRef(false)
+  // Track when edit was ended by keyboard (Enter/Escape) so blur doesn't double-trigger
+  const endedByKeyboardRef = React.useRef(false)
 
   // Sync editValue with task.title when task changes
   React.useEffect(() => {
@@ -79,6 +81,8 @@ export function TaskItem({
     if (isEditing && inputRef.current) {
       inputRef.current.focus()
       inputRef.current.select()
+      // Reset keyboard-end tracking for new edit session
+      endedByKeyboardRef.current = false
     }
   }, [isEditing])
 
@@ -96,9 +100,18 @@ export function TaskItem({
   }
 
   const handleInputBlur = () => {
+    // Skip if already handled by keyboard (Enter/Escape)
+    if (endedByKeyboardRef.current) {
+      endedByKeyboardRef.current = false
+      return
+    }
     // Don't save if we're canceling (Escape was pressed)
     if (!cancelingRef.current && editValue.trim() !== task.title) {
       onTitleChange(editValue.trim())
+    }
+    // Blur without Escape = confirm (treat click-away as saving, not canceling)
+    if (!cancelingRef.current) {
+      onConfirmEdit?.()
     }
     cancelingRef.current = false
     onEndEdit()
@@ -118,11 +131,15 @@ export function TaskItem({
       // Select this task when confirming edit - ensures newly created tasks
       // become selected after pressing Enter to confirm the title
       onSelect()
+      // Mark as handled by keyboard so blur doesn't double-trigger
+      endedByKeyboardRef.current = true
       onEndEdit()
     } else if (e.key === 'Escape') {
       e.preventDefault()
       cancelingRef.current = true
       setEditValue(task.title) // Reset to original
+      // Mark as handled by keyboard so blur doesn't double-trigger
+      endedByKeyboardRef.current = true
       onEndEdit()
     }
   }
