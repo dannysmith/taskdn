@@ -326,6 +326,56 @@ export function useUpdateTask() {
 }
 
 /**
+ * Hook to delete a task.
+ * Used when canceling a newly created task (Escape pressed before confirming).
+ */
+export function useDeleteTask() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string): Promise<void> => {
+      logger.debug('Deleting task', { id })
+      const result = await commands.deleteTask(id)
+
+      if (result.status === 'error') {
+        throw new Error(handleVaultError(result.error, 'Deleting task'))
+      }
+
+      logger.info('Task deleted', { id })
+    },
+    onMutate: async id => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
+
+      // Snapshot the previous value
+      const previousTasks = queryClient.getQueryData<Task[]>(
+        vaultQueryKeys.tasks()
+      )
+
+      // Optimistically remove the task
+      queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
+        if (!oldTasks) return oldTasks
+        return oldTasks.filter(t => t.id !== id)
+      })
+
+      // Remove individual task cache
+      queryClient.removeQueries({ queryKey: vaultQueryKeys.task(id) })
+
+      return { previousTasks }
+    },
+    onError: (_error, _id, context) => {
+      // Rollback on error
+      if (context?.previousTasks) {
+        queryClient.setQueryData(vaultQueryKeys.tasks(), context.previousTasks)
+      }
+    },
+    onSuccess: () => {
+      markMutationComplete()
+    },
+  })
+}
+
+/**
  * Hook to create a new project.
  */
 export function useCreateProject() {

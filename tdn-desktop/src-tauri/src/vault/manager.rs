@@ -479,6 +479,32 @@ impl VaultManager {
     }
 
     // =========================================================================
+    // Delete Operations
+    // =========================================================================
+
+    /// Delete a task by ID
+    pub fn delete_task(&self, id: &str) -> Result<(), VaultError> {
+        self.ensure_configured()?;
+
+        let task = self.get_task(id)?;
+
+        // Delete the file
+        self.set_writing(true);
+        let result = std::fs::remove_file(&task.path);
+        self.set_writing(false);
+
+        result.map_err(|e| VaultError::write_error(&task.path, format!("Failed to delete: {e}")))?;
+
+        // Remove from index
+        {
+            let mut inner = self.inner.write();
+            inner.index.remove_task_by_path(&task.path);
+        }
+
+        Ok(())
+    }
+
+    // =========================================================================
     // Helper Methods
     // =========================================================================
 

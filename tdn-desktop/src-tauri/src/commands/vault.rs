@@ -144,3 +144,14 @@ pub fn update_project(
 ) -> Result<Project, VaultError> {
     vault_manager.update_project(update)
 }
+
+// =============================================================================
+// Delete Operations
+// =============================================================================
+
+/// Delete a task by ID
+#[tauri::command]
+#[specta::specta]
+pub fn delete_task(vault_manager: State<'_, VaultManager>, id: String) -> Result<(), VaultError> {
+    vault_manager.delete_task(&id)
+}

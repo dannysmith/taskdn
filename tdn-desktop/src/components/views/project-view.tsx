@@ -1,6 +1,11 @@
 import * as React from 'react'
 
-import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
+import {
+  useVaultData,
+  useUpdateTask,
+  useCreateTask,
+  useDeleteTask,
+} from '@/services/vault'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useViewMode } from '@/store/view-mode-store'
@@ -34,6 +39,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   const { tasks, projects, areas } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
+  const deleteTask = useDeleteTask()
   const openTask = useTaskDetailStore(state => state.openTask)
   const { viewMode } = useViewMode('project')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
@@ -214,6 +220,13 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     [createTask, projectId, project?.area]
   )
 
+  const handleDeleteTask = React.useCallback(
+    (taskId: string) => {
+      deleteTask.mutate(taskId)
+    },
+    [deleteTask]
+  )
+
   const handleKanbanCreateTask = React.useCallback(
     (status: TaskStatus): string | undefined => {
       createTask.mutate({
@@ -299,6 +312,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
               onTaskStatusToggle={handleStatusToggle}
               onTaskOpenDetail={handleOpenDetail}
               onCreateTask={handleCreateTask}
+              onDeleteTask={handleDeleteTask}
               showScheduled={true}
               showDue={true}
             />
