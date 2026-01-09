@@ -56,9 +56,13 @@ export function useSidebarOrder() {
       if (containerId === ORPHAN_CONTAINER_ID) {
         return projects.filter(p => !p.area).map(p => p.id)
       }
-      return projects.filter(p => p.area?.includes(containerId)).map(p => p.id)
+      // Find area by ID to get its title for wikilink matching
+      // Project.area is a wikilink like "[[Finance]]", not an ID
+      const area = areas.find(a => a.id === containerId)
+      if (!area) return []
+      return projects.filter(p => p.area?.includes(area.title)).map(p => p.id)
     },
-    [projectOrderOverride, projects]
+    [projectOrderOverride, projects, areas]
   )
 
   // Build order object for compatibility

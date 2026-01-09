@@ -1,12 +1,12 @@
 import { cn } from '@/lib/utils'
 import { useNavigationStore } from '@/store/navigation-store'
 import { ViewHeader } from './ViewHeader'
+import { InboxView } from '@/components/views'
 
 /**
  * MainWindowContent - Primary content area that renders the active view.
  *
  * Uses navigation store to determine which view to show based on sidebar selection.
- * Will be expanded to render actual view components (InboxView, TodayView, etc.)
  */
 export function MainWindowContent() {
   const selection = useNavigationStore(state => state.selection)
@@ -38,23 +38,59 @@ export function MainWindowContent() {
     return 'Unknown'
   }
 
+  // Render the appropriate view based on selection
+  const renderContent = () => {
+    if (!selection) {
+      return <PlaceholderView message="Select a view from the sidebar" />
+    }
+
+    if (selection.type === 'nav') {
+      switch (selection.id) {
+        case 'inbox':
+          return <InboxView />
+        case 'today':
+          return <PlaceholderView message="Today view coming soon" />
+        case 'this-week':
+          return <PlaceholderView message="This Week view coming soon" />
+        case 'calendar':
+          return <PlaceholderView message="Calendar view coming soon" />
+      }
+    }
+
+    // Area, project, or no-area views
+    return (
+      <PlaceholderView
+        message={`${getViewTitle()} view coming soon`}
+        selection={selection}
+      />
+    )
+  }
+
   return (
     <div className={cn('flex h-full flex-col bg-background')}>
       <ViewHeader title={getViewTitle()} />
-      <div className="flex flex-1 flex-col items-center justify-center p-4">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold text-foreground mb-2">
-            {getViewTitle()}
-          </h2>
-          <p className="text-muted-foreground">
-            View content will be rendered here
-          </p>
-          {selection && (
-            <pre className="mt-4 text-xs text-muted-foreground bg-muted p-2 rounded">
-              {JSON.stringify(selection, null, 2)}
-            </pre>
-          )}
-        </div>
+      <div className="flex-1 overflow-auto p-4">{renderContent()}</div>
+    </div>
+  )
+}
+
+// Placeholder for views not yet implemented
+function PlaceholderView({
+  message,
+  selection,
+}: {
+  message: string
+  selection?: object
+}) {
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center h-full">
+      <div className="text-center">
+        <p className="text-muted-foreground">{message}</p>
+        {selection && (
+          <pre className="mt-4 text-xs text-muted-foreground bg-muted p-2 rounded">
+            {JSON.stringify(selection, null, 2)}
+          </pre>
+        )}
       </div>
     </div>
   )
