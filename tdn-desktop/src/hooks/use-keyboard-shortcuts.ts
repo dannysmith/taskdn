@@ -38,18 +38,8 @@ export function useKeyboardShortcuts(commandContext: CommandContext) {
           }
           case 'n':
           case 'N': {
-            // DEBUG: Log handler entry
-            console.log('[Cmd+N] Global handler fired', {
-              defaultPrevented: e.defaultPrevented,
-              activeElement: document.activeElement?.tagName,
-              activeElementId: (document.activeElement as HTMLElement)?.id,
-            })
-
             // Skip if already handled by a component (e.g., TaskList with focus)
             if (e.defaultPrevented) {
-              console.log(
-                '[Cmd+N] Skipping - already handled (defaultPrevented)'
-              )
               break
             }
 
@@ -60,11 +50,9 @@ export function useKeyboardShortcuts(commandContext: CommandContext) {
               activeEl instanceof HTMLTextAreaElement ||
               (activeEl instanceof HTMLElement && activeEl.isContentEditable)
             ) {
-              console.log('[Cmd+N] Skipping - in input/textarea')
               break
             }
 
-            console.log('[Cmd+N] Calling triggerCreate()')
             e.preventDefault()
             // Trigger task creation via the store
             useTaskCreationStore.getState().triggerCreate()

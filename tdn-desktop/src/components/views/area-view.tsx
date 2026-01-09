@@ -253,6 +253,8 @@ export function AreaView({ areaId }: AreaViewProps) {
                 .getState()
                 .setAreaTaskOrder(areaId, updatedOrder)
             }
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             const order =
@@ -324,6 +326,8 @@ export function AreaView({ areaId }: AreaViewProps) {
                   .getState()
                   .setProjectTaskOrder(projectId, updatedOrder)
               }
+              // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+              setPendingEditItemId(realTask.id)
             },
             onError: () => {
               const order =

@@ -152,6 +152,8 @@ export function InboxView() {
               )
               useDisplayOrderStore.getState().setInboxOrder(updatedOrder)
             }
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             const order = useDisplayOrderStore.getState().inboxOrder

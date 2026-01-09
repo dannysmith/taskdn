@@ -266,6 +266,8 @@ export function ProjectView({ projectId }: ProjectViewProps) {
                 .getState()
                 .setProjectTaskOrder(projectId, updatedOrder)
             }
+            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
+            setPendingEditItemId(realTask.id)
           },
           onError: () => {
             // 6. Remove temp ID from order store on failure
