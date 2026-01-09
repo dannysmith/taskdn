@@ -21,14 +21,19 @@ import {
   getLooseTasksProjectId,
   isLooseTasksProjectId,
 } from '@/components/tasks/task-dnd-context'
-import { ProjectCard } from '@/components/cards/project-card'
-import { CollapsibleNotesSection } from '@/components/ui/collapsible-notes'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
   AreaKanbanBoard,
   useAreaCollapsedColumns,
   LOOSE_TASKS_SWIMLANE_ID,
 } from '@/components/kanban'
+
+// -----------------------------------------------------------------------------
+// Constants
+// -----------------------------------------------------------------------------
+
+/** Special ID used for orphan tasks ordering (tasks with no project or area) */
+const ORPHAN_AREA_ID = 'orphan'
 
 // -----------------------------------------------------------------------------
 // Helper Functions
@@ -63,36 +68,25 @@ function applyStoredOrder(tasks: Task[], storedOrder: string[] | null): Task[] {
 // -----------------------------------------------------------------------------
 
 /**
- * AreaView - Shows all projects and tasks within a life area.
+ * NoAreaView - Shows orphan projects and tasks that aren't assigned to any area.
  *
- * Areas represent ongoing life responsibilities (e.g., "Health", "Finance",
- * "Work"). This view displays:
- * 1. Area notes (collapsible) - background info about this life area
- * 2. Active Projects grid - cards for in-progress/ready/planning/blocked projects
- * 3. All Projects list OR Kanban - depends on view mode toggle
+ * This view appears when clicking the "No Area" item in the sidebar. It displays:
+ * - Projects that have no area set
+ * - "Loose tasks" that have neither project nor area
  *
  * Supports two view modes (toggled via ViewHeader):
  * - "list" → Collapsible project groups with task lists + loose tasks section
  * - "kanban" → AreaKanbanBoard with swimlanes per project, tasks by status
  *
- * Tasks can be dragged between projects in list mode. "Loose tasks" are tasks
- * directly under the area without a project.
+ * Tasks can be dragged between orphan projects in list mode. This view helps
+ * users find and organize items that haven't been assigned to a life area yet.
  */
-
-/** Active statuses for project cards grid */
-const ACTIVE_STATUSES = ['in-progress', 'ready', 'planning', 'blocked'] as const
-
-interface AreaViewProps {
-  areaId: string
-}
-
-export function AreaView({ areaId }: AreaViewProps) {
-  const { tasks, projects, areas } = useVaultData()
+export function NoAreaView() {
+  const { tasks, projects } = useVaultData()
   const {
-    getProjectsByAreaId,
-    getAreaDirectTasks,
+    getOrphanProjects,
+    getOrphanTasks,
     getProjectCompletion,
-    getTaskCounts,
     getTaskById,
   } = useVaultHelpers()
   const updateTask = useUpdateTask()
@@ -105,47 +99,31 @@ export function AreaView({ areaId }: AreaViewProps) {
   // Get project task order from Zustand (used to apply stored order in tasksByProject)
   const projectTaskOrder = useDisplayOrderStore(state => state.projectTaskOrder)
 
-  // Find the area
-  const area = React.useMemo(() => {
-    return areas.find(a => a.id === areaId)
-  }, [areas, areaId])
+  // Get orphan projects (projects with no area)
+  const orphanProjects = React.useMemo(() => {
+    return getOrphanProjects()
+  }, [getOrphanProjects])
 
-  // Get projects in this area
-  const areaProjects = React.useMemo(() => {
-    return getProjectsByAreaId(areaId)
-  }, [getProjectsByAreaId, areaId])
+  // Get orphan tasks (tasks with no project AND no area)
+  const orphanTasks = React.useMemo(() => {
+    return getOrphanTasks()
+  }, [getOrphanTasks])
 
-  // Get area-direct tasks (tasks in this area but not in any project)
-  const areaDirectTasks = React.useMemo(() => {
-    return getAreaDirectTasks(areaId)
-  }, [getAreaDirectTasks, areaId])
-
-  // Split projects into active (for grid)
-  // Note: projects with null status default to 'planning' per S1 spec
-  const activeProjects = React.useMemo(() => {
-    return areaProjects.filter(p => {
-      const status = p.status ?? 'planning'
-      return ACTIVE_STATUSES.includes(
-        status as (typeof ACTIVE_STATUSES)[number]
-      )
-    })
-  }, [areaProjects])
-
-  // Manage display order for loose tasks
+  // Manage display order for orphan tasks using special "orphan" area ID
   const {
-    setOrder: setLooseTasksOrder,
-    getOrderedTasks: getOrderedLooseTasks,
-  } = useAreaOrder(areaId, areaDirectTasks)
-  const orderedLooseTasks = getOrderedLooseTasks()
+    setOrder: setOrphanTasksOrder,
+    getOrderedTasks: getOrderedOrphanTasks,
+  } = useAreaOrder(ORPHAN_AREA_ID, orphanTasks)
+  const orderedOrphanTasks = getOrderedOrphanTasks()
 
-  // Build tasksByProject map for TaskDndContext (includes loose tasks as pseudo-project)
-  const looseTasksProjectId = getLooseTasksProjectId(areaId)
+  // Build tasksByProject map for TaskDndContext (includes orphan tasks as pseudo-project)
+  const orphanTasksProjectId = getLooseTasksProjectId(ORPHAN_AREA_ID)
   const tasksByProject = React.useMemo(() => {
     const map = new Map<string, Task[]>()
-    // Add loose tasks with pseudo-project ID (already ordered via useAreaOrder)
-    map.set(looseTasksProjectId, orderedLooseTasks)
+    // Add orphan tasks with pseudo-project ID (already ordered via useAreaOrder)
+    map.set(orphanTasksProjectId, orderedOrphanTasks)
     // Add regular project tasks with stored order applied
-    for (const project of areaProjects) {
+    for (const project of orphanProjects) {
       const rawProjectTasks = tasks.filter(t =>
         t.project?.includes(project.title)
       )
@@ -155,19 +133,19 @@ export function AreaView({ areaId }: AreaViewProps) {
     }
     return map
   }, [
-    areaProjects,
+    orphanProjects,
     tasks,
-    looseTasksProjectId,
-    orderedLooseTasks,
+    orphanTasksProjectId,
+    orderedOrphanTasks,
     projectTaskOrder,
   ])
 
   // Build tasksByStatus map for kanban view
   const tasksByStatus = React.useMemo(() => {
     const map = new Map<TaskStatus, Task[]>()
-    // Collect all tasks from projects and loose tasks
-    const allTasks = [...orderedLooseTasks]
-    for (const project of areaProjects) {
+    // Collect all tasks from projects and orphan tasks
+    const allTasks = [...orderedOrphanTasks]
+    for (const project of orphanProjects) {
       const projectTasks = tasks.filter(t => t.project?.includes(project.title))
       allTasks.push(...projectTasks)
     }
@@ -177,10 +155,10 @@ export function AreaView({ areaId }: AreaViewProps) {
       map.set(task.status, existing)
     }
     return map
-  }, [orderedLooseTasks, areaProjects, tasks])
+  }, [orderedOrphanTasks, orphanProjects, tasks])
 
   // Manage kanban column order
-  const { setColumnOrder } = useKanbanOrder(`area-${areaId}`, tasksByStatus)
+  const { setColumnOrder } = useKanbanOrder('no-area', tasksByStatus)
 
   // Helper: get task by ID
   const getTaskByIdFn = React.useCallback(
@@ -196,21 +174,21 @@ export function AreaView({ areaId }: AreaViewProps) {
     [setSelection]
   )
 
-  // Handler for creating loose tasks (no project)
-  const handleCreateLooseTask = React.useCallback(
+  // Handler for creating orphan tasks (no project, no area)
+  const handleCreateOrphanTask = React.useCallback(
     async (_afterTaskId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
         projectId: null,
-        areaId: areaId,
+        areaId: null,
         scheduled: null,
         due: null,
         deferUntil: null,
       })
       return newTask.id
     },
-    [createTask, areaId]
+    [createTask]
   )
 
   // Factory function to create task creation handlers for each project
@@ -324,15 +302,14 @@ export function AreaView({ areaId }: AreaViewProps) {
 
   const handleProjectChange = React.useCallback(
     (taskId: string, newProjectId: string) => {
-      // Find the project to get its WikiLink format
       if (newProjectId === LOOSE_TASKS_SWIMLANE_ID) {
-        // Moving to loose tasks - clear project but keep area
+        // Moving to loose tasks - clear project (already no area)
         updateTask.mutate({
           id: taskId,
           title: null,
           status: null,
           project: '', // Empty string to clear
-          area: area?.title ? `[[${area.title}]]` : null,
+          area: null,
           scheduled: null,
           due: null,
           deferUntil: null,
@@ -347,7 +324,7 @@ export function AreaView({ areaId }: AreaViewProps) {
             title: null,
             status: null,
             project: `[[${project.title}]]`,
-            area: null, // Area is inherited from project
+            area: null, // Orphan project has no area
             scheduled: null,
             due: null,
             deferUntil: null,
@@ -356,7 +333,7 @@ export function AreaView({ areaId }: AreaViewProps) {
         }
       }
     },
-    [updateTask, area, projects]
+    [updateTask, projects]
   )
 
   const handleOpenDetail = React.useCallback(
@@ -370,8 +347,8 @@ export function AreaView({ areaId }: AreaViewProps) {
   const handleTasksReorder = React.useCallback(
     (projectId: string, reorderedTasks: Task[]) => {
       if (isLooseTasksProjectId(projectId)) {
-        // Reordering loose tasks within the area
-        setLooseTasksOrder(reorderedTasks)
+        // Reordering orphan tasks
+        setOrphanTasksOrder(reorderedTasks)
       } else {
         // Reordering tasks within a project - store in project order
         const { setProjectTaskOrder } = useDisplayOrderStore.getState()
@@ -381,7 +358,7 @@ export function AreaView({ areaId }: AreaViewProps) {
         )
       }
     },
-    [setLooseTasksOrder]
+    [setOrphanTasksOrder]
   )
 
   // Handler for moving a task between projects
@@ -395,13 +372,13 @@ export function AreaView({ areaId }: AreaViewProps) {
     ) => {
       // 1. Update entity data (project WikiLink)
       if (isLooseTasksProjectId(toProjectId)) {
-        // Moving to loose tasks: clear project but keep area
+        // Moving to orphan tasks: clear project (already no area)
         updateTask.mutate({
           id: taskId,
           title: null,
           status: null,
           project: '', // Empty string to clear
-          area: area?.title ? `[[${area.title}]]` : null,
+          area: null,
           scheduled: null,
           due: null,
           deferUntil: null,
@@ -416,7 +393,7 @@ export function AreaView({ areaId }: AreaViewProps) {
             title: null,
             status: null,
             project: `[[${project.title}]]`,
-            area: null, // Area is inherited from project
+            area: null, // Orphan project has no area
             scheduled: null,
             due: null,
             deferUntil: null,
@@ -440,7 +417,7 @@ export function AreaView({ areaId }: AreaViewProps) {
       // 2a. Remove from source order
       const newSourceOrder = sourceTaskIds.filter(id => id !== taskId)
       if (isLooseTasksProjectId(fromProjectId)) {
-        setAreaTaskOrder(areaId, newSourceOrder)
+        setAreaTaskOrder(ORPHAN_AREA_ID, newSourceOrder)
       } else {
         setProjectTaskOrder(fromProjectId, newSourceOrder)
       }
@@ -465,31 +442,20 @@ export function AreaView({ areaId }: AreaViewProps) {
       }
 
       if (isLooseTasksProjectId(toProjectId)) {
-        setAreaTaskOrder(areaId, newTargetOrder)
+        setAreaTaskOrder(ORPHAN_AREA_ID, newTargetOrder)
       } else {
         setProjectTaskOrder(toProjectId, newTargetOrder)
       }
     },
-    [updateTask, area, projects, tasksByProject, areaId]
+    [updateTask, projects, tasksByProject]
   )
-
-  // Combine description and body for notes
-  const areaNotes = React.useMemo(() => {
-    if (!area) return ''
-    const parts: string[] = []
-    if (area.description) parts.push(area.description)
-    if (area.body) parts.push(area.body)
-    return parts.join('\n\n')
-  }, [area])
 
   // Handler for kanban task reorder
   const handleKanbanReorder = React.useCallback(
     (swimlaneId: string, status: TaskStatus, reorderedColumnTasks: Task[]) => {
-      // Merge the reordered column tasks back into the full task list
-      // for this swimlane (project or loose tasks)
       const isLooseTasks = swimlaneId === LOOSE_TASKS_SWIMLANE_ID
       const allTasks = isLooseTasks
-        ? orderedLooseTasks
+        ? orderedOrphanTasks
         : (tasksByProject.get(swimlaneId) ?? [])
 
       const reorderedIds = new Set(reorderedColumnTasks.map(t => t.id))
@@ -498,14 +464,12 @@ export function AreaView({ areaId }: AreaViewProps) {
 
       for (const task of allTasks) {
         if (reorderedIds.has(task.id)) {
-          // This task is in the reordered column - use new order
           const reorderedTask = reorderedColumnTasks[columnIndex]
           if (reorderedTask) {
             result.push(reorderedTask)
             columnIndex++
           }
         } else {
-          // Task from a different column - preserve position
           result.push(task)
         }
       }
@@ -520,63 +484,32 @@ export function AreaView({ areaId }: AreaViewProps) {
       }
 
       if (isLooseTasks) {
-        setLooseTasksOrder(result)
+        setOrphanTasksOrder(result)
       } else {
         setColumnOrder(status, reorderedColumnTasks)
       }
     },
-    [orderedLooseTasks, tasksByProject, setLooseTasksOrder, setColumnOrder]
+    [orderedOrphanTasks, tasksByProject, setOrphanTasksOrder, setColumnOrder]
   )
 
-  if (!area) {
+  // Empty state check
+  const isEmpty = orphanProjects.length === 0 && orderedOrphanTasks.length === 0
+
+  if (isEmpty) {
     return (
-      <div className="space-y-4">
-        <EmptyState
-          title="Area not found"
-          description="This area may have been deleted or moved."
-        />
-      </div>
+      <EmptyState
+        title="Everything has a home"
+        description="All your projects and tasks are assigned to areas. Nice work!"
+      />
     )
   }
 
   return (
     <div className="space-y-8">
-      {/* Area Notes (collapsible) */}
-      {areaNotes && (
-        <CollapsibleNotesSection notes={areaNotes} title="About this area" />
-      )}
-
-      {/* Active Projects Grid */}
-      {activeProjects.length > 0 && (
-        <section>
-          <h2 className="text-sm font-medium text-muted-foreground mb-3">
-            Active Projects
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {activeProjects.map(project => {
-              const completion = getProjectCompletion(project.id)
-              const { taskCount, completedTaskCount } = getTaskCounts(
-                project.id
-              )
-              return (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  completion={completion}
-                  taskCount={taskCount}
-                  completedTaskCount={completedTaskCount}
-                  onClick={() => handleNavigateToProject(project.id)}
-                />
-              )
-            })}
-          </div>
-        </section>
-      )}
-
       {/* Projects/Tasks Content */}
       <section>
         <h2 className="text-sm font-medium text-muted-foreground mb-3">
-          {viewMode === 'list' ? 'All Projects' : 'Tasks by Status'}
+          {viewMode === 'list' ? 'All Projects & Tasks' : 'Tasks by Status'}
         </h2>
 
         {viewMode === 'list' ? (
@@ -587,26 +520,26 @@ export function AreaView({ areaId }: AreaViewProps) {
             getTaskById={getTaskByIdFn}
           >
             <div className="space-y-4">
-              {/* Area-direct tasks (tasks in this area but not in any project) */}
+              {/* Orphan tasks (tasks with no project AND no area) */}
               <SectionTaskGroup
-                sectionId={looseTasksProjectId}
+                sectionId={orphanTasksProjectId}
                 title="Loose Tasks"
                 icon={<ListTodo className="size-4" />}
-                tasks={orderedLooseTasks}
+                tasks={orderedOrphanTasks}
                 onTasksReorder={reorderedTasks =>
-                  handleTasksReorder(looseTasksProjectId, reorderedTasks)
+                  handleTasksReorder(orphanTasksProjectId, reorderedTasks)
                 }
                 onTaskTitleChange={handleTitleChange}
                 onTaskStatusToggle={handleStatusToggle}
                 onTaskOpenDetail={handleOpenDetail}
-                onCreateTask={handleCreateLooseTask}
+                onCreateTask={handleCreateOrphanTask}
                 showScheduled={true}
                 showDue={true}
                 defaultExpanded={true}
                 useExternalDnd={true}
               />
 
-              {areaProjects.map(project => {
+              {orphanProjects.map(project => {
                 const projectTasks = tasksByProject.get(project.id) ?? []
                 const completion = getProjectCompletion(project.id)
 
@@ -629,20 +562,13 @@ export function AreaView({ areaId }: AreaViewProps) {
                   />
                 )
               })}
-
-              {areaProjects.length === 0 && orderedLooseTasks.length === 0 && (
-                <EmptyState
-                  title="No projects or tasks"
-                  description="This area doesn't have any projects or tasks yet."
-                />
-              )}
             </div>
           </TaskDndContext>
         ) : (
           <AreaKanbanBoard
-            projects={areaProjects}
+            projects={orphanProjects}
             tasksByProject={tasksByProject}
-            areaDirectTasks={orderedLooseTasks}
+            areaDirectTasks={orderedOrphanTasks}
             collapsedColumns={collapsedColumns}
             onColumnCollapseChange={toggleColumn}
             onTaskStatusChange={handleStatusChange}

@@ -1,6 +1,7 @@
 export { AreaView } from './area-view'
 export { CalendarView } from './calendar-view'
 export { InboxView } from './inbox-view'
+export { NoAreaView } from './no-area-view'
 export { ProjectView } from './project-view'
 export { TodayView } from './today-view'
 export { WeekView } from './week-view'

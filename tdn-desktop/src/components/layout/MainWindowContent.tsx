@@ -13,6 +13,7 @@ import {
   AreaView,
   CalendarView,
   InboxView,
+  NoAreaView,
   ProjectView,
   TodayView,
   WeekView,
@@ -112,6 +113,9 @@ export function MainWindowContent() {
     if (selection.type === 'area') {
       return 'area'
     }
+    if (selection.type === 'no-area') {
+      return 'area' // Uses same list/kanban toggle as area view
+    }
     return null
   }
 
@@ -144,13 +148,11 @@ export function MainWindowContent() {
       return <AreaView areaId={selection.id} />
     }
 
-    // no-area view
-    return (
-      <PlaceholderView
-        message={`${getViewTitle()} view coming soon`}
-        selection={selection}
-      />
-    )
+    if (selection.type === 'no-area') {
+      return <NoAreaView />
+    }
+
+    return <PlaceholderView message={`Unknown view`} selection={selection} />
   }
 
   return (
