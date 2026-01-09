@@ -103,14 +103,16 @@ export function TodayView() {
   )
 
   // Get context name (project/area) for a task
+  // Note: task.project and task.area are WikiLink format (e.g., "[[My Project]]")
+  // so we match against the title using includes()
   const getTaskContextName = React.useCallback(
     (task: Task): string | undefined => {
       if (task.project) {
-        const project = projects.find(p => p.id === task.project)
+        const project = projects.find(p => task.project?.includes(p.title))
         return project?.title
       }
       if (task.area) {
-        const area = areas.find(a => a.id === task.area)
+        const area = areas.find(a => task.area?.includes(a.title))
         return area?.title
       }
       return undefined
