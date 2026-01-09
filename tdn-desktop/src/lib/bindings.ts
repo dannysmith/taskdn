@@ -187,6 +187,135 @@ async isDevMode() : Promise<boolean> {
  */
 async getDummyVaultPaths() : Promise<DummyVaultPaths> {
     return await TAURI_INVOKE("get_dummy_vault_paths");
+},
+/**
+ * Initialize the vault with the given configuration.
+ * Should be called after preferences are loaded.
+ */
+async initVault(tasksDir: string, projectsDir: string, areasDir: string, ignore: string[] | null) : Promise<Result<null, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("init_vault", { tasksDir, projectsDir, areasDir, ignore }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Check if the vault is configured
+ */
+async isVaultConfigured() : Promise<boolean> {
+    return await TAURI_INVOKE("is_vault_configured");
+},
+/**
+ * Refresh the vault by re-scanning all directories.
+ * Call this when receiving the vault-changed event.
+ */
+async refreshVault() : Promise<Result<null, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("refresh_vault") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get all tasks from the vault
+ */
+async listTasks() : Promise<Result<Task[], VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_tasks") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get all projects from the vault
+ */
+async listProjects() : Promise<Result<Project[], VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_projects") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get all areas from the vault
+ */
+async listAreas() : Promise<Result<Area[], VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_areas") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get a task by ID
+ */
+async getTask(id: string) : Promise<Result<Task, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_task", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get a project by ID
+ */
+async getProject(id: string) : Promise<Result<Project, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_project", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Get an area by ID
+ */
+async getArea(id: string) : Promise<Result<Area, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_area", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Create a new task
+ */
+async createTask(options: CreateTaskOptions) : Promise<Result<Task, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_task", { options }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Create a new project
+ */
+async createProject(options: CreateProjectOptions) : Promise<Result<Project, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_project", { options }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Update an existing task
+ */
+async updateTask(update: TaskUpdate) : Promise<Result<Task, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_task", { update }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -232,6 +361,43 @@ projects_dir: string | null;
  */
 ignore: string[] | null }
 /**
+ * Public area struct exposed to TypeScript via tauri-specta.
+ */
+export type Area = { 
+/**
+ * Unique identifier derived from file path
+ */
+id: string; 
+/**
+ * Absolute file path to the area
+ */
+path: string; 
+/**
+ * Area title from frontmatter
+ */
+title: string; 
+/**
+ * Area status (optional per S1 spec)
+ */
+status: AreaStatus | null; 
+/**
+ * Area type (e.g., "client", "life-area") - free-form string
+ */
+areaType: string | null; 
+/**
+ * Short description
+ */
+description: string | null; 
+/**
+ * Markdown body content (after frontmatter)
+ */
+body: string }
+/**
+ * Area status enum matching S1 spec Section 5.5
+ * Unlike tasks/projects, area status is for visibility only (active vs hidden).
+ */
+export type AreaStatus = "active" | "archived"
+/**
  * Config read from CLI's ~/.taskdn.json
  * Note: CLI uses camelCase field names (tasksDir, areasDir, projectsDir)
  */
@@ -257,10 +423,66 @@ export type CliConfigError =
  */
 { type: "ParseError"; message: string }
 /**
+ * Options for creating a new project
+ */
+export type CreateProjectOptions = { title: string; status: ProjectStatus | null; areaId: string | null; description: string | null; startDate: string | null; endDate: string | null }
+/**
+ * Options for creating a new task
+ */
+export type CreateTaskOptions = { title: string | null; status: TaskStatus | null; projectId: string | null; areaId: string | null; scheduled: string | null; due: string | null; deferUntil: string | null }
+/**
  * Paths to dummy vault for development testing
  */
 export type DummyVaultPaths = { tasks_dir: string; areas_dir: string; projects_dir: string }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
+/**
+ * Public project struct exposed to TypeScript via tauri-specta.
+ */
+export type Project = { 
+/**
+ * Unique identifier derived from file path
+ */
+id: string; 
+/**
+ * Absolute file path to the project
+ */
+path: string; 
+/**
+ * Project title from frontmatter
+ */
+title: string; 
+/**
+ * Project status (optional per S1 spec)
+ */
+status: ProjectStatus | null; 
+/**
+ * Area reference (WikiLink format)
+ */
+area: string | null; 
+/**
+ * Start date (ISO 8601)
+ */
+startDate: string | null; 
+/**
+ * End date (ISO 8601)
+ */
+endDate: string | null; 
+/**
+ * Short description
+ */
+description: string | null; 
+/**
+ * Projects that block this one (WikiLink format)
+ */
+blockedBy: string[] | null; 
+/**
+ * Markdown body content (after frontmatter)
+ */
+body: string }
+/**
+ * Project status enum matching S1 spec Section 4.5
+ */
+export type ProjectStatus = "planning" | "ready" | "blocked" | "in-progress" | "paused" | "done"
 /**
  * Error types for recovery operations (typed for frontend matching)
  */
@@ -285,6 +507,147 @@ export type RecoveryError =
  * JSON serialization/deserialization error
  */
 { type: "ParseError"; message: string }
+/**
+ * Public task struct exposed to TypeScript via tauri-specta.
+ * Uses camelCase for TypeScript compatibility.
+ */
+export type Task = { 
+/**
+ * Unique identifier derived from file path
+ */
+id: string; 
+/**
+ * Absolute file path to the task
+ */
+path: string; 
+/**
+ * Task title from frontmatter
+ */
+title: string; 
+/**
+ * Task status
+ */
+status: TaskStatus; 
+/**
+ * Creation date (ISO 8601)
+ */
+createdAt: string | null; 
+/**
+ * Last update date (ISO 8601)
+ */
+updatedAt: string | null; 
+/**
+ * Completion date (ISO 8601) - set when status becomes done/dropped
+ */
+completedAt: string | null; 
+/**
+ * Due date/datetime (ISO 8601)
+ */
+due: string | null; 
+/**
+ * Scheduled date (ISO 8601)
+ */
+scheduled: string | null; 
+/**
+ * Defer until date (ISO 8601)
+ */
+deferUntil: string | null; 
+/**
+ * Area reference (WikiLink format, e.g., "[[Work]]")
+ */
+area: string | null; 
+/**
+ * Project reference (WikiLink format) - first element of projects array
+ */
+project: string | null; 
+/**
+ * Markdown body content (after frontmatter)
+ */
+body: string }
+/**
+ * Task status enum matching S1 spec Section 3.5
+ */
+export type TaskStatus = "inbox" | "icebox" | "ready" | "in-progress" | "blocked" | "dropped" | "done"
+/**
+ * Fields that can be updated on a task
+ */
+export type TaskUpdate = { 
+/**
+ * Task ID (required to identify which task to update)
+ */
+id: string; 
+/**
+ * New title (if provided)
+ */
+title: string | null; 
+/**
+ * New status (if provided)
+ */
+status: TaskStatus | null; 
+/**
+ * New project reference (if provided, empty string to clear)
+ */
+project: string | null; 
+/**
+ * New area reference (if provided, empty string to clear)
+ */
+area: string | null; 
+/**
+ * New scheduled date (if provided, empty string to clear)
+ */
+scheduled: string | null; 
+/**
+ * New due date (if provided, empty string to clear)
+ */
+due: string | null; 
+/**
+ * New defer-until date (if provided, empty string to clear)
+ */
+deferUntil: string | null; 
+/**
+ * New body content (if provided)
+ */
+body: string | null }
+/**
+ * Vault operation error types
+ */
+export type VaultError = 
+/**
+ * Vault not configured (no directories set in preferences)
+ */
+{ type: "notConfigured"; message: string } | 
+/**
+ * File does not exist
+ */
+{ type: "fileNotFound"; path: string } | 
+/**
+ * Entity not found by ID
+ */
+{ type: "entityNotFound"; entity_type: string; id: string } | 
+/**
+ * Failed to read file
+ */
+{ type: "readError"; path: string; message: string } | 
+/**
+ * Failed to write file
+ */
+{ type: "writeError"; path: string; message: string } | 
+/**
+ * Failed to parse frontmatter
+ */
+{ type: "parseError"; path: string; message: string } | 
+/**
+ * Validation failed
+ */
+{ type: "validationError"; field: string; message: string } | 
+/**
+ * File watcher error
+ */
+{ type: "watcherError"; message: string } | 
+/**
+ * Internal error
+ */
+{ type: "internal"; message: string }
 
 /** tauri-specta globals **/
 

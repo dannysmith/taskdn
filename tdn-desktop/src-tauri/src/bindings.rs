@@ -1,7 +1,7 @@
 use tauri_specta::{collect_commands, Builder};
 
 pub fn generate_bindings() -> Builder<tauri::Wry> {
-    use crate::commands::{config, notifications, preferences, quick_pane, recovery};
+    use crate::commands::{config, notifications, preferences, quick_pane, recovery, vault};
 
     Builder::<tauri::Wry>::new().commands(collect_commands![
         preferences::greet,
@@ -21,6 +21,19 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         config::open_app_data_dir,
         config::is_dev_mode,
         config::get_dummy_vault_paths,
+        // Vault commands
+        vault::init_vault,
+        vault::is_vault_configured,
+        vault::refresh_vault,
+        vault::list_tasks,
+        vault::list_projects,
+        vault::list_areas,
+        vault::get_task,
+        vault::get_project,
+        vault::get_area,
+        vault::create_task,
+        vault::create_project,
+        vault::update_task,
     ])
 }
 

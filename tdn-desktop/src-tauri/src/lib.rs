@@ -8,8 +8,10 @@ mod bindings;
 mod commands;
 mod types;
 mod utils;
+pub mod vault;
 
 use tauri::Manager;
+use vault::VaultManager;
 
 // Re-export only what's needed externally
 pub use types::DEFAULT_QUICK_PANE_SHORTCUT;
@@ -93,6 +95,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .manage(VaultManager::new())
         .setup(|app| {
             log::info!("Application starting up");
             log::debug!(
