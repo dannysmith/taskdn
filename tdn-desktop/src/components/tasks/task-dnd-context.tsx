@@ -182,6 +182,12 @@ interface TaskDndContextProps {
   getTaskById: (taskId: string) => Task | undefined
   /** Get a heading by its ID (optional, for heading drag preview) */
   getHeadingById?: (headingId: string) => Heading | undefined
+  /**
+   * Optional callback to determine if a drop is allowed.
+   * Used to prevent visual feedback (gap animation) for disallowed drops.
+   * If not provided, all cross-container drops show visual feedback.
+   */
+  canDropInContainer?: (sourceContainerId: string, targetContainerId: string) => boolean
 }
 
 // -----------------------------------------------------------------------------
@@ -205,6 +211,7 @@ export function TaskDndContext({
   onItemsReorder,
   getTaskById,
   getHeadingById,
+  canDropInContainer,
 }: TaskDndContextProps) {
   const [dragPreview, setDragPreview] = React.useState<DragPreviewState | null>(
     null
@@ -298,6 +305,12 @@ export function TaskDndContext({
 
     // Only track cross-container hover (not same-container)
     if (targetContainerId === dragPreview.sourceContainerId) {
+      setCrossContainerHover(null)
+      return
+    }
+
+    // Check if drop is allowed in this container
+    if (canDropInContainer && !canDropInContainer(dragPreview.sourceContainerId, targetContainerId)) {
       setCrossContainerHover(null)
       return
     }

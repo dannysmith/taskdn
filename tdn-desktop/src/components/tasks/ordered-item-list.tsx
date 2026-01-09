@@ -147,8 +147,18 @@ export function OrderedItemList({
       : internalEditingItemId
   const setEditingItemId = onEditingItemIdChange ?? setInternalEditingItemId
 
-  // Get drag context to check for dropped task
-  const { lastDroppedTaskId, clearLastDroppedTaskId } = useTaskDragPreview()
+  // Get drag context to check for dropped task and cross-container hover
+  const {
+    lastDroppedTaskId,
+    clearLastDroppedTaskId,
+    crossContainerHover,
+    clearCrossContainerHover,
+  } = useTaskDragPreview()
+
+  // Check if the dropped task has appeared in this list
+  const droppedTaskInList =
+    lastDroppedTaskId !== null &&
+    items.some(item => item.type === 'task' && item.id === lastDroppedTaskId)
 
   // Select the dropped task after a drag ends
   React.useEffect(() => {
@@ -164,6 +174,23 @@ export function OrderedItemList({
       }
     }
   }, [lastDroppedTaskId, items, setSelectedIndex, clearLastDroppedTaskId])
+
+  // Clear cross-container hover state when dropped task appears in this list
+  React.useEffect(() => {
+    if (
+      droppedTaskInList &&
+      crossContainerHover?.targetContainerId === containerId
+    ) {
+      clearLastDroppedTaskId()
+      clearCrossContainerHover()
+    }
+  }, [
+    droppedTaskInList,
+    crossContainerHover?.targetContainerId,
+    containerId,
+    clearLastDroppedTaskId,
+    clearCrossContainerHover,
+  ])
 
   // Keep selection valid when items change
   React.useEffect(() => {
@@ -423,6 +450,19 @@ export function OrderedItemList({
   // Generate drag IDs for sortable context
   const dragIds = items.map(getDragId)
 
+  // Check if we should show a trailing gap (cross-container drag, append at end)
+  // Don't show gap once the dropped task has appeared in this container
+  const showTrailingGap =
+    crossContainerHover?.targetContainerId === containerId &&
+    crossContainerHover?.insertBeforeId === null &&
+    !droppedTaskInList
+
+  // Helper to check if a task should show a gap before it
+  const shouldShowGapBefore = (taskId: string) =>
+    crossContainerHover?.targetContainerId === containerId &&
+    crossContainerHover?.insertBeforeId === taskId &&
+    !droppedTaskInList
+
   if (items.length === 0) {
     return (
       <div
@@ -461,6 +501,7 @@ export function OrderedItemList({
                   task={item.data}
                   dragId={getDragId(item)}
                   projectId={containerId}
+                  showGapBefore={shouldShowGapBefore(item.id)}
                   isSelected={selectedIndex === index}
                   isEditing={editingItemId === item.id}
                   onSelect={() => handleSelect(index)}
@@ -502,6 +543,13 @@ export function OrderedItemList({
               )
             }
           })}
+          {/* Trailing gap for cross-container drag (append at end) */}
+          <div
+            className={cn(
+              'transition-[height] duration-150 ease-out',
+              showTrailingGap ? 'h-10' : 'h-0'
+            )}
+          />
         </div>
       </SortableContext>
     </div>

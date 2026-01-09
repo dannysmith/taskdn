@@ -19,6 +19,8 @@ export interface TaskListItemProps extends Omit<TaskItemProps, 'className'> {
   dragId: string
   /** Project/section ID for cross-container drag detection */
   projectId: string
+  /** Show gap before this item (for cross-container drag visual feedback) */
+  showGapBefore?: boolean
   className?: string
 }
 
@@ -30,6 +32,7 @@ export function TaskListItem({
   task,
   dragId,
   projectId,
+  showGapBefore,
   className,
   isEditing,
   ...taskItemProps
@@ -67,6 +70,8 @@ export function TaskListItem({
       className={cn(
         'touch-manipulation',
         isDragging && 'opacity-50',
+        // CSS gap animation for cross-container drag
+        showGapBefore && 'mt-10 transition-[margin] duration-150 ease-out',
         className
       )}
     >
