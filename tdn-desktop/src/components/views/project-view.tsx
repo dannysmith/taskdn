@@ -268,12 +268,17 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   // Register view default handler for Cmd+N task creation
   // When no task is selected, Cmd+N creates a new task at the end
   React.useEffect(() => {
+    console.log('[ProjectView] Registering view default handler')
     useTaskCreationStore.getState().registerViewDefault({
       handler: handleCreateTask,
-      onTaskCreated: taskId => setPendingEditItemId(taskId),
+      onTaskCreated: taskId => {
+        console.log('[ProjectView] onTaskCreated callback:', taskId)
+        setPendingEditItemId(taskId)
+      },
     })
 
     return () => {
+      console.log('[ProjectView] Unregistering view default handler')
       useTaskCreationStore.getState().registerViewDefault(null)
     }
   }, [handleCreateTask])

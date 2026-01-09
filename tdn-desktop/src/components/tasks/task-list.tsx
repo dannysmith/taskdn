@@ -240,7 +240,10 @@ export function TaskList({
   // Register with task creation store when this list has a selection
   // This enables Cmd+N to create tasks after the selected task via the global handler
   React.useEffect(() => {
-    if (!onCreateTask) return
+    if (!onCreateTask) {
+      console.log(`[TaskList:${projectId}] No onCreateTask - skipping registration`)
+      return
+    }
 
     // Get the selected task (may be undefined if index is out of range)
     const selectedTask =
@@ -250,6 +253,7 @@ export function TaskList({
 
     if (selectedTask) {
       // Has valid selection - activate this list
+      console.log(`[TaskList:${projectId}] Activating with selection:`, selectedTask.id)
       useTaskCreationStore.getState().activateList(projectId, {
         handler: afterTaskId => onCreateTask(afterTaskId),
         selectedTaskId: selectedTask.id,
@@ -259,11 +263,13 @@ export function TaskList({
       })
     } else {
       // No selection - deactivate (reverts to view default)
+      console.log(`[TaskList:${projectId}] Deactivating (no selection)`)
       useTaskCreationStore.getState().deactivateList(projectId)
     }
 
     // Cleanup: deactivate when this list unmounts
     return () => {
+      console.log(`[TaskList:${projectId}] Cleanup - deactivating`)
       useTaskCreationStore.getState().deactivateList(projectId)
     }
   }, [
@@ -344,7 +350,13 @@ export function TaskList({
 
       case 'n':
       case 'N':
+        console.log(`[TaskList:${projectId}] Local Cmd+N handler`, {
+          isMeta,
+          hasOnCreateTask: !!onCreateTask,
+          selectedIndex,
+        })
         if (isMeta && onCreateTask) {
+          console.log(`[TaskList:${projectId}] Handling locally (stopPropagation)`)
           e.preventDefault()
           e.stopPropagation() // Prevent global handler from also firing
           const afterTaskId =
@@ -624,11 +636,20 @@ export function DraggableTaskList({
 
   // Auto-edit: when autoEditItemId is set, find the task and start editing
   // This is used when a task is created via the view's default handler
+  //
+  // NOTE: There's currently a race condition where the task may not appear in
+  // `tasks` immediately after creation (TanStack Query cache hasn't updated yet).
+  // The fix is to implement optimistic updates in useCreateTask - see task-3a doc.
   React.useEffect(() => {
     if (!autoEditItemId) return
 
+    console.log('[DraggableTaskList] autoEditItemId set:', autoEditItemId)
+    console.log('[DraggableTaskList] tasks count:', tasks.length)
+
     // Find the task in the list
     const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
+    console.log('[DraggableTaskList] Found at index:', taskIndex)
+
     if (taskIndex !== -1) {
       // Select and edit the task
       setSelectedIndex(taskIndex)
@@ -636,6 +657,8 @@ export function DraggableTaskList({
       // Notify that we consumed the auto-edit
       onAutoEditConsumed?.()
     }
+    // If not found, the task hasn't appeared in the cache yet.
+    // With optimistic updates, this won't happen.
   }, [autoEditItemId, tasks, onAutoEditConsumed])
 
   // Sensors for drag and drop - only PointerSensor
