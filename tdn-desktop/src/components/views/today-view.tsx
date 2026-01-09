@@ -353,7 +353,7 @@ export function TodayView() {
 
   // Create task handler for "Scheduled for Today" section
   const handleCreateScheduledTask = React.useCallback(
-    async (_afterItemId: string | null): Promise<string | undefined> => {
+    async (afterItemId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
@@ -363,9 +363,33 @@ export function TodayView() {
         due: null,
         deferUntil: null,
       })
+
+      // Insert new task at the correct position in the order
+      const currentOrder = orderedScheduledItems.map(item =>
+        item.type === 'heading' ? toHeadingId(item.id) : item.id
+      )
+      let newOrder: string[]
+
+      if (afterItemId) {
+        const insertIndex = currentOrder.indexOf(afterItemId)
+        if (insertIndex !== -1) {
+          newOrder = [
+            ...currentOrder.slice(0, insertIndex + 1),
+            newTask.id,
+            ...currentOrder.slice(insertIndex + 1),
+          ]
+        } else {
+          newOrder = [...currentOrder, newTask.id]
+        }
+      } else {
+        newOrder = [...currentOrder, newTask.id]
+      }
+
+      setSectionItemOrder('scheduled-today', newOrder)
+
       return newTask.id
     },
-    [createTask, today]
+    [createTask, today, orderedScheduledItems, setSectionItemOrder]
   )
 
   // Add task from header button
@@ -418,7 +442,7 @@ export function TodayView() {
 
   // Create task handler for due/overdue section (set due date to today)
   const handleCreateDueTask = React.useCallback(
-    async (_afterTaskId: string | null): Promise<string | undefined> => {
+    async (afterTaskId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
@@ -428,14 +452,36 @@ export function TodayView() {
         due: today,
         deferUntil: null,
       })
+
+      // Insert new task at the correct position in the order
+      const currentOrder = orderedOverdueOrDueToday.map(t => t.id)
+      let newOrder: string[]
+
+      if (afterTaskId) {
+        const insertIndex = currentOrder.indexOf(afterTaskId)
+        if (insertIndex !== -1) {
+          newOrder = [
+            ...currentOrder.slice(0, insertIndex + 1),
+            newTask.id,
+            ...currentOrder.slice(insertIndex + 1),
+          ]
+        } else {
+          newOrder = [...currentOrder, newTask.id]
+        }
+      } else {
+        newOrder = [...currentOrder, newTask.id]
+      }
+
+      setSectionItemOrder('overdue-due-today', newOrder)
+
       return newTask.id
     },
-    [createTask, today]
+    [createTask, today, orderedOverdueOrDueToday, setSectionItemOrder]
   )
 
   // Create task handler for "became available" section (schedule for today)
   const handleCreateAvailableTask = React.useCallback(
-    async (_afterTaskId: string | null): Promise<string | undefined> => {
+    async (afterTaskId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
@@ -445,9 +491,31 @@ export function TodayView() {
         due: null,
         deferUntil: null,
       })
+
+      // Insert new task at the correct position in the order
+      const currentOrder = orderedBecameAvailableToday.map(t => t.id)
+      let newOrder: string[]
+
+      if (afterTaskId) {
+        const insertIndex = currentOrder.indexOf(afterTaskId)
+        if (insertIndex !== -1) {
+          newOrder = [
+            ...currentOrder.slice(0, insertIndex + 1),
+            newTask.id,
+            ...currentOrder.slice(insertIndex + 1),
+          ]
+        } else {
+          newOrder = [...currentOrder, newTask.id]
+        }
+      } else {
+        newOrder = [...currentOrder, newTask.id]
+      }
+
+      setSectionItemOrder('became-available-today', newOrder)
+
       return newTask.id
     },
-    [createTask, today]
+    [createTask, today, orderedBecameAvailableToday, setSectionItemOrder]
   )
 
   const handleDeleteTask = React.useCallback(

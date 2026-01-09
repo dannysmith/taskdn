@@ -21,6 +21,7 @@ import { CSS } from '@dnd-kit/utilities'
 
 import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
+import { useTaskCreationStore } from '@/store/task-creation-store'
 import { TaskItem, type TaskItemProps } from './task-item'
 import { TaskStatusCheckbox } from './task-status-checkbox'
 import { useTaskDragPreview } from './task-dnd-context'
@@ -333,7 +334,8 @@ export function TaskList({
 
   const handleEndEdit = () => {
     // Check if this was a newly created task that was canceled (Escape)
-    const wasNewlyCreated = newlyCreatedTaskId && editingTaskId === newlyCreatedTaskId
+    const wasNewlyCreated =
+      newlyCreatedTaskId && editingTaskId === newlyCreatedTaskId
     const wasCanceled = !editConfirmedRef.current
 
     if (wasNewlyCreated && wasCanceled && onDeleteTask) {
@@ -539,6 +541,47 @@ export function DraggableTaskList({
   const [activeTaskId, setActiveTaskId] = React.useState<string | null>(null)
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
   const [editingTaskId, setEditingTaskId] = React.useState<string | null>(null)
+
+  // Register with global task creation store for Cmd+N support
+  // Uses refs to avoid re-registering on every render
+  const onCreateTaskRef = React.useRef(onCreateTask)
+  React.useEffect(() => {
+    onCreateTaskRef.current = onCreateTask
+  }, [onCreateTask])
+
+  React.useEffect(() => {
+    if (!onCreateTaskRef.current) return
+
+    const { registerContext, unregisterContext } =
+      useTaskCreationStore.getState()
+
+    // Stable wrapper that uses ref
+    const stableCreateHandler = (afterTaskId: string | null) => {
+      return onCreateTaskRef.current?.(afterTaskId)
+    }
+
+    registerContext({
+      createTaskHandler: stableCreateHandler,
+      setEditingTaskId,
+      setSelectedIndex,
+      taskCount: tasks.length,
+    })
+
+    return () => {
+      unregisterContext()
+    }
+  }, [tasks.length])
+
+  // Update selection in store when it changes
+  React.useEffect(() => {
+    const selectedTaskId =
+      selectedIndex !== null && tasks[selectedIndex]
+        ? tasks[selectedIndex].id
+        : null
+    useTaskCreationStore
+      .getState()
+      .updateSelection(selectedTaskId, selectedIndex)
+  }, [selectedIndex, tasks])
 
   // Sensors for drag and drop - only PointerSensor
   const sensors = useSensors(

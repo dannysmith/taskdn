@@ -6,6 +6,7 @@ import {
   useVaultHelpers,
   useUpdateTask,
   useCreateTask,
+  useDeleteTask,
 } from '@/services/vault'
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
@@ -91,6 +92,7 @@ export function NoAreaView() {
   } = useVaultHelpers()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
+  const deleteTask = useDeleteTask()
   const openTask = useTaskDetailStore(state => state.openTask)
   const setSelection = useNavigationStore(state => state.setSelection)
   const { viewMode } = useViewMode('area')
@@ -176,7 +178,7 @@ export function NoAreaView() {
 
   // Handler for creating orphan tasks (no project, no area)
   const handleCreateOrphanTask = React.useCallback(
-    async (_afterTaskId: string | null): Promise<string | undefined> => {
+    async (afterTaskId: string | null): Promise<string | undefined> => {
       const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
@@ -186,15 +188,37 @@ export function NoAreaView() {
         due: null,
         deferUntil: null,
       })
+
+      // Insert new task at the correct position in the order
+      const currentOrder = orderedOrphanTasks.map(t => t.id)
+      let newOrder: string[]
+
+      if (afterTaskId) {
+        const insertIndex = currentOrder.indexOf(afterTaskId)
+        if (insertIndex !== -1) {
+          newOrder = [
+            ...currentOrder.slice(0, insertIndex + 1),
+            newTask.id,
+            ...currentOrder.slice(insertIndex + 1),
+          ]
+        } else {
+          newOrder = [...currentOrder, newTask.id]
+        }
+      } else {
+        newOrder = [...currentOrder, newTask.id]
+      }
+
+      useDisplayOrderStore.getState().setAreaTaskOrder(ORPHAN_AREA_ID, newOrder)
+
       return newTask.id
     },
-    [createTask]
+    [createTask, orderedOrphanTasks]
   )
 
   // Factory function to create task creation handlers for each project
   const makeCreateTaskHandler = React.useCallback(
     (projectId: string) =>
-      async (_afterTaskId: string | null): Promise<string | undefined> => {
+      async (afterTaskId: string | null): Promise<string | undefined> => {
         const project = projects.find(p => p.id === projectId)
         const newTask = await createTask.mutateAsync({
           title: '',
@@ -205,9 +229,32 @@ export function NoAreaView() {
           due: null,
           deferUntil: null,
         })
+
+        // Insert new task at the correct position in the project's order
+        const projectTasks = tasksByProject.get(projectId) ?? []
+        const currentOrder = projectTasks.map(t => t.id)
+        let newOrder: string[]
+
+        if (afterTaskId) {
+          const insertIndex = currentOrder.indexOf(afterTaskId)
+          if (insertIndex !== -1) {
+            newOrder = [
+              ...currentOrder.slice(0, insertIndex + 1),
+              newTask.id,
+              ...currentOrder.slice(insertIndex + 1),
+            ]
+          } else {
+            newOrder = [...currentOrder, newTask.id]
+          }
+        } else {
+          newOrder = [...currentOrder, newTask.id]
+        }
+
+        useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
+
         return newTask.id
       },
-    [createTask, projects]
+    [createTask, projects, tasksByProject]
   )
 
   const handleTitleChange = React.useCallback(
@@ -341,6 +388,13 @@ export function NoAreaView() {
       openTask(taskId)
     },
     [openTask]
+  )
+
+  const handleDeleteTask = React.useCallback(
+    (taskId: string) => {
+      deleteTask.mutate(taskId)
+    },
+    [deleteTask]
   )
 
   // Handler for reordering tasks within a container
@@ -533,6 +587,7 @@ export function NoAreaView() {
                 onTaskStatusToggle={handleStatusToggle}
                 onTaskOpenDetail={handleOpenDetail}
                 onCreateTask={handleCreateOrphanTask}
+                onDeleteTask={handleDeleteTask}
                 showScheduled={true}
                 showDue={true}
                 defaultExpanded={true}
@@ -557,6 +612,7 @@ export function NoAreaView() {
                     onTaskStatusToggle={handleStatusToggle}
                     onTaskOpenDetail={handleOpenDetail}
                     onCreateTask={makeCreateTaskHandler(project.id)}
+                    onDeleteTask={handleDeleteTask}
                     showScheduled={true}
                     showDue={true}
                   />

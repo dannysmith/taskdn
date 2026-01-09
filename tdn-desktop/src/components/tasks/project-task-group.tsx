@@ -31,6 +31,8 @@ interface ProjectTaskGroupProps {
   onCreateTask?: (
     afterTaskId: string | null
   ) => string | undefined | Promise<string | undefined>
+  /** Called when a newly created task is canceled (Escape before confirming) */
+  onDeleteTask?: (taskId: string) => void | Promise<void>
   /** Function to get context name for a task (usually not needed within project group) */
   getContextName?: (task: Task) => string | undefined
   /** Whether to show scheduled dates (default: true) */
@@ -56,6 +58,7 @@ export function ProjectTaskGroup({
   onTaskStatusToggle,
   onTaskOpenDetail,
   onCreateTask,
+  onDeleteTask,
   getContextName,
   showScheduled = true,
   showDue = true,
@@ -90,6 +93,7 @@ export function ProjectTaskGroup({
               onTaskStatusToggle={onTaskStatusToggle}
               onTaskOpenDetail={onTaskOpenDetail}
               onCreateTask={onCreateTask}
+              onDeleteTask={onDeleteTask}
               getContextName={getContextName}
               showScheduled={showScheduled}
               showDue={showDue}
