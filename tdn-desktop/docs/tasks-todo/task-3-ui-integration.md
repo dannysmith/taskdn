@@ -616,9 +616,9 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [ ] AreaView (list mode)
 - [ ] AreaView (kanban mode)
 - [ ] NoAreaView
-- [ ] WeekView (calendar mode)
+- [x] WeekView (calendar mode) - 7-day column layout with DnD scheduling
 - [ ] WeekView (kanban mode)
-- [ ] CalendarView
+- [x] CalendarView - month grid with DnD scheduling
 
 ### Task Components
 
@@ -653,10 +653,10 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 
 ### Calendar
 
-- [ ] MonthCalendar, MonthDayCell
-- [ ] WeekCalendar, DayColumn
-- [ ] DraggableTaskCard
-- [ ] Drag-to-schedule functionality
+- [x] MonthCalendar, MonthDayCell
+- [x] WeekCalendar, DayColumn
+- [x] DraggableTaskCard (SortableTaskCard + TaskCardDragPreview)
+- [x] Drag-to-schedule functionality (uses pointerWithin collision detection)
 
 ### Order Hooks
 
@@ -664,7 +664,7 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] useInboxOrder uses Zustand store (session-persistent)
 - [x] display-order-store.ts created (Zustand store for all order state)
 - [x] useTodayOrder with Zustand (per-section task ordering)
-- [ ] useCalendarOrder with Zustand
+- [x] useCalendarOrder hook (per-day task ordering for calendar views)
 - [x] useProjectOrder with Zustand (per-project task ordering)
 - [ ] useAreaOrder with Zustand (per-area task ordering)
 - [ ] useKanbanOrder with Zustand (per-view column ordering)
