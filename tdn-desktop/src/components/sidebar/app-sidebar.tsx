@@ -27,7 +27,6 @@ import {
   ChevronRight,
   FolderIcon,
   InboxIcon,
-  PanelLeftIcon,
   SunIcon,
 } from 'lucide-react'
 
@@ -42,13 +41,10 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
   SidebarSeparator,
-  useSidebar,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import { useSidebarOrder } from '@/hooks/use-sidebar-order'
@@ -122,9 +118,6 @@ export function AppSidebar({
   onSelectionChange,
   ...props
 }: AppSidebarProps) {
-  const { state, toggleSidebar } = useSidebar()
-  const isCollapsed = state === 'collapsed'
-
   const { getProjectCompletion, getAreaById, getProjectById } =
     useVaultHelpers()
   const {
@@ -286,23 +279,9 @@ export function AppSidebar({
   }
 
   return (
-    <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="h-14 flex-row items-center justify-between border-b border-sidebar-border px-4">
-        <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-          <img src="/Icon512.png" alt="Taskdn" className="size-7 shrink-0" />
-          <span className="font-semibold text-lg">Taskdn</span>
-        </div>
-        <button
-          onClick={toggleSidebar}
-          className="size-8 flex items-center justify-center rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          <PanelLeftIcon className="size-4" />
-        </button>
-      </SidebarHeader>
-
+    <Sidebar collapsible="none" className="h-full w-full" {...props}>
       <DndContext
-        sensors={isCollapsed ? [] : sensors}
+        sensors={sensors}
         collisionDetection={closestCenter}
         modifiers={[restrictToVerticalAxis]}
         onDragStart={handleDragStart}
@@ -333,7 +312,7 @@ export function AppSidebar({
             </SidebarMenu>
           </SidebarGroup>
 
-          <SidebarSeparator className="my-2 group-data-[collapsible=icon]:hidden" />
+          <SidebarSeparator className="my-2" />
 
           {/* Sortable Areas */}
           <SortableContext
@@ -386,10 +365,7 @@ export function AppSidebar({
           </SortableContext>
 
           {/* No Area Section (always visible for drop target) */}
-          <Collapsible
-            defaultOpen
-            className="group/collapsible group-data-[collapsible=icon]:hidden"
-          >
+          <Collapsible defaultOpen className="group/collapsible">
             <SidebarGroup className="py-0">
               <SidebarGroupLabel
                 className={cn(
@@ -404,7 +380,7 @@ export function AppSidebar({
                   className="flex items-center gap-2 flex-1 min-w-0"
                   onClick={() => onSelectionChange({ type: 'no-area' })}
                 >
-                  <FolderIcon className="text-icon-folder-none shrink-0" />
+                  <FolderIcon className="size-4 text-icon-folder-none shrink-0" />
                   <span className="truncate">No Area</span>
                 </button>
                 <CollapsibleTrigger
@@ -458,8 +434,6 @@ export function AppSidebar({
           {renderDragPreview()}
         </DragOverlay>
       </DndContext>
-
-      <SidebarRail />
     </Sidebar>
   )
 }

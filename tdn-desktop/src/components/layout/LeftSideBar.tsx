@@ -13,13 +13,8 @@ export function LeftSideBar() {
   const setSelection = useNavigationStore(state => state.setSelection)
 
   return (
-    <SidebarProvider defaultOpen={true}>
-      <AppSidebar
-        selection={selection}
-        onSelectionChange={setSelection}
-        collapsible="none"
-        className="h-full"
-      />
+    <SidebarProvider defaultOpen={true} className="h-full min-h-0">
+      <AppSidebar selection={selection} onSelectionChange={setSelection} />
     </SidebarProvider>
   )
 }

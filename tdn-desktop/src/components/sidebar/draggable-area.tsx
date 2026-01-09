@@ -76,10 +76,7 @@ export function DraggableArea({
         isOver && 'ring-2 ring-primary/20 ring-inset rounded-md'
       )}
     >
-      <Collapsible
-        defaultOpen
-        className="group/collapsible group-data-[collapsible=icon]:hidden"
-      >
+      <Collapsible defaultOpen className="group/collapsible">
         <SidebarGroup className="py-0">
           <SidebarGroupLabel
             className={cn(
@@ -90,7 +87,7 @@ export function DraggableArea({
             {...attributes}
             {...listeners}
           >
-            <FolderIcon className="text-icon-folder" />
+            <FolderIcon className="size-4 text-icon-folder" />
             <span className="truncate">{area.title}</span>
             {/* Wrapper div stops propagation so clicking chevron doesn't select area */}
             <div
