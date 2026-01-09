@@ -43,7 +43,7 @@ export function useCalendarOrder({
     const taskOrderByDate: Record<string, string[]> = {}
     for (const date of dates) {
       const dayTasks = getTasksForDate(date)
-      taskOrderByDate[date] = dayTasks.map((t) => t.id)
+      taskOrderByDate[date] = dayTasks.map(t => t.id)
     }
     return { taskOrderByDate }
   })
@@ -59,13 +59,13 @@ export function useCalendarOrder({
     const datesChanged = datesKey !== prevDatesRef.current
     prevDatesRef.current = datesKey
 
-    setOrder((prev) => {
+    setOrder(prev => {
       if (datesChanged) {
         // Full reinitialize when navigating to different date range
         const taskOrderByDate: Record<string, string[]> = {}
         for (const date of dates) {
           const dayTasks = getTasksForDate(date)
-          taskOrderByDate[date] = dayTasks.map((t) => t.id)
+          taskOrderByDate[date] = dayTasks.map(t => t.id)
         }
         return { taskOrderByDate }
       }
@@ -75,17 +75,17 @@ export function useCalendarOrder({
       let changed = false
 
       for (const date of dates) {
-        const currentTaskIds = getTasksForDate(date).map((t) => t.id)
+        const currentTaskIds = getTasksForDate(date).map(t => t.id)
         const existingOrder = prev.taskOrderByDate[date] ?? []
 
         // Keep existing order for tasks that still exist
-        const preservedOrder = existingOrder.filter((id) =>
+        const preservedOrder = existingOrder.filter(id =>
           currentTaskIds.includes(id)
         )
 
         // Find new tasks not in order yet
         const newTaskIds = currentTaskIds.filter(
-          (id) => !existingOrder.includes(id)
+          id => !existingOrder.includes(id)
         )
 
         // Append new tasks to end
@@ -108,7 +108,7 @@ export function useCalendarOrder({
   // Reorder tasks within the same day
   const reorderTasksInDay = useCallback(
     (date: string, activeId: string, overId: string) => {
-      setOrder((prev) => {
+      setOrder(prev => {
         const dayOrder = prev.taskOrderByDate[date] ?? []
         const oldIndex = dayOrder.indexOf(activeId)
         const newIndex = dayOrder.indexOf(overId)
@@ -135,7 +135,7 @@ export function useCalendarOrder({
       toDate: string,
       insertIndex?: number
     ) => {
-      setOrder((prev) => {
+      setOrder(prev => {
         const fromOrder = [...(prev.taskOrderByDate[fromDate] ?? [])]
         const toOrder = [...(prev.taskOrderByDate[toDate] ?? [])]
 
@@ -174,11 +174,11 @@ export function useCalendarOrder({
   const getOrderedTasks = useCallback(
     (date: string, allTasksForDate: Task[]): Task[] => {
       const orderedIds = order.taskOrderByDate[date] ?? []
-      const taskMap = new Map(allTasksForDate.map((t) => [t.id, t]))
+      const taskMap = new Map(allTasksForDate.map(t => [t.id, t]))
 
       // Return tasks in order, filtering out any IDs that don't have matching tasks
       return orderedIds
-        .map((id) => taskMap.get(id))
+        .map(id => taskMap.get(id))
         .filter((t): t is Task => t !== undefined)
     },
     [order.taskOrderByDate]

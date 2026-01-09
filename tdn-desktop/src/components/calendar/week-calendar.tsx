@@ -154,7 +154,7 @@ export function WeekCalendar({
 
   // Date strings for the week (used by order hook)
   const weekDateStrings = React.useMemo(
-    () => weekDays.map((d) => format(d, 'yyyy-MM-dd')),
+    () => weekDays.map(d => format(d, 'yyyy-MM-dd')),
     [weekDays]
   )
 
@@ -185,7 +185,7 @@ export function WeekCalendar({
       if (!displayDate) continue
 
       const dateToMatch = displayDate
-      const matchingDay = weekDays.find((day) => isSameDay(day, dateToMatch))
+      const matchingDay = weekDays.find(day => isSameDay(day, dateToMatch))
       if (matchingDay) {
         const dateKey = format(matchingDay, 'yyyy-MM-dd')
         const existing = map.get(dateKey) ?? []
@@ -210,7 +210,7 @@ export function WeekCalendar({
       if (!task.due) continue
 
       const dueDate = new Date(task.due)
-      const matchingDay = weekDays.find((day) => isSameDay(day, dueDate))
+      const matchingDay = weekDays.find(day => isSameDay(day, dueDate))
       if (matchingDay) {
         const dateKey = format(matchingDay, 'yyyy-MM-dd')
         const existing = map.get(dateKey) ?? []
@@ -261,11 +261,11 @@ export function WeekCalendar({
 
   // Navigation handlers
   const goToPreviousWeek = () => {
-    setCurrentWeekStart((prev) => subWeeks(prev, 1))
+    setCurrentWeekStart(prev => subWeeks(prev, 1))
   }
 
   const goToNextWeek = () => {
-    setCurrentWeekStart((prev) => addWeeks(prev, 1))
+    setCurrentWeekStart(prev => addWeeks(prev, 1))
   }
 
   const goToToday = () => {
@@ -309,7 +309,7 @@ export function WeekCalendar({
 
     const { over } = event
     if (!over) {
-      setDragState((prev) => (prev ? { ...prev, currentOverDate: null } : null))
+      setDragState(prev => (prev ? { ...prev, currentOverDate: null } : null))
       return
     }
 
@@ -329,7 +329,7 @@ export function WeekCalendar({
     }
 
     if (overDate !== dragState.currentOverDate) {
-      setDragState((prev) =>
+      setDragState(prev =>
         prev ? { ...prev, currentOverDate: overDate } : null
       )
     }
@@ -432,7 +432,7 @@ export function WeekCalendar({
       >
         <div className="flex-1 border border-border rounded-lg overflow-hidden">
           <div className="grid grid-cols-7 h-full">
-            {weekDays.map((day) => {
+            {weekDays.map(day => {
               const dateKey = format(day, 'yyyy-MM-dd')
               const rawTasks = tasksByDate.get(dateKey) ?? []
               const orderedTasks = getOrderedTasks(dateKey, rawTasks)

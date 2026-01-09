@@ -574,6 +574,40 @@ Within each:
    - Shows area type badge with consistent color hashing
    - Project counts and folder icon
 
+**Kanban Components (2026-01-09):**
+
+1. **Added KanbanDndContext** (src/components/kanban/kanban-dnd-context.tsx)
+   - Drag-and-drop context for Kanban boards
+   - Handles status changes, reordering, swimlane changes
+   - DragOverlay with TaskCard preview
+   - Helper functions: createKanbanTaskData, createEmptyColumnData, createEmptySwimlaneData
+
+2. **Added KanbanColumn** (src/components/kanban/kanban-column.tsx)
+   - Single status column with collapsible header
+   - SortableKanbanCard wrapper for drag-drop
+   - Empty column drop zone with visual feedback
+   - Add task button
+
+3. **Added KanbanBoard** (src/components/kanban/kanban-board.tsx)
+   - Horizontal board with status columns
+   - Column collapse state management via useCollapsedColumns hook
+   - DEFAULT_STATUS_ORDER and DEFAULT_EXPANDED_STATUSES constants
+   - Task creation with auto-focus
+
+4. **Added AreaKanbanBoard** (src/components/kanban/area-kanban-board.tsx)
+   - Kanban board with project swimlanes for area views
+   - ProjectSwimlane and LooseTasksSwimlane components
+   - Drag between swimlanes to change task's project
+   - useAreaCollapsedColumns hook
+
+5. **Added useKanbanOrder hook** (src/hooks/use-kanban-order.ts)
+   - Per-view, per-column task ordering using Zustand
+   - Session-persistent ordering
+
+6. **Updated display-order-store.ts**
+   - Added kanbanColumnOrder storage
+   - Added setKanbanColumnOrder action
+
 ### Future: Disk Persistence for Order
 
 When needed:
@@ -646,10 +680,10 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 
 ### Kanban
 
-- [ ] KanbanBoard, KanbanColumn
-- [ ] AreaKanbanBoard
-- [ ] KanbanDndContext
-- [ ] Cross-column DnD (status changes)
+- [x] KanbanBoard, KanbanColumn
+- [x] AreaKanbanBoard
+- [x] KanbanDndContext
+- [x] Cross-column DnD (status changes)
 
 ### Calendar
 
@@ -667,7 +701,7 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] useCalendarOrder hook (per-day task ordering for calendar views)
 - [x] useProjectOrder with Zustand (per-project task ordering)
 - [ ] useAreaOrder with Zustand (per-area task ordering)
-- [ ] useKanbanOrder with Zustand (per-view column ordering)
+- [x] useKanbanOrder with Zustand (per-view column ordering)
 - [ ] Disk persistence layer (Rust commands + TanStack Query) - deferred
 
 ### Final Integration

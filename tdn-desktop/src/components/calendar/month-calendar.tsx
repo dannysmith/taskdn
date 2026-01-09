@@ -135,7 +135,7 @@ export function MonthCalendar({
 
   // Date strings for all displayed days
   const dateStrings = React.useMemo(
-    () => calendarDays.map((d) => format(d, 'yyyy-MM-dd')),
+    () => calendarDays.map(d => format(d, 'yyyy-MM-dd')),
     [calendarDays]
   )
 
@@ -210,11 +210,11 @@ export function MonthCalendar({
 
   // Navigation handlers
   const goToPreviousMonth = () => {
-    setCurrentMonth((prev) => subMonths(prev, 1))
+    setCurrentMonth(prev => subMonths(prev, 1))
   }
 
   const goToNextMonth = () => {
-    setCurrentMonth((prev) => addMonths(prev, 1))
+    setCurrentMonth(prev => addMonths(prev, 1))
   }
 
   const goToToday = () => {
@@ -258,7 +258,7 @@ export function MonthCalendar({
 
     const { over } = event
     if (!over) {
-      setDragState((prev) => (prev ? { ...prev, currentOverDate: null } : null))
+      setDragState(prev => (prev ? { ...prev, currentOverDate: null } : null))
       return
     }
 
@@ -276,7 +276,7 @@ export function MonthCalendar({
     }
 
     if (overDate !== dragState.currentOverDate) {
-      setDragState((prev) =>
+      setDragState(prev =>
         prev ? { ...prev, currentOverDate: overDate } : null
       )
     }
@@ -378,7 +378,7 @@ export function MonthCalendar({
         <div className="flex-1 border border-border rounded-lg overflow-hidden flex flex-col">
           {/* Day headers */}
           <div className="grid grid-cols-7 border-b border-border/50 bg-muted/30">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
               <div
                 key={day}
                 className="px-2 py-2 text-xs font-medium text-muted-foreground uppercase text-center"
@@ -395,7 +395,7 @@ export function MonthCalendar({
                 key={weekIndex}
                 className="grid grid-cols-7 border-b border-border/30 last:border-b-0"
               >
-                {week.map((day) => {
+                {week.map(day => {
                   const dateKey = format(day, 'yyyy-MM-dd')
                   const rawTasks = tasksByDate.get(dateKey) ?? []
                   const orderedTasks = getOrderedTasks(dateKey, rawTasks)
