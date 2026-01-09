@@ -327,6 +327,17 @@ async updateProject(update: ProjectUpdate) : Promise<Result<Project, VaultError>
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Delete a task by ID
+ */
+async deleteTask(id: string) : Promise<Result<null, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_task", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 

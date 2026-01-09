@@ -60,6 +60,11 @@ interface BaseTaskListProps {
   onCreateTask?: (
     afterTaskId: string | null
   ) => string | undefined | Promise<string | undefined>
+  /**
+   * Called when a newly created task is canceled (Escape pressed before confirming).
+   * If provided, newly created tasks will be deleted when Escape is pressed.
+   */
+  onDeleteTask?: (taskId: string) => void | Promise<void>
   className?: string
   /** Function to get context name (project/area) for a task */
   getContextName?: (task: Task) => string | undefined
@@ -101,6 +106,7 @@ export function TaskList({
   onTaskStatusToggle,
   onTaskOpenDetail,
   onCreateTask,
+  onDeleteTask,
   className,
   getContextName,
   showScheduled = true,
@@ -119,6 +125,16 @@ export function TaskList({
   const [internalEditingTaskId, setInternalEditingTaskId] = React.useState<
     string | null
   >(null)
+
+  // Track newly created tasks that haven't been confirmed yet
+  const [newlyCreatedTaskId, setNewlyCreatedTaskId] = React.useState<
+    string | null
+  >(null)
+  const [previousSelectedIndex, setPreviousSelectedIndex] = React.useState<
+    number | null
+  >(null)
+  // Track if edit was confirmed (Enter) vs canceled (Escape)
+  const editConfirmedRef = React.useRef(false)
 
   // Use external state if provided, otherwise internal
   const selectedIndex =
@@ -267,10 +283,18 @@ export function TaskList({
           // Capture current index for the async callback
           const currentIndex = selectedIndex
           const currentLength = tasks.length
+
+          // Save the previous selection so we can restore it if task is canceled
+          setPreviousSelectedIndex(currentIndex)
+          // Reset the confirm flag for the new edit session
+          editConfirmedRef.current = false
+
           const result = onCreateTask(afterTaskId)
           // Handle both sync and async returns
           const handleNewTask = (newTaskId: string | undefined) => {
             if (newTaskId) {
+              // Track this as a newly created task
+              setNewlyCreatedTaskId(newTaskId)
               setEditingTaskId(newTaskId)
               if (currentIndex !== null) {
                 setSelectedIndex(currentIndex + 1)
@@ -299,7 +323,32 @@ export function TaskList({
     setEditingTaskId(taskId)
   }
 
+  // Called when edit is confirmed with Enter
+  const handleConfirmEdit = () => {
+    editConfirmedRef.current = true
+    // Clear the newly created tracking since edit was confirmed
+    setNewlyCreatedTaskId(null)
+    setPreviousSelectedIndex(null)
+  }
+
   const handleEndEdit = () => {
+    // Check if this was a newly created task that was canceled (Escape)
+    const wasNewlyCreated = newlyCreatedTaskId && editingTaskId === newlyCreatedTaskId
+    const wasCanceled = !editConfirmedRef.current
+
+    if (wasNewlyCreated && wasCanceled && onDeleteTask) {
+      // Delete the canceled new task
+      const taskIdToDelete = newlyCreatedTaskId
+      onDeleteTask(taskIdToDelete)
+      // Restore previous selection
+      setSelectedIndex(previousSelectedIndex)
+    }
+
+    // Reset tracking state
+    setNewlyCreatedTaskId(null)
+    setPreviousSelectedIndex(null)
+    editConfirmedRef.current = false
+
     setEditingTaskId(null)
     // Re-focus container for keyboard navigation
     containerRef.current?.focus()
@@ -361,6 +410,7 @@ export function TaskList({
               onSelect={() => handleSelect(index)}
               onStartEdit={() => handleStartEdit(task.id)}
               onEndEdit={handleEndEdit}
+              onConfirmEdit={handleConfirmEdit}
               onTitleChange={newTitle => onTaskTitleChange(task.id, newTitle)}
               onStatusToggle={() => onTaskStatusToggle(task.id)}
               onOpenDetail={
@@ -480,6 +530,7 @@ export function DraggableTaskList({
   onTaskStatusToggle,
   onTaskOpenDetail,
   onCreateTask,
+  onDeleteTask,
   className,
   getContextName,
   showScheduled = true,
@@ -572,6 +623,7 @@ export function DraggableTaskList({
         onTaskStatusToggle={onTaskStatusToggle}
         onTaskOpenDetail={onTaskOpenDetail}
         onCreateTask={onCreateTask}
+        onDeleteTask={onDeleteTask}
         className={className}
         getContextName={getContextName}
         showScheduled={showScheduled}

@@ -1,6 +1,11 @@
 import * as React from 'react'
 
-import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
+import {
+  useVaultData,
+  useUpdateTask,
+  useCreateTask,
+  useDeleteTask,
+} from '@/services/vault'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useInboxOrder } from '@/hooks/use-inbox-order'
@@ -26,6 +31,7 @@ export function InboxView() {
   const { tasks } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
+  const deleteTask = useDeleteTask()
   const openTask = useTaskDetailStore(state => state.openTask)
 
   // Get all tasks with inbox status
@@ -106,6 +112,13 @@ export function InboxView() {
     [createTask]
   )
 
+  const handleDeleteTask = React.useCallback(
+    (taskId: string) => {
+      deleteTask.mutate(taskId)
+    },
+    [deleteTask]
+  )
+
   return (
     <div className="space-y-4">
       {orderedInboxTasks.length > 0 ? (
@@ -117,6 +130,7 @@ export function InboxView() {
           onTaskStatusToggle={handleStatusToggle}
           onTaskOpenDetail={handleOpenDetail}
           onCreateTask={handleCreateTask}
+          onDeleteTask={handleDeleteTask}
           showScheduled={true}
           showDue={true}
         />

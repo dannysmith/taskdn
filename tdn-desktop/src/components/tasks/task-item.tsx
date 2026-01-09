@@ -28,6 +28,11 @@ export interface TaskItemProps {
   onStatusToggle: () => void
   /** Called when the open-detail chevron is clicked */
   onOpenDetail?: () => void
+  /**
+   * Called when edit is confirmed with Enter.
+   * Used to distinguish Enter (confirm) from Escape (cancel) in the parent.
+   */
+  onConfirmEdit?: () => void
   /** Optional context label (project or area name) shown on the right */
   contextName?: string
   /** Whether to show the scheduled date (default: true if exists) */
@@ -51,6 +56,7 @@ export function TaskItem({
   onTitleChange,
   onStatusToggle,
   onOpenDetail,
+  onConfirmEdit,
   contextName,
   showScheduled = true,
   showDue = true,
@@ -107,6 +113,8 @@ export function TaskItem({
       if (editValue.trim() !== task.title) {
         onTitleChange(editValue.trim())
       }
+      // Notify parent that edit was confirmed (used for newly created tasks)
+      onConfirmEdit?.()
       // Select this task when confirming edit - ensures newly created tasks
       // become selected after pressing Enter to confirm the title
       onSelect()
