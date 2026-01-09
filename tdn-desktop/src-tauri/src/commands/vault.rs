@@ -5,8 +5,8 @@
 use tauri::State;
 
 use crate::vault::{
-    Area, CreateProjectOptions, CreateTaskOptions, Project, Task, TaskUpdate, VaultConfig,
-    VaultError, VaultManager,
+    Area, CreateProjectOptions, CreateTaskOptions, Project, ProjectUpdate, Task, TaskUpdate,
+    VaultConfig, VaultError, VaultManager,
 };
 
 // =============================================================================
@@ -133,4 +133,14 @@ pub fn update_task(
     update: TaskUpdate,
 ) -> Result<Task, VaultError> {
     vault_manager.update_task(update)
+}
+
+/// Update an existing project
+#[tauri::command]
+#[specta::specta]
+pub fn update_project(
+    vault_manager: State<'_, VaultManager>,
+    update: ProjectUpdate,
+) -> Result<Project, VaultError> {
+    vault_manager.update_project(update)
 }

@@ -23,7 +23,7 @@ use tauri::{AppHandle, Emitter};
 
 use crate::vault::{
     scan_areas, scan_projects, scan_tasks, Area, CreateProjectOptions, CreateTaskOptions, Project,
-    Task, TaskUpdate, VaultConfig, VaultError,
+    ProjectUpdate, Task, TaskUpdate, VaultConfig, VaultError,
 };
 
 /// Event emitted when vault data changes (for frontend cache invalidation)
@@ -456,6 +456,26 @@ impl VaultManager {
         }
 
         Ok(updated_task)
+    }
+
+    /// Update a project
+    pub fn update_project(&self, update: ProjectUpdate) -> Result<Project, VaultError> {
+        self.ensure_configured()?;
+
+        let project = self.get_project(&update.id)?;
+
+        self.set_writing(true);
+        let result = crate::vault::update_project(&project, update);
+        self.set_writing(false);
+
+        let updated_project = result?;
+
+        {
+            let mut inner = self.inner.write();
+            inner.index.update_project(updated_project.clone());
+        }
+
+        Ok(updated_project)
     }
 
     // =========================================================================

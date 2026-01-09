@@ -34,6 +34,7 @@ export type {
   JsonValue,
   Project,
   ProjectStatus,
+  ProjectUpdate,
   RecoveryError,
   Task,
   TaskStatus,
