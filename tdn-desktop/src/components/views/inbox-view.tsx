@@ -111,7 +111,7 @@ export function InboxView() {
       {orderedInboxTasks.length > 0 ? (
         <DraggableTaskList
           tasks={orderedInboxTasks}
-          listId="inbox"
+          projectId="inbox"
           onTasksReorder={handleReorder}
           onTaskTitleChange={handleTitleChange}
           onTaskStatusToggle={handleStatusToggle}
