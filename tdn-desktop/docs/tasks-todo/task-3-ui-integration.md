@@ -502,26 +502,77 @@ Within each:
 1. **Added useTodayOrder hook** (src/hooks/use-today-order.ts)
    - Per-section task ordering using Zustand display-order-store
    - Three sections: scheduled-today, overdue-due-today, became-available-today
+   - Supports mixed tasks + headings with type-safe ResolvedOrderedItem
    - Session-persistent ordering
 
 2. **Added SectionHeader component** (src/components/tasks/section-header.tsx)
    - Collapsible header with expand/collapse chevron
    - Optional icon, title, task count badge
-   - Optional "+ Task" button
+   - Optional "+ Task" and "+ Heading" buttons
 
 3. **Added SectionTaskGroup component** (src/components/tasks/section-task-group.tsx)
-   - Combines SectionHeader with DraggableTaskList
-   - Simplified version for TodayView sections
+   - Two modes: task-only (tasks array) or mixed items (orderedItems with headings)
+   - Integrates OrderedItemList for mixed mode
+   - EmptySectionDropZone for cross-section drag targets
 
 4. **Added TodayView component** (src/components/views/today-view.tsx)
    - Three sections: Scheduled for Today, Overdue or Due Today, Became Available Today
-   - Each section has its own DnD ordering
-   - Create task handlers set appropriate dates
+   - "Scheduled for Today" supports inline headings for organization
+   - Cross-section drag-and-drop via TaskDndContext
+   - Dragging to "Scheduled for Today" sets scheduled date to today
+   - Creating tasks in sections sets appropriate dates
+   - Shows project/area context name on tasks (via getTaskContextName)
    - Empty state when no tasks match
 
-5. **Updated display-order-store.ts**
+5. **Added TaskDndContext** (src/components/tasks/task-dnd-context.tsx)
+   - Shared DndContext for cross-container task movement
+   - Handles both task and heading drags
+   - Cross-container hover state for CSS gap animation
+   - TaskDragPreview and HeadingDragPreview overlays
+
+6. **Added OrderedItemList** (src/components/tasks/ordered-item-list.tsx)
+   - Renders mixed tasks + headings with DnD support
+   - Inline heading editing with color picker
+   - Cross-container gap animation for drag feedback
+
+7. **Added Heading components** (src/components/headings/)
+   - heading-list-item.tsx - Sortable heading row with inline editing
+   - heading-color-picker.tsx - Color selection dropdown
+   - heading-drag-preview.tsx - Drag overlay for headings
+   - index.ts - Barrel exports
+
+8. **Updated display-order-store.ts**
    - Added TodaySectionId type
    - Added todaySectionOrder state and setTodaySectionOrder action
+   - Added todayHeadings storage and CRUD actions
+
+9. **Added heading types** (src/types/headings.ts)
+   - Heading interface (id, title, color)
+   - HeadingColor type with 8 color options
+   - isHeadingId/toHeadingId/parseHeadingId utilities for "heading:" prefix
+
+10. **Fixed contextName display**
+    - getTaskContextName now correctly handles WikiLink format (e.g., "[[My Project]]")
+    - Uses .includes(title) matching like ProjectView
+
+**Card Components (2026-01-09):**
+
+1. **Added TaskCard** (src/components/cards/task-card.tsx)
+   - Visual card for tasks used in Kanban and Calendar views
+   - Two sizes: default (full metadata) and compact (checkbox + title)
+   - Four variants: default, overdue, deferred, done
+   - Inline title editing, date pickers, status pill
+   - Container queries for responsive behavior
+
+2. **Added ProjectCard** (src/components/cards/project-card.tsx)
+   - Summary card for AreaView project grids
+   - Shows progress bar, task counts, status badge
+   - Uses ProgressCircle for visual completion indicator
+
+3. **Added AreaCard** (src/components/cards/area-card.tsx)
+   - Summary card for area overviews
+   - Shows area type badge with consistent color hashing
+   - Project counts and folder icon
 
 ### Future: Disk Persistence for Order
 
@@ -576,9 +627,22 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] TaskStatusPill
 - [x] TaskDetailPanel (full editing interface in right sidebar)
 - [x] MilkdownEditor integration (lazy-loaded, with task list shortcuts)
-- [x] SectionHeader (collapsible header with icon, title, count)
-- [x] SectionTaskGroup (section with draggable task list)
-- [ ] TaskDndContext (shared context for cross-list DnD)
+- [x] SectionHeader (collapsible header with icon, title, count, + buttons)
+- [x] SectionTaskGroup (section with draggable task list, supports headings)
+- [x] TaskDndContext (shared context for cross-container DnD)
+- [x] OrderedItemList (mixed tasks + headings with DnD)
+
+### Heading Components
+
+- [x] HeadingListItem (sortable heading row with inline editing)
+- [x] HeadingColorPicker (color selection dropdown)
+- [x] HeadingDragPreview (drag overlay)
+
+### Card Components
+
+- [x] TaskCard (for kanban/calendar views)
+- [x] ProjectCard (for area view grids)
+- [x] AreaCard (for area overview grids)
 
 ### Kanban
 
@@ -591,6 +655,7 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 
 - [ ] MonthCalendar, MonthDayCell
 - [ ] WeekCalendar, DayColumn
+- [ ] DraggableTaskCard
 - [ ] Drag-to-schedule functionality
 
 ### Order Hooks
