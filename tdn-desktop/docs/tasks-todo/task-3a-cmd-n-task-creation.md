@@ -169,6 +169,23 @@ TodayView uses `SectionTaskGroup` → `OrderedItemList`/`TaskList`. Due to timin
 
 The correct fix is to use TanStack Query's optimistic update pattern. When we create a task, we immediately add it to the query cache **before** the mutation completes, ensuring the task exists in `orderedTasks` by the time we try to edit it.
 
+### Reference Implementation
+
+**Good news:** `useUpdateTask` and `useDeleteTask` in `src/services/vault.ts` already implement optimistic updates correctly. Use these as the canonical pattern.
+
+### Query Cache Structure (IMPORTANT)
+
+The vault uses **separate queries**, not a single nested object:
+
+| Query Key | Returns | Constant |
+|-----------|---------|----------|
+| `['vault', 'tasks']` | `Task[]` | `vaultQueryKeys.tasks()` |
+| `['vault', 'projects']` | `Project[]` | `vaultQueryKeys.projects()` |
+| `['vault', 'areas']` | `Area[]` | `vaultQueryKeys.areas()` |
+| `['vault', 'tasks', id]` | `Task` | `vaultQueryKeys.task(id)` |
+
+**There is no single `['vault']` query.** Always use `vaultQueryKeys.tasks()` for the task list.
+
 ### How Optimistic Updates Work
 
 ```typescript
@@ -177,116 +194,157 @@ const mutation = useMutation({
 
   onMutate: async (newTaskData) => {
     // 1. Cancel any outgoing refetches to avoid overwriting our optimistic update
-    await queryClient.cancelQueries({ queryKey: ['vault'] })
+    await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
 
     // 2. Snapshot current data for rollback
-    const previousData = queryClient.getQueryData(['vault'])
+    const previousTasks = queryClient.getQueryData<Task[]>(vaultQueryKeys.tasks())
 
-    // 3. Optimistically add the new task to the cache
-    queryClient.setQueryData(['vault'], (old) => ({
-      ...old,
-      tasks: [...old.tasks, {
-        id: crypto.randomUUID(), // Temporary ID
-        ...newTaskData,
-        // Set reasonable defaults for required fields
-      }]
-    }))
+    // 3. Generate temp ID (caller provides this - see "Temp ID Flow" below)
+    const tempId = newTaskData.tempId
 
-    return { previousData }
+    // 4. Optimistically add the new task to the cache
+    const tempTask: Task = {
+      id: tempId,
+      title: newTaskData.title ?? '',
+      status: newTaskData.status ?? 'next',
+      path: `temp://${tempId}`,  // Placeholder path
+      body: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      completedAt: null,
+      due: newTaskData.due ?? null,
+      scheduled: newTaskData.scheduled ?? null,
+      deferUntil: newTaskData.deferUntil ?? null,
+      area: newTaskData.area ?? null,
+      project: newTaskData.project ?? null,
+    }
+
+    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), (old) =>
+      old ? [...old, tempTask] : [tempTask]
+    )
+
+    return { previousTasks, tempId }
   },
 
   onSuccess: (realTask, variables, context) => {
-    // 4. Replace temp task with real data from server
-    queryClient.setQueryData(['vault'], (old) => ({
-      ...old,
-      tasks: old.tasks.map(t =>
-        t.id === variables.tempId ? realTask : t
-      )
-    }))
+    // 5. Replace temp task with real data from server
+    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), (old) =>
+      old?.map(t => t.id === context?.tempId ? realTask : t) ?? []
+    )
+    // Also set individual task cache
+    queryClient.setQueryData(vaultQueryKeys.task(realTask.id), realTask)
   },
 
   onError: (err, variables, context) => {
-    // 5. Rollback on error
-    if (context?.previousData) {
-      queryClient.setQueryData(['vault'], context.previousData)
+    // 6. Rollback on error
+    if (context?.previousTasks) {
+      queryClient.setQueryData(vaultQueryKeys.tasks(), context.previousTasks)
     }
   },
 })
 ```
 
+### Required Fields for Temp Task
+
+The `Task` type requires all these fields. The temp task must include them with reasonable defaults:
+
+```typescript
+interface Task {
+  id: string           // Use temp UUID from caller
+  title: string        // From options, or empty string
+  status: TaskStatus   // From options, or 'next'
+  path: string         // Placeholder: `temp://${tempId}`
+  body: string         // Empty string
+  createdAt: string | null   // Current ISO date
+  updatedAt: string | null   // Current ISO date
+  completedAt: string | null // null
+  due: string | null         // From options
+  scheduled: string | null   // From options
+  deferUntil: string | null  // From options
+  area: string | null        // From options
+  project: string | null     // From options
+}
+```
+
 ### Implementation Plan
 
-#### Step 1: Understand Current Mutation Implementation
+#### Step 1: Add Optimistic Updates to useCreateTask
 
-Read and understand how `useCreateTask` currently works:
-- File: `src/services/vault.ts` (or similar)
-- What does it return?
-- How does it invalidate the cache?
-- What's the query key structure?
+Location: `src/services/vault.ts` (lines ~206-237)
 
-#### Step 2: Add Optimistic Updates to useCreateTask
+Modify `useCreateTask` to accept a `tempId` from the caller and use optimistic updates:
 
-Modify the `useCreateTask` mutation hook to:
+1. Accept `tempId` in the mutation options
+2. In `onMutate`: cancel queries, snapshot, add temp task to cache
+3. In `onSuccess`: replace temp task with real task, update individual task cache
+4. In `onError`: rollback to previous data
 
-1. Generate a temporary task ID in `onMutate`
-2. Optimistically add the task to the vault query cache
-3. Return the temp ID so the caller can use it immediately
-4. In `onSuccess`, replace the temp task with the real one (matching by temp ID)
-5. In `onError`, rollback to previous data
+Reference `useUpdateTask` (lines 257-302) for the exact pattern.
 
-**Key consideration:** The temp task must have all required fields with reasonable defaults so it can be rendered in the list. Check the `Task` type for required fields.
+#### Step 2: Update View Handlers - The Temp ID Flow
 
-#### Step 3: Update View Handlers to Use Temp ID
+**Critical:** The view must generate the temp ID upfront so it can update both the order store and set `pendingEditItemId` synchronously.
 
-The `handleCreateTask` functions in views currently do:
 ```typescript
-const newTask = await createTask.mutateAsync({...})
-// Update order store
-return newTask.id
+// In view's handleCreateTask:
+const handleCreateTask = async (afterTaskId: string | null) => {
+  // 1. Generate temp ID BEFORE mutation
+  const tempId = crypto.randomUUID()
+
+  // 2. Update order store immediately with temp ID
+  const currentOrder = orderedTasks.map(t => t.id)
+  const insertIndex = afterTaskId
+    ? currentOrder.indexOf(afterTaskId) + 1
+    : currentOrder.length
+  const newOrder = [
+    ...currentOrder.slice(0, insertIndex),
+    tempId,
+    ...currentOrder.slice(insertIndex),
+  ]
+  useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
+
+  // 3. Start mutation (this adds temp task to cache via onMutate)
+  createTask.mutate(
+    { ...taskOptions, tempId },
+    {
+      onSuccess: (realTask) => {
+        // 4. Replace temp ID with real ID in order store
+        const order = useDisplayOrderStore.getState().projectTaskOrder[projectId]
+        if (order) {
+          const updatedOrder = order.map(id => id === tempId ? realTask.id : id)
+          useDisplayOrderStore.getState().setProjectTaskOrder(projectId, updatedOrder)
+        }
+      },
+      onError: () => {
+        // 5. Remove temp ID from order store on failure
+        const order = useDisplayOrderStore.getState().projectTaskOrder[projectId]
+        if (order) {
+          const revertedOrder = order.filter(id => id !== tempId)
+          useDisplayOrderStore.getState().setProjectTaskOrder(projectId, revertedOrder)
+        }
+      },
+    }
+  )
+
+  // 6. Return temp ID immediately for edit mode
+  return tempId
+}
 ```
 
-After the change, the optimistic task appears in the cache immediately (before `mutateAsync` resolves), so the flow becomes:
-```typescript
-const result = createTask.mutate({...}, {
-  onSuccess: (realTask) => {
-    // Order store update and edit mode trigger happen here
-  }
-})
-```
+**Result:** The temp ID is in both the order store AND the query cache immediately, so `orderedTasks` includes the new task and edit mode works.
 
-Or we may need to coordinate the temp ID with the view:
-```typescript
-const tempId = crypto.randomUUID()
-createTask.mutate({ ...taskData, tempId }, {
-  onSuccess: (realTask) => {
-    // Replace tempId with realTask.id in order store if needed
-  }
-})
-// Immediately set pendingEditItemId to tempId
-setPendingEditItemId(tempId)
-```
+#### Step 3: Add InboxView Registration
 
-#### Step 4: Handle Order Store Coordination
+Location: `src/components/views/inbox-view.tsx`
 
-The display order store needs to have the task ID when the task is created. With optimistic updates:
-
-1. Generate temp ID before mutation
-2. Add temp ID to order store immediately
-3. Set `pendingEditItemId` to temp ID
-4. Task appears in `orderedTasks` immediately (temp ID in order + temp task in cache)
-5. DraggableTaskList finds task, enters edit mode
-6. When mutation completes, replace temp ID with real ID in order store
-7. Query cache already has real task (from `onSuccess`)
-
-#### Step 5: Add InboxView Registration
-
-InboxView is missing `registerViewDefault`. Add it following the same pattern as ProjectView:
+InboxView is missing `registerViewDefault` entirely. Add:
 
 ```typescript
-// In InboxView
-const [pendingEditItemId, setPendingEditItemId] = useState<string | null>(null)
+// Add state
+const [pendingEditItemId, setPendingEditItemId] = React.useState<string | null>(null)
 
-useEffect(() => {
+// Add registration effect (similar to ProjectView lines 270-284)
+React.useEffect(() => {
   useTaskCreationStore.getState().registerViewDefault({
     handler: handleCreateTask,
     onTaskCreated: (taskId) => setPendingEditItemId(taskId),
@@ -294,15 +352,31 @@ useEffect(() => {
   return () => useTaskCreationStore.getState().registerViewDefault(null)
 }, [handleCreateTask])
 
-// Pass to DraggableTaskList
+// Update DraggableTaskList props (around line 152-163)
 <DraggableTaskList
+  // ... existing props
   autoEditItemId={pendingEditItemId}
   onAutoEditConsumed={() => setPendingEditItemId(null)}
-  ...
 />
 ```
 
-#### Step 6: Test All Views
+#### Step 4: Update Other Views
+
+Apply the same temp ID flow pattern to:
+- `src/components/views/project-view.tsx`
+- `src/components/views/today-view.tsx`
+- `src/components/views/area-view.tsx`
+- `src/components/views/no-area-view.tsx`
+
+Each view's `handleCreateTask` needs to:
+1. Generate temp ID upfront
+2. Update its order store immediately
+3. Use `mutate()` instead of `mutateAsync()`
+4. Replace temp ID with real ID in `onSuccess`
+5. Revert order store in `onError`
+6. Return temp ID immediately
+
+#### Step 5: Test All Views
 
 After implementation, verify:
 
@@ -314,31 +388,94 @@ After implementation, verify:
 | Area    | Creates after (in project), edit mode | Creates in Loose Tasks, edit mode | Creates, edit mode |
 | NoArea  | Creates after, edit mode | Creates in Loose Tasks, edit mode | Creates, edit mode |
 
-#### Step 7: Cleanup
+#### Step 6: Cleanup
 
 1. Remove all debug `console.log` statements added during investigation
-2. Remove the polling retry code from DraggableTaskList (if any was added)
-3. Run `bun run check:all` to ensure no lint/type issues
-4. Test edge cases: rapid Cmd+N, Escape to cancel, switching views mid-creation
+2. Run `bun run check:all` to ensure no lint/type issues
+3. Test edge cases (see below)
+
+---
+
+## Edge Cases to Test
+
+### 1. Rapid Successive Cmd+N
+
+User presses Cmd+N twice rapidly before first mutation completes.
+
+**Expected behavior:**
+- Two temp tasks appear immediately
+- First mutation completes → first temp ID replaced with real ID
+- Second mutation completes → second temp ID replaced with real ID
+- Both tasks editable
+
+**Why it should work:** Each call generates a unique temp ID. The order store and cache updates are independent.
+
+### 2. Editing During Mutation
+
+User starts typing in the new task while mutation is still pending.
+
+**Expected behavior:**
+- User types with temp ID task
+- Mutation completes, temp ID → real ID swap
+- Focus and editing state preserved
+
+**Potential issue:** If `editingTaskId` state holds the temp ID and we swap to real ID, the component might lose track.
+
+**Mitigation:** The task row component should receive the task object (with its ID), not just use `editingTaskId` for comparison. When the ID in the `tasks` array changes, React will re-render but preserve focus because it's the same DOM element (same array position).
+
+### 3. Escape to Cancel
+
+User presses Escape before confirming the new task.
+
+**Expected behavior:**
+- TaskList's `handleCancelEdit` is called
+- Calls `onDeleteTask(tempId)`
+- `useDeleteTask` removes the temp task from cache
+- Order store should also remove the temp ID
+
+**Implementation note:** The delete mutation will fail for a temp task (no real file exists). Handle this gracefully - the optimistic delete already removed it from cache, so the error is benign. Consider checking if the path starts with `temp://` and skipping the backend call.
+
+### 4. Mutation Failure
+
+Backend fails to create the task (e.g., filesystem error).
+
+**Expected behavior:**
+- `onError` callback fires
+- Query cache rolled back (temp task removed)
+- Order store reverted (temp ID removed)
+- User sees error notification
+- Edit mode cancelled
+
+### 5. View Navigation During Creation
+
+User presses Cmd+N, then immediately navigates to another view.
+
+**Expected behavior:**
+- Original view unmounts, unregisters its handler
+- Mutation continues in background
+- New view mounts, registers its handler
+- When mutation completes, `onSuccess` still runs (closure captures the order store setter)
+
+**Note:** The created task will appear in its destination (based on project/area/status), even if user navigated away.
 
 ---
 
 ## Files to Modify
 
 ### Core Changes
-- `src/services/vault.ts` (or wherever `useCreateTask` is defined) - Add optimistic update logic
+- `src/services/vault.ts` (lines 206-237) - Add optimistic update logic to `useCreateTask`
 - `src/components/views/inbox-view.tsx` - Add missing view default registration
 
-### View Handler Updates (if needed for temp ID coordination)
-- `src/components/views/project-view.tsx`
-- `src/components/views/today-view.tsx`
-- `src/components/views/area-view.tsx`
-- `src/components/views/no-area-view.tsx`
+### View Handler Updates (temp ID flow)
+- `src/components/views/project-view.tsx` - Update `handleCreateTask`
+- `src/components/views/today-view.tsx` - Update `handleCreateTask`
+- `src/components/views/area-view.tsx` - Update `handleCreateTask`
+- `src/components/views/no-area-view.tsx` - Update `handleCreateTask`
 
-### Cleanup
-- `src/store/task-creation-store.ts` - Remove debug logging
-- `src/hooks/use-keyboard-shortcuts.ts` - Remove debug logging
-- `src/components/tasks/task-list.tsx` - Remove debug logging, remove polling if added
+### Cleanup (remove debug logging)
+- `src/store/task-creation-store.ts` (lines 303-309, 313, 327, 330, 333-334, 342)
+- `src/components/tasks/task-list.tsx` (lines 244, 256, 266, 272, 353, 359)
+- `src/components/views/project-view.tsx` (lines 271, 275, 281)
 
 ---
 
@@ -371,40 +508,57 @@ After implementation, verify:
 - TodayView works due to timing luck, not correctness
 - Documented the root cause and designed optimistic updates solution
 
-### Session 5 (Next)
-- Implement TanStack Query optimistic updates in useCreateTask
-- Add InboxView view default registration
-- Test all views
+### Session 5 (2026-01-09)
+- Thoroughly reviewed implementation plan with codebase exploration
+- **Identified critical issues:**
+  - Query key examples were wrong (used `['vault']` instead of `vaultQueryKeys.tasks()`)
+  - Missing required fields specification for temp task object
+  - Temp ID → real ID replacement in order store not detailed
+- **Confirmed:**
+  - `useUpdateTask` and `useDeleteTask` already use optimistic updates (good reference)
+  - InboxView is indeed missing registration entirely
+  - Query structure uses separate queries, not nested object
+- Updated task doc with corrections
+
+### Session 6 (Next)
+- Implement the plan as documented
+- Start with `useCreateTask` optimistic updates
+- Then update view handlers with temp ID flow
+- Add InboxView registration
+- Test all edge cases
 - Remove debug logging
 
 ---
 
 ## Technical Notes
 
-### Debug Logging Locations (to remove later)
+### Debug Logging Locations (to remove)
 
-Current debug logging exists in:
-- `src/store/task-creation-store.ts` - `triggerCreate` logs state snapshot
-- `src/hooks/use-keyboard-shortcuts.ts` - Cmd+N handler entry/exit
-- `src/components/tasks/task-list.tsx` - TaskList activation, DraggableTaskList autoEdit
-- `src/components/views/project-view.tsx` - View default registration
-
-### Query Cache Structure
-
-The vault query likely returns:
-```typescript
-{
-  tasks: Task[],
-  projects: Project[],
-  areas: Area[],
-}
+```
+src/store/task-creation-store.ts:303-309, 313, 327, 330, 333-334, 342
+src/components/tasks/task-list.tsx:244, 256, 266, 272, 353, 359
+src/components/views/project-view.tsx:271, 275, 281
 ```
 
-When adding optimistic updates, we only modify the `tasks` array. The query key is probably `['vault']` or similar.
+### Temp ID Flow Summary
 
-### Temp ID Considerations
+```
+1. View generates tempId = crypto.randomUUID()
+2. View updates order store with tempId (sync)
+3. View calls createTask.mutate({ ...options, tempId })
+4. useCreateTask.onMutate adds temp task to cache (sync)
+5. orderedTasks now includes temp task (order ∩ cache works!)
+6. View returns tempId → pendingEditItemId set
+7. DraggableTaskList finds task, enters edit mode
+8. [async] Mutation completes
+9. useCreateTask.onSuccess replaces temp task with real task in cache
+10. View's onSuccess callback replaces tempId with realId in order store
+```
 
-- Use `crypto.randomUUID()` for temp IDs
-- Temp IDs must not collide with real IDs (UUID ensures this)
-- Store temp ID → real ID mapping if needed for order store update
-- Consider: should order store use temp ID initially, then swap? Or wait for real ID?
+### Why This Works
+
+The key insight is that **both** sources of truth get the temp ID synchronously:
+- Order store: updated in step 2 (before mutation)
+- Query cache: updated in step 4 (in `onMutate`, before async work)
+
+So when `orderedTasks` is computed (order ∩ cache), the temp task is in both places.
