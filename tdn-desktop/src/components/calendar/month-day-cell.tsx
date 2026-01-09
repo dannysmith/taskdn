@@ -105,10 +105,10 @@ export function MonthDayCell({
       {/* Tasks container */}
       <div className="flex-1 px-1 pb-1 space-y-0.5 overflow-y-auto">
         <SortableContext
-          items={tasks.map((t) => getCalendarTaskDragId(dateString, t.id))}
+          items={tasks.map(t => getCalendarTaskDragId(dateString, t.id))}
           strategy={verticalListSortingStrategy}
         >
-          {tasks.map((task) => {
+          {tasks.map(task => {
             const variant = getTaskVariant?.(task)
             return (
               <SortableTaskCard
@@ -117,7 +117,7 @@ export function MonthDayCell({
                 date={dateString}
                 variant={variant}
                 size="compact"
-                onStatusChange={(newStatus) =>
+                onStatusChange={newStatus =>
                   onTaskStatusChange(task.id, newStatus)
                 }
                 onEditClick={

@@ -23,11 +23,11 @@ export function CalendarView() {
   const { tasks } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
-  const openTask = useTaskDetailStore((state) => state.openTask)
+  const openTask = useTaskDetailStore(state => state.openTask)
 
   // Get task by ID for drag preview
   const getTaskById = React.useCallback(
-    (taskId: string) => tasks.find((t) => t.id === taskId),
+    (taskId: string) => tasks.find(t => t.id === taskId),
     [tasks]
   )
 

@@ -121,10 +121,10 @@ export function DayColumn({
       {/* Tasks container */}
       <div className="flex-1 p-1.5 space-y-1.5 overflow-y-auto flex flex-col">
         <SortableContext
-          items={tasks.map((t) => getCalendarTaskDragId(dateString, t.id))}
+          items={tasks.map(t => getCalendarTaskDragId(dateString, t.id))}
           strategy={verticalListSortingStrategy}
         >
-          {tasks.map((task) => {
+          {tasks.map(task => {
             const context = getTaskContext?.(task) ?? {}
             const variant = getTaskVariant?.(task)
             return (
@@ -135,16 +135,12 @@ export function DayColumn({
                 variant={variant}
                 projectName={context.projectName}
                 areaName={context.areaName}
-                onStatusChange={(newStatus) =>
+                onStatusChange={newStatus =>
                   onTaskStatusChange(task.id, newStatus)
                 }
-                onTitleChange={(newTitle) =>
-                  onTaskTitleChange(task.id, newTitle)
-                }
-                onScheduledChange={(date) =>
-                  onTaskScheduledChange(task.id, date)
-                }
-                onDueChange={(date) => onTaskDueChange(task.id, date)}
+                onTitleChange={newTitle => onTaskTitleChange(task.id, newTitle)}
+                onScheduledChange={date => onTaskScheduledChange(task.id, date)}
+                onDueChange={date => onTaskDueChange(task.id, date)}
                 onEditClick={
                   onTaskOpenDetail ? () => onTaskOpenDetail(task.id) : undefined
                 }
@@ -174,9 +170,7 @@ export function DayColumn({
         <div
           className={cn(
             'flex-1 min-h-[60px] rounded-lg border-2 border-dashed transition-colors',
-            tasks.length === 0
-              ? 'border-transparent'
-              : 'border-transparent',
+            tasks.length === 0 ? 'border-transparent' : 'border-transparent',
             (isOver || isDropTarget) && 'border-primary/30 bg-primary/5'
           )}
         />
@@ -196,7 +190,7 @@ export function DayColumn({
       {/* Due tasks section - pinned to bottom */}
       {tasksDueOnDay.length > 0 && (
         <div className="mt-auto p-1.5 pt-2 border-t border-border/30 space-y-0.5">
-          {tasksDueOnDay.map((task) => (
+          {tasksDueOnDay.map(task => (
             <button
               key={task.id}
               type="button"

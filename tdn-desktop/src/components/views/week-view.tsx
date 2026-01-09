@@ -1,10 +1,6 @@
 import * as React from 'react'
 
-import {
-  useVaultData,
-  useUpdateTask,
-  useCreateTask,
-} from '@/services/vault'
+import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useNavigationStore } from '@/store/navigation-store'
@@ -25,12 +21,12 @@ export function WeekView() {
   const { tasks, projects, areas } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
-  const openTask = useTaskDetailStore((state) => state.openTask)
-  const setSelection = useNavigationStore((state) => state.setSelection)
+  const openTask = useTaskDetailStore(state => state.openTask)
+  const setSelection = useNavigationStore(state => state.setSelection)
 
   // Get task by ID for drag preview
   const getTaskById = React.useCallback(
-    (taskId: string) => tasks.find((t) => t.id === taskId),
+    (taskId: string) => tasks.find(t => t.id === taskId),
     [tasks]
   )
 
@@ -44,13 +40,13 @@ export function WeekView() {
       let areaId: string | undefined
 
       if (task.project) {
-        const project = projects.find((p) => task.project?.includes(p.title))
+        const project = projects.find(p => task.project?.includes(p.title))
         if (project) {
           projectName = project.title
           projectId = project.id
           // Get area from project if not directly set on task
           if (project.area) {
-            const area = areas.find((a) => project.area?.includes(a.title))
+            const area = areas.find(a => project.area?.includes(a.title))
             if (area) {
               areaName = area.title
               areaId = area.id
@@ -61,7 +57,7 @@ export function WeekView() {
 
       // Direct area on task overrides project's area
       if (task.area) {
-        const area = areas.find((a) => task.area?.includes(a.title))
+        const area = areas.find(a => task.area?.includes(a.title))
         if (area) {
           areaName = area.title
           areaId = area.id

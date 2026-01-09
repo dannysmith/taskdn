@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import type { Heading } from '@/types/headings'
+import type { TaskStatus } from '@/lib/tauri-bindings'
 
 /**
  * Display Order Store - Manages visual ordering of entities separate from data.
@@ -8,7 +9,9 @@ import type { Heading } from '@/types/headings'
  * This store tracks user-defined display order for:
  * - Sidebar areas and projects
  * - Inbox tasks
- * - (Future) Today view sections, calendar days, project/area task lists
+ * - Today view sections
+ * - Project/area task lists
+ * - Kanban column ordering (per-view, per-status)
  *
  * Order is session-persistent (survives component unmount, lost on app restart).
  * Disk persistence will be added later via Rust commands + TanStack Query.
@@ -29,6 +32,18 @@ export type TodaySectionId =
   | 'overdue-due-today'
   | 'became-available-today'
 
+/**
+ * Kanban column order storage.
+ * Structure: { viewId: { status: taskIds[] } }
+ * - viewId is the project or area ID the kanban is showing
+ * - status is the column (ready, in-progress, etc.)
+ * - taskIds is the ordered list of task IDs in that column
+ */
+export type KanbanColumnOrder = Record<
+  string,
+  Partial<Record<TaskStatus, string[]>>
+>
+
 interface DisplayOrderState {
   // Sidebar ordering
   sidebarAreaOrder: string[] | null
@@ -45,6 +60,9 @@ interface DisplayOrderState {
 
   // Today view headings (UI-only, session-persistent)
   todayHeadings: Record<string, Heading> | null
+
+  // Kanban column ordering (per-view, per-status)
+  kanbanColumnOrder: KanbanColumnOrder | null
 
   // Actions for sidebar
   setSidebarAreaOrder: (order: string[]) => void
@@ -64,6 +82,13 @@ interface DisplayOrderState {
   setTodayHeading: (headingId: string, heading: Heading) => void
   deleteTodayHeading: (headingId: string) => void
 
+  // Actions for kanban columns
+  setKanbanColumnOrder: (
+    viewId: string,
+    status: TaskStatus,
+    order: string[]
+  ) => void
+
   // Reset (for testing or clearing)
   resetAllOrder: () => void
 }
@@ -82,6 +107,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
       projectTaskOrder: null,
       todaySectionOrder: null,
       todayHeadings: null,
+      kanbanColumnOrder: null,
 
       // Sidebar actions
       setSidebarAreaOrder: order =>
@@ -165,6 +191,22 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
           'deleteTodayHeading'
         ),
 
+      // Kanban column actions
+      setKanbanColumnOrder: (viewId, status, order) =>
+        set(
+          state => ({
+            kanbanColumnOrder: {
+              ...state.kanbanColumnOrder,
+              [viewId]: {
+                ...(state.kanbanColumnOrder?.[viewId] ?? {}),
+                [status]: order,
+              },
+            },
+          }),
+          undefined,
+          'setKanbanColumnOrder'
+        ),
+
       // Reset
       resetAllOrder: () =>
         set(
@@ -175,6 +217,7 @@ export const useDisplayOrderStore = create<DisplayOrderState>()(
             projectTaskOrder: null,
             todaySectionOrder: null,
             todayHeadings: null,
+            kanbanColumnOrder: null,
           },
           undefined,
           'resetAllOrder'
