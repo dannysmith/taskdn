@@ -58,6 +58,8 @@ export function TaskItem({
 }: TaskItemProps) {
   const inputRef = React.useRef<HTMLInputElement>(null)
   const [editValue, setEditValue] = React.useState(task.title)
+  // Track when we're canceling an edit (Escape) so blur handler doesn't save
+  const cancelingRef = React.useRef(false)
 
   // Sync editValue with task.title when task changes
   React.useEffect(() => {
@@ -88,9 +90,11 @@ export function TaskItem({
   }
 
   const handleInputBlur = () => {
-    if (editValue.trim() !== task.title) {
+    // Don't save if we're canceling (Escape was pressed)
+    if (!cancelingRef.current && editValue.trim() !== task.title) {
       onTitleChange(editValue.trim())
     }
+    cancelingRef.current = false
     onEndEdit()
   }
 
@@ -103,9 +107,13 @@ export function TaskItem({
       if (editValue.trim() !== task.title) {
         onTitleChange(editValue.trim())
       }
+      // Select this task when confirming edit - ensures newly created tasks
+      // become selected after pressing Enter to confirm the title
+      onSelect()
       onEndEdit()
     } else if (e.key === 'Escape') {
       e.preventDefault()
+      cancelingRef.current = true
       setEditValue(task.title) // Reset to original
       onEndEdit()
     }
