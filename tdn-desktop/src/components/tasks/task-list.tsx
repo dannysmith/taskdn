@@ -44,7 +44,7 @@ interface DraggableTaskListProps {
   onTaskTitleChange: (taskId: string, newTitle: string) => void
   onTaskStatusToggle: (taskId: string) => void
   onTaskOpenDetail?: (taskId: string) => void
-  onCreateTask?: (afterTaskId: string | null) => string | undefined
+  onCreateTask?: (afterTaskId: string | null) => Promise<string | undefined>
   className?: string
   getContextName?: (task: Task) => string | undefined
   showScheduled?: boolean
@@ -202,15 +202,19 @@ export function DraggableTaskList({
             selectedIndex !== null && tasks[selectedIndex]
               ? tasks[selectedIndex].id
               : null
-          const newTaskId = onCreateTask(afterTaskId)
-          if (newTaskId) {
-            setEditingTaskId(newTaskId)
-            if (selectedIndex !== null) {
-              setSelectedIndex(selectedIndex + 1)
-            } else {
-              setSelectedIndex(tasks.length)
+          // Capture current index for the async callback
+          const currentIndex = selectedIndex
+          const currentLength = tasks.length
+          onCreateTask(afterTaskId).then(newTaskId => {
+            if (newTaskId) {
+              setEditingTaskId(newTaskId)
+              if (currentIndex !== null) {
+                setSelectedIndex(currentIndex + 1)
+              } else {
+                setSelectedIndex(currentLength)
+              }
             }
-          }
+          })
         }
         break
     }

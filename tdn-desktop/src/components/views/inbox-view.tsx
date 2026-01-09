@@ -91,8 +91,8 @@ export function InboxView() {
   )
 
   const handleCreateTask = React.useCallback(
-    (_afterTaskId: string | null): string | undefined => {
-      createTask.mutate({
+    async (_afterTaskId: string | null): Promise<string | undefined> => {
+      const newTask = await createTask.mutateAsync({
         title: '',
         status: 'inbox',
         projectId: null,
@@ -101,9 +101,7 @@ export function InboxView() {
         due: null,
         deferUntil: null,
       })
-      // Note: We can't return the ID synchronously with async mutations
-      // The task will appear and can be edited on next render
-      return undefined
+      return newTask.id
     },
     [createTask]
   )
