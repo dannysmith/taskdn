@@ -439,6 +439,41 @@ Within each:
 5. **Fixed `use-inbox-order.ts`**
    - Now uses Zustand store instead of useState
 
+**TaskDetailPanel & Milkdown (2026-01-09):**
+
+1. **Added Milkdown dependencies**
+   - @milkdown/kit, @milkdown/react, @milkdown/components, @milkdown/utils
+
+2. **Added TaskStatusPill component** (src/components/tasks/task-status-pill.tsx)
+   - Status dropdown for changing task status
+   - Uses status config from config/status.ts
+
+3. **Added MilkdownEditor** (src/components/tasks/milkdown-editor.tsx)
+   - Full markdown editor with GFM support
+   - `[]` shortcut creates task lists
+   - Paste URL over selected text creates links
+   - Cmd/Ctrl+click opens links
+
+4. **Added LazyMilkdownEditor** (src/components/tasks/lazy-milkdown-editor.tsx)
+   - Code-split lazy loader for Milkdown
+
+5. **Added TaskDetailPanel** (src/components/tasks/task-detail-panel.tsx)
+   - Full task editing interface in right sidebar
+   - Edit title, status, project, area, dates, body
+   - Wired into RightSideBar component
+
+6. **Added Milkdown CSS** (src/App.css)
+   - ~200 lines of styling for editor and preview
+
+7. **Fixed external file changes not updating UI**
+   - Added `useVaultInitialization()` call in App.tsx
+   - Sets up listener for `vault-changed` events from Rust file watcher
+
+8. **Fixed items jumping when typing in body**
+   - Added mutation debouncing in vault.ts
+   - `markMutationComplete()` prevents our own writes from triggering cache invalidation
+   - 500ms debounce window after mutations
+
 ### Future: Disk Persistence for Order
 
 When needed:
@@ -453,7 +488,7 @@ When needed:
 ### Core Setup
 
 - [x] Add DnD dependencies (dnd-kit)
-- [ ] Add Milkdown dependencies
+- [x] Add Milkdown dependencies
 - [x] Set up order persistence system (session-level via Zustand; disk persistence deferred)
 - [ ] Set up heading persistence system
 
@@ -491,11 +526,11 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 
 - [x] TaskItem, TaskList (partial - DraggableTaskList done)
 - [x] TaskStatusCheckbox
-- [ ] TaskStatusPill
-- [ ] TaskDetailPanel
+- [x] TaskStatusPill
+- [x] TaskDetailPanel (full editing interface in right sidebar)
+- [x] MilkdownEditor integration (lazy-loaded, with task list shortcuts)
 - [ ] TaskDndContext (shared context for cross-list DnD)
 - [ ] Section components
-- [ ] MilkdownEditor integration
 
 ### Kanban
 
@@ -525,11 +560,11 @@ Copy these from `tdn-uimockup/src/components/ui/` after Milkdown is set up.
 ### Final Integration
 
 - [ ] All views accessible from sidebar
-- [ ] TaskDetailPanel opens from any context
+- [x] TaskDetailPanel opens from any context (clicking chevron opens panel, shows right sidebar)
 - [ ] All DnD operations persist to correct location (order→settings, entity changes→vault)
 - [ ] Order persists across restarts
-- [ ] External file changes update UI
-- [ ] Run `bun run check:all`
+- [x] External file changes update UI (via useVaultInitialization + file watcher)
+- [x] Run `bun run check:all` (passing)
 
 ## Dependencies
 
