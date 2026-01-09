@@ -796,10 +796,14 @@ _Space for tracking progress across sessions. Update after each work session._
   - Note: Had to use `tasks` in dependency array (not `tasks.length`) due to React Compiler requirements
   - Commit: d351284
 
-### Session 2: [Date]
+### Session 2: 2026-01-09
 
-- [ ] Phase 4 complete (OrderedItemList)
-- [ ] Notes:
+- [x] Phase 4 complete (OrderedItemList)
+- Notes:
+  - Added useTaskCreationStore import to ordered-item-list.tsx
+  - Added activation/deactivation effect - activates only when a task (not heading) is selected
+  - Added e.stopPropagation() to prevent double-fire with global handler
+  - TypeScript and ESLint checks pass
 
 ### Session 3: [Date]
 

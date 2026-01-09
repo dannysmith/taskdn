@@ -7,6 +7,7 @@ import {
 
 import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
+import { useTaskCreationStore } from '@/store/task-creation-store'
 import type { HeadingColor } from '@/types/headings'
 import { toHeadingId } from '@/types/headings'
 import type { ResolvedOrderedItem } from '@/hooks/use-today-order'
@@ -199,6 +200,45 @@ export function OrderedItemList({
     onAutoEditConsumed,
   ])
 
+  // Register with task creation store for global Cmd+N support
+  // This enables Cmd+N to create tasks after the selected task via the global handler
+  React.useEffect(() => {
+    if (!onCreateTask) return
+
+    // Get the selected item (may be undefined if index is out of range)
+    const selectedItem =
+      selectedIndex !== null && selectedIndex < items.length
+        ? items[selectedIndex]
+        : undefined
+
+    // Only activate when a task is selected (not a heading)
+    if (selectedItem && selectedItem.type === 'task') {
+      // Has valid task selection - activate this list
+      useTaskCreationStore.getState().activateList(containerId, {
+        handler: afterTaskId => onCreateTask(afterTaskId),
+        selectedTaskId: selectedItem.id,
+        setEditingTaskId: setEditingItemId,
+        setSelectedIndex,
+        taskCount: items.filter(i => i.type === 'task').length,
+      })
+    } else {
+      // No task selected - deactivate (reverts to view default)
+      useTaskCreationStore.getState().deactivateList(containerId)
+    }
+
+    // Cleanup: deactivate when this list unmounts
+    return () => {
+      useTaskCreationStore.getState().deactivateList(containerId)
+    }
+  }, [
+    containerId,
+    selectedIndex,
+    items,
+    onCreateTask,
+    setEditingItemId,
+    setSelectedIndex,
+  ])
+
   // Helper to get the order ID for an item (with prefix for headings)
   const getOrderId = (item: ResolvedOrderedItem): string => {
     return item.type === 'heading' ? toHeadingId(item.id) : item.id
@@ -304,6 +344,7 @@ export function OrderedItemList({
       case 'N':
         if (isMeta && onCreateTask) {
           e.preventDefault()
+          e.stopPropagation() // Prevent global handler from also firing
           const afterItemId = selectedItem ? getOrderId(selectedItem) : null
           // Capture current index for the async callback
           const currentIndex = selectedIndex
