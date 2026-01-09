@@ -6,11 +6,9 @@ import {
   useSensor,
   useSensors,
   closestCenter,
-  defaultDropAnimationSideEffects,
   type DragStartEvent,
   type DragEndEvent,
   type DragOverEvent,
-  type DropAnimation,
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 
@@ -126,13 +124,6 @@ export function KanbanDndContext({
       },
     })
   )
-
-  // Drop animation
-  const dropAnimation: DropAnimation = {
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: { active: { opacity: '0.5' } },
-    }),
-  }
 
   const handleDragStart = (event: DragStartEvent) => {
     const data = event.active.data.current as KanbanDragData | undefined
@@ -281,8 +272,8 @@ export function KanbanDndContext({
       >
         {children}
 
-        {/* Drag Overlay */}
-        <DragOverlay dropAnimation={dropAnimation}>
+        {/* Drag Overlay - no drop animation to prevent "snap back" when moving between columns */}
+        <DragOverlay dropAnimation={null}>
           {dragPreview && <TaskCard task={dragPreview.task} />}
         </DragOverlay>
       </DndContext>

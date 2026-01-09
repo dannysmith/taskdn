@@ -73,10 +73,10 @@ export async function withTempVault(
 
 #### Test Categories
 
-**Unit Tests (Vitest)**
+**Unit Tests**
 
 - Rust: Parsing, serialization, index building
-- TypeScript: Hooks, utilities, date functions
+- TypeScript: Hooks, utilities, date functions (Vitest)
 
 **Integration Tests**
 
@@ -90,11 +90,6 @@ export async function withTempVault(
 - User interactions trigger correct mutations
 - Loading and error states display properly
 
-**E2E Tests** (if using Playwright/Cypress with Tauri)
-
-- Full user flows: create task, edit, complete
-- DnD operations
-- External file change detection
 
 ### 2. Edge Cases
 
@@ -177,24 +172,7 @@ export async function withTempVault(
 - [ ] Debounced saves for rapid inline edits
 - [ ] Index caching strategies
 
-#### Benchmarks
-
-Create benchmarks for:
-
-- Load vault with 100/500/1000 tasks
-- Filter tasks by status
-- Render TodayView with 50+ tasks
-- Kanban board with 20+ cards per column
-
 ### 5. Polish
-
-#### Visual Polish
-
-- [ ] Consistent spacing and alignment
-- [ ] Proper focus indicators
-- [ ] Smooth transitions and animations
-- [ ] Dark mode works correctly everywhere
-- [ ] Responsive behavior at various window sizes
 
 #### Keyboard Navigation
 
@@ -204,13 +182,6 @@ Create benchmarks for:
 - [ ] Enter activates focused items
 - [ ] Shortcuts work (Cmd+K, etc.)
 
-#### Accessibility
-
-- [ ] Proper ARIA labels
-- [ ] Screen reader compatibility
-- [ ] Sufficient color contrast
-- [ ] Focus visible at all times
-
 #### Inline Editing
 
 - [ ] Task title editing feels native
@@ -218,46 +189,6 @@ Create benchmarks for:
 - [ ] Escape cancels edits
 - [ ] Enter confirms edits
 - [ ] Blur auto-saves
-
-### 6. Platform-Specific
-
-#### macOS
-
-- [ ] Native window controls work
-- [ ] Dock menu (if applicable)
-- [ ] System notifications
-- [ ] Cmd shortcuts (not Ctrl)
-- [ ] Quick pane behavior
-
-### 7. Documentation Updates
-
-After stabilization:
-
-- [ ] Update README with current features
-- [ ] Developer docs reflect final architecture
-- [ ] API documentation for hooks
-- [ ] Troubleshooting guide
-
-## Testing Workflow
-
-### During Development
-
-1. Write tests alongside features
-2. Run `bun run test` frequently
-3. Use `dummy-demo-vault` for manual testing
-
-### Before Completion
-
-1. Full test suite passes
-2. Manual testing checklist complete
-3. Performance benchmarks acceptable
-4. All edge cases handled or documented
-
-### Regression Prevention
-
-- CI runs full test suite
-- Pre-commit hooks for quick checks
-- Coverage tracking (aim for 80%+ on business logic)
 
 ## Checklist
 
