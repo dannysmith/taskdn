@@ -10,6 +10,7 @@ import {
 } from '@/services/vault'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useTodayOrder, type TodaySectionId } from '@/hooks/use-today-order'
 import { SectionTaskGroup } from '@/components/tasks/section-task-group'
 import { TaskDndContext } from '@/components/tasks/task-dnd-context'
@@ -524,6 +525,19 @@ export function TodayView() {
     },
     [deleteTask]
   )
+
+  // Register view default handler for Cmd+N task creation
+  // When no task is selected, Cmd+N creates a new task in "Scheduled for Today"
+  React.useEffect(() => {
+    useTaskCreationStore.getState().registerViewDefault({
+      handler: handleCreateScheduledTask,
+      onTaskCreated: taskId => setPendingEditItemId(taskId),
+    })
+
+    return () => {
+      useTaskCreationStore.getState().registerViewDefault(null)
+    }
+  }, [handleCreateScheduledTask])
 
   // Check if there are any tasks to show
   const hasAnyItems =
