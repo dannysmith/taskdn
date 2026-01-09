@@ -668,6 +668,35 @@ Within each:
    - AreaView renders when selection.type === 'area'
    - ViewToggle shows for area views (list/kanban modes)
 
+**AreaView Bug Fixes & Enhancements (2026-01-09):**
+
+1. **Fixed task reordering not persisting in AreaView list mode**
+   - Added `applyStoredOrder()` helper function to area-view.tsx
+   - `tasksByProject` memo now reads `projectTaskOrder` from Zustand and applies stored order for each project
+   - Previously only loose tasks used stored order; now all project task lists do
+
+2. **Fixed cross-project moves ignoring insertion position**
+   - `handleTaskMove` now updates order arrays in Zustand (not just entity data)
+   - Removes task from source project's order, inserts at correct position in target
+   - Follows same pattern as TodayView's cross-section handling
+
+3. **Fixed DnD snap-back animation for cross-container drags** (src/components/tasks/task-dnd-context.tsx)
+   - Set `dropAnimation={crossContainerHover ? null : dropAnimation}` on DragOverlay
+   - Prevents visual snap-back when moving tasks between projects
+
+4. **Added ProjectStatusBadges component** (src/components/projects/project-status-badges.tsx)
+   - Compact colored badges showing project count per status in area header
+   - Order: blocked → in-progress → ready → planning → paused → done
+   - Only shows badges for statuses with count > 0
+
+5. **Added project status badges to area ViewHeader** (src/components/layout/MainWindowContent.tsx)
+   - Computes `projectStatusCounts` for current area
+   - Passes `ProjectStatusBadges` to ViewHeader (hidden on small screens via `@lg:flex`)
+
+6. **Fixed Active Projects grid not showing** (src/components/views/area-view.tsx)
+   - `activeProjects` filter now uses `p.status ?? 'planning'` fallback
+   - Projects with null status (default) are now correctly included as 'planning'
+
 ### Future: Disk Persistence for Order
 
 When needed:
@@ -708,7 +737,7 @@ These components were skipped during Task 1 (Foundation) because they depend on 
 - [x] ProjectView (kanban mode) - uses KanbanBoard, useKanbanOrder, view toggle in header
 - [x] AreaView (list mode) - uses ProjectTaskGroup, SectionTaskGroup, TaskDndContext for cross-project DnD
 - [x] AreaView (kanban mode) - uses AreaKanbanBoard with project swimlanes
-- [ ] NoAreaView
+- [x] NoAreaView - orphan projects/tasks view with list/kanban modes
 - [x] WeekView (calendar mode) - 7-day column layout with DnD scheduling
 - [x] WeekView (kanban mode) - filters to this week's tasks, view toggle in header
 - [x] CalendarView - month grid with DnD scheduling

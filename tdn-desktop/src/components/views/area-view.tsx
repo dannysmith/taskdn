@@ -125,7 +125,9 @@ export function AreaView({ areaId }: AreaViewProps) {
   const activeProjects = React.useMemo(() => {
     return areaProjects.filter(p => {
       const status = p.status ?? 'planning'
-      return ACTIVE_STATUSES.includes(status as (typeof ACTIVE_STATUSES)[number])
+      return ACTIVE_STATUSES.includes(
+        status as (typeof ACTIVE_STATUSES)[number]
+      )
     })
   }, [areaProjects])
 
