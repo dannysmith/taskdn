@@ -4,6 +4,8 @@
 
 The keyboard shortcut system has grown organically with shortcuts defined in multiple places: keyboard handlers, command definitions, and menu accelerators. This creates maintenance burden and inconsistency. The solution is to make the **command system the single source of truth** for all global shortcuts.
 
+> **Requirements Reference**: See [Task 7: Command Registry](./task-7-command-registry.md) for the complete list of commands, their shortcuts, and where they appear (palette, menus, context menus). This task focuses on the **technical implementation** of the shortcut system.
+
 ## Current Architecture (Problems)
 
 ### Shortcut Definitions in 4 Places
