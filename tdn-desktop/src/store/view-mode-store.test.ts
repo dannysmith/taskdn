@@ -1,10 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
-import {
-  useViewModeStore,
-  useViewMode,
-  type ViewModeKey,
-} from './view-mode-store'
+import { useViewModeStore, useViewMode } from './view-mode-store'
 import type { ViewMode } from '@/components/ui/view-toggle'
 
 describe('view-mode-store', () => {

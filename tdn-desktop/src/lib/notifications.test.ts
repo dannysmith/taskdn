@@ -1,5 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { notify, notifications, success, error, info, warning } from './notifications'
+import {
+  notify,
+  notifications,
+  success,
+  error,
+  info,
+  warning,
+} from './notifications'
 import { toast } from 'sonner'
 import { commands } from './tauri-bindings'
 

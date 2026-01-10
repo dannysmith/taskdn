@@ -197,9 +197,8 @@ describe('useKanbanOrder', () => {
         result.current.setColumnOrder('ready', [task1])
       })
 
-      const columns = useDisplayOrderStore.getState().kanbanColumnOrder?.[
-        'project-1'
-      ]
+      const columns =
+        useDisplayOrderStore.getState().kanbanColumnOrder?.['project-1']
       expect(columns?.ready).toEqual(['task-1'])
       expect(columns?.['in-progress']).toEqual(['task-2'])
     })
@@ -273,8 +272,16 @@ describe('useKanbanOrder', () => {
 
   describe('getOrderedTasks', () => {
     it('returns Task objects in display order', () => {
-      const task1 = createTestTask({ id: 'task-1', status: 'ready', title: 'First' })
-      const task2 = createTestTask({ id: 'task-2', status: 'ready', title: 'Second' })
+      const task1 = createTestTask({
+        id: 'task-1',
+        status: 'ready',
+        title: 'First',
+      })
+      const task2 = createTestTask({
+        id: 'task-2',
+        status: 'ready',
+        title: 'Second',
+      })
       const tasksByStatus = createTasksByStatus({
         ready: [task1, task2],
       })
@@ -292,8 +299,8 @@ describe('useKanbanOrder', () => {
       )
 
       const orderedTasks = result.current.getOrderedTasks('ready')
-      expect(orderedTasks[0].title).toBe('Second')
-      expect(orderedTasks[1].title).toBe('First')
+      expect(orderedTasks[0]!.title).toBe('Second')
+      expect(orderedTasks[1]!.title).toBe('First')
     })
 
     it('handles missing tasks gracefully', () => {
@@ -317,13 +324,17 @@ describe('useKanbanOrder', () => {
 
       const orderedTasks = result.current.getOrderedTasks('ready')
       expect(orderedTasks).toHaveLength(1)
-      expect(orderedTasks[0].id).toBe('task-1')
+      expect(orderedTasks[0]!.id).toBe('task-1')
     })
   })
 
   describe('getOrderedTasksByStatus', () => {
     it('returns all columns with ordered tasks', () => {
-      const task1 = createTestTask({ id: 'task-1', status: 'ready', title: 'Ready1' })
+      const task1 = createTestTask({
+        id: 'task-1',
+        status: 'ready',
+        title: 'Ready1',
+      })
       const task2 = createTestTask({
         id: 'task-2',
         status: 'in-progress',

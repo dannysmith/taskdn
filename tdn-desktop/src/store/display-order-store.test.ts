@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useDisplayOrderStore, type TodaySectionId } from './display-order-store'
+import { useDisplayOrderStore } from './display-order-store'
 import type { Heading } from '@/types/headings'
 
 describe('display-order-store', () => {
@@ -321,9 +321,9 @@ describe('display-order-store', () => {
         setTodayHeading('heading-1', heading1)
         setTodayHeading('heading-1', heading2)
 
-        expect(useDisplayOrderStore.getState().todayHeadings?.['heading-1']).toEqual(
-          heading2
-        )
+        expect(
+          useDisplayOrderStore.getState().todayHeadings?.['heading-1']
+        ).toEqual(heading2)
       })
 
       it('preserves other headings', () => {
@@ -472,7 +472,8 @@ describe('display-order-store', () => {
         setKanbanColumnOrder('project-1', 'ready', ['task-2', 'task-1'])
 
         expect(
-          useDisplayOrderStore.getState().kanbanColumnOrder?.['project-1']?.ready
+          useDisplayOrderStore.getState().kanbanColumnOrder?.['project-1']
+            ?.ready
         ).toEqual(['task-2', 'task-1'])
       })
 

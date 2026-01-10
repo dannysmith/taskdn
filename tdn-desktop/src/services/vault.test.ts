@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import {
@@ -252,7 +252,10 @@ describe('vault service', () => {
           area: '[[Personal]]',
         })
 
-        setupTestData({ areas: [area], projects: [project1, project2, project3] })
+        setupTestData({
+          areas: [area],
+          projects: [project1, project2, project3],
+        })
 
         const { result } = renderHook(() => useVaultHelpers(), {
           wrapper: createWrapper(queryClient),
@@ -368,7 +371,10 @@ describe('vault service', () => {
           project: null,
         })
 
-        setupTestData({ areas: [area], tasks: [directTask, projectTask, otherTask] })
+        setupTestData({
+          areas: [area],
+          tasks: [directTask, projectTask, otherTask],
+        })
 
         const { result } = renderHook(() => useVaultHelpers(), {
           wrapper: createWrapper(queryClient),
@@ -376,7 +382,7 @@ describe('vault service', () => {
 
         const tasks = result.current.getAreaDirectTasks('area-1')
         expect(tasks).toHaveLength(1)
-        expect(tasks[0].id).toBe('task-1')
+        expect(tasks[0]!.id).toBe('task-1')
       })
 
       it('returns empty array for non-existent area', () => {
@@ -416,13 +422,16 @@ describe('vault service', () => {
 
         const orphans = result.current.getOrphanTasks()
         expect(orphans).toHaveLength(1)
-        expect(orphans[0].id).toBe('orphan')
+        expect(orphans[0]!.id).toBe('orphan')
       })
     })
 
     describe('getActiveProjects', () => {
       it('returns projects not done or paused', () => {
-        const planning = createTestProject({ id: 'planning', status: 'planning' })
+        const planning = createTestProject({
+          id: 'planning',
+          status: 'planning',
+        })
         const ready = createTestProject({ id: 'ready', status: 'ready' })
         const inProgress = createTestProject({
           id: 'in-progress',
@@ -441,7 +450,11 @@ describe('vault service', () => {
 
         const active = result.current.getActiveProjects()
         expect(active).toHaveLength(3)
-        expect(active.map(p => p.id)).toEqual(['planning', 'ready', 'in-progress'])
+        expect(active.map(p => p.id)).toEqual([
+          'planning',
+          'ready',
+          'in-progress',
+        ])
       })
     })
 
@@ -458,7 +471,7 @@ describe('vault service', () => {
 
         const activeAreas = result.current.getActiveAreas()
         expect(activeAreas).toHaveLength(1)
-        expect(activeAreas[0].id).toBe('active')
+        expect(activeAreas[0]!.id).toBe('active')
       })
     })
 
@@ -522,7 +535,10 @@ describe('vault service', () => {
       })
 
       it('returns 100 when all tasks are completed', () => {
-        const project = createTestProject({ id: 'project-1', title: 'Complete' })
+        const project = createTestProject({
+          id: 'project-1',
+          title: 'Complete',
+        })
         const task1 = createTestTask({
           id: 'task-1',
           project: '[[Complete]]',

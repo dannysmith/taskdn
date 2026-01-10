@@ -119,9 +119,12 @@ describe('useCalendarOrder', () => {
 
       const { result } = renderHook(() => useCalendarOrder(options))
 
-      const orderedTasks = result.current.getOrderedTasks('2025-01-13', [task1, task2])
-      expect(orderedTasks[0].title).toBe('First')
-      expect(orderedTasks[1].title).toBe('Second')
+      const orderedTasks = result.current.getOrderedTasks('2025-01-13', [
+        task1,
+        task2,
+      ])
+      expect(orderedTasks[0]!.title).toBe('First')
+      expect(orderedTasks[1]!.title).toBe('Second')
     })
 
     it('filters out tasks not in provided array', () => {
@@ -141,7 +144,7 @@ describe('useCalendarOrder', () => {
       // Only pass task1 to getOrderedTasks
       const orderedTasks = result.current.getOrderedTasks('2025-01-13', [task1])
       expect(orderedTasks).toHaveLength(1)
-      expect(orderedTasks[0].id).toBe('task-1')
+      expect(orderedTasks[0]!.id).toBe('task-1')
     })
   })
 
@@ -345,7 +348,9 @@ describe('useCalendarOrder', () => {
       const { result } = renderHook(() => useCalendarOrder(options))
 
       expect(result.current.order).toHaveProperty('taskOrderByDate')
-      expect(result.current.order.taskOrderByDate['2025-01-13']).toEqual(['task-1'])
+      expect(result.current.order.taskOrderByDate['2025-01-13']).toEqual([
+        'task-1',
+      ])
     })
   })
 

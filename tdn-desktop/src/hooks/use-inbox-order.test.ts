@@ -127,7 +127,7 @@ describe('useInboxOrder', () => {
 
       act(() => {
         // Simulate reorder: move task-3 to front
-        result.current.setOrder([tasks[2], tasks[0], tasks[1]])
+        result.current.setOrder([tasks[2]!, tasks[0]!, tasks[1]!])
       })
 
       expect(useDisplayOrderStore.getState().inboxOrder).toEqual([
@@ -146,7 +146,7 @@ describe('useInboxOrder', () => {
       const { result } = renderHook(() => useInboxOrder(tasks))
 
       act(() => {
-        result.current.setOrder([tasks[1], tasks[0]])
+        result.current.setOrder([tasks[1]!, tasks[0]!])
       })
 
       expect(useDisplayOrderStore.getState().inboxOrder).toEqual([
@@ -155,7 +155,7 @@ describe('useInboxOrder', () => {
       ])
 
       act(() => {
-        result.current.setOrder([tasks[0], tasks[1]])
+        result.current.setOrder([tasks[0]!, tasks[1]!])
       })
 
       expect(useDisplayOrderStore.getState().inboxOrder).toEqual([
@@ -178,7 +178,9 @@ describe('useInboxOrder', () => {
 
       const { result } = renderHook(() => useInboxOrder(tasks))
 
-      expect(result.current.getOrderedTaskIds()).toEqual(result.current.orderedIds)
+      expect(result.current.getOrderedTaskIds()).toEqual(
+        result.current.orderedIds
+      )
       expect(result.current.getOrderedTaskIds()).toEqual(['task-2', 'task-1'])
     })
   })
@@ -198,10 +200,10 @@ describe('useInboxOrder', () => {
       const orderedTasks = result.current.getOrderedTasks()
 
       expect(orderedTasks).toHaveLength(3)
-      expect(orderedTasks[0].id).toBe('task-3')
-      expect(orderedTasks[0].title).toBe('Third Task')
-      expect(orderedTasks[1].id).toBe('task-1')
-      expect(orderedTasks[2].id).toBe('task-2')
+      expect(orderedTasks[0]!.id).toBe('task-3')
+      expect(orderedTasks[0]!.title).toBe('Third Task')
+      expect(orderedTasks[1]!.id).toBe('task-1')
+      expect(orderedTasks[2]!.id).toBe('task-2')
     })
 
     it('handles tasks that dont exist in map gracefully', () => {
@@ -217,7 +219,7 @@ describe('useInboxOrder', () => {
 
       // Non-existent task is filtered out by orderedIds, so getOrderedTasks only has task-1
       expect(orderedTasks).toHaveLength(1)
-      expect(orderedTasks[0].id).toBe('task-1')
+      expect(orderedTasks[0]!.id).toBe('task-1')
     })
   })
 
@@ -228,9 +230,12 @@ describe('useInboxOrder', () => {
         createTestTask({ id: 'task-2' }),
       ]
 
-      const { result, rerender } = renderHook(({ tasks }) => useInboxOrder(tasks), {
-        initialProps: { tasks: initialTasks },
-      })
+      const { result, rerender } = renderHook(
+        ({ tasks }) => useInboxOrder(tasks),
+        {
+          initialProps: { tasks: initialTasks },
+        }
+      )
 
       expect(result.current.orderedIds).toEqual(['task-1', 'task-2'])
 

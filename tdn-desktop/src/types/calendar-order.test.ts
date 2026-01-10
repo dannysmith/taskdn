@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { getCalendarTaskDragId, parseCalendarTaskDragId } from './calendar-order'
+import {
+  getCalendarTaskDragId,
+  parseCalendarTaskDragId,
+} from './calendar-order'
 
 describe('calendar-order', () => {
   describe('getCalendarTaskDragId', () => {
@@ -19,17 +22,15 @@ describe('calendar-order', () => {
     })
 
     it('handles task IDs with hyphens', () => {
-      expect(getCalendarTaskDragId('2025-06-15', 'task-with-many-hyphens')).toBe(
-        'calendar-task-2025-06-15-task-with-many-hyphens'
-      )
+      expect(
+        getCalendarTaskDragId('2025-06-15', 'task-with-many-hyphens')
+      ).toBe('calendar-task-2025-06-15-task-with-many-hyphens')
     })
   })
 
   describe('parseCalendarTaskDragId', () => {
     it('extracts date and taskId from valid drag ID', () => {
-      const result = parseCalendarTaskDragId(
-        'calendar-task-2025-06-15-task-1'
-      )
+      const result = parseCalendarTaskDragId('calendar-task-2025-06-15-task-1')
 
       expect(result).toEqual({
         date: '2025-06-15',
@@ -59,8 +60,12 @@ describe('calendar-order', () => {
     })
 
     it('returns null for invalid date format', () => {
-      expect(parseCalendarTaskDragId('calendar-task-2025-6-15-task-1')).toBeNull()
-      expect(parseCalendarTaskDragId('calendar-task-25-06-15-task-1')).toBeNull()
+      expect(
+        parseCalendarTaskDragId('calendar-task-2025-6-15-task-1')
+      ).toBeNull()
+      expect(
+        parseCalendarTaskDragId('calendar-task-25-06-15-task-1')
+      ).toBeNull()
     })
 
     it('round-trips correctly', () => {
@@ -74,17 +79,23 @@ describe('calendar-order', () => {
     })
 
     it('handles different valid dates', () => {
-      expect(parseCalendarTaskDragId('calendar-task-2024-02-29-leap-task')).toEqual({
+      expect(
+        parseCalendarTaskDragId('calendar-task-2024-02-29-leap-task')
+      ).toEqual({
         date: '2024-02-29',
         taskId: 'leap-task',
       })
 
-      expect(parseCalendarTaskDragId('calendar-task-2025-01-01-new-year')).toEqual({
+      expect(
+        parseCalendarTaskDragId('calendar-task-2025-01-01-new-year')
+      ).toEqual({
         date: '2025-01-01',
         taskId: 'new-year',
       })
 
-      expect(parseCalendarTaskDragId('calendar-task-2025-12-31-end-of-year')).toEqual({
+      expect(
+        parseCalendarTaskDragId('calendar-task-2025-12-31-end-of-year')
+      ).toEqual({
         date: '2025-12-31',
         taskId: 'end-of-year',
       })

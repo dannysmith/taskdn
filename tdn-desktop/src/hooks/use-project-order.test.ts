@@ -3,7 +3,6 @@ import { renderHook, act } from '@testing-library/react'
 import { useProjectOrder } from './use-project-order'
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import { createTestTask, resetFactoryCounters } from '@/test/helpers/vault'
-import type { Task } from '@/lib/tauri-bindings'
 
 describe('useProjectOrder', () => {
   beforeEach(() => {
@@ -93,7 +92,7 @@ describe('useProjectOrder', () => {
       const { result } = renderHook(() => useProjectOrder('project-1', tasks))
 
       act(() => {
-        result.current.setOrder([tasks[1], tasks[0]])
+        result.current.setOrder([tasks[1]!, tasks[0]!])
       })
 
       expect(useDisplayOrderStore.getState().projectTaskOrder).toEqual({
@@ -116,7 +115,7 @@ describe('useProjectOrder', () => {
       const { result } = renderHook(() => useProjectOrder('project-1', tasks))
 
       act(() => {
-        result.current.setOrder([tasks[1], tasks[0]])
+        result.current.setOrder([tasks[1]!, tasks[0]!])
       })
 
       expect(useDisplayOrderStore.getState().projectTaskOrder).toEqual({
@@ -141,8 +140,8 @@ describe('useProjectOrder', () => {
       const { result } = renderHook(() => useProjectOrder('project-1', tasks))
       const orderedTasks = result.current.getOrderedTasks()
 
-      expect(orderedTasks[0].title).toBe('Second')
-      expect(orderedTasks[1].title).toBe('First')
+      expect(orderedTasks[0]!.title).toBe('Second')
+      expect(orderedTasks[1]!.title).toBe('First')
     })
   })
 
@@ -165,11 +164,11 @@ describe('useProjectOrder', () => {
       )
 
       act(() => {
-        result1.current.setOrder([tasks1[1], tasks1[0]])
+        result1.current.setOrder([tasks1[1]!, tasks1[0]!])
       })
 
       act(() => {
-        result2.current.setOrder([tasks2[1], tasks2[0]])
+        result2.current.setOrder([tasks2[1]!, tasks2[0]!])
       })
 
       expect(useDisplayOrderStore.getState().projectTaskOrder).toEqual({

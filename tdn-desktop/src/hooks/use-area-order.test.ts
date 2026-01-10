@@ -92,7 +92,7 @@ describe('useAreaOrder', () => {
       const { result } = renderHook(() => useAreaOrder('area-1', tasks))
 
       act(() => {
-        result.current.setOrder([tasks[1], tasks[0]])
+        result.current.setOrder([tasks[1]!, tasks[0]!])
       })
 
       expect(useDisplayOrderStore.getState().areaTaskOrder).toEqual({
@@ -115,7 +115,7 @@ describe('useAreaOrder', () => {
       const { result } = renderHook(() => useAreaOrder('area-1', tasks))
 
       act(() => {
-        result.current.setOrder([tasks[1], tasks[0]])
+        result.current.setOrder([tasks[1]!, tasks[0]!])
       })
 
       expect(useDisplayOrderStore.getState().areaTaskOrder).toEqual({
@@ -140,8 +140,8 @@ describe('useAreaOrder', () => {
       const { result } = renderHook(() => useAreaOrder('area-1', tasks))
       const orderedTasks = result.current.getOrderedTasks()
 
-      expect(orderedTasks[0].title).toBe('Second')
-      expect(orderedTasks[1].title).toBe('First')
+      expect(orderedTasks[0]!.title).toBe('Second')
+      expect(orderedTasks[1]!.title).toBe('First')
     })
   })
 
@@ -156,15 +156,19 @@ describe('useAreaOrder', () => {
         createTestTask({ id: 'task-4' }),
       ]
 
-      const { result: result1 } = renderHook(() => useAreaOrder('area-1', tasks1))
-      const { result: result2 } = renderHook(() => useAreaOrder('area-2', tasks2))
+      const { result: result1 } = renderHook(() =>
+        useAreaOrder('area-1', tasks1)
+      )
+      const { result: result2 } = renderHook(() =>
+        useAreaOrder('area-2', tasks2)
+      )
 
       act(() => {
-        result1.current.setOrder([tasks1[1], tasks1[0]])
+        result1.current.setOrder([tasks1[1]!, tasks1[0]!])
       })
 
       act(() => {
-        result2.current.setOrder([tasks2[1], tasks2[0]])
+        result2.current.setOrder([tasks2[1]!, tasks2[0]!])
       })
 
       expect(useDisplayOrderStore.getState().areaTaskOrder).toEqual({

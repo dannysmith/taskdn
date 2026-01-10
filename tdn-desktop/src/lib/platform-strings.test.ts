@@ -110,7 +110,9 @@ describe('platform-strings', () => {
       })
 
       it('formats shortcut with alt modifier', () => {
-        expect(formatShortcut('windows', 'K', ['alt', 'mod'])).toBe('Alt+Ctrl+K')
+        expect(formatShortcut('windows', 'K', ['alt', 'mod'])).toBe(
+          'Alt+Ctrl+K'
+        )
       })
 
       it('formats shortcut with all modifiers', () => {

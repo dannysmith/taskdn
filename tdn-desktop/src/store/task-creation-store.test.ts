@@ -237,7 +237,9 @@ describe('task-creation-store', () => {
 
       updateActiveListSelection(null, null)
 
-      expect(useTaskCreationStore.getState().activeListSelectedTaskId).toBeNull()
+      expect(
+        useTaskCreationStore.getState().activeListSelectedTaskId
+      ).toBeNull()
     })
   })
 
@@ -245,8 +247,7 @@ describe('task-creation-store', () => {
     describe('with active list handler', () => {
       it('calls active list handler with selected task ID', async () => {
         const handler = vi.fn().mockReturnValue('new-task-id')
-        const { activateList, triggerCreate } =
-          useTaskCreationStore.getState()
+        const { activateList, triggerCreate } = useTaskCreationStore.getState()
 
         activateList('list-1', {
           handler,
@@ -263,8 +264,7 @@ describe('task-creation-store', () => {
       it('calls setEditingTaskId callback with new task ID', async () => {
         const handler = vi.fn().mockReturnValue('new-task-id')
         const setEditingTaskId = vi.fn()
-        const { activateList, triggerCreate } =
-          useTaskCreationStore.getState()
+        const { activateList, triggerCreate } = useTaskCreationStore.getState()
 
         activateList('list-1', {
           handler,
@@ -281,8 +281,7 @@ describe('task-creation-store', () => {
       it('does not call setEditingTaskId if handler returns undefined', async () => {
         const handler = vi.fn().mockReturnValue(undefined)
         const setEditingTaskId = vi.fn()
-        const { activateList, triggerCreate } =
-          useTaskCreationStore.getState()
+        const { activateList, triggerCreate } = useTaskCreationStore.getState()
 
         activateList('list-1', {
           handler,
@@ -299,8 +298,7 @@ describe('task-creation-store', () => {
       it('handles async handler', async () => {
         const handler = vi.fn().mockResolvedValue('async-task-id')
         const setEditingTaskId = vi.fn()
-        const { activateList, triggerCreate } =
-          useTaskCreationStore.getState()
+        const { activateList, triggerCreate } = useTaskCreationStore.getState()
 
         activateList('list-1', {
           handler,
@@ -395,8 +393,12 @@ describe('task-creation-store', () => {
       it('falls back to view default when list deactivated', async () => {
         const viewHandler = vi.fn().mockReturnValue('view-task')
         const listHandler = vi.fn().mockReturnValue('list-task')
-        const { registerViewDefault, activateList, deactivateList, triggerCreate } =
-          useTaskCreationStore.getState()
+        const {
+          registerViewDefault,
+          activateList,
+          deactivateList,
+          triggerCreate,
+        } = useTaskCreationStore.getState()
 
         registerViewDefault({ handler: viewHandler })
         activateList('list-1', {

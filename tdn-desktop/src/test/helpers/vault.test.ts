@@ -129,7 +129,7 @@ describe('vault test helpers', () => {
       })
 
       // All tasks should link to the single project
-      expect(tasks[0].project).toContain(projects[0].title)
+      expect(tasks[0]!.project).toContain(projects[0]!.title)
     })
 
     it('assigns varied statuses to tasks', () => {

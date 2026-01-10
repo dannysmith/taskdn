@@ -189,7 +189,9 @@ describe('recovery', () => {
         error: { type: 'IoError', message: 'Cleanup failed' },
       })
 
-      await expect(cleanupOldFiles()).rejects.toThrow('IO error: Cleanup failed')
+      await expect(cleanupOldFiles()).rejects.toThrow(
+        'IO error: Cleanup failed'
+      )
     })
   })
 

@@ -154,11 +154,7 @@ export interface TestVaultData {
  * ```
  */
 export function createTestVault(config: CreateTestVaultConfig): TestVaultData {
-  const {
-    taskCount = 5,
-    projectCount = 2,
-    areaCount = 1,
-  } = config
+  const { taskCount = 5, projectCount = 2, areaCount = 1 } = config
 
   const areas: Area[] = []
   const projects: Project[] = []
@@ -406,10 +402,7 @@ export const FIXTURE_PROJECT_IDS = [
 /**
  * IDs of all fixture areas (non-archived)
  */
-export const FIXTURE_AREA_IDS = [
-  'area-active-001',
-  'area-empty-002',
-] as const
+export const FIXTURE_AREA_IDS = ['area-active-001', 'area-empty-002'] as const
 
 /**
  * Get expected count of fixture items

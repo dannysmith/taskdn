@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { useNavigationStore } from './navigation-store'
-import type { Selection, NavId } from '@/types/navigation'
+import type { NavId } from '@/types/navigation'
 
 describe('navigation-store', () => {
   // Helper to get default initial state

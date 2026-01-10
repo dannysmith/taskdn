@@ -44,40 +44,40 @@ vault/
 
 ### Tasks
 
-| Fixture                    | Edge Case                             |
-| -------------------------- | ------------------------------------- |
-| task-inbox-001             | Default/initial task state            |
-| task-icebox-002            | Deferred indefinitely                 |
-| task-blocked-005           | External dependency blocking          |
-| task-done-006              | Completed with `completed-at`         |
-| task-dropped-007           | Abandoned with `completed-at`         |
-| task-with-dates-008        | All date fields: due, scheduled, defer-until |
-| task-minimal-009           | Only required fields, no body         |
-| task-unicode-010           | Unicode characters, special chars     |
-| task-long-notes-011        | Extended markdown: lists, code, tables |
-| task-with-project-012      | WikiLink project reference            |
-| task-with-area-013         | WikiLink area reference (no project)  |
-| task-archived-014          | Task in archive subdirectory          |
+| Fixture               | Edge Case                                    |
+| --------------------- | -------------------------------------------- |
+| task-inbox-001        | Default/initial task state                   |
+| task-icebox-002       | Deferred indefinitely                        |
+| task-blocked-005      | External dependency blocking                 |
+| task-done-006         | Completed with `completed-at`                |
+| task-dropped-007      | Abandoned with `completed-at`                |
+| task-with-dates-008   | All date fields: due, scheduled, defer-until |
+| task-minimal-009      | Only required fields, no body                |
+| task-unicode-010      | Unicode characters, special chars            |
+| task-long-notes-011   | Extended markdown: lists, code, tables       |
+| task-with-project-012 | WikiLink project reference                   |
+| task-with-area-013    | WikiLink area reference (no project)         |
+| task-archived-014     | Task in archive subdirectory                 |
 
 ### Projects
 
-| Fixture                    | Edge Case                             |
-| -------------------------- | ------------------------------------- |
-| project-planning-001       | Planning status with dates            |
-| project-blocked-004        | blocked-by array reference            |
-| project-paused-005         | Temporarily on hold                   |
-| project-done-006           | Completed project                     |
-| project-with-area-007      | Area reference via WikiLink           |
-| project-empty-008          | No start-date/end-date                |
-| project-archived-009       | Project in archive subdirectory       |
+| Fixture               | Edge Case                       |
+| --------------------- | ------------------------------- |
+| project-planning-001  | Planning status with dates      |
+| project-blocked-004   | blocked-by array reference      |
+| project-paused-005    | Temporarily on hold             |
+| project-done-006      | Completed project               |
+| project-with-area-007 | Area reference via WikiLink     |
+| project-empty-008     | No start-date/end-date          |
+| project-archived-009  | Project in archive subdirectory |
 
 ### Areas
 
-| Fixture                    | Edge Case                             |
-| -------------------------- | ------------------------------------- |
-| area-active-001            | Active with type field                |
-| area-empty-002             | No associated content                 |
-| area-archived-003          | Archived status (hidden in views)     |
+| Fixture           | Edge Case                         |
+| ----------------- | --------------------------------- |
+| area-active-001   | Active with type field            |
+| area-empty-002    | No associated content             |
+| area-archived-003 | Archived status (hidden in views) |
 
 ## Usage
 
@@ -115,12 +115,12 @@ beforeEach(() => {
 import { withTempVault, withTempVaultFromFixtures } from '@/test/helpers/vault'
 
 // Empty temp vault
-await withTempVault(async (vaultPath) => {
+await withTempVault(async vaultPath => {
   // vaultPath has tasks/, projects/, areas/ subdirectories
 })
 
 // Temp vault with fixture files copied
-await withTempVaultFromFixtures(async (vaultPath) => {
+await withTempVaultFromFixtures(async vaultPath => {
   // vaultPath contains copies of all fixture files
 })
 ```
@@ -154,6 +154,7 @@ Files follow the pattern: `{type}-{description}-{number}.md`
 - Number: three-digit sequential ID
 
 This convention ensures:
+
 - Predictable alphabetical ordering
 - Easy identification of test purpose
 - Unique filenames across the fixture set
