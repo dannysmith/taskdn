@@ -23,8 +23,8 @@ import {
  * as a colored pill. When onStatusChange is provided, clicking opens a dropdown
  * to select a new status.
  *
- * Statuses are split into primary (ready, in-progress, blocked, done, dropped)
- * and secondary (inbox, icebox) with a separator in the dropdown.
+ * Statuses are split into primary (inbox, ready, in-progress, blocked, done)
+ * and secondary (icebox, dropped) with a separator in the dropdown.
  *
  * Uses responsive text sizing via container queries (2xs → xs).
  */

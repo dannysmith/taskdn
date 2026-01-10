@@ -24,7 +24,7 @@ const statusOrder: ProjectStatus[] = [
 ]
 
 interface ProjectStatusBadgesProps {
-  counts: Record<string, number>
+  counts: Partial<Record<ProjectStatus, number>>
   className?: string
 }
 

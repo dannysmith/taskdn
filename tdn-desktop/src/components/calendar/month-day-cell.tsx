@@ -68,7 +68,7 @@ export function MonthDayCell({
     <div
       ref={setNodeRef}
       className={cn(
-        '@container flex flex-col min-h-[100px] border-r border-border/30 last:border-r-0',
+        '@container flex flex-col min-h-[100px] border-e border-border/30 last:border-e-0',
         !isCurrentMonth && 'bg-muted/30 opacity-50',
         isWeekendDay && isCurrentMonth && 'bg-muted/10',
         (isOver || isDropTarget) && 'bg-primary/5'
@@ -132,8 +132,7 @@ export function MonthDayCell({
         {/* Drop zone - always present to catch drops */}
         <div
           className={cn(
-            'flex-1 min-h-6 rounded border border-dashed transition-colors',
-            tasks.length === 0 ? 'border-transparent' : 'border-transparent',
+            'flex-1 min-h-6 rounded border border-dashed transition-colors border-transparent',
             (isOver || isDropTarget) && 'border-primary/30 bg-primary/5'
           )}
         />

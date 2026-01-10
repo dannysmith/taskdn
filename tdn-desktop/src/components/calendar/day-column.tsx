@@ -89,7 +89,7 @@ export function DayColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        '@container flex flex-col min-h-[300px] border-r border-border/50 last:border-r-0',
+        '@container flex flex-col min-h-[300px] border-e border-border/50 last:border-e-0',
         isWeekendDay && 'bg-muted/20',
         (isOver || isDropTarget) && 'bg-primary/5'
       )}
@@ -169,8 +169,7 @@ export function DayColumn({
         {/* Drop zone - always present to catch drops, visible styling when empty or hovering */}
         <div
           className={cn(
-            'flex-1 min-h-[60px] rounded-lg border-2 border-dashed transition-colors',
-            tasks.length === 0 ? 'border-transparent' : 'border-transparent',
+            'flex-1 min-h-[60px] rounded-lg border-2 border-dashed transition-colors border-transparent',
             (isOver || isDropTarget) && 'border-primary/30 bg-primary/5'
           )}
         />
