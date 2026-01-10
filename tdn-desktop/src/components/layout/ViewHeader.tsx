@@ -37,7 +37,7 @@ export function ViewHeader({
   return (
     <header
       className={cn(
-        '@container flex h-14 shrink-0 items-center gap-2 border-b px-3 @sm:gap-3 @sm:px-4',
+        '@container flex h-14 shrink-0 items-center gap-2 px-3 @sm:gap-3 @sm:px-4',
         className
       )}
     >

@@ -116,6 +116,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 export function AppSidebar({
   selection,
   onSelectionChange,
+  className,
   ...props
 }: AppSidebarProps) {
   const { getProjectCompletion, getAreaById, getProjectById } =
@@ -279,7 +280,7 @@ export function AppSidebar({
   }
 
   return (
-    <Sidebar collapsible="none" className="h-full w-full" {...props}>
+    <Sidebar collapsible="none" className={cn('h-full w-full', className)} {...props}>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

@@ -53,7 +53,7 @@ export function MainWindow() {
             <LeftSideBar />
           </ResizablePanel>
 
-          <ResizableHandle className={cn(!leftSidebarVisible && 'hidden')} />
+          <ResizableHandle className={cn('bg-transparent', !leftSidebarVisible && 'hidden')} />
 
           <ResizablePanel
             defaultSize={MAIN_CONTENT_DEFAULT}
@@ -62,7 +62,7 @@ export function MainWindow() {
             <MainWindowContent />
           </ResizablePanel>
 
-          <ResizableHandle className={cn(!rightSidebarVisible && 'hidden')} />
+          <ResizableHandle className={cn('bg-transparent', !rightSidebarVisible && 'hidden')} />
 
           <ResizablePanel
             defaultSize={LAYOUT.rightSidebar.default}
