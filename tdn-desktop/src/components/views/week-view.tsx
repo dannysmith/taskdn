@@ -246,10 +246,8 @@ export function WeekView() {
   )
 
   const handleCreateTask = React.useCallback(
-    (scheduledDate: string): string => {
-      const tempId = crypto.randomUUID()
-      createTask.mutate({
-        tempId,
+    async (scheduledDate: string): Promise<string> => {
+      const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
         projectId: null,
@@ -258,16 +256,14 @@ export function WeekView() {
         due: null,
         deferUntil: null,
       })
-      return tempId
+      return newTask.id
     },
     [createTask]
   )
 
   const handleKanbanCreateTask = React.useCallback(
-    (status: TaskStatus): string => {
-      const tempId = crypto.randomUUID()
-      createTask.mutate({
-        tempId,
+    async (status: TaskStatus): Promise<string> => {
+      const newTask = await createTask.mutateAsync({
         title: '',
         status,
         projectId: null,
@@ -276,7 +272,7 @@ export function WeekView() {
         due: null,
         deferUntil: null,
       })
-      return tempId
+      return newTask.id
     },
     [createTask]
   )

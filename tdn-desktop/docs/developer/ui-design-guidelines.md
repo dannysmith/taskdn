@@ -80,23 +80,23 @@ A single actionable item.
 
 ### Date Colors
 
-| Token         | Color    | Usage                              |
-| ------------- | -------- | ---------------------------------- |
-| date-due      | Soft red | Due dates (not overdue)            |
-| date-overdue  | Dark red | Overdue due dates, hover state     |
+| Token        | Color    | Usage                          |
+| ------------ | -------- | ------------------------------ |
+| date-due     | Soft red | Due dates (not overdue)        |
+| date-overdue | Dark red | Overdue due dates, hover state |
 
 ### Area Type Colors
 
 Six color slots for user-defined area types. Colors are assigned automatically via hash of the type string.
 
-| Token        | Color  |
-| ------------ | ------ |
-| area-type-1  | Green  |
-| area-type-2  | Blue   |
-| area-type-3  | Purple |
-| area-type-4  | Amber  |
-| area-type-5  | Red    |
-| area-type-6  | Teal   |
+| Token       | Color  |
+| ----------- | ------ |
+| area-type-1 | Green  |
+| area-type-2 | Blue   |
+| area-type-3 | Purple |
+| area-type-4 | Amber  |
+| area-type-5 | Red    |
+| area-type-6 | Teal   |
 
 ### UI Colors
 
@@ -160,24 +160,24 @@ We use container queries (`@container`) for component-level responsive design. T
 
 Defined in `src/index.css`, these extend Tailwind's default container breakpoints for compact UI:
 
-| Breakpoint | Size   | Use Case                                   |
-| ---------- | ------ | ------------------------------------------ |
-| `@4xs`     | 80px   | Ultra-compact (calendar day cells)         |
-| `@5xs`     | 120px  | Task card row layout transitions           |
-| `@6xs`     | 140px  | Task card compact threshold                |
-| `@7xs`     | 180px  | Area/project cards expand                  |
-| `@8xs`     | 200px  | Area/project cards switch to row layout    |
+| Breakpoint | Size  | Use Case                                |
+| ---------- | ----- | --------------------------------------- |
+| `@4xs`     | 80px  | Ultra-compact (calendar day cells)      |
+| `@5xs`     | 120px | Task card row layout transitions        |
+| `@6xs`     | 140px | Task card compact threshold             |
+| `@7xs`     | 180px | Area/project cards expand               |
+| `@8xs`     | 200px | Area/project cards switch to row layout |
 
 ### Standard Breakpoints
 
 Tailwind's built-in container breakpoints are also available:
 
-| Breakpoint  | Size   |
-| ----------- | ------ |
-| `@3xs`      | 256px  |
-| `@2xs`      | 288px  |
-| `@xs`       | 320px  |
-| `@sm`       | 384px  |
+| Breakpoint | Size  |
+| ---------- | ----- |
+| `@3xs`     | 256px |
+| `@2xs`     | 288px |
+| `@xs`      | 320px |
+| `@sm`      | 384px |
 
 ### Arbitrary Breakpoints
 

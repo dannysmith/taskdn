@@ -362,90 +362,9 @@ export function TodayView() {
 
   // Create task handler for "Scheduled for Today" section
   const handleCreateScheduledTask = React.useCallback(
-    (afterItemId: string | null): string => {
-      // 1. Generate temp ID upfront for optimistic updates
-      const tempId = crypto.randomUUID()
-
-      // 2. Calculate new order with temp ID
-      const currentOrder = orderedScheduledItems.map(item =>
-        item.type === 'heading' ? toHeadingId(item.id) : item.id
-      )
-      let newOrder: string[]
-
-      if (afterItemId) {
-        const insertIndex = currentOrder.indexOf(afterItemId)
-        if (insertIndex !== -1) {
-          newOrder = [
-            ...currentOrder.slice(0, insertIndex + 1),
-            tempId,
-            ...currentOrder.slice(insertIndex + 1),
-          ]
-        } else {
-          newOrder = [...currentOrder, tempId]
-        }
-      } else {
-        newOrder = [...currentOrder, tempId]
-      }
-
-      // 3. Update order store immediately with temp ID
-      setSectionItemOrder('scheduled-today', newOrder)
-
-      // 4. Start mutation (onMutate adds temp task to cache synchronously)
-      createTask.mutate(
-        {
-          tempId,
-          title: '',
-          status: 'ready',
-          projectId: null,
-          areaId: null,
-          scheduled: today,
-          due: null,
-          deferUntil: null,
-        },
-        {
-          onSuccess: realTask => {
-            // 5. Replace temp ID with real ID in order store
-            // Note: useTodayOrder stores order in display-order-store under section keys
-            const currentItems = orderedScheduledItems.map(item =>
-              item.type === 'heading' ? toHeadingId(item.id) : item.id
-            )
-            const updatedOrder = currentItems.map(id =>
-              id === tempId ? realTask.id : id
-            )
-            setSectionItemOrder('scheduled-today', updatedOrder)
-            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-            setPendingEditItemId(realTask.id)
-          },
-          onError: () => {
-            // 6. Remove temp ID from order store on failure
-            const currentItems = orderedScheduledItems.map(item =>
-              item.type === 'heading' ? toHeadingId(item.id) : item.id
-            )
-            const revertedOrder = currentItems.filter(id => id !== tempId)
-            setSectionItemOrder('scheduled-today', revertedOrder)
-          },
-        }
-      )
-
-      // 7. Return temp ID immediately for edit mode
-      return tempId
-    },
-    [createTask, today, orderedScheduledItems, setSectionItemOrder]
-  )
-
-  // Add task from header button
-  const handleAddScheduledTask = React.useCallback(() => {
-    const tempId = crypto.randomUUID()
-
-    // Append to end of section
-    const currentOrder = orderedScheduledItems.map(item =>
-      item.type === 'heading' ? toHeadingId(item.id) : item.id
-    )
-    setSectionItemOrder('scheduled-today', [...currentOrder, tempId])
-
-    createTask.mutate(
-      {
-        tempId,
+    async (afterItemId: string | null): Promise<string> => {
+      // Create task and wait for real ID (~50ms, imperceptible)
+      const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
         projectId: null,
@@ -453,31 +372,59 @@ export function TodayView() {
         scheduled: today,
         due: null,
         deferUntil: null,
-      },
-      {
-        onSuccess: realTask => {
-          const currentItems = orderedScheduledItems.map(item =>
-            item.type === 'heading' ? toHeadingId(item.id) : item.id
-          )
-          const updatedOrder = currentItems.map(id =>
-            id === tempId ? realTask.id : id
-          )
-          setSectionItemOrder('scheduled-today', updatedOrder)
-          // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-          setPendingEditItemId(realTask.id)
-        },
-        onError: () => {
-          const currentItems = orderedScheduledItems.map(item =>
-            item.type === 'heading' ? toHeadingId(item.id) : item.id
-          )
-          const revertedOrder = currentItems.filter(id => id !== tempId)
-          setSectionItemOrder('scheduled-today', revertedOrder)
-        },
-      }
-    )
+      })
 
-    // Trigger auto-edit for the new task
-    setPendingEditItemId(tempId)
+      // Update display order with REAL ID
+      const currentOrder = orderedScheduledItems.map(item =>
+        item.type === 'heading' ? toHeadingId(item.id) : item.id
+      )
+      let newOrder: string[]
+
+      if (afterItemId) {
+        const insertIndex = currentOrder.indexOf(afterItemId)
+        newOrder =
+          insertIndex !== -1
+            ? [
+                ...currentOrder.slice(0, insertIndex + 1),
+                newTask.id,
+                ...currentOrder.slice(insertIndex + 1),
+              ]
+            : [...currentOrder, newTask.id]
+      } else {
+        newOrder = [...currentOrder, newTask.id]
+      }
+
+      setSectionItemOrder('scheduled-today', newOrder)
+
+      // Trigger edit mode
+      setPendingEditItemId(newTask.id)
+
+      return newTask.id
+    },
+    [createTask, today, orderedScheduledItems, setSectionItemOrder]
+  )
+
+  // Add task from header button
+  const handleAddScheduledTask = React.useCallback(async () => {
+    // Create task and wait for real ID
+    const newTask = await createTask.mutateAsync({
+      title: '',
+      status: 'ready',
+      projectId: null,
+      areaId: null,
+      scheduled: today,
+      due: null,
+      deferUntil: null,
+    })
+
+    // Append to end of section
+    const currentOrder = orderedScheduledItems.map(item =>
+      item.type === 'heading' ? toHeadingId(item.id) : item.id
+    )
+    setSectionItemOrder('scheduled-today', [...currentOrder, newTask.id])
+
+    // Trigger edit mode
+    setPendingEditItemId(newTask.id)
   }, [createTask, today, orderedScheduledItems, setSectionItemOrder])
 
   // Heading handlers for Scheduled section
@@ -515,120 +462,84 @@ export function TodayView() {
 
   // Create task handler for due/overdue section (set due date to today)
   const handleCreateDueTask = React.useCallback(
-    (afterTaskId: string | null): string => {
-      const tempId = crypto.randomUUID()
+    async (afterTaskId: string | null): Promise<string> => {
+      // Create task and wait for real ID
+      const newTask = await createTask.mutateAsync({
+        title: '',
+        status: 'ready',
+        projectId: null,
+        areaId: null,
+        scheduled: null,
+        due: today,
+        deferUntil: null,
+      })
 
-      // Calculate new order with temp ID
+      // Update display order with REAL ID
       const currentOrder = orderedOverdueOrDueToday.map(t => t.id)
       let newOrder: string[]
 
       if (afterTaskId) {
         const insertIndex = currentOrder.indexOf(afterTaskId)
-        if (insertIndex !== -1) {
-          newOrder = [
-            ...currentOrder.slice(0, insertIndex + 1),
-            tempId,
-            ...currentOrder.slice(insertIndex + 1),
-          ]
-        } else {
-          newOrder = [...currentOrder, tempId]
-        }
+        newOrder =
+          insertIndex !== -1
+            ? [
+                ...currentOrder.slice(0, insertIndex + 1),
+                newTask.id,
+                ...currentOrder.slice(insertIndex + 1),
+              ]
+            : [...currentOrder, newTask.id]
       } else {
-        newOrder = [...currentOrder, tempId]
+        newOrder = [...currentOrder, newTask.id]
       }
 
       setSectionItemOrder('overdue-due-today', newOrder)
 
-      createTask.mutate(
-        {
-          tempId,
-          title: '',
-          status: 'ready',
-          projectId: null,
-          areaId: null,
-          scheduled: null,
-          due: today,
-          deferUntil: null,
-        },
-        {
-          onSuccess: realTask => {
-            const order = orderedOverdueOrDueToday.map(t => t.id)
-            const updatedOrder = order.map(id =>
-              id === tempId ? realTask.id : id
-            )
-            setSectionItemOrder('overdue-due-today', updatedOrder)
-            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-            setPendingEditItemId(realTask.id)
-          },
-          onError: () => {
-            const order = orderedOverdueOrDueToday.map(t => t.id)
-            const revertedOrder = order.filter(id => id !== tempId)
-            setSectionItemOrder('overdue-due-today', revertedOrder)
-          },
-        }
-      )
+      // Trigger edit mode
+      setPendingEditItemId(newTask.id)
 
-      return tempId
+      return newTask.id
     },
     [createTask, today, orderedOverdueOrDueToday, setSectionItemOrder]
   )
 
   // Create task handler for "became available" section (schedule for today)
   const handleCreateAvailableTask = React.useCallback(
-    (afterTaskId: string | null): string => {
-      const tempId = crypto.randomUUID()
+    async (afterTaskId: string | null): Promise<string> => {
+      // Create task and wait for real ID
+      const newTask = await createTask.mutateAsync({
+        title: '',
+        status: 'ready',
+        projectId: null,
+        areaId: null,
+        scheduled: today,
+        due: null,
+        deferUntil: null,
+      })
 
-      // Calculate new order with temp ID
+      // Update display order with REAL ID
       const currentOrder = orderedBecameAvailableToday.map(t => t.id)
       let newOrder: string[]
 
       if (afterTaskId) {
         const insertIndex = currentOrder.indexOf(afterTaskId)
-        if (insertIndex !== -1) {
-          newOrder = [
-            ...currentOrder.slice(0, insertIndex + 1),
-            tempId,
-            ...currentOrder.slice(insertIndex + 1),
-          ]
-        } else {
-          newOrder = [...currentOrder, tempId]
-        }
+        newOrder =
+          insertIndex !== -1
+            ? [
+                ...currentOrder.slice(0, insertIndex + 1),
+                newTask.id,
+                ...currentOrder.slice(insertIndex + 1),
+              ]
+            : [...currentOrder, newTask.id]
       } else {
-        newOrder = [...currentOrder, tempId]
+        newOrder = [...currentOrder, newTask.id]
       }
 
       setSectionItemOrder('became-available-today', newOrder)
 
-      createTask.mutate(
-        {
-          tempId,
-          title: '',
-          status: 'ready',
-          projectId: null,
-          areaId: null,
-          scheduled: today,
-          due: null,
-          deferUntil: null,
-        },
-        {
-          onSuccess: realTask => {
-            const order = orderedBecameAvailableToday.map(t => t.id)
-            const updatedOrder = order.map(id =>
-              id === tempId ? realTask.id : id
-            )
-            setSectionItemOrder('became-available-today', updatedOrder)
-            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-            setPendingEditItemId(realTask.id)
-          },
-          onError: () => {
-            const order = orderedBecameAvailableToday.map(t => t.id)
-            const revertedOrder = order.filter(id => id !== tempId)
-            setSectionItemOrder('became-available-today', revertedOrder)
-          },
-        }
-      )
+      // Trigger edit mode
+      setPendingEditItemId(newTask.id)
 
-      return tempId
+      return newTask.id
     },
     [createTask, today, orderedBecameAvailableToday, setSectionItemOrder]
   )

@@ -201,36 +201,25 @@ export function useArea(id: string) {
 // =============================================================================
 
 /**
- * Options for creating a task with optimistic updates.
- * Extends CreateTaskOptions with a tempId for immediate cache insertion.
- */
-export type CreateTaskWithTempId = CreateTaskOptions & {
-  /** Temporary ID for optimistic updates. Generate with crypto.randomUUID() */
-  tempId: string
-}
-
-/**
- * Hook to create a new task with optimistic updates.
+ * Hook to create a new task.
  *
- * The caller must provide a `tempId` which is used to immediately add the task
- * to the cache before the mutation completes. This enables instant edit mode.
+ * Uses simple async/await approach - the ~50ms backend latency is imperceptible.
+ * No temp IDs or optimistic updates needed.
  *
- * Flow:
- * 1. Caller generates tempId and updates order store
- * 2. Mutation starts, onMutate adds temp task to cache
- * 3. Task appears in orderedTasks immediately
- * 4. Mutation completes, temp task replaced with real task
- * 5. Caller's onSuccess replaces tempId with realId in order store
+ * Usage:
+ * ```typescript
+ * const createTask = useCreateTask()
+ * const newTask = await createTask.mutateAsync({ title: '', status: 'ready', ... })
+ * // newTask has real ID, update order store and trigger edit mode
+ * ```
  */
 export function useCreateTask() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (options: CreateTaskWithTempId): Promise<Task> => {
-      // Strip tempId before sending to Rust (it doesn't know about it)
-      const { tempId: _tempId, ...createOptions } = options
-      logger.debug('Creating task', { options: createOptions })
-      const result = await commands.createTask(createOptions)
+    mutationFn: async (options: CreateTaskOptions): Promise<Task> => {
+      logger.debug('Creating task', { options })
+      const result = await commands.createTask(options)
 
       if (result.status === 'error') {
         throw new Error(handleVaultError(result.error, 'Creating task'))
@@ -243,88 +232,16 @@ export function useCreateTask() {
       return result.data
     },
 
-    onMutate: async options => {
-      // Mark mutation start to prevent file watcher from invalidating during mutation
-      markMutationStart()
-
-      // Cancel any outgoing refetches to avoid overwriting our optimistic update
-      await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
-
-      // Snapshot current data for rollback
-      const previousTasks = queryClient.getQueryData<Task[]>(
-        vaultQueryKeys.tasks()
-      )
-
-      // Look up project/area titles to construct wikilinks for the temp task
-      // This is necessary so the temp task appears in filtered views (ProjectView, AreaView)
-      let projectWikilink: string | null = null
-      let areaWikilink: string | null = null
-
-      if (options.projectId) {
-        const projects = queryClient.getQueryData<Project[]>(
-          vaultQueryKeys.projects()
-        )
-        const project = projects?.find(p => p.id === options.projectId)
-        if (project) {
-          projectWikilink = `[[${project.title}]]`
-          // If project has an area and no explicit area was provided, inherit it
-          if (!options.areaId && project.area) {
-            areaWikilink = project.area
-          }
-        }
-      }
-
-      if (options.areaId && !areaWikilink) {
-        const areas = queryClient.getQueryData<Area[]>(vaultQueryKeys.areas())
-        const area = areas?.find(a => a.id === options.areaId)
-        if (area) {
-          areaWikilink = `[[${area.title}]]`
-        }
-      }
-
-      // Create optimistic task with temp ID
-      const tempTask: Task = {
-        id: options.tempId,
-        path: `temp://${options.tempId}`, // Placeholder path
-        title: options.title ?? '',
-        status: options.status ?? 'inbox',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        completedAt: null,
-        due: options.due ?? null,
-        scheduled: options.scheduled ?? null,
-        deferUntil: options.deferUntil ?? null,
-        area: areaWikilink,
-        project: projectWikilink,
-        body: '',
-      }
-
-      // Add temp task to cache
-      queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks =>
-        oldTasks ? [...oldTasks, tempTask] : [tempTask]
-      )
-
-      return { previousTasks, tempId: options.tempId }
-    },
-
-    onSuccess: (realTask, _variables, context) => {
+    onSuccess: newTask => {
       markMutationComplete()
 
-      // Replace temp task with real task in the list cache
-      queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
-        if (!oldTasks) return [realTask]
-        return oldTasks.map(t => (t.id === context?.tempId ? realTask : t))
-      })
+      // Add real task to cache
+      queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks =>
+        oldTasks ? [...oldTasks, newTask] : [newTask]
+      )
 
-      // Set individual task cache with real task
-      queryClient.setQueryData(vaultQueryKeys.task(realTask.id), realTask)
-    },
-
-    onError: (_error, _variables, context) => {
-      // Rollback on error
-      if (context?.previousTasks) {
-        queryClient.setQueryData(vaultQueryKeys.tasks(), context.previousTasks)
-      }
+      // Set individual task cache
+      queryClient.setQueryData(vaultQueryKeys.task(newTask.id), newTask)
     },
   })
 }

@@ -77,7 +77,9 @@ interface KanbanBoardProps {
   /** Called when area name is clicked */
   onAreaClick?: (areaId: string) => void
   /** Called when + button is clicked to create a task. Returns the new task ID. */
-  onCreateTask?: (status: TaskStatus) => string | undefined
+  onCreateTask?: (
+    status: TaskStatus
+  ) => string | undefined | Promise<string | undefined>
   /** Column order - defaults to DEFAULT_STATUS_ORDER */
   columnOrder?: TaskStatus[]
   /** Which statuses to display - defaults to all in columnOrder */
@@ -115,9 +117,13 @@ export function KanbanBoard({
   // Handle creating a task in a column
   const handleCreateTask = (status: TaskStatus) => {
     if (!onCreateTask) return
-    const newTaskId = onCreateTask(status)
-    if (newTaskId) {
-      setEditingTaskId(newTaskId)
+    const result = onCreateTask(status)
+    if (result instanceof Promise) {
+      result.then(newTaskId => {
+        if (newTaskId) setEditingTaskId(newTaskId)
+      })
+    } else if (result) {
+      setEditingTaskId(result)
     }
   }
 

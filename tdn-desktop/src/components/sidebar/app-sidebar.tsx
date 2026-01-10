@@ -280,7 +280,11 @@ export function AppSidebar({
   }
 
   return (
-    <Sidebar collapsible="none" className={cn('h-full w-full', className)} {...props}>
+    <Sidebar
+      collapsible="none"
+      className={cn('h-full w-full', className)}
+      {...props}
+    >
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}

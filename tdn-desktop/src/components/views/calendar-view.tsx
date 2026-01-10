@@ -73,11 +73,8 @@ export function CalendarView() {
   )
 
   const handleCreateTask = React.useCallback(
-    (scheduledDate: string): string => {
-      // Generate temp ID for optimistic updates
-      const tempId = crypto.randomUUID()
-      createTask.mutate({
-        tempId,
+    async (scheduledDate: string): Promise<string> => {
+      const newTask = await createTask.mutateAsync({
         title: '',
         status: 'ready',
         projectId: null,
@@ -86,7 +83,7 @@ export function CalendarView() {
         due: null,
         deferUntil: null,
       })
-      return tempId
+      return newTask.id
     },
     [createTask]
   )

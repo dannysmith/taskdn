@@ -1,4 +1,5 @@
 # Task 3A: Bugfixes
+
 Okay, I have some small fixes I want to make. Let's try and keep these changes as small as possible While doing what we need to make it work.
 
 ## Active Task is always in Rightsidebar

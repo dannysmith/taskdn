@@ -93,7 +93,9 @@ interface WeekCalendarProps {
   /** Called when navigating to an area */
   onNavigateToArea?: (areaId: string) => void
   /** Called when + button is clicked to create a task. Returns the new task ID. */
-  onCreateTask?: (scheduledDate: string) => string | undefined
+  onCreateTask?: (
+    scheduledDate: string
+  ) => string | undefined | Promise<string | undefined>
   className?: string
 }
 
@@ -125,9 +127,13 @@ export function WeekCalendar({
   const handleCreateTask = React.useCallback(
     (dateKey: string) => {
       if (!onCreateTask) return
-      const newTaskId = onCreateTask(dateKey)
-      if (newTaskId) {
-        setEditingTaskId(newTaskId)
+      const result = onCreateTask(dateKey)
+      if (result instanceof Promise) {
+        result.then(newTaskId => {
+          if (newTaskId) setEditingTaskId(newTaskId)
+        })
+      } else if (result) {
+        setEditingTaskId(result)
       }
     },
     [onCreateTask]
