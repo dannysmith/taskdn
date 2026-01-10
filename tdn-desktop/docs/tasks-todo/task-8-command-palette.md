@@ -26,6 +26,7 @@ Convert existing commands to use Tauri accelerator format:
 ```
 
 Files to update:
+
 - `src/lib/commands/navigation-commands.ts`
 - `src/lib/commands/window-commands.ts`
 
@@ -44,7 +45,7 @@ interface AppCommand {
 
   // New
   surfaces?: {
-    commandPalette?: boolean  // Default: true
+    commandPalette?: boolean // Default: true
     contextMenu?: EntityType[] // e.g., ['task', 'project', 'area']
     appMenu?: string // Menu location, e.g., 'Edit', 'View'
   }
@@ -56,15 +57,15 @@ interface AppCommand {
 
 #### Global Navigation Commands
 
-| Command | Notes |
-|---------|-------|
-| `navigate-today` | Set active view to Today |
-| `navigate-this-week` | Set active view to This Week |
-| `navigate-inbox` | Set active view to Inbox |
-| `navigate-calendar` | Set active view to Calendar |
-| `navigate-no-area` | Set active view to No Area |
+| Command              | Notes                         |
+| -------------------- | ----------------------------- |
+| `navigate-today`     | Set active view to Today      |
+| `navigate-this-week` | Set active view to This Week  |
+| `navigate-inbox`     | Set active view to Inbox      |
+| `navigate-calendar`  | Set active view to Calendar   |
+| `navigate-no-area`   | Set active view to No Area    |
 | `collapse-all-areas` | Collapse all areas in sidebar |
-| `expand-all-areas` | Expand all areas in sidebar |
+| `expand-all-areas`   | Expand all areas in sidebar   |
 
 #### Dynamic Navigation Commands
 
@@ -74,9 +75,9 @@ Generate commands for each active area/project:
 // Generate at runtime based on current areas/projects
 function getDynamicNavigationCommands(context: CommandContext): AppCommand[] {
   const areas = context.getAreas().filter(a => a.status !== 'archived')
-  const projects = context.getProjects().filter(p =>
-    p.status !== 'done' && p.status !== 'dropped'
-  )
+  const projects = context
+    .getProjects()
+    .filter(p => p.status !== 'done' && p.status !== 'dropped')
 
   return [
     ...areas.map(area => ({
@@ -97,10 +98,10 @@ function getDynamicNavigationCommands(context: CommandContext): AppCommand[] {
 
 #### Application Commands
 
-| Command | Notes |
-|---------|-------|
-| `open-help` | Opens https://tdn.danny.is/desktop/overview/ in browser |
-| `toggle-command-palette` | Already exists, ensure in registry |
+| Command                  | Notes                                                   |
+| ------------------------ | ------------------------------------------------------- |
+| `open-help`              | Opens https://tdn.danny.is/desktop/overview/ in browser |
+| `toggle-command-palette` | Already exists, ensure in registry                      |
 
 ### 4. Command Palette Enhancements
 
@@ -124,6 +125,7 @@ const visibleCommands = allCommands.filter(cmd => {
 #### Grouping
 
 Commands should be grouped in the palette:
+
 - Navigation (Today, This Week, etc.)
 - Areas (dynamic)
 - Projects (dynamic)
@@ -165,14 +167,14 @@ interface CommandContext {
 
 ## Files to Change
 
-| File | Change |
-|------|--------|
-| `src/lib/commands/types.ts` | Add `surfaces`, `supportsMultiSelect` |
-| `src/lib/commands/navigation-commands.ts` | Update format, add new commands |
-| `src/lib/commands/window-commands.ts` | Update format |
-| `src/lib/commands/index.ts` | Add dynamic command generation |
-| `src/hooks/use-command-context.ts` | Extend context |
-| `src/components/command-palette/CommandPalette.tsx` | Update filtering/grouping |
+| File                                                | Change                                |
+| --------------------------------------------------- | ------------------------------------- |
+| `src/lib/commands/types.ts`                         | Add `surfaces`, `supportsMultiSelect` |
+| `src/lib/commands/navigation-commands.ts`           | Update format, add new commands       |
+| `src/lib/commands/window-commands.ts`               | Update format                         |
+| `src/lib/commands/index.ts`                         | Add dynamic command generation        |
+| `src/hooks/use-command-context.ts`                  | Extend context                        |
+| `src/components/command-palette/CommandPalette.tsx` | Update filtering/grouping             |
 
 ## Success Criteria
 

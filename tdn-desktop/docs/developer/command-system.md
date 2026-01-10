@@ -18,7 +18,7 @@ export const myFeatureCommands: AppCommand[] = [
     descriptionKey: 'commands.myAction.description',
     icon: SomeIcon,
     group: 'my-feature',
-    shortcut: 'CmdOrCtrl+M',  // Tauri accelerator format
+    shortcut: 'CmdOrCtrl+M', // Tauri accelerator format
     keywords: ['my', 'action', 'feature'],
 
     execute: context => {
@@ -73,6 +73,7 @@ interface CommandContext {
 ```
 
 The context is available as:
+
 - **Hook**: `useCommandContext()` for React components
 - **Singleton**: `commandContext` for non-React code (e.g., menu handlers)
 
@@ -118,14 +119,15 @@ execute: () => setLeftSidebarVisible(!leftSidebarVisible)
 Commands use **Tauri's accelerator format** for shortcuts:
 
 ```typescript
-shortcut: 'CmdOrCtrl+1'       // Cross-platform primary modifier
-shortcut: 'CmdOrCtrl+,'       // Special characters
-shortcut: 'F11'               // Function keys (no modifier)
+shortcut: 'CmdOrCtrl+1' // Cross-platform primary modifier
+shortcut: 'CmdOrCtrl+,' // Special characters
+shortcut: 'F11' // Function keys (no modifier)
 shortcut: 'CmdOrCtrl+Shift+Z' // With shift
-shortcut: 'CmdOrCtrl+Alt+P'   // With alt
+shortcut: 'CmdOrCtrl+Alt+P' // With alt
 ```
 
 **Why this format?**
+
 - Cross-platform: `CmdOrCtrl` = Cmd on Mac, Ctrl elsewhere
 - Same format used by Tauri menu accelerators
 - Parseable for keyboard event matching
@@ -138,8 +140,8 @@ Convert shortcuts for UI display using the shortcuts utility:
 ```typescript
 import { formatForDisplay } from '@/lib/shortcuts'
 
-formatForDisplay('CmdOrCtrl+1')        // '⌘1' (Mac) or 'Ctrl+1' (Windows)
-formatForDisplay('CmdOrCtrl+Shift+Z')  // '⌘⇧Z' (Mac) or 'Ctrl+Shift+Z' (Windows)
+formatForDisplay('CmdOrCtrl+1') // '⌘1' (Mac) or 'Ctrl+1' (Windows)
+formatForDisplay('CmdOrCtrl+Shift+Z') // '⌘⇧Z' (Mac) or 'Ctrl+Shift+Z' (Windows)
 ```
 
 ## Integration Points
@@ -203,7 +205,7 @@ import { executeCommand, commandContext } from '@/lib/commands'
 await MenuItem.new({
   id: 'toggle-left-sidebar',
   text: t('menu.toggleLeftSidebar'),
-  accelerator: 'CmdOrCtrl+1',  // Display only (doesn't intercept keyboard)
+  accelerator: 'CmdOrCtrl+1', // Display only (doesn't intercept keyboard)
   action: () => executeCommand('toggle-left-sidebar', commandContext),
 })
 ```
@@ -236,7 +238,7 @@ export const myFeatureCommands: AppCommand[] = [
     labelKey: 'commands.myAction.label',
     descriptionKey: 'commands.myAction.description',
     group: 'my-feature',
-    shortcut: 'CmdOrCtrl+3',  // Optional: add keyboard shortcut
+    shortcut: 'CmdOrCtrl+3', // Optional: add keyboard shortcut
 
     execute: context => {
       // Your logic here
@@ -290,15 +292,15 @@ Group labels are translated via `commands.group.{groupName}` keys.
 
 ## Best Practices
 
-| Do | Don't |
-| -- | ----- |
-| Use `labelKey` with translation keys | Hardcode label strings |
-| Use `getState()` in execute functions | Use hooks in commands |
-| Use Tauri accelerator format for shortcuts | Use display format (`⌘1`) |
-| Check `isAvailable` for context-dependent commands | Show unavailable commands |
-| Provide `keywords` for better searchability | Rely only on label matching |
-| Use `context.showToast()` for feedback | Silently execute without feedback |
-| Route menu actions through `executeCommand()` | Call store directly from menus |
+| Do                                                 | Don't                             |
+| -------------------------------------------------- | --------------------------------- |
+| Use `labelKey` with translation keys               | Hardcode label strings            |
+| Use `getState()` in execute functions              | Use hooks in commands             |
+| Use Tauri accelerator format for shortcuts         | Use display format (`⌘1`)         |
+| Check `isAvailable` for context-dependent commands | Show unavailable commands         |
+| Provide `keywords` for better searchability        | Rely only on label matching       |
+| Use `context.showToast()` for feedback             | Silently execute without feedback |
+| Route menu actions through `executeCommand()`      | Call store directly from menus    |
 
 ## Related Documentation
 

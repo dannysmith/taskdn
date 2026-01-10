@@ -66,7 +66,12 @@ Copy as Markdown
 ### Using Tauri's Menu API
 
 ```typescript
-import { Menu, MenuItem, Submenu, PredefinedMenuItem } from '@tauri-apps/api/menu'
+import {
+  Menu,
+  MenuItem,
+  Submenu,
+  PredefinedMenuItem,
+} from '@tauri-apps/api/menu'
 
 async function showTaskContextMenu(task: Task, context: CommandContext) {
   const showObsidian = context.isObsidianSettingOn()
@@ -82,12 +87,14 @@ async function showTaskContextMenu(task: Task, context: CommandContext) {
         text: t('contextMenu.openInDefaultApp'),
         action: () => executeCommand('open-in-default-app', context, task),
       }),
-      ...(showObsidian ? [
-        await MenuItem.new({
-          text: t('contextMenu.openInObsidian'),
-          action: () => executeCommand('open-in-obsidian', context, task),
-        }),
-      ] : []),
+      ...(showObsidian
+        ? [
+            await MenuItem.new({
+              text: t('contextMenu.openInObsidian'),
+              action: () => executeCommand('open-in-obsidian', context, task),
+            }),
+          ]
+        : []),
 
       await PredefinedMenuItem.new({ item: 'Separator' }),
 
@@ -140,12 +147,14 @@ async function buildContextMenu(
     }
 
     for (const cmd of groupCommands) {
-      items.push(await MenuItem.new({
-        text: t(cmd.labelKey),
-        accelerator: cmd.shortcut,
-        enabled: !cmd.isAvailable || cmd.isAvailable(context),
-        action: () => executeCommand(cmd.id, context, entity),
-      }))
+      items.push(
+        await MenuItem.new({
+          text: t(cmd.labelKey),
+          accelerator: cmd.shortcut,
+          enabled: !cmd.isAvailable || cmd.isAvailable(context),
+          action: () => executeCommand(cmd.id, context, entity),
+        })
+      )
     }
   }
 
@@ -169,9 +178,9 @@ async function buildContextMenu(
 
 ### Platform-Specific Labels
 
-| Action | macOS | Windows |
-|--------|-------|---------|
-| `reveal-in-finder` | "Reveal in Finder" | "Reveal in Explorer" |
+| Action                | macOS                 | Windows                     |
+| --------------------- | --------------------- | --------------------------- |
+| `reveal-in-finder`    | "Reveal in Finder"    | "Reveal in Explorer"        |
 | `open-in-default-app` | "Open in Default App" | "Open with Default Program" |
 
 Use i18n keys that resolve differently per platform, or detect platform at runtime.
@@ -189,7 +198,7 @@ context.setSelectedEntity(task)
 await menu.popup()
 
 // Option 3: Commands read from context
-execute: (context) => {
+execute: context => {
   const entity = context.getContextMenuTarget()
   // operate on entity
 }
@@ -209,16 +218,16 @@ Recommend Option 2 or 3 for cleaner command implementations.
 
 ## Files to Create/Change
 
-| File | Change |
-|------|--------|
-| `src/lib/context-menu/index.ts` | New - context menu utilities |
-| `src/lib/context-menu/task-menu.ts` | New - task context menu |
-| `src/lib/context-menu/project-menu.ts` | New - project context menu |
-| `src/lib/context-menu/area-menu.ts` | New - area context menu |
-| `src/components/task-list/TaskListItem.tsx` | Add onContextMenu |
-| `src/components/sidebar/ProjectItem.tsx` | Add onContextMenu |
-| `src/components/sidebar/AreaItem.tsx` | Add onContextMenu |
-| `locales/en.json` | Add contextMenu translations |
+| File                                        | Change                       |
+| ------------------------------------------- | ---------------------------- |
+| `src/lib/context-menu/index.ts`             | New - context menu utilities |
+| `src/lib/context-menu/task-menu.ts`         | New - task context menu      |
+| `src/lib/context-menu/project-menu.ts`      | New - project context menu   |
+| `src/lib/context-menu/area-menu.ts`         | New - area context menu      |
+| `src/components/task-list/TaskListItem.tsx` | Add onContextMenu            |
+| `src/components/sidebar/ProjectItem.tsx`    | Add onContextMenu            |
+| `src/components/sidebar/AreaItem.tsx`       | Add onContextMenu            |
+| `locales/en.json`                           | Add contextMenu translations |
 
 ## Edge Cases
 
@@ -230,6 +239,7 @@ Recommend Option 2 or 3 for cleaner command implementations.
 ### Multiple Selection (Future)
 
 When multi-select is implemented, context menu should:
+
 - Show commands that work on multiple items
 - Hide commands that only work on single items
 - Show count in menu title (e.g., "3 tasks selected")

@@ -122,6 +122,7 @@ await MenuItem.new({
 Menu items need to update their enabled state. Options:
 
 **Option A: Rebuild menu on state change**
+
 ```typescript
 // Listen for selection changes
 useEffect(() => {
@@ -130,6 +131,7 @@ useEffect(() => {
 ```
 
 **Option B: Use Tauri's menu item references**
+
 ```typescript
 // Store references to items that need updating
 const duplicateItem = await MenuItem.new({ ... })
@@ -149,9 +151,9 @@ Option B is more performant but requires managing refs.
 ```typescript
 async function buildGoMenu(context: CommandContext): Promise<Submenu> {
   const areas = context.getAreas().filter(a => a.status !== 'archived')
-  const projects = context.getProjects().filter(p =>
-    p.status !== 'done' && p.status !== 'dropped'
-  )
+  const projects = context
+    .getProjects()
+    .filter(p => p.status !== 'done' && p.status !== 'dropped')
 
   const areasSubmenu = await Submenu.new({
     text: t('menu.go.areas'),
@@ -171,7 +173,8 @@ async function buildGoMenu(context: CommandContext): Promise<Submenu> {
       projects.map(project =>
         MenuItem.new({
           text: project.title,
-          action: () => executeCommand(`navigate-project-${project.id}`, context),
+          action: () =>
+            executeCommand(`navigate-project-${project.id}`, context),
         })
       )
     ),
@@ -255,30 +258,30 @@ await MenuItem.new({
 
 ## Files to Change
 
-| File | Change |
-|------|--------|
-| `src/lib/menu.ts` | Extend with all menus |
+| File                                           | Change                    |
+| ---------------------------------------------- | ------------------------- |
+| `src/lib/menu.ts`                              | Extend with all menus     |
 | `src/hooks/use-main-window-event-listeners.ts` | Handle menu state updates |
-| `locales/en.json` | Add menu translations |
+| `locales/en.json`                              | Add menu translations     |
 
 ## Menu State Management
 
 ### Items That Need Dynamic State
 
-| Menu Item | Enabled When |
-|-----------|--------------|
-| Reveal in Finder | Entity selected |
-| Open in Default App | Entity selected |
-| Open in Obsidian | Entity selected + Obsidian setting on |
-| Duplicate | Task selected |
-| Edit Scheduled Date | Task selected |
-| Set Scheduled to Today | Task selected |
-| Edit Due Date | Task selected |
-| Edit Defer Until | Task selected |
-| Edit Status | Task selected |
-| Move Up/Down/Top/Bottom | Task selected |
-| Copy Title | Task selected |
-| Copy Path | Entity selected |
+| Menu Item               | Enabled When                          |
+| ----------------------- | ------------------------------------- |
+| Reveal in Finder        | Entity selected                       |
+| Open in Default App     | Entity selected                       |
+| Open in Obsidian        | Entity selected + Obsidian setting on |
+| Duplicate               | Task selected                         |
+| Edit Scheduled Date     | Task selected                         |
+| Set Scheduled to Today  | Task selected                         |
+| Edit Due Date           | Task selected                         |
+| Edit Defer Until        | Task selected                         |
+| Edit Status             | Task selected                         |
+| Move Up/Down/Top/Bottom | Task selected                         |
+| Copy Title              | Task selected                         |
+| Copy Path               | Entity selected                       |
 
 ### State Update Triggers
 
@@ -292,14 +295,16 @@ await MenuItem.new({
 ### macOS Only (For Now)
 
 This task focuses on macOS. Windows/Linux app menus work differently:
+
 - Windows: Menu bar inside window, or system tray
 - Linux: Varies by desktop environment
 
-These *may* be implemented in the future.
+These _may_ be implemented in the future.
 
 ### Keyboard Shortcut Display
 
 Tauri handles displaying accelerators in menus. Use the same format as command shortcuts:
+
 - `CmdOrCtrl+1` displays as `⌘1` on Mac, `Ctrl+1` on Windows
 
 ## Success Criteria
