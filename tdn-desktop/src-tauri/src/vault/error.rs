@@ -114,3 +114,207 @@ impl VaultError {
         }
     }
 }
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ------------------------------------------------------------------------
+    // Display implementation tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn display_not_configured() {
+        let err = VaultError::NotConfigured {
+            message: "No vault path set".to_string(),
+        };
+        assert_eq!(format!("{err}"), "Vault not configured: No vault path set");
+    }
+
+    #[test]
+    fn display_file_not_found() {
+        let err = VaultError::FileNotFound {
+            path: "/path/to/file.md".to_string(),
+        };
+        assert_eq!(format!("{err}"), "File not found: /path/to/file.md");
+    }
+
+    #[test]
+    fn display_entity_not_found() {
+        let err = VaultError::EntityNotFound {
+            entity_type: "Task".to_string(),
+            id: "task-123".to_string(),
+        };
+        assert_eq!(format!("{err}"), "Task not found: task-123");
+    }
+
+    #[test]
+    fn display_read_error() {
+        let err = VaultError::ReadError {
+            path: "/path/to/file.md".to_string(),
+            message: "Permission denied".to_string(),
+        };
+        assert_eq!(
+            format!("{err}"),
+            "Read error (/path/to/file.md): Permission denied"
+        );
+    }
+
+    #[test]
+    fn display_write_error() {
+        let err = VaultError::WriteError {
+            path: "/path/to/file.md".to_string(),
+            message: "Disk full".to_string(),
+        };
+        assert_eq!(
+            format!("{err}"),
+            "Write error (/path/to/file.md): Disk full"
+        );
+    }
+
+    #[test]
+    fn display_parse_error() {
+        let err = VaultError::ParseError {
+            path: "/path/to/file.md".to_string(),
+            message: "Invalid YAML".to_string(),
+        };
+        assert_eq!(
+            format!("{err}"),
+            "Parse error (/path/to/file.md): Invalid YAML"
+        );
+    }
+
+    #[test]
+    fn display_validation_error() {
+        let err = VaultError::ValidationError {
+            field: "title".to_string(),
+            message: "Title is required".to_string(),
+        };
+        assert_eq!(
+            format!("{err}"),
+            "Validation error (title): Title is required"
+        );
+    }
+
+    #[test]
+    fn display_watcher_error() {
+        let err = VaultError::WatcherError {
+            message: "Failed to start watcher".to_string(),
+        };
+        assert_eq!(format!("{err}"), "Watcher error: Failed to start watcher");
+    }
+
+    #[test]
+    fn display_internal() {
+        let err = VaultError::Internal {
+            message: "Unexpected state".to_string(),
+        };
+        assert_eq!(format!("{err}"), "Internal error: Unexpected state");
+    }
+
+    // ------------------------------------------------------------------------
+    // Builder method tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn builder_not_configured() {
+        let err = VaultError::not_configured("test message");
+        assert!(matches!(err, VaultError::NotConfigured { message } if message == "test message"));
+    }
+
+    #[test]
+    fn builder_file_not_found() {
+        let err = VaultError::file_not_found("/test/path");
+        assert!(matches!(err, VaultError::FileNotFound { path } if path == "/test/path"));
+    }
+
+    #[test]
+    fn builder_entity_not_found() {
+        let err = VaultError::entity_not_found("Project", "proj-123");
+        assert!(matches!(
+            err,
+            VaultError::EntityNotFound { entity_type, id }
+            if entity_type == "Project" && id == "proj-123"
+        ));
+    }
+
+    #[test]
+    fn builder_read_error() {
+        let err = VaultError::read_error("/test/path", "error msg");
+        assert!(matches!(
+            err,
+            VaultError::ReadError { path, message }
+            if path == "/test/path" && message == "error msg"
+        ));
+    }
+
+    #[test]
+    fn builder_write_error() {
+        let err = VaultError::write_error("/test/path", "write failed");
+        assert!(matches!(
+            err,
+            VaultError::WriteError { path, message }
+            if path == "/test/path" && message == "write failed"
+        ));
+    }
+
+    #[test]
+    fn builder_parse_error() {
+        let err = VaultError::parse_error("/test/path", "invalid yaml");
+        assert!(matches!(
+            err,
+            VaultError::ParseError { path, message }
+            if path == "/test/path" && message == "invalid yaml"
+        ));
+    }
+
+    #[test]
+    fn builder_validation_error() {
+        let err = VaultError::validation_error("status", "invalid value");
+        assert!(matches!(
+            err,
+            VaultError::ValidationError { field, message }
+            if field == "status" && message == "invalid value"
+        ));
+    }
+
+    #[test]
+    fn builder_watcher_error() {
+        let err = VaultError::watcher_error("watcher failed");
+        assert!(matches!(
+            err,
+            VaultError::WatcherError { message }
+            if message == "watcher failed"
+        ));
+    }
+
+    #[test]
+    fn builder_internal() {
+        let err = VaultError::internal("internal error");
+        assert!(matches!(
+            err,
+            VaultError::Internal { message }
+            if message == "internal error"
+        ));
+    }
+
+    // ------------------------------------------------------------------------
+    // Builder accepts various Into<String> types
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn builder_accepts_string() {
+        let err = VaultError::internal(String::from("owned string"));
+        assert!(matches!(err, VaultError::Internal { message } if message == "owned string"));
+    }
+
+    #[test]
+    fn builder_accepts_str_ref() {
+        let err = VaultError::internal("str ref");
+        assert!(matches!(err, VaultError::Internal { message } if message == "str ref"));
+    }
+}

@@ -548,3 +548,371 @@ impl Default for VaultManager {
 // VaultManager is thread-safe
 unsafe impl Send for VaultManager {}
 unsafe impl Sync for VaultManager {}
+
+// ============================================================================
+// Tests
+// ============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Create a test task with minimal required fields
+    fn test_task(id: &str, path: &str) -> Task {
+        Task {
+            id: id.to_string(),
+            path: path.to_string(),
+            title: format!("Task {id}"),
+            status: crate::vault::TaskStatus::Inbox,
+            created_at: Some("2025-01-15".to_string()),
+            updated_at: Some("2025-01-15".to_string()),
+            completed_at: None,
+            due: None,
+            scheduled: None,
+            defer_until: None,
+            area: None,
+            project: None,
+            body: String::new(),
+        }
+    }
+
+    /// Create a test project with minimal required fields
+    fn test_project(id: &str, path: &str) -> Project {
+        Project {
+            id: id.to_string(),
+            path: path.to_string(),
+            title: format!("Project {id}"),
+            status: None,
+            area: None,
+            start_date: None,
+            end_date: None,
+            description: None,
+            blocked_by: None,
+            body: String::new(),
+        }
+    }
+
+    /// Create a test area with minimal required fields
+    fn test_area(id: &str, path: &str) -> Area {
+        Area {
+            id: id.to_string(),
+            path: path.to_string(),
+            title: format!("Area {id}"),
+            status: None,
+            area_type: None,
+            description: None,
+            body: String::new(),
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // VaultIndex::from_scans tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn vault_index_from_scans_builds_maps() {
+        let tasks = vec![
+            test_task("task-1", "/tasks/task-1.md"),
+            test_task("task-2", "/tasks/task-2.md"),
+        ];
+        let projects = vec![test_project("proj-1", "/projects/proj-1.md")];
+        let areas = vec![test_area("area-1", "/areas/area-1.md")];
+
+        let index = VaultIndex::from_scans(tasks, projects, areas);
+
+        assert_eq!(index.tasks.len(), 2);
+        assert_eq!(index.projects.len(), 1);
+        assert_eq!(index.areas.len(), 1);
+    }
+
+    #[test]
+    fn vault_index_from_scans_builds_path_index() {
+        let tasks = vec![test_task("task-1", "/tasks/task-1.md")];
+        let projects = vec![test_project("proj-1", "/projects/proj-1.md")];
+        let areas = vec![test_area("area-1", "/areas/area-1.md")];
+
+        let index = VaultIndex::from_scans(tasks, projects, areas);
+
+        assert_eq!(index.task_paths.get("/tasks/task-1.md"), Some(&"task-1".to_string()));
+        assert_eq!(index.project_paths.get("/projects/proj-1.md"), Some(&"proj-1".to_string()));
+        assert_eq!(index.area_paths.get("/areas/area-1.md"), Some(&"area-1".to_string()));
+    }
+
+    #[test]
+    fn vault_index_from_scans_empty_vectors() {
+        let index = VaultIndex::from_scans(vec![], vec![], vec![]);
+
+        assert!(index.tasks.is_empty());
+        assert!(index.projects.is_empty());
+        assert!(index.areas.is_empty());
+    }
+
+    // ------------------------------------------------------------------------
+    // VaultIndex get_* tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn vault_index_get_task_found() {
+        let tasks = vec![test_task("task-1", "/tasks/task-1.md")];
+        let index = VaultIndex::from_scans(tasks, vec![], vec![]);
+
+        let task = index.get_task("task-1");
+        assert!(task.is_some());
+        assert_eq!(task.unwrap().id, "task-1");
+    }
+
+    #[test]
+    fn vault_index_get_task_not_found() {
+        let index = VaultIndex::from_scans(vec![], vec![], vec![]);
+        assert!(index.get_task("nonexistent").is_none());
+    }
+
+    #[test]
+    fn vault_index_get_project_found() {
+        let projects = vec![test_project("proj-1", "/projects/proj-1.md")];
+        let index = VaultIndex::from_scans(vec![], projects, vec![]);
+
+        let project = index.get_project("proj-1");
+        assert!(project.is_some());
+        assert_eq!(project.unwrap().id, "proj-1");
+    }
+
+    #[test]
+    fn vault_index_get_project_not_found() {
+        let index = VaultIndex::from_scans(vec![], vec![], vec![]);
+        assert!(index.get_project("nonexistent").is_none());
+    }
+
+    #[test]
+    fn vault_index_get_area_found() {
+        let areas = vec![test_area("area-1", "/areas/area-1.md")];
+        let index = VaultIndex::from_scans(vec![], vec![], areas);
+
+        let area = index.get_area("area-1");
+        assert!(area.is_some());
+        assert_eq!(area.unwrap().id, "area-1");
+    }
+
+    #[test]
+    fn vault_index_get_area_not_found() {
+        let index = VaultIndex::from_scans(vec![], vec![], vec![]);
+        assert!(index.get_area("nonexistent").is_none());
+    }
+
+    // ------------------------------------------------------------------------
+    // VaultIndex all_* tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn vault_index_all_tasks() {
+        let tasks = vec![
+            test_task("task-1", "/tasks/task-1.md"),
+            test_task("task-2", "/tasks/task-2.md"),
+        ];
+        let index = VaultIndex::from_scans(tasks, vec![], vec![]);
+
+        let all = index.all_tasks();
+        assert_eq!(all.len(), 2);
+    }
+
+    #[test]
+    fn vault_index_all_projects() {
+        let projects = vec![
+            test_project("proj-1", "/projects/proj-1.md"),
+            test_project("proj-2", "/projects/proj-2.md"),
+        ];
+        let index = VaultIndex::from_scans(vec![], projects, vec![]);
+
+        let all = index.all_projects();
+        assert_eq!(all.len(), 2);
+    }
+
+    #[test]
+    fn vault_index_all_areas() {
+        let areas = vec![
+            test_area("area-1", "/areas/area-1.md"),
+            test_area("area-2", "/areas/area-2.md"),
+        ];
+        let index = VaultIndex::from_scans(vec![], vec![], areas);
+
+        let all = index.all_areas();
+        assert_eq!(all.len(), 2);
+    }
+
+    // ------------------------------------------------------------------------
+    // VaultIndex update_* tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn vault_index_update_task_adds_new() {
+        let mut index = VaultIndex::default();
+        let task = test_task("task-1", "/tasks/task-1.md");
+
+        index.update_task(task);
+
+        assert_eq!(index.tasks.len(), 1);
+        assert!(index.get_task("task-1").is_some());
+        assert_eq!(index.task_paths.get("/tasks/task-1.md"), Some(&"task-1".to_string()));
+    }
+
+    #[test]
+    fn vault_index_update_task_replaces_existing() {
+        let mut index = VaultIndex::default();
+        let task1 = test_task("task-1", "/tasks/task-1.md");
+        index.update_task(task1);
+
+        let mut task2 = test_task("task-1", "/tasks/task-1.md");
+        task2.title = "Updated Title".to_string();
+        index.update_task(task2);
+
+        assert_eq!(index.tasks.len(), 1);
+        assert_eq!(index.get_task("task-1").unwrap().title, "Updated Title");
+    }
+
+    #[test]
+    fn vault_index_update_project_adds_new() {
+        let mut index = VaultIndex::default();
+        let project = test_project("proj-1", "/projects/proj-1.md");
+
+        index.update_project(project);
+
+        assert_eq!(index.projects.len(), 1);
+        assert!(index.get_project("proj-1").is_some());
+    }
+
+    #[test]
+    fn vault_index_update_area_adds_new() {
+        let mut index = VaultIndex::default();
+        let area = test_area("area-1", "/areas/area-1.md");
+
+        index.update_area(area);
+
+        assert_eq!(index.areas.len(), 1);
+        assert!(index.get_area("area-1").is_some());
+    }
+
+    // ------------------------------------------------------------------------
+    // VaultIndex remove_*_by_path tests
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn vault_index_remove_task_by_path() {
+        let tasks = vec![
+            test_task("task-1", "/tasks/task-1.md"),
+            test_task("task-2", "/tasks/task-2.md"),
+        ];
+        let mut index = VaultIndex::from_scans(tasks, vec![], vec![]);
+
+        index.remove_task_by_path("/tasks/task-1.md");
+
+        assert_eq!(index.tasks.len(), 1);
+        assert!(index.get_task("task-1").is_none());
+        assert!(index.get_task("task-2").is_some());
+        assert!(index.task_paths.get("/tasks/task-1.md").is_none());
+    }
+
+    #[test]
+    fn vault_index_remove_task_by_path_nonexistent() {
+        let tasks = vec![test_task("task-1", "/tasks/task-1.md")];
+        let mut index = VaultIndex::from_scans(tasks, vec![], vec![]);
+
+        // Should not panic
+        index.remove_task_by_path("/nonexistent/path.md");
+
+        assert_eq!(index.tasks.len(), 1);
+    }
+
+    #[test]
+    fn vault_index_remove_project_by_path() {
+        let projects = vec![test_project("proj-1", "/projects/proj-1.md")];
+        let mut index = VaultIndex::from_scans(vec![], projects, vec![]);
+
+        index.remove_project_by_path("/projects/proj-1.md");
+
+        assert!(index.projects.is_empty());
+        assert!(index.project_paths.is_empty());
+    }
+
+    #[test]
+    fn vault_index_remove_area_by_path() {
+        let areas = vec![test_area("area-1", "/areas/area-1.md")];
+        let mut index = VaultIndex::from_scans(vec![], vec![], areas);
+
+        index.remove_area_by_path("/areas/area-1.md");
+
+        assert!(index.areas.is_empty());
+        assert!(index.area_paths.is_empty());
+    }
+
+    // ------------------------------------------------------------------------
+    // VaultManager basic tests (no Tauri AppHandle required)
+    // ------------------------------------------------------------------------
+
+    #[test]
+    fn vault_manager_new_is_not_configured() {
+        let manager = VaultManager::new();
+        assert!(!manager.is_configured());
+    }
+
+    #[test]
+    fn vault_manager_default_is_not_configured() {
+        let manager = VaultManager::default();
+        assert!(!manager.is_configured());
+    }
+
+    #[test]
+    fn vault_manager_config_is_none_initially() {
+        let manager = VaultManager::new();
+        assert!(manager.config().is_none());
+    }
+
+    #[test]
+    fn vault_manager_list_tasks_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.list_tasks();
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), VaultError::NotConfigured { .. }));
+    }
+
+    #[test]
+    fn vault_manager_list_projects_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.list_projects();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn vault_manager_list_areas_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.list_areas();
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn vault_manager_get_task_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.get_task("task-1");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn vault_manager_get_project_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.get_project("proj-1");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn vault_manager_get_area_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.get_area("area-1");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn vault_manager_refresh_fails_when_not_configured() {
+        let manager = VaultManager::new();
+        let result = manager.refresh();
+        assert!(result.is_err());
+    }
+}
