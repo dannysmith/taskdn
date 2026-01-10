@@ -206,70 +206,42 @@ export function AreaView({ areaId }: AreaViewProps) {
 
   // Handler for creating loose tasks (no project)
   const handleCreateLooseTask = React.useCallback(
-    (afterTaskId: string | null): string => {
-      const tempId = crypto.randomUUID()
+    async (afterTaskId: string | null): Promise<string> => {
+      // Create task and wait for real ID (~50ms, imperceptible)
+      const newTask = await createTask.mutateAsync({
+        title: '',
+        status: 'ready',
+        projectId: null,
+        areaId: areaId,
+        scheduled: null,
+        due: null,
+        deferUntil: null,
+      })
 
-      // Calculate new order with temp ID
+      // Update display order with REAL ID
       const currentOrder = orderedLooseTasks.map(t => t.id)
       let newOrder: string[]
 
       if (afterTaskId) {
         const insertIndex = currentOrder.indexOf(afterTaskId)
-        if (insertIndex !== -1) {
-          newOrder = [
-            ...currentOrder.slice(0, insertIndex + 1),
-            tempId,
-            ...currentOrder.slice(insertIndex + 1),
-          ]
-        } else {
-          newOrder = [...currentOrder, tempId]
-        }
+        newOrder =
+          insertIndex !== -1
+            ? [
+                ...currentOrder.slice(0, insertIndex + 1),
+                newTask.id,
+                ...currentOrder.slice(insertIndex + 1),
+              ]
+            : [...currentOrder, newTask.id]
       } else {
-        newOrder = [...currentOrder, tempId]
+        newOrder = [...currentOrder, newTask.id]
       }
 
       useDisplayOrderStore.getState().setAreaTaskOrder(areaId, newOrder)
 
-      createTask.mutate(
-        {
-          tempId,
-          title: '',
-          status: 'ready',
-          projectId: null,
-          areaId: areaId,
-          scheduled: null,
-          due: null,
-          deferUntil: null,
-        },
-        {
-          onSuccess: realTask => {
-            const order =
-              useDisplayOrderStore.getState().areaTaskOrder?.[areaId]
-            if (order) {
-              const updatedOrder = order.map(id =>
-                id === tempId ? realTask.id : id
-              )
-              useDisplayOrderStore
-                .getState()
-                .setAreaTaskOrder(areaId, updatedOrder)
-            }
-            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-            setPendingEditItemId(realTask.id)
-          },
-          onError: () => {
-            const order =
-              useDisplayOrderStore.getState().areaTaskOrder?.[areaId]
-            if (order) {
-              const revertedOrder = order.filter(id => id !== tempId)
-              useDisplayOrderStore
-                .getState()
-                .setAreaTaskOrder(areaId, revertedOrder)
-            }
-          },
-        }
-      )
+      // Trigger edit mode
+      setPendingEditItemId(newTask.id)
 
-      return tempId
+      return newTask.id
     },
     [createTask, areaId, orderedLooseTasks]
   )
@@ -277,72 +249,45 @@ export function AreaView({ areaId }: AreaViewProps) {
   // Factory function to create task creation handlers for each project
   const makeCreateTaskHandler = React.useCallback(
     (projectId: string) =>
-      (afterTaskId: string | null): string => {
-        const tempId = crypto.randomUUID()
+      async (afterTaskId: string | null): Promise<string> => {
         const project = projects.find(p => p.id === projectId)
 
-        // Calculate new order with temp ID
+        // Create task and wait for real ID
+        const newTask = await createTask.mutateAsync({
+          title: '',
+          status: 'ready',
+          projectId,
+          areaId: project?.area ?? null,
+          scheduled: null,
+          due: null,
+          deferUntil: null,
+        })
+
+        // Update display order with REAL ID
         const projectTasks = tasksByProject.get(projectId) ?? []
         const currentOrder = projectTasks.map(t => t.id)
         let newOrder: string[]
 
         if (afterTaskId) {
           const insertIndex = currentOrder.indexOf(afterTaskId)
-          if (insertIndex !== -1) {
-            newOrder = [
-              ...currentOrder.slice(0, insertIndex + 1),
-              tempId,
-              ...currentOrder.slice(insertIndex + 1),
-            ]
-          } else {
-            newOrder = [...currentOrder, tempId]
-          }
+          newOrder =
+            insertIndex !== -1
+              ? [
+                  ...currentOrder.slice(0, insertIndex + 1),
+                  newTask.id,
+                  ...currentOrder.slice(insertIndex + 1),
+                ]
+              : [...currentOrder, newTask.id]
         } else {
-          newOrder = [...currentOrder, tempId]
+          newOrder = [...currentOrder, newTask.id]
         }
 
         useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
 
-        createTask.mutate(
-          {
-            tempId,
-            title: '',
-            status: 'ready',
-            projectId,
-            areaId: project?.area ?? null,
-            scheduled: null,
-            due: null,
-            deferUntil: null,
-          },
-          {
-            onSuccess: realTask => {
-              const order =
-                useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
-              if (order) {
-                const updatedOrder = order.map(id =>
-                  id === tempId ? realTask.id : id
-                )
-                useDisplayOrderStore
-                  .getState()
-                  .setProjectTaskOrder(projectId, updatedOrder)
-              }
-              // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-              setPendingEditItemId(realTask.id)
-            },
-            onError: () => {
-              const order =
-                useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
-              if (order) {
-                const revertedOrder = order.filter(id => id !== tempId)
-                useDisplayOrderStore
-                  .getState()
-                  .setProjectTaskOrder(projectId, revertedOrder)
-              }
-            },
-          }
-        )
+        // Trigger edit mode
+        setPendingEditItemId(newTask.id)
 
-        return tempId
+        return newTask.id
       },
     [createTask, projects, tasksByProject]
   )

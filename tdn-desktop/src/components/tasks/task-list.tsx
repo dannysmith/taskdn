@@ -212,7 +212,11 @@ export function TaskList({
   // Sync selection to task detail store (so right sidebar shows selected task)
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   React.useEffect(() => {
-    if (selectedIndex !== null && selectedIndex >= 0 && selectedIndex < tasks.length) {
+    if (
+      selectedIndex !== null &&
+      selectedIndex >= 0 &&
+      selectedIndex < tasks.length
+    ) {
       const selectedTask = tasks[selectedIndex]
       if (selectedTask) {
         setOpenTaskId(selectedTask.id)
@@ -235,11 +239,6 @@ export function TaskList({
     // Find the task in the list
     const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
     if (taskIndex !== -1) {
-      // If we're tracking a newly created task and the ID changed (temp → real),
-      // update the tracking to use the new real ID
-      if (newlyCreatedTaskId && autoEditItemId !== newlyCreatedTaskId) {
-        setNewlyCreatedTaskId(autoEditItemId)
-      }
       // Select and edit the task
       setSelectedIndex(taskIndex)
       setEditingTaskId(autoEditItemId)
@@ -249,7 +248,6 @@ export function TaskList({
   }, [
     autoEditItemId,
     tasks,
-    newlyCreatedTaskId,
     setSelectedIndex,
     setEditingTaskId,
     onAutoEditConsumed,
@@ -642,16 +640,11 @@ export function DraggableTaskList({
 
   // Auto-edit: when autoEditItemId is set, find the task and start editing
   // This is used when a task is created via the view's default handler
-  //
-  // NOTE: There's currently a race condition where the task may not appear in
-  // `tasks` immediately after creation (TanStack Query cache hasn't updated yet).
-  // The fix is to implement optimistic updates in useCreateTask - see task-3a doc.
   React.useEffect(() => {
     if (!autoEditItemId) return
 
     // Find the task in the list
     const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
-
     if (taskIndex !== -1) {
       // Select and edit the task
       setSelectedIndex(taskIndex)
@@ -659,8 +652,6 @@ export function DraggableTaskList({
       // Notify that we consumed the auto-edit
       onAutoEditConsumed?.()
     }
-    // If not found, the task hasn't appeared in the cache yet.
-    // With optimistic updates, this won't happen.
   }, [autoEditItemId, tasks, onAutoEditConsumed])
 
   // Sensors for drag and drop - only PointerSensor

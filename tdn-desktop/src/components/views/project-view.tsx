@@ -212,79 +212,42 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   )
 
   const handleCreateTask = React.useCallback(
-    (afterTaskId: string | null): string => {
-      // 1. Generate temp ID upfront for optimistic updates
-      const tempId = crypto.randomUUID()
+    async (afterTaskId: string | null): Promise<string> => {
+      // Create task and wait for real ID (~50ms, imperceptible)
+      const newTask = await createTask.mutateAsync({
+        title: '',
+        status: 'ready',
+        projectId,
+        areaId: project?.area ?? null,
+        scheduled: null,
+        due: null,
+        deferUntil: null,
+      })
 
-      // 2. Calculate new order with temp ID
+      // Update display order with REAL ID
       const currentOrder = orderedTasks.map(t => t.id)
       let newOrder: string[]
 
       if (afterTaskId) {
         const insertIndex = currentOrder.indexOf(afterTaskId)
-        if (insertIndex !== -1) {
-          // Insert after the selected task
-          newOrder = [
-            ...currentOrder.slice(0, insertIndex + 1),
-            tempId,
-            ...currentOrder.slice(insertIndex + 1),
-          ]
-        } else {
-          // afterTaskId not found, append to end
-          newOrder = [...currentOrder, tempId]
-        }
+        newOrder =
+          insertIndex !== -1
+            ? [
+                ...currentOrder.slice(0, insertIndex + 1),
+                newTask.id,
+                ...currentOrder.slice(insertIndex + 1),
+              ]
+            : [...currentOrder, newTask.id]
       } else {
-        // No selection, append to end
-        newOrder = [...currentOrder, tempId]
+        newOrder = [...currentOrder, newTask.id]
       }
 
-      // 3. Update order store immediately with temp ID
       useDisplayOrderStore.getState().setProjectTaskOrder(projectId, newOrder)
 
-      // 4. Start mutation (onMutate adds temp task to cache synchronously)
-      createTask.mutate(
-        {
-          tempId,
-          title: '',
-          status: 'ready',
-          projectId,
-          areaId: project?.area ?? null,
-          scheduled: null,
-          due: null,
-          deferUntil: null,
-        },
-        {
-          onSuccess: realTask => {
-            // 5. Replace temp ID with real ID in order store
-            const order =
-              useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
-            if (order) {
-              const updatedOrder = order.map(id =>
-                id === tempId ? realTask.id : id
-              )
-              useDisplayOrderStore
-                .getState()
-                .setProjectTaskOrder(projectId, updatedOrder)
-            }
-            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-            setPendingEditItemId(realTask.id)
-          },
-          onError: () => {
-            // 6. Remove temp ID from order store on failure
-            const order =
-              useDisplayOrderStore.getState().projectTaskOrder?.[projectId]
-            if (order) {
-              const revertedOrder = order.filter(id => id !== tempId)
-              useDisplayOrderStore
-                .getState()
-                .setProjectTaskOrder(projectId, revertedOrder)
-            }
-          },
-        }
-      )
+      // Trigger edit mode
+      setPendingEditItemId(newTask.id)
 
-      // 7. Return temp ID immediately for edit mode
-      return tempId
+      return newTask.id
     },
     [createTask, projectId, project?.area, orderedTasks]
   )
@@ -317,10 +280,8 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   }, [handleCreateTask])
 
   const handleKanbanCreateTask = React.useCallback(
-    (status: TaskStatus): string => {
-      const tempId = crypto.randomUUID()
-      createTask.mutate({
-        tempId,
+    async (status: TaskStatus): Promise<string> => {
+      const newTask = await createTask.mutateAsync({
         title: '',
         status,
         projectId,
@@ -329,8 +290,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
         due: null,
         deferUntil: null,
       })
-      // Return temp ID for immediate edit mode
-      return tempId
+      return newTask.id
     },
     [createTask, projectId, project?.area]
   )

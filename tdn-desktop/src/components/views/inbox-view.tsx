@@ -104,68 +104,42 @@ export function InboxView() {
   )
 
   const handleCreateTask = React.useCallback(
-    (afterTaskId: string | null): string => {
-      const tempId = crypto.randomUUID()
+    async (afterTaskId: string | null): Promise<string> => {
+      // Create task and wait for real ID (~50ms, imperceptible)
+      const newTask = await createTask.mutateAsync({
+        title: '',
+        status: 'inbox',
+        projectId: null,
+        areaId: null,
+        scheduled: null,
+        due: null,
+        deferUntil: null,
+      })
 
-      // Calculate new order with temp ID
+      // Update display order with REAL ID
       const currentOrder = orderedInboxTasks.map(t => t.id)
       let newOrder: string[]
 
       if (afterTaskId) {
         const insertIndex = currentOrder.indexOf(afterTaskId)
-        if (insertIndex !== -1) {
-          // Insert after the selected task
-          newOrder = [
-            ...currentOrder.slice(0, insertIndex + 1),
-            tempId,
-            ...currentOrder.slice(insertIndex + 1),
-          ]
-        } else {
-          // afterTaskId not found, append to end
-          newOrder = [...currentOrder, tempId]
-        }
+        newOrder =
+          insertIndex !== -1
+            ? [
+                ...currentOrder.slice(0, insertIndex + 1),
+                newTask.id,
+                ...currentOrder.slice(insertIndex + 1),
+              ]
+            : [...currentOrder, newTask.id]
       } else {
-        // No selection, append to end
-        newOrder = [...currentOrder, tempId]
+        newOrder = [...currentOrder, newTask.id]
       }
 
-      // Update the order store immediately
       useDisplayOrderStore.getState().setInboxOrder(newOrder)
 
-      createTask.mutate(
-        {
-          tempId,
-          title: '',
-          status: 'inbox',
-          projectId: null,
-          areaId: null,
-          scheduled: null,
-          due: null,
-          deferUntil: null,
-        },
-        {
-          onSuccess: realTask => {
-            const order = useDisplayOrderStore.getState().inboxOrder
-            if (order) {
-              const updatedOrder = order.map(id =>
-                id === tempId ? realTask.id : id
-              )
-              useDisplayOrderStore.getState().setInboxOrder(updatedOrder)
-            }
-            // Update pendingEditItemId to real task ID so auto-edit continues with correct ID
-            setPendingEditItemId(realTask.id)
-          },
-          onError: () => {
-            const order = useDisplayOrderStore.getState().inboxOrder
-            if (order) {
-              const revertedOrder = order.filter(id => id !== tempId)
-              useDisplayOrderStore.getState().setInboxOrder(revertedOrder)
-            }
-          },
-        }
-      )
+      // Trigger edit mode
+      setPendingEditItemId(newTask.id)
 
-      return tempId
+      return newTask.id
     },
     [createTask, orderedInboxTasks]
   )

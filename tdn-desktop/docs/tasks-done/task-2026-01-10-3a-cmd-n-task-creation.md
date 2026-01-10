@@ -1,6 +1,6 @@
 # Task 3a: Fix Cmd+N Task Creation
 
-IMPORTANT: this whole approach was proven to be overly complex and difficult. 
+IMPORTANT: this whole approach was proven to be overly complex and difficult.
 
 ## Overview
 
