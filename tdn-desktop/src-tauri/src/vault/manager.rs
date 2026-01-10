@@ -385,7 +385,10 @@ impl VaultManager {
     /// Create a new task
     pub fn create_task(&self, options: CreateTaskOptions) -> Result<Task, VaultError> {
         self.ensure_configured()?;
-        debug!("Creating task: {}", options.title.as_deref().unwrap_or("(untitled)"));
+        debug!(
+            "Creating task: {}",
+            options.title.as_deref().unwrap_or("(untitled)")
+        );
 
         let tasks_dir = {
             let inner = self.inner.read();

@@ -150,14 +150,14 @@ This app uses React Compiler which automatically handles memoization. You do **n
 
 The app uses multiple focused stores rather than one monolithic store. Each has a specific responsibility:
 
-| Store | Purpose | Location |
-|-------|---------|----------|
-| `useUIStore` | Panel visibility, command palette, preferences dialog | `src/store/ui-store.ts` |
-| `useNavigationStore` | Sidebar selection and view routing | `src/store/navigation-store.ts` |
-| `useTaskCreationStore` | Cmd+N task creation with two-layer handler system | `src/store/task-creation-store.ts` |
-| `useViewModeStore` | List/kanban/calendar mode per view type | `src/store/view-mode-store.ts` |
+| Store                  | Purpose                                                 | Location                           |
+| ---------------------- | ------------------------------------------------------- | ---------------------------------- |
+| `useUIStore`           | Panel visibility, command palette, preferences dialog   | `src/store/ui-store.ts`            |
+| `useNavigationStore`   | Sidebar selection and view routing                      | `src/store/navigation-store.ts`    |
+| `useTaskCreationStore` | Cmd+N task creation with two-layer handler system       | `src/store/task-creation-store.ts` |
+| `useViewModeStore`     | List/kanban/calendar mode per view type                 | `src/store/view-mode-store.ts`     |
 | `useDisplayOrderStore` | Drag-and-drop ordering (sidebar, inbox, kanban columns) | `src/store/display-order-store.ts` |
-| `useTaskDetailStore` | Right sidebar detail panel state | `src/store/task-detail-store.ts` |
+| `useTaskDetailStore`   | Right sidebar detail panel state                        | `src/store/task-detail-store.ts`   |
 
 ### When to create a new store
 

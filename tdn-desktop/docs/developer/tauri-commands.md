@@ -238,14 +238,14 @@ To see all available commands and their types, check:
 
 Commands are organized by domain module:
 
-| Module | Commands |
-|--------|----------|
-| `preferences` | `greet`, `loadPreferences`, `savePreferences` |
-| `notifications` | `sendNativeNotification` |
-| `recovery` | `saveEmergencyData`, `loadEmergencyData`, `cleanupOldRecoveryFiles` |
-| `quick_pane` | `showQuickPane`, `dismissQuickPane`, `toggleQuickPane`, etc. |
-| `config` | `readCliConfig`, `getAppDataDir`, `openAppDataDir`, `isDevMode`, etc. |
-| `vault` | `initVault`, `listTasks`, `listProjects`, `listAreas`, `createTask`, etc. |
+| Module          | Commands                                                                  |
+| --------------- | ------------------------------------------------------------------------- |
+| `preferences`   | `greet`, `loadPreferences`, `savePreferences`                             |
+| `notifications` | `sendNativeNotification`                                                  |
+| `recovery`      | `saveEmergencyData`, `loadEmergencyData`, `cleanupOldRecoveryFiles`       |
+| `quick_pane`    | `showQuickPane`, `dismissQuickPane`, `toggleQuickPane`, etc.              |
+| `config`        | `readCliConfig`, `getAppDataDir`, `openAppDataDir`, `isDevMode`, etc.     |
+| `vault`         | `initVault`, `listTasks`, `listProjects`, `listAreas`, `createTask`, etc. |
 
 ## Dependencies
 

@@ -243,7 +243,7 @@ export function AreaView({ areaId }: AreaViewProps) {
 
       return newTask.id
     },
-    [createTask, areaId, orderedLooseTasks]
+    [createTask, areaId, orderedLooseTasks, area?.title]
   )
 
   // Factory function to create task creation handlers for each project

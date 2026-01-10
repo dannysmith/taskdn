@@ -249,7 +249,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
       return newTask.id
     },
-    [createTask, projectId, project?.area, orderedTasks]
+    [createTask, projectId, project?.area, orderedTasks, project?.title]
   )
 
   const handleDeleteTask = React.useCallback(
