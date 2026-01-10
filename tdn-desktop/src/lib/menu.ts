@@ -16,7 +16,7 @@ import { useUIStore } from '@/store/ui-store'
 import { logger } from '@/lib/logger'
 import { notifications } from '@/lib/notifications'
 
-const APP_NAME = 'Tauri Template'
+const APP_NAME = 'Taskdn'
 
 /**
  * Build and set the application menu with translated labels.

@@ -38,11 +38,3 @@ export interface DragItem {
 export function getDragId(type: DragItemType, id: string): string {
   return `${type}-${id}`
 }
-
-export function parseDragId(
-  dragId: string
-): { type: DragItemType; id: string } | null {
-  const match = dragId.match(/^(area|project)-(.+)$/)
-  if (!match || !match[1] || !match[2]) return null
-  return { type: match[1] as DragItemType, id: match[2] }
-}

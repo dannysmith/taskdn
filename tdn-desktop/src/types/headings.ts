@@ -44,11 +44,3 @@ export function toHeadingId(id: string): string {
 export type OrderedItem =
   | { type: 'task'; id: string }
   | { type: 'heading'; id: string }
-
-/** Parse an order array ID into an OrderedItem */
-export function parseOrderedId(id: string): OrderedItem {
-  if (isHeadingId(id)) {
-    return { type: 'heading', id: parseHeadingId(id) }
-  }
-  return { type: 'task', id }
-}

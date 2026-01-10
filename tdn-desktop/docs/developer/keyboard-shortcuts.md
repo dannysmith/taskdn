@@ -13,7 +13,7 @@ Centralized keyboard shortcut management using native DOM event listeners.
 
 ## Architecture
 
-All shortcuts are handled in `src/hooks/useMainWindowEventListeners.ts`:
+All shortcuts are handled in `src/hooks/use-main-window-event-listeners.ts`:
 
 ```typescript
 export function useMainWindowEventListeners() {
@@ -52,7 +52,7 @@ export function useMainWindowEventListeners() {
 ### 1. Add to event handler
 
 ```typescript
-// src/hooks/useMainWindowEventListeners.ts
+// src/hooks/use-main-window-event-listeners.ts
 case '3': {
   e.preventDefault()
   commandContext.myNewAction()

@@ -9,15 +9,19 @@ interface ThemeProviderProps {
   storageKey?: string
 }
 
+const isValidTheme = (value: string | null): value is Theme =>
+  value === 'dark' || value === 'light' || value === 'system'
+
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
   storageKey = 'ui-theme',
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
-  )
+  const [theme, setTheme] = useState<Theme>(() => {
+    const stored = localStorage.getItem(storageKey)
+    return isValidTheme(stored) ? stored : defaultTheme
+  })
 
   // Load theme from persistent preferences
   const { data: preferences } = usePreferences()

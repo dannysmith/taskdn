@@ -42,7 +42,3 @@ export const useTaskDetailStore = create<TaskDetailState>()(
     { name: 'task-detail-store' }
   )
 )
-
-/** Convenience selector for checking if the detail panel is open */
-export const useIsTaskDetailOpen = () =>
-  useTaskDetailStore(state => state.openTaskId !== null)

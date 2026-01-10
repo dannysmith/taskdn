@@ -12,7 +12,7 @@ import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/hooks/use-theme'
 import { useUIStore } from '@/store/ui-store'
-import { useMainWindowEventListeners } from '@/hooks/useMainWindowEventListeners'
+import { useMainWindowEventListeners } from '@/hooks/use-main-window-event-listeners'
 import { cn } from '@/lib/utils'
 
 /**

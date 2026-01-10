@@ -106,7 +106,7 @@ Comprehensive review identified architectural issues in keyboard shortcut handli
 
 - `docs/developer/keyboard-shortcuts.md` - documentation
 - `src/hooks/use-keyboard-shortcuts.ts` - main keyboard handler
-- `src/hooks/useMainWindowEventListeners.ts` - wrapper hook
+- `src/hooks/use-main-window-event-listeners.ts` - wrapper hook
 - `src/components/command-palette/CommandPalette.tsx` - Cmd+K handler
 - `src/components/ui/sidebar.tsx` - Cmd+B handler
 - `src/lib/commands/navigation-commands.ts` - command definitions
