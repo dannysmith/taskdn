@@ -68,6 +68,9 @@ pub fn run() {
                 } else {
                     log::LevelFilter::Info
                 })
+                // Prevent log files from growing indefinitely
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
+                .max_file_size(5_000_000) // 5MB max before rotation
                 .targets([
                     // Always log to stdout for development
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),

@@ -63,7 +63,7 @@ fn load_preferences_sync(app: &AppHandle) -> Result<AppPreferences, ()> {
         return Err(());
     }
     let contents = std::fs::read_to_string(&path)
-        .inspect_err(|e| log::warn!("Failed to read preferences: {e}"))
+        .inspect_err(|e| log::warn!("Failed to read preferences from {}: {e}", path.display()))
         .map_err(|_| ())?;
     serde_json::from_str(&contents)
         .inspect_err(|e| log::warn!("Failed to parse preferences: {e}"))

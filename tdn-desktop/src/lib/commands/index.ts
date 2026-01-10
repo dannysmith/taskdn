@@ -5,6 +5,7 @@ import { navigationCommands } from './navigation-commands'
 import { windowCommands } from './window-commands'
 import { notificationCommands } from './notification-commands'
 import { registerCommands } from './registry'
+import { logger } from '@/lib/logger'
 
 /**
  * Initialize the command system by registering all commands.
@@ -17,7 +18,7 @@ export function initializeCommandSystem(): void {
   // Future command groups will be registered here
 
   if (import.meta.env.DEV) {
-    console.log('Command system initialized')
+    logger.debug('Command system initialized')
   }
 }
 

@@ -385,6 +385,7 @@ impl VaultManager {
     /// Create a new task
     pub fn create_task(&self, options: CreateTaskOptions) -> Result<Task, VaultError> {
         self.ensure_configured()?;
+        debug!("Creating task: {}", options.title.as_deref().unwrap_or("(untitled)"));
 
         let tasks_dir = {
             let inner = self.inner.read();
@@ -408,12 +409,14 @@ impl VaultManager {
             inner.index.update_task(task.clone());
         }
 
+        info!("Task created: {}", task.id);
         Ok(task)
     }
 
     /// Create a new project
     pub fn create_project(&self, options: CreateProjectOptions) -> Result<Project, VaultError> {
         self.ensure_configured()?;
+        debug!("Creating project: {}", options.title);
 
         let projects_dir = {
             let inner = self.inner.read();
@@ -435,17 +438,19 @@ impl VaultManager {
             inner.index.update_project(project.clone());
         }
 
+        info!("Project created: {}", project.id);
         Ok(project)
     }
 
     /// Update a task
     pub fn update_task(&self, update: TaskUpdate) -> Result<Task, VaultError> {
         self.ensure_configured()?;
+        debug!("Updating task: {}", update.id);
 
         let task = self.get_task(&update.id)?;
 
         self.set_writing(true);
-        let result = crate::vault::update_task(&task, update);
+        let result = crate::vault::update_task(&task, update.clone());
         self.set_writing(false);
 
         let updated_task = result?;
@@ -455,17 +460,19 @@ impl VaultManager {
             inner.index.update_task(updated_task.clone());
         }
 
+        info!("Task updated: {}", update.id);
         Ok(updated_task)
     }
 
     /// Update a project
     pub fn update_project(&self, update: ProjectUpdate) -> Result<Project, VaultError> {
         self.ensure_configured()?;
+        debug!("Updating project: {}", update.id);
 
         let project = self.get_project(&update.id)?;
 
         self.set_writing(true);
-        let result = crate::vault::update_project(&project, update);
+        let result = crate::vault::update_project(&project, update.clone());
         self.set_writing(false);
 
         let updated_project = result?;
@@ -475,6 +482,7 @@ impl VaultManager {
             inner.index.update_project(updated_project.clone());
         }
 
+        info!("Project updated: {}", update.id);
         Ok(updated_project)
     }
 
@@ -485,6 +493,7 @@ impl VaultManager {
     /// Delete a task by ID
     pub fn delete_task(&self, id: &str) -> Result<(), VaultError> {
         self.ensure_configured()?;
+        debug!("Deleting task: {id}");
 
         let task = self.get_task(id)?;
 
@@ -502,6 +511,7 @@ impl VaultManager {
             inner.index.remove_task_by_path(&task.path);
         }
 
+        info!("Task deleted: {id}");
         Ok(())
     }
 
@@ -517,6 +527,7 @@ impl VaultManager {
     }
 
     fn set_writing(&self, writing: bool) {
+        debug!("Write flag: {writing}");
         let mut inner = self.inner.write();
         inner.writing_flag.store(writing, Ordering::SeqCst);
         if !writing {
