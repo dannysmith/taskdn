@@ -77,6 +77,8 @@ These are generated from current areas/projects (excluding archived areas, done/
 
 ### UI Toggles
 
+> **Design Decision**: We use simple toggle commands rather than separate show/hide pairs. This simplifies the codebase while providing the same functionality. Menu and palette labels say "Toggle" rather than context-sensitive "Show"/"Hide".
+
 | ID | Label | Shortcut | CP | AM |
 |----|-------|----------|----|----|
 | `toggle-left-sidebar` | Toggle Left Sidebar | ⌘1 | Yes | View |
@@ -92,7 +94,7 @@ These are generated from current areas/projects (excluding archived areas, done/
 | `open-preferences` | Preferences | ⌘, | Yes | Taskdn |
 | `toggle-fullscreen` | Toggle Full Screen | ⌃⌘F | Yes | View |
 | `open-help` | Taskdn Help | — | Yes | Help |
-| `create-task` | New Task | ⌘N | — | Yes | File |
+| `create-task` | New Task | ⌘N | Yes | File |
 
 **Notes**:
 - `open-help` opens https://tdn.danny.is/desktop/overview/ in the default browser.
