@@ -47,6 +47,11 @@ export function useGlobalShortcuts(context: CommandContext) {
 
 /**
  * Check if an element should exclude global shortcuts.
+ *
+ * Currently, most shortcuts use modifiers (Cmd+1, Cmd+K) which don't conflict
+ * with text input, so this check rarely blocks anything. It exists for:
+ * - Future single-key shortcuts (e.g., 'n' for new, 'e' for edit)
+ * - Future shortcuts that conflict with text editing (Cmd+Z, Cmd+A)
  */
 function isEditableElement(el: Element | null): boolean {
   if (!el) return false

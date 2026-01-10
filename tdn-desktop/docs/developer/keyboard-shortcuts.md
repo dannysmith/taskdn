@@ -147,15 +147,13 @@ const handleKeyDown = (e: KeyboardEvent) => {
 // Global handler (use-global-shortcuts.ts) automatically skips if defaultPrevented
 ```
 
-## Input Field Exclusion
+## Input Field Behavior
 
-Global shortcuts are automatically disabled when focus is on:
-- `<input>` elements
-- `<textarea>` elements
-- `<select>` elements
-- Elements with `contenteditable`
+Modifier-based shortcuts (Cmd+1, Cmd+K, etc.) work even when focused on input fields. This is intentional—toggling sidebars or opening the command palette while editing text is useful, and these shortcuts don't conflict with typing.
 
-This is handled in `use-global-shortcuts.ts`.
+The global handler includes an `isEditableElement` check that can block shortcuts in input fields, but it's currently a no-op for our modifier-based shortcuts. It exists for future use if we add:
+- Single-key shortcuts without modifiers (e.g., `n` for new)
+- Shortcuts that conflict with text editing (e.g., `Cmd+Z`, `Cmd+A`)
 
 ## Troubleshooting
 
