@@ -9,11 +9,13 @@ Comprehensive review identified architectural issues in keyboard shortcut handli
 ### HIGH Priority
 
 **Documentation Mismatch**
+
 - `docs/developer/keyboard-shortcuts.md` shows inline code that doesn't exist
 - Real implementation is in `use-keyboard-shortcuts.ts`, not shown in docs
 - Cmd+N and Cmd+K not documented at all
 
 **Command System Underutilized**
+
 - `src/lib/commands/navigation-commands.ts` defines shortcuts as metadata only
 - Actual key bindings duplicated in `use-keyboard-shortcuts.ts`
 - Same shortcuts defined in 3 places: keyboard handler, command definitions, menu accelerators
@@ -22,17 +24,20 @@ Comprehensive review identified architectural issues in keyboard shortcut handli
 ### MEDIUM Priority
 
 **Cmd+K Separate Handler**
+
 - `CommandPalette.tsx:59-69` has its own keydown handler
 - Bypasses centralized `use-keyboard-shortcuts.ts`
 - Should be consolidated
 
 **Cmd+B Orphaned Handler**
+
 - `sidebar.tsx:96-108` defines Cmd+B shortcut from shadcn template
 - Not documented anywhere
 - May conflict with `useUIStore` sidebar visibility
 - Likely dead code - investigate and remove or integrate
 
 **Cmd+N Interaction Complexity**
+
 - Global handler in `use-keyboard-shortcuts.ts`
 - Component handlers in `TaskList.tsx` and `OrderedItemList.tsx`
 - Relies on `stopPropagation()` and `defaultPrevented` checks
@@ -41,6 +46,7 @@ Comprehensive review identified architectural issues in keyboard shortcut handli
 ### LOW Priority
 
 **Display Format Inconsistency**
+
 - `navigation-commands.ts`: `⌘+1` (Mac symbols)
 - `menu.ts`: `CmdOrCtrl+1` (Tauri format)
 - `window-commands.ts`: Mixed formats
@@ -67,6 +73,7 @@ Comprehensive review identified architectural issues in keyboard shortcut handli
 4. **Make command system the source of truth**
 
    Rather than three places defining shortcuts:
+
    ```typescript
    // Example approach
    function registerShortcut(command: AppCommand) {

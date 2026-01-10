@@ -99,14 +99,15 @@ These are exported but never imported. Decide case-by-case:
 
 **Critical observation:** The codebase is split ~70/30 between kebab-case and PascalCase:
 
-| Pattern | Folders | File Count |
-|---------|---------|------------|
-| PascalCase | `layout/`, `titlebar/`, `preferences/` | ~15 files |
-| kebab-case | `tasks/`, `views/`, `sidebar/`, `calendar/`, `cards/`, `kanban/`, `projects/`, `headings/` | ~45 files |
+| Pattern    | Folders                                                                                    | File Count |
+| ---------- | ------------------------------------------------------------------------------------------ | ---------- |
+| PascalCase | `layout/`, `titlebar/`, `preferences/`                                                     | ~15 files  |
+| kebab-case | `tasks/`, `views/`, `sidebar/`, `calendar/`, `cards/`, `kanban/`, `projects/`, `headings/` | ~45 files  |
 
 **Decision needed:** Standardizing to PascalCase (per original plan) would require renaming 45+ files and updating all their imports. This is significant churn with risk of merge conflicts.
 
 **Options:**
+
 1. **Accept current state** - Live with the inconsistency. Not ideal but low risk.
 2. **Standardize to kebab-case** - Less work (only ~15 files to rename). Matches `ui/` pattern.
 3. **Standardize to PascalCase** - More work (~45 files) but matches component names.
