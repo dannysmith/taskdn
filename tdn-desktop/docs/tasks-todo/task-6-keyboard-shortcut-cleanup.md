@@ -27,17 +27,17 @@ The keyboard shortcut system has grown organically with shortcuts defined in mul
 
 ### Current Shortcut Coverage
 
-| Shortcut | Keyboard                      | Menu | Command      | Status              |
-| -------- | ----------------------------- | ---- | ------------ | ------------------- |
-| Cmd+,    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working             |
-| Cmd+1    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working             |
-| Cmd+2    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working             |
-| Cmd+N    | ✓ `use-keyboard-shortcuts.ts` | ✗    | ✗            | Working (partial)   |
-| Cmd+K    | ✓ `CommandPalette.tsx`        | ✗    | ✗            | Hidden              |
-| Cmd+B    | ✓ `sidebar.tsx`               | ✗    | ✗            | DEAD CODE - REMOVE  |
-| Cmd+W    | ✗                             | ✗    | ✓ (declared) | Needs testing       |
-| Cmd+M    | ✗                             | ✗    | ✓ (declared) | Needs testing       |
-| F11      | ✗                             | ✗    | ✓ (declared) | Needs testing       |
+| Shortcut | Keyboard                      | Menu | Command      | Status             |
+| -------- | ----------------------------- | ---- | ------------ | ------------------ |
+| Cmd+,    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working            |
+| Cmd+1    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working            |
+| Cmd+2    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working            |
+| Cmd+N    | ✓ `use-keyboard-shortcuts.ts` | ✗    | ✗            | Working (partial)  |
+| Cmd+K    | ✓ `CommandPalette.tsx`        | ✗    | ✗            | Hidden             |
+| Cmd+B    | ✓ `sidebar.tsx`               | ✗    | ✗            | DEAD CODE - REMOVE |
+| Cmd+W    | ✗                             | ✗    | ✓ (declared) | Needs testing      |
+| Cmd+M    | ✗                             | ✗    | ✓ (declared) | Needs testing      |
+| F11      | ✗                             | ✗    | ✓ (declared) | Needs testing      |
 
 ## Target Architecture
 
@@ -354,6 +354,7 @@ If accelerators don't intercept, use React keyboard handler for everything and r
 Add logging to determine if BOTH menu and keyboard handlers fire:
 
 1. **Add logging to `src/lib/menu.ts`** (temporarily):
+
    ```typescript
    function handleToggleLeftSidebar(): void {
      console.log('🍎 MENU: handleToggleLeftSidebar fired')
@@ -369,6 +370,7 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
    ```
 
 2. **Add logging to `src/hooks/use-keyboard-shortcuts.ts`** (temporarily):
+
    ```typescript
    case ',': {
      console.log('⌨️ KEYBOARD: Cmd+, handler fired')
@@ -399,6 +401,7 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
 5. **Remove the logging** after testing.
 
 **Decision tree based on results**:
+
 - If ONLY menu handler fires for keyboard shortcuts → Menu accelerators intercept events, React handlers redundant
 - If ONLY keyboard handler fires → Menu accelerators are display-only, React handles all shortcuts
 - If BOTH fire → We have hidden double-toggle bug, need to remove one
@@ -489,15 +492,18 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
 The Cmd+N shortcut has a sophisticated two-layer handler system that **must not be broken** during this refactor. Here's how it works:
 
 **Architecture** (in `task-creation-store.ts`):
+
 1. **Active List Handler** (priority 1): When a task is selected in TaskList or OrderedItemList
 2. **View Default Handler** (priority 2): Fallback when no task is selected
 
 **Component-Level Override Pattern**:
+
 - TaskList and OrderedItemList register handlers via `activateList()` when they have a selection
 - These components call `e.stopPropagation()` in their Cmd+N handlers
 - The global handler checks `e.defaultPrevented` and skips if component already handled it
 
 **What the new `use-global-shortcuts.ts` MUST do**:
+
 ```typescript
 case 'n':
 case 'N': {
@@ -515,11 +521,13 @@ case 'N': {
 ```
 
 **DO NOT**:
+
 - Remove the `e.defaultPrevented` check
 - Bypass `triggerCreate()` with direct task creation
 - Change how TaskList/OrderedItemList call `stopPropagation()`
 
 **Related edit mode behavior**:
+
 - New tasks enter edit mode automatically
 - Pressing Escape deletes the newly created task (tracked via `newlyCreatedTaskId`)
 - This is handled in the list components, not the global shortcut handler
@@ -550,22 +558,22 @@ Some commands only make sense in certain contexts:
 
 ## Files to Change
 
-| File                                                | Change                                                   |
-| --------------------------------------------------- | -------------------------------------------------------- |
-| `src/lib/shortcuts/*.ts`                            | New - shortcut utilities (parser, matcher, formatter)    |
-| `src/lib/commands/types.ts`                         | Document shortcut format                                 |
-| `src/lib/commands/navigation-commands.ts`           | Consolidate to toggle commands, use Tauri format         |
-| `src/lib/commands/window-commands.ts`               | Update shortcut format (or remove if native handles it)  |
-| `src/lib/commands/index.ts`                         | Add new commands (toggle-command-palette, create-task)   |
-| `src/hooks/use-global-shortcuts.ts`                 | New - unified handler                                    |
-| `src/hooks/use-keyboard-shortcuts.ts`               | Delete                                                   |
-| `src/hooks/use-command-context.ts`                  | Fix set/toggle inconsistency                             |
-| `src/hooks/use-main-window-event-listeners.ts`      | Use new hook                                             |
-| `src/components/command-palette/CommandPalette.tsx` | Remove Cmd+K handler                                     |
-| `src/components/ui/sidebar.tsx`                     | Remove dead Cmd+B handler                                |
-| `src/lib/menu.ts`                                   | Use executeCommand, update based on Phase 0 findings     |
-| `docs/developer/keyboard-shortcuts.md`              | Rewrite                                                  |
-| `docs/developer/command-system.md`                  | Add shortcut section                                     |
+| File                                                | Change                                                  |
+| --------------------------------------------------- | ------------------------------------------------------- |
+| `src/lib/shortcuts/*.ts`                            | New - shortcut utilities (parser, matcher, formatter)   |
+| `src/lib/commands/types.ts`                         | Document shortcut format                                |
+| `src/lib/commands/navigation-commands.ts`           | Consolidate to toggle commands, use Tauri format        |
+| `src/lib/commands/window-commands.ts`               | Update shortcut format (or remove if native handles it) |
+| `src/lib/commands/index.ts`                         | Add new commands (toggle-command-palette, create-task)  |
+| `src/hooks/use-global-shortcuts.ts`                 | New - unified handler                                   |
+| `src/hooks/use-keyboard-shortcuts.ts`               | Delete                                                  |
+| `src/hooks/use-command-context.ts`                  | Fix set/toggle inconsistency                            |
+| `src/hooks/use-main-window-event-listeners.ts`      | Use new hook                                            |
+| `src/components/command-palette/CommandPalette.tsx` | Remove Cmd+K handler                                    |
+| `src/components/ui/sidebar.tsx`                     | Remove dead Cmd+B handler                               |
+| `src/lib/menu.ts`                                   | Use executeCommand, update based on Phase 0 findings    |
+| `docs/developer/keyboard-shortcuts.md`              | Rewrite                                                 |
+| `docs/developer/command-system.md`                  | Add shortcut section                                    |
 
 ## Success Criteria
 

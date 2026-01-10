@@ -17,27 +17,27 @@ This task implements all task-specific commands - those that are only available 
 
 From the registry, these commands require "task selected" availability:
 
-| Command | Shortcut | Description |
-|---------|----------|-------------|
-| `paste-as-tasks` | ⌘V | Create tasks from clipboard lines |
-| `duplicate-task` | ⇧⌘D | Duplicate selected task |
-| `move-task-up` | ⌘↑ | Move task up in list |
-| `move-task-down` | ⌘↓ | Move task down in list |
-| `move-task-to-top` | ⌥⌘↑ | Move task to top of list |
-| `move-task-to-bottom` | ⌥⌘↓ | Move task to bottom of list |
-| `edit-scheduled-date` | ⌘D | Open scheduled date picker |
-| `set-scheduled-today` | ⌘T | Set scheduled date to today |
-| `edit-due-date` | ⌥⌘D | Open due date picker |
-| `edit-defer-date` | ⇧⌥⌘D | Open defer until date picker |
-| `edit-status` | ⌘S | Open status dropdown |
-| `copy-task-title` | ⌘C | Copy task title to clipboard |
+| Command               | Shortcut | Description                       |
+| --------------------- | -------- | --------------------------------- |
+| `paste-as-tasks`      | ⌘V       | Create tasks from clipboard lines |
+| `duplicate-task`      | ⇧⌘D      | Duplicate selected task           |
+| `move-task-up`        | ⌘↑       | Move task up in list              |
+| `move-task-down`      | ⌘↓       | Move task down in list            |
+| `move-task-to-top`    | ⌥⌘↑      | Move task to top of list          |
+| `move-task-to-bottom` | ⌥⌘↓      | Move task to bottom of list       |
+| `edit-scheduled-date` | ⌘D       | Open scheduled date picker        |
+| `set-scheduled-today` | ⌘T       | Set scheduled date to today       |
+| `edit-due-date`       | ⌥⌘D      | Open due date picker              |
+| `edit-defer-date`     | ⇧⌥⌘D     | Open defer until date picker      |
+| `edit-status`         | ⌘S       | Open status dropdown              |
+| `copy-task-title`     | ⌘C       | Copy task title to clipboard      |
 
 ### Availability Logic
 
 All task commands share this availability check:
 
 ```typescript
-isAvailable: (context) => {
+isAvailable: context => {
   // Must have a selected task
   if (!context.selectedTaskId) return false
 
@@ -61,7 +61,7 @@ isAvailable: (context) => {
 #### `paste-as-tasks` (⌘V)
 
 ```typescript
-execute: async (context) => {
+execute: async context => {
   const clipboardText = await navigator.clipboard.readText()
   const lines = clipboardText.split('\n').filter(line => line.trim())
 
@@ -82,7 +82,7 @@ execute: async (context) => {
 #### `duplicate-task` (⇧⌘D)
 
 ```typescript
-execute: async (context) => {
+execute: async context => {
   const task = context.getSelectedTask()
   const newTask = await context.duplicateTask(task.id)
   context.selectTask(newTask.id)
@@ -93,19 +93,20 @@ execute: async (context) => {
 
 ```typescript
 // move-task-up
-execute: (context) => {
+execute: context => {
   const task = context.getSelectedTask()
   context.moveTaskUp(task.id)
 }
 
 // move-task-to-top
-execute: (context) => {
+execute: context => {
   const task = context.getSelectedTask()
   context.moveTaskToTop(task.id)
 }
 ```
 
 **Note**: Movement behavior depends on current view:
+
 - In project view: moves within project
 - In area view: moves within visible list
 - In Today/This Week: moves within scheduled order
@@ -114,13 +115,13 @@ execute: (context) => {
 
 ```typescript
 // edit-scheduled-date - opens date picker
-execute: (context) => {
+execute: context => {
   const task = context.getSelectedTask()
   context.openDatePicker(task.id, 'scheduled')
 }
 
 // set-scheduled-today - immediate action
-execute: (context) => {
+execute: context => {
   const task = context.getSelectedTask()
   const today = new Date().toISOString().split('T')[0]
   context.updateTask(task.id, { scheduledDate: today })
@@ -131,7 +132,7 @@ execute: (context) => {
 #### `edit-status` (⌘S)
 
 ```typescript
-execute: (context) => {
+execute: context => {
   const task = context.getSelectedTask()
   context.openStatusDropdown(task.id)
 }
@@ -140,7 +141,7 @@ execute: (context) => {
 #### `copy-task-title` (⌘C)
 
 ```typescript
-execute: async (context) => {
+execute: async context => {
   const task = context.getSelectedTask()
   await navigator.clipboard.writeText(task.title)
   context.showToast(t('tasks.titleCopied'))
@@ -183,13 +184,13 @@ interface CommandContext {
 
 Already implemented with context-aware behavior. The command should wrap the existing logic:
 
-| Context | Behavior |
-|---------|----------|
-| Task selected in list | Create below selected, open for editing |
-| Task list focused, none selected | Create at bottom, open for editing |
-| In area view | Create in area's default location |
-| In project view | Create in project |
-| Global | Create in Inbox |
+| Context                          | Behavior                                |
+| -------------------------------- | --------------------------------------- |
+| Task selected in list            | Create below selected, open for editing |
+| Task list focused, none selected | Create at bottom, open for editing      |
+| In area view                     | Create in area's default location       |
+| In project view                  | Create in project                       |
+| Global                           | Create in Inbox                         |
 
 ### Component-Level Handlers
 
@@ -221,13 +222,13 @@ The global shortcut handler respects `e.defaultPrevented` and skips commands whe
 
 ## Files to Change
 
-| File | Change |
-|------|--------|
-| `src/lib/commands/task-commands.ts` | New - all task commands |
-| `src/lib/commands/index.ts` | Register task commands |
-| `src/hooks/use-command-context.ts` | Add task operation methods |
-| `src/stores/ui-store.ts` | Add openDatePicker, openStatusDropdown |
-| `src/components/task-list/*` | Expose methods for command context |
+| File                                | Change                                 |
+| ----------------------------------- | -------------------------------------- |
+| `src/lib/commands/task-commands.ts` | New - all task commands                |
+| `src/lib/commands/index.ts`         | Register task commands                 |
+| `src/hooks/use-command-context.ts`  | Add task operation methods             |
+| `src/stores/ui-store.ts`            | Add openDatePicker, openStatusDropdown |
+| `src/components/task-list/*`        | Expose methods for command context     |
 
 ## Success Criteria
 

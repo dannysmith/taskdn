@@ -65,6 +65,9 @@
   "commands.group.window": "Window",
   "commands.group.notification": "Notifications",
   "commands.group.debug": "Debug",
+  "commands.group.areas": "Areas",
+  "commands.group.projects": "Projects",
+  "commands.group.help": "Help",
   "commands.group.other": "Other",
 
   "commands.toggleCommandPalette.label": "Toggle Command Palette",
@@ -77,6 +80,27 @@
   "commands.toggleRightSidebar.description": "Show or hide the right sidebar",
   "commands.openPreferences.label": "Open Preferences",
   "commands.openPreferences.description": "Open the application preferences",
+
+  "commands.navigateToday.label": "Today",
+  "commands.navigateToday.description": "Navigate to Today view",
+  "commands.navigateThisWeek.label": "This Week",
+  "commands.navigateThisWeek.description": "Navigate to This Week view",
+  "commands.navigateInbox.label": "Inbox",
+  "commands.navigateInbox.description": "Navigate to Inbox view",
+  "commands.navigateCalendar.label": "Calendar",
+  "commands.navigateCalendar.description": "Navigate to Calendar view",
+  "commands.navigateNoArea.label": "No Area",
+  "commands.navigateNoArea.description": "Show tasks without an area",
+
+  "commands.collapseAllAreas.label": "Collapse All Areas",
+  "commands.collapseAllAreas.description": "Collapse all areas in the sidebar",
+  "commands.expandAllAreas.label": "Expand All Areas",
+  "commands.expandAllAreas.description": "Expand all areas in the sidebar",
+
+  "commands.toggleFullscreen.label": "Toggle Fullscreen",
+  "commands.toggleFullscreen.description": "Enter or exit fullscreen mode",
+  "commands.openHelp.label": "Help",
+  "commands.openHelp.description": "Open Taskdn Help documentation",
 
   "commands.windowClose.label": "Close Window",
   "commands.windowClose.description": "Close the current window",

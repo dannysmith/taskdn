@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '@/store/ui-store'
 import { useCommandContext } from '@/hooks/use-command-context'
-import { getAllCommands, executeCommand } from '@/lib/commands'
+import { getAllCommands, executeCommand, getCommandLabel } from '@/lib/commands'
 import { formatForDisplay } from '@/lib/shortcuts'
 import {
   CommandDialog,
@@ -14,6 +14,19 @@ import {
   CommandShortcut,
 } from '@/components/ui/command'
 
+/** Order in which groups should appear in the palette */
+const GROUP_ORDER = [
+  'navigation',
+  'tasks',
+  'areas',
+  'projects',
+  'settings',
+  'window',
+  'help',
+  'app',
+  'other',
+]
+
 export function CommandPalette() {
   const { t } = useTranslation()
   const commandPaletteOpen = useUIStore(state => state.commandPaletteOpen)
@@ -21,8 +34,13 @@ export function CommandPalette() {
   const commandContext = useCommandContext()
   const [search, setSearch] = useState('')
 
-  // Get all available commands grouped by category
-  const commands = getAllCommands(commandContext, search, t)
+  // Get all available commands and filter by surfaces.commandPalette
+  const allCommands = getAllCommands(commandContext, search, t)
+  const commands = allCommands.filter(
+    cmd => cmd.surfaces?.commandPalette !== false
+  )
+
+  // Group commands by category
   const commandGroups = commands.reduce(
     (groups, command) => {
       const group = command.group || 'other'
@@ -34,6 +52,16 @@ export function CommandPalette() {
     },
     {} as Record<string, typeof commands>
   )
+
+  // Sort groups by defined order
+  const sortedGroups = Object.entries(commandGroups).sort(([a], [b]) => {
+    const aIndex = GROUP_ORDER.indexOf(a)
+    const bIndex = GROUP_ORDER.indexOf(b)
+    // Put unknown groups at the end
+    const aOrder = aIndex === -1 ? 999 : aIndex
+    const bOrder = bIndex === -1 ? 999 : bIndex
+    return aOrder - bOrder
+  })
 
   // Handle command execution
   const handleCommandSelect = async (commandId: string) => {
@@ -80,7 +108,7 @@ export function CommandPalette() {
       <CommandList>
         <CommandEmpty>{t('commandPalette.noResults')}</CommandEmpty>
 
-        {Object.entries(commandGroups).map(([groupName, groupCommands]) => (
+        {sortedGroups.map(([groupName, groupCommands]) => (
           <CommandGroup key={groupName} heading={getGroupLabel(groupName)}>
             {groupCommands.map(command => (
               <CommandItem
@@ -89,7 +117,7 @@ export function CommandPalette() {
                 onSelect={() => handleCommandSelect(command.id)}
               >
                 {command.icon && <command.icon className="mr-2 h-4 w-4" />}
-                <span>{t(command.labelKey)}</span>
+                <span>{getCommandLabel(command, t)}</span>
                 {command.descriptionKey && (
                   <span className="ml-auto text-xs text-muted-foreground">
                     {t(command.descriptionKey)}

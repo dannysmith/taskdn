@@ -1,4 +1,19 @@
 import type { LucideIcon } from 'lucide-react'
+import type { Area, Project } from '@/lib/tauri-bindings'
+import type { NavId } from '@/types/navigation'
+
+/** Entity types that can appear in context menus */
+export type EntityType = 'task' | 'project' | 'area'
+
+/** Defines where a command appears in the UI */
+export interface CommandSurfaces {
+  /** Show in command palette (default: true) */
+  commandPalette?: boolean
+  /** Entity types whose context menus should include this command */
+  contextMenu?: EntityType[]
+  /** App menu location (e.g., 'Edit', 'View', 'File') */
+  appMenu?: string
+}
 
 export interface AppCommand {
   id: string
@@ -28,6 +43,16 @@ export interface AppCommand {
    * @see src/lib/shortcuts for parsing and formatting utilities
    */
   shortcut?: string
+  /**
+   * Defines where this command appears in the UI.
+   * If not specified, defaults to showing in command palette only.
+   */
+  surfaces?: CommandSurfaces
+  /**
+   * Whether this command supports multi-select (for future).
+   * When true, the command can operate on multiple selected items.
+   */
+  supportsMultiSelect?: boolean
 }
 
 export interface CommandGroup {
@@ -42,4 +67,21 @@ export interface CommandContext {
 
   // Notifications
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void
+
+  // Navigation
+  navigateToView: (view: NavId) => void
+  navigateToArea: (areaId: string) => void
+  navigateToProject: (projectId: string) => void
+  navigateToNoArea: () => void
+
+  // Data access (for dynamic commands)
+  getAreas: () => Area[]
+  getProjects: () => Project[]
+
+  // Sidebar management
+  collapseAllAreas: () => void
+  expandAllAreas: () => void
+
+  // External
+  openExternalUrl: (url: string) => void
 }

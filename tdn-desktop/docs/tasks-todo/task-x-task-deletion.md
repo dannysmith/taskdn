@@ -20,11 +20,13 @@ Implement the ability to delete tasks, with support for both moving to the OS tr
 - **Default**: Move task file(s) to OS trash/recycle bin
 
 ### Existing Behavior to Maintain
+
 - **Escape on new task**: When user presses Escape while editing a newly created task's title, the newly created task is deleted. This should be a permanent deletion (not trash) since there's nothing meaningful to recover.
 
 ### User Preference
 
 Add a preference toggle:
+
 - **Setting**: "Permanently delete tasks instead of moving to trash"
 - **Default**: Off (trash is default)
 - When enabled, `Cmd+Backspace` permanently deletes instead of trashing
@@ -32,12 +34,14 @@ Add a preference toggle:
 ### Rust Backend Logging
 
 When a task file is deleted or trashed, log:
+
 - Task title
 - Full file path
 - Operation type (trashed vs permanently deleted)
 - If trashed and available: new location in trash
 
 Example log output:
+
 ```
 INFO: Task trashed: "Fix login bug" | Path: /Users/danny/vault/tasks/fix-login-bug.md | Trash location: ~/.Trash/fix-login-bug.md
 INFO: Task permanently deleted: "Untitled" | Path: /Users/danny/vault/tasks/untitled.md
@@ -59,13 +63,13 @@ The official Tauri File System plugin only offers permanent deletion via `remove
 
 The [`trash`](https://github.com/Byron/trash-rs) crate is the standard Rust solution for cross-platform trash operations.
 
-| Metric | Value |
-|--------|-------|
-| Version | 5.2.5 (Oct 2025) |
-| Downloads | 1.2M+ all-time |
-| License | MIT |
-| Releases | 34 |
-| Contributors | 31 |
+| Metric       | Value            |
+| ------------ | ---------------- |
+| Version      | 5.2.5 (Oct 2025) |
+| Downloads    | 1.2M+ all-time   |
+| License      | MIT              |
+| Releases     | 34               |
+| Contributors | 31               |
 
 #### API
 
@@ -88,18 +92,21 @@ os_limited::purge_all(items)?;  // Permanent delete from trash
 #### Platform Implementations
 
 **macOS** — Two configurable methods via `TrashContextExtMacos` trait:
+
 - `NSFileManager.trashItemAtURL` (default, fast, no permissions needed)
 - Finder via AppleScript (enables "Put Back", slower, makes sound, requires permissions)
 - Uses `objc2_foundation` for Objective-C bindings
 - **Limitation**: Cannot implement `list()`, `restore_all()`, `purge_all()` — [open issue since 2019](https://github.com/Byron/trash-rs/issues/8)
 
 **Windows** — COM/Shell APIs:
+
 - `IFileOperation` with `FOF_ALLOWUNDO` flag
 - Handles wide (UTF-16) paths, extended-length prefix stripping
 - Full support for list/restore/purge operations
 - Some failures reported with shared folders ([Issue #55](https://github.com/Byron/trash-rs/issues/55))
 
 **Linux** — Freedesktop Trash Spec v1.0:
+
 - Most complex implementation
 - Handles mount points, cross-device moves, sticky bit validation
 - `.Trash/<uid>` and `.Trash-<uid>` folder discovery

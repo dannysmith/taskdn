@@ -32,6 +32,15 @@ const { navigationCommands } = await import('./navigation-commands')
 const createMockContext = (): CommandContext => ({
   openPreferences: vi.fn(),
   showToast: vi.fn(),
+  navigateToView: vi.fn(),
+  navigateToArea: vi.fn(),
+  navigateToProject: vi.fn(),
+  navigateToNoArea: vi.fn(),
+  getAreas: vi.fn(() => []),
+  getProjects: vi.fn(() => []),
+  collapseAllAreas: vi.fn(),
+  expandAllAreas: vi.fn(),
+  openExternalUrl: vi.fn(),
 })
 
 // Mock translation function for testing
@@ -80,8 +89,11 @@ describe('Simplified Command System', () => {
         const description = cmd.descriptionKey
           ? mockT(cmd.descriptionKey).toLowerCase()
           : ''
+        const keywords = cmd.keywords?.join(' ').toLowerCase() ?? ''
         const matchesSearch =
-          label.includes('sidebar') || description.includes('sidebar')
+          label.includes('sidebar') ||
+          description.includes('sidebar') ||
+          keywords.includes('sidebar')
 
         expect(matchesSearch).toBe(true)
       })
