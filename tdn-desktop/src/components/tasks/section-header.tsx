@@ -1,4 +1,5 @@
 import { ChevronRight, Plus, PlusCircle } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
 
@@ -39,6 +40,8 @@ export function SectionHeader({
   onAddHeading,
   className,
 }: SectionHeaderProps) {
+  const { t } = useTranslation()
+
   return (
     <div
       className={cn(
@@ -80,10 +83,10 @@ export function SectionHeader({
                 'text-muted-foreground hover:text-foreground',
                 'hover:bg-muted transition-colors'
               )}
-              title="Add heading"
+              title={t('section.addHeading')}
             >
               <PlusCircle className="size-3" />
-              <span className="sr-only">Heading</span>
+              <span className="sr-only">{t('section.heading')}</span>
             </button>
           )}
           {onAddTask && (
@@ -98,10 +101,10 @@ export function SectionHeader({
                 'text-muted-foreground hover:text-foreground',
                 'hover:bg-muted transition-colors'
               )}
-              title="Add task"
+              title={t('section.addTask')}
             >
               <Plus className="size-3" />
-              <span className="sr-only">Task</span>
+              <span className="sr-only">{t('section.task')}</span>
             </button>
           )}
         </div>

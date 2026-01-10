@@ -342,14 +342,10 @@ pub struct ProjectUpdate {
 // =============================================================================
 
 /// Generate a stable ID from a file path.
-/// Uses a simple hash approach for consistency.
+/// Uses xxhash for consistent hashing across Rust versions.
 fn generate_id_from_path(path: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
-    let mut hasher = DefaultHasher::new();
-    path.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
+    let hash = xxhash_rust::xxh64::xxh64(path.as_bytes(), 0);
+    format!("{hash:016x}")
 }
 
 #[cfg(test)]

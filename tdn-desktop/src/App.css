@@ -87,6 +87,12 @@
   cursor: text !important;
 }
 
+/* Accessible focus indicator for keyboard users */
+.milkdown-editor .ProseMirror:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: -2px;
+}
+
 /* Prevent long words/URLs from breaking layout */
 .milkdown-editor .ProseMirror * {
   overflow-wrap: break-word;

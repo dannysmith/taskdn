@@ -399,12 +399,9 @@ impl VaultManager {
                 .ok_or_else(|| VaultError::not_configured("Vault not initialized"))?
         };
 
-        // Set write flag for loop prevention
-        self.set_writing(true);
-        let result = crate::vault::create_task_file(&tasks_dir, options);
-        self.set_writing(false);
-
-        let task = result?;
+        // Use RAII guard to ensure write flag is always reset, even on panic
+        let _guard = WriteFlagGuard::new(self);
+        let task = crate::vault::create_task_file(&tasks_dir, options)?;
 
         // Update index
         {
@@ -430,11 +427,8 @@ impl VaultManager {
                 .ok_or_else(|| VaultError::not_configured("Vault not initialized"))?
         };
 
-        self.set_writing(true);
-        let result = crate::vault::create_project_file(&projects_dir, options);
-        self.set_writing(false);
-
-        let project = result?;
+        let _guard = WriteFlagGuard::new(self);
+        let project = crate::vault::create_project_file(&projects_dir, options)?;
 
         {
             let mut inner = self.inner.write();
@@ -452,11 +446,8 @@ impl VaultManager {
 
         let task = self.get_task(&update.id)?;
 
-        self.set_writing(true);
-        let result = crate::vault::update_task(&task, update.clone());
-        self.set_writing(false);
-
-        let updated_task = result?;
+        let _guard = WriteFlagGuard::new(self);
+        let updated_task = crate::vault::update_task(&task, update.clone())?;
 
         {
             let mut inner = self.inner.write();
@@ -474,11 +465,8 @@ impl VaultManager {
 
         let project = self.get_project(&update.id)?;
 
-        self.set_writing(true);
-        let result = crate::vault::update_project(&project, update.clone());
-        self.set_writing(false);
-
-        let updated_project = result?;
+        let _guard = WriteFlagGuard::new(self);
+        let updated_project = crate::vault::update_project(&project, update.clone())?;
 
         {
             let mut inner = self.inner.write();
@@ -501,11 +489,8 @@ impl VaultManager {
         let task = self.get_task(id)?;
 
         // Delete the file
-        self.set_writing(true);
-        let result = std::fs::remove_file(&task.path);
-        self.set_writing(false);
-
-        result
+        let _guard = WriteFlagGuard::new(self);
+        std::fs::remove_file(&task.path)
             .map_err(|e| VaultError::write_error(&task.path, format!("Failed to delete: {e}")))?;
 
         // Remove from index
@@ -542,6 +527,24 @@ impl VaultManager {
 impl Default for VaultManager {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// RAII guard for write flag - ensures set_writing(false) is called even on panic
+struct WriteFlagGuard<'a> {
+    manager: &'a VaultManager,
+}
+
+impl<'a> WriteFlagGuard<'a> {
+    fn new(manager: &'a VaultManager) -> Self {
+        manager.set_writing(true);
+        Self { manager }
+    }
+}
+
+impl Drop for WriteFlagGuard<'_> {
+    fn drop(&mut self) {
+        self.manager.set_writing(false);
     }
 }
 

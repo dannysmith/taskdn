@@ -115,5 +115,12 @@
   "toast.error.windowMinimizeFailed": "Failed to minimize window: {{message}}",
   "toast.error.windowMaximizeFailed": "Failed to toggle maximize: {{message}}",
   "toast.error.fullscreenEnterFailed": "Failed to enter fullscreen: {{message}}",
-  "toast.error.fullscreenExitFailed": "Failed to exit fullscreen: {{message}}"
+  "toast.error.fullscreenExitFailed": "Failed to exit fullscreen: {{message}}",
+
+  "section.addHeading": "Add heading",
+  "section.heading": "Heading",
+  "section.addTask": "Add task",
+  "section.task": "Task",
+
+  "collapsibleNotes.defaultTitle": "About this project"
 }
