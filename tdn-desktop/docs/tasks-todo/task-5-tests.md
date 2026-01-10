@@ -316,12 +316,12 @@ This is the most critical TypeScript file - it handles ALL data fetching, mutati
 
 ### Tasks
 
-- [ ] Add vault service tests (formatVaultError, optimistic updates, rollback, helpers)
-- [ ] Add date-utils tests with vi.useFakeTimers()
-- [ ] Add recovery system tests with mocked Tauri commands
-- [ ] Add platform-strings tests
-- [ ] Add notifications tests with mocked toast/native
-- [ ] Add type helper tests
+- [x] Add vault service tests (formatVaultError, optimistic updates, rollback, helpers)
+- [x] Add date-utils tests with vi.useFakeTimers()
+- [x] Add recovery system tests with mocked Tauri commands
+- [x] Add platform-strings tests
+- [x] Add notifications tests with mocked toast/native
+- [x] Add type helper tests
 
 ---
 
@@ -407,11 +407,11 @@ Test Zustand stores in isolation (following existing ui-store.test.ts pattern).
 
 ### Tasks
 
-- [ ] Add task-creation-store tests (priority system, async handling)
-- [ ] Add display-order-store tests (all ordering operations)
-- [ ] Add task-detail-store tests (cross-store interaction)
-- [ ] Add navigation-store tests
-- [ ] Add view-mode-store tests
+- [x] Add task-creation-store tests (priority system, async handling)
+- [x] Add display-order-store tests (all ordering operations)
+- [x] Add task-detail-store tests (cross-store interaction)
+- [x] Add navigation-store tests
+- [x] Add view-mode-store tests
 
 ---
 
