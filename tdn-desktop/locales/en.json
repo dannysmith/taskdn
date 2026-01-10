@@ -33,6 +33,9 @@
   "preferences.general.readFromCli": "Read from CLI Config",
   "preferences.general.useDummyVault": "Use Dummy Vault",
   "preferences.general.cliNotConfigured": "CLI not configured. Run the Taskdn CLI to create ~/.taskdn.json",
+  "preferences.general.ignorePatterns": "Ignored Patterns",
+  "preferences.general.ignorePatternsDescription": "File patterns to exclude from scanning. Supports wildcards (e.g., \"*.tmp\", \"draft-*\").",
+  "preferences.general.ignorePatternsPlaceholder": "Add pattern and press Enter",
 
   "preferences.appearance.theme": "Theme",
   "preferences.appearance.colorTheme": "Color Theme",

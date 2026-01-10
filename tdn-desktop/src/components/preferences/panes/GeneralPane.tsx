@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { TagInput, type Tag } from '@/components/ui/tag-input'
 import { ShortcutPicker } from '../ShortcutPicker'
 import { SettingsField, SettingsSection } from '../shared/SettingsComponents'
 import { FolderPicker } from '../shared/FolderPicker'
@@ -136,6 +137,15 @@ export function GeneralPane() {
     toast.success(t('toast.success.dummyVaultSet'))
   }
 
+  // Handle ignore patterns change
+  const handleIgnoreChange = (tags: Tag[]) => {
+    if (!preferences) return
+    savePreferences.mutate({
+      ...preferences,
+      ignore: tags.length > 0 ? tags.map(tag => tag.text) : null,
+    })
+  }
+
   return (
     <div className="space-y-6">
       <SettingsSection title={t('preferences.general.keyboardShortcuts')}>
@@ -204,6 +214,24 @@ export function GeneralPane() {
             </Button>
           )}
         </div>
+      </SettingsSection>
+
+      <SettingsSection title={t('preferences.general.ignorePatterns')}>
+        <SettingsField
+          label={t('preferences.general.ignorePatterns')}
+          description={t('preferences.general.ignorePatternsDescription')}
+        >
+          <TagInput
+            tags={(preferences?.ignore ?? []).map(pattern => ({
+              id: pattern,
+              text: pattern,
+            }))}
+            onTagsChange={handleIgnoreChange}
+            placeholder={t('preferences.general.ignorePatternsPlaceholder')}
+            disabled={!preferences || savePreferences.isPending}
+            allowDuplicates={false}
+          />
+        </SettingsField>
       </SettingsSection>
     </div>
   )
