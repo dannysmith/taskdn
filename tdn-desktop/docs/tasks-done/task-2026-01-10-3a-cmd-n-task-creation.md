@@ -1,5 +1,7 @@
 # Task 3a: Fix Cmd+N Task Creation
 
+IMPORTANT: this whole approach was proven to be overly complex and difficult. 
+
 ## Overview
 
 **Goal:** Cmd+N should create a new task in the current view context. When a task is selected, create below it. When nothing is selected, create in the view's default section. The new task should immediately enter edit mode.
