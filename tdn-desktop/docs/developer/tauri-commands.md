@@ -161,8 +161,16 @@ Always commit:
 
 ```
 src-tauri/src/
-├── lib.rs              # Commands with #[specta::specta]
+├── lib.rs              # App setup, plugins, startup logic
 ├── bindings.rs         # Command registration + export test
+├── commands/           # Command handlers by domain
+│   ├── mod.rs          # Re-exports all command modules
+│   ├── preferences.rs
+│   ├── notifications.rs
+│   ├── quick_pane.rs
+│   ├── recovery.rs
+│   ├── config.rs
+│   └── vault.rs
 └── Cargo.toml          # specta, tauri-specta dependencies
 
 src/lib/
@@ -221,15 +229,23 @@ vi.mock('@/lib/tauri-bindings', () => ({
 
 ## Available Commands
 
-| Command                   | Parameters                            | Returns                          | Description         |
-| ------------------------- | ------------------------------------- | -------------------------------- | ------------------- |
-| `greet`                   | `name: string`                        | `string`                         | Simple greeting     |
-| `loadPreferences`         | none                                  | `Result<AppPreferences, string>` | Load preferences    |
-| `savePreferences`         | `preferences: AppPreferences`         | `Result<null, string>`           | Save preferences    |
-| `sendNativeNotification`  | `title: string, body: string \| null` | `Result<null, string>`           | System notification |
-| `saveEmergencyData`       | `filename: string, data: JsonValue`   | `Result<null, string>`           | Save recovery data  |
-| `loadEmergencyData`       | `filename: string`                    | `Result<JsonValue, string>`      | Load recovery data  |
-| `cleanupOldRecoveryFiles` | none                                  | `Result<number, string>`         | Cleanup old files   |
+All commands are registered in `src-tauri/src/bindings.rs`. The TypeScript types are auto-generated in `src/lib/bindings.ts`.
+
+To see all available commands and their types, check:
+
+- **Rust source**: `src-tauri/src/bindings.rs` (command registration)
+- **TypeScript types**: `src/lib/tauri-bindings.ts` (re-exports with conventions)
+
+Commands are organized by domain module:
+
+| Module | Commands |
+|--------|----------|
+| `preferences` | `greet`, `loadPreferences`, `savePreferences` |
+| `notifications` | `sendNativeNotification` |
+| `recovery` | `saveEmergencyData`, `loadEmergencyData`, `cleanupOldRecoveryFiles` |
+| `quick_pane` | `showQuickPane`, `dismissQuickPane`, `toggleQuickPane`, etc. |
+| `config` | `readCliConfig`, `getAppDataDir`, `openAppDataDir`, `isDevMode`, etc. |
+| `vault` | `initVault`, `listTasks`, `listProjects`, `listAreas`, `createTask`, etc. |
 
 ## Dependencies
 
