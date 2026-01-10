@@ -48,6 +48,7 @@ export function useKeyboardShortcuts(commandContext: CommandContext) {
             if (
               activeEl instanceof HTMLInputElement ||
               activeEl instanceof HTMLTextAreaElement ||
+              activeEl instanceof HTMLSelectElement ||
               (activeEl instanceof HTMLElement && activeEl.isContentEditable)
             ) {
               break
