@@ -457,12 +457,14 @@ Test custom hooks that derive state or manage complex logic.
 
 ### Tasks
 
-- [ ] Add useTodayOrder tests (most complex - headings + tasks)
-- [ ] Add useKanbanOrder tests
-- [ ] Add useSidebarOrder tests
-- [ ] Add useCalendarOrder tests
-- [ ] Add useInboxOrder tests (template for project/area)
-- [ ] Add useViewMode tests
+- [x] Add useTodayOrder tests (most complex - headings + tasks)
+- [x] Add useKanbanOrder tests
+- [x] Add useSidebarOrder tests
+- [x] Add useCalendarOrder tests
+- [x] Add useInboxOrder tests (template for project/area)
+- [x] Add useProjectOrder tests
+- [x] Add useAreaOrder tests
+- [x] Add useViewMode tests (already existed in view-mode-store.test.ts)
 
 ---
 
