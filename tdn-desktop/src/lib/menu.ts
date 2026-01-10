@@ -12,9 +12,9 @@ import {
 } from '@tauri-apps/api/menu'
 import { check } from '@tauri-apps/plugin-updater'
 import i18n from '@/i18n/config'
-import { useUIStore } from '@/store/ui-store'
 import { logger } from '@/lib/logger'
 import { notifications } from '@/lib/notifications'
+import { executeCommand, commandContext } from '@/lib/commands'
 
 const APP_NAME = 'Taskdn'
 
@@ -149,15 +149,15 @@ async function handleCheckForUpdates(): Promise<void> {
 
 function handleOpenPreferences(): void {
   logger.info('Preferences menu item clicked')
-  useUIStore.getState().setPreferencesOpen(true)
+  executeCommand('open-preferences', commandContext)
 }
 
 function handleToggleLeftSidebar(): void {
   logger.info('Toggle Left Sidebar menu item clicked')
-  useUIStore.getState().toggleLeftSidebar()
+  executeCommand('toggle-left-sidebar', commandContext)
 }
 
 function handleToggleRightSidebar(): void {
   logger.info('Toggle Right Sidebar menu item clicked')
-  useUIStore.getState().toggleRightSidebar()
+  executeCommand('toggle-right-sidebar', commandContext)
 }
