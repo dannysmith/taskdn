@@ -8,7 +8,7 @@ import type { CommandContext } from '@/lib/commands/types'
  * Note: Store must be initialized before use (always true after app mount).
  */
 const commandContext: CommandContext = {
-  openPreferences: () => useUIStore.getState().togglePreferences(),
+  openPreferences: () => useUIStore.getState().setPreferencesOpen(true),
   showToast: (message, type = 'info') =>
     void notify(message, undefined, { type }),
 }

@@ -389,10 +389,12 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
    - Open console and note which log messages appear for each action
 
 4. **Document the results** below before proceeding:
-   - [ ] Cmd+1 keyboard: Which handlers fired? _______________
-   - [ ] Cmd+1 menu click: Which handlers fired? _______________
-   - [ ] Cmd+, keyboard: Which handlers fired? _______________
-   - [ ] Cmd+, menu click: Which handlers fired? _______________
+   - [x] Cmd+1 keyboard: Only ⌨️ KEYBOARD handler fired
+   - [x] Cmd+1 menu click: Only 🍎 MENU handler fired
+   - [x] Cmd+, keyboard: Only ⌨️ KEYBOARD handler fired
+   - [x] Cmd+, menu click: Only 🍎 MENU handler fired
+
+**FINDING (2026-01-10)**: Menu accelerators are **display-only** in Tauri. They don't intercept keyboard events. React keyboard handlers handle all shortcuts, menu click handlers fire only on menu clicks. No double-firing exists.
 
 5. **Remove the logging** after testing.
 
