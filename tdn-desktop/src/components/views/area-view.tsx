@@ -100,7 +100,7 @@ export function AreaView({ areaId }: AreaViewProps) {
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
-  const openTask = useTaskDetailStore(state => state.openTask)
+  const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   const setSelection = useNavigationStore(state => state.setSelection)
   const { viewMode } = useViewMode('area')
   const { collapsedColumns, toggleColumn } = useAreaCollapsedColumns()
@@ -476,9 +476,9 @@ export function AreaView({ areaId }: AreaViewProps) {
 
   const handleOpenDetail = React.useCallback(
     (taskId: string) => {
-      openTask(taskId)
+      setOpenTaskId(taskId)
     },
-    [openTask]
+    [setOpenTaskId]
   )
 
   const handleDeleteTask = React.useCallback(

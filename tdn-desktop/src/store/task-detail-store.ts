@@ -18,6 +18,8 @@ import { useUIStore } from './ui-store'
 interface TaskDetailState {
   /** The ID of the task currently open in the detail panel, or null if closed */
   openTaskId: string | null
+  /** Set which task is shown in the detail panel (does NOT auto-show sidebar) */
+  setOpenTaskId: (taskId: string | null) => void
   /** Open the detail panel for a specific task (also shows right sidebar) */
   openTask: (taskId: string) => void
   /** Close the detail panel */
@@ -28,6 +30,8 @@ export const useTaskDetailStore = create<TaskDetailState>()(
   devtools(
     set => ({
       openTaskId: null,
+      setOpenTaskId: taskId =>
+        set({ openTaskId: taskId }, undefined, 'setOpenTaskId'),
       openTask: taskId => {
         set({ openTaskId: taskId }, undefined, 'openTask')
         // Also ensure the right sidebar is visible

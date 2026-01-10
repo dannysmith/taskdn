@@ -244,6 +244,9 @@ export function useCreateTask() {
     },
 
     onMutate: async options => {
+      // Mark mutation start to prevent file watcher from invalidating during mutation
+      markMutationStart()
+
       // Cancel any outgoing refetches to avoid overwriting our optimistic update
       await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
 
@@ -251,6 +254,33 @@ export function useCreateTask() {
       const previousTasks = queryClient.getQueryData<Task[]>(
         vaultQueryKeys.tasks()
       )
+
+      // Look up project/area titles to construct wikilinks for the temp task
+      // This is necessary so the temp task appears in filtered views (ProjectView, AreaView)
+      let projectWikilink: string | null = null
+      let areaWikilink: string | null = null
+
+      if (options.projectId) {
+        const projects = queryClient.getQueryData<Project[]>(
+          vaultQueryKeys.projects()
+        )
+        const project = projects?.find(p => p.id === options.projectId)
+        if (project) {
+          projectWikilink = `[[${project.title}]]`
+          // If project has an area and no explicit area was provided, inherit it
+          if (!options.areaId && project.area) {
+            areaWikilink = project.area
+          }
+        }
+      }
+
+      if (options.areaId && !areaWikilink) {
+        const areas = queryClient.getQueryData<Area[]>(vaultQueryKeys.areas())
+        const area = areas?.find(a => a.id === options.areaId)
+        if (area) {
+          areaWikilink = `[[${area.title}]]`
+        }
+      }
 
       // Create optimistic task with temp ID
       const tempTask: Task = {
@@ -264,10 +294,8 @@ export function useCreateTask() {
         due: options.due ?? null,
         scheduled: options.scheduled ?? null,
         deferUntil: options.deferUntil ?? null,
-        // Note: CreateTaskOptions uses projectId/areaId, but Task uses project/area (wikilinks)
-        // For optimistic update, we set these to null - they'll be set correctly when real task arrives
-        area: null,
-        project: null,
+        area: areaWikilink,
+        project: projectWikilink,
         body: '',
       }
 
@@ -320,6 +348,9 @@ export function useUpdateTask() {
       return result.data
     },
     onMutate: async update => {
+      // Mark mutation start to prevent file watcher from invalidating during mutation
+      markMutationStart()
+
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
       await queryClient.cancelQueries({
@@ -409,6 +440,9 @@ export function useDeleteTask() {
       logger.info('Task deleted', { id })
     },
     onMutate: async id => {
+      // Mark mutation start to prevent file watcher from invalidating during mutation
+      markMutationStart()
+
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: vaultQueryKeys.tasks() })
 
@@ -498,6 +532,9 @@ export function useUpdateProject() {
       return result.data
     },
     onMutate: async update => {
+      // Mark mutation start to prevent file watcher from invalidating during mutation
+      markMutationStart()
+
       // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: vaultQueryKeys.projects() })
       await queryClient.cancelQueries({
@@ -595,7 +632,12 @@ export function useUpdateProject() {
 let lastMutationTime = 0
 const MUTATION_DEBOUNCE_MS = 500
 
-/** Call this when a mutation completes to prevent file watcher from re-invalidating */
+/** Call this when a mutation STARTS to prevent file watcher from invalidating during the mutation */
+export function markMutationStart() {
+  lastMutationTime = Date.now()
+}
+
+/** Call this when a mutation completes to extend the debounce window */
 export function markMutationComplete() {
   lastMutationTime = Date.now()
 }

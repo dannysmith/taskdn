@@ -23,7 +23,7 @@ export function CalendarView() {
   const { tasks } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
-  const openTask = useTaskDetailStore(state => state.openTask)
+  const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
 
   // Get task by ID for drag preview
   const getTaskById = React.useCallback(
@@ -67,9 +67,9 @@ export function CalendarView() {
 
   const handleOpenDetail = React.useCallback(
     (taskId: string) => {
-      openTask(taskId)
+      setOpenTaskId(taskId)
     },
-    [openTask]
+    [setOpenTaskId]
   )
 
   const handleCreateTask = React.useCallback(

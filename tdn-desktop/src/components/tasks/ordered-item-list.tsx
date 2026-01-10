@@ -98,7 +98,7 @@ export function OrderedItemList({
   onItemsReorder,
   onTaskTitleChange,
   onTaskStatusToggle,
-  onTaskOpenDetail,
+  // onTaskOpenDetail - no longer used; selection syncs to detail store automatically
   onCreateTask,
   onDeleteTask,
   onHeadingTitleChange,
@@ -512,11 +512,6 @@ export function OrderedItemList({
                     onTaskTitleChange(item.id, newTitle)
                   }
                   onStatusToggle={() => onTaskStatusToggle(item.id)}
-                  onOpenDetail={
-                    onTaskOpenDetail
-                      ? () => onTaskOpenDetail(item.id)
-                      : undefined
-                  }
                   contextName={getContextName?.(item.data)}
                   showScheduled={showScheduled}
                   showDue={showDue}

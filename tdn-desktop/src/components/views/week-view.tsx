@@ -27,7 +27,7 @@ export function WeekView() {
   const { tasks, projects, areas } = useVaultData()
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
-  const openTask = useTaskDetailStore(state => state.openTask)
+  const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   const setSelection = useNavigationStore(state => state.setSelection)
   const { viewMode } = useViewMode('this-week')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
@@ -226,9 +226,9 @@ export function WeekView() {
 
   const handleOpenDetail = React.useCallback(
     (taskId: string) => {
-      openTask(taskId)
+      setOpenTaskId(taskId)
     },
-    [openTask]
+    [setOpenTaskId]
   )
 
   const handleNavigateToProject = React.useCallback(

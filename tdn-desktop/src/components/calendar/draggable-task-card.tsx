@@ -106,6 +106,7 @@ export function SortableTaskCard({
         size={size}
         projectName={projectName}
         areaName={areaName}
+        onClick={onEditClick}
         onStatusChange={onStatusChange}
         onTitleChange={onTitleChange}
         onScheduledChange={onScheduledChange}

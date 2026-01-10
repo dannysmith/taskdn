@@ -42,7 +42,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
-  const openTask = useTaskDetailStore(state => state.openTask)
+  const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   const { viewMode } = useViewMode('project')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
 
@@ -206,9 +206,9 @@ export function ProjectView({ projectId }: ProjectViewProps) {
 
   const handleOpenDetail = React.useCallback(
     (taskId: string) => {
-      openTask(taskId)
+      setOpenTaskId(taskId)
     },
-    [openTask]
+    [setOpenTaskId]
   )
 
   const handleCreateTask = React.useCallback(

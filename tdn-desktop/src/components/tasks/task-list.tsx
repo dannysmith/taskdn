@@ -22,6 +22,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskCreationStore } from '@/store/task-creation-store'
+import { useTaskDetailStore } from '@/store/task-detail-store'
 import { TaskItem, type TaskItemProps } from './task-item'
 import { TaskStatusCheckbox } from './task-status-checkbox'
 import { useTaskDragPreview } from './task-dnd-context'
@@ -112,7 +113,7 @@ export function TaskList({
   onTasksReorder,
   onTaskTitleChange,
   onTaskStatusToggle,
-  onTaskOpenDetail,
+  // onTaskOpenDetail - no longer used here; selection syncs to detail store automatically
   onCreateTask,
   onDeleteTask,
   className,
@@ -208,6 +209,17 @@ export function TaskList({
     }
   }, [tasks.length, selectedIndex, setSelectedIndex])
 
+  // Sync selection to task detail store (so right sidebar shows selected task)
+  const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
+  React.useEffect(() => {
+    if (selectedIndex !== null && selectedIndex >= 0 && selectedIndex < tasks.length) {
+      const selectedTask = tasks[selectedIndex]
+      if (selectedTask) {
+        setOpenTaskId(selectedTask.id)
+      }
+    }
+  }, [selectedIndex, tasks, setOpenTaskId])
+
   // Focus container when selection changes (for keyboard events)
   React.useEffect(() => {
     if (selectedIndex !== null && !editingTaskId && containerRef.current) {
@@ -223,6 +235,11 @@ export function TaskList({
     // Find the task in the list
     const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
     if (taskIndex !== -1) {
+      // If we're tracking a newly created task and the ID changed (temp → real),
+      // update the tracking to use the new real ID
+      if (newlyCreatedTaskId && autoEditItemId !== newlyCreatedTaskId) {
+        setNewlyCreatedTaskId(autoEditItemId)
+      }
       // Select and edit the task
       setSelectedIndex(taskIndex)
       setEditingTaskId(autoEditItemId)
@@ -232,6 +249,7 @@ export function TaskList({
   }, [
     autoEditItemId,
     tasks,
+    newlyCreatedTaskId,
     setSelectedIndex,
     setEditingTaskId,
     onAutoEditConsumed,
@@ -346,7 +364,8 @@ export function TaskList({
 
       case 'n':
       case 'N':
-        if (isMeta && onCreateTask) {
+        // Check defaultPrevented to avoid double-handling if global handler already fired
+        if (isMeta && onCreateTask && !e.defaultPrevented) {
           e.preventDefault()
           e.stopPropagation() // Prevent global handler from also firing
           const afterTaskId =
@@ -487,9 +506,6 @@ export function TaskList({
               onConfirmEdit={handleConfirmEdit}
               onTitleChange={newTitle => onTaskTitleChange(task.id, newTitle)}
               onStatusToggle={() => onTaskStatusToggle(task.id)}
-              onOpenDetail={
-                onTaskOpenDetail ? () => onTaskOpenDetail(task.id) : undefined
-              }
               contextName={getContextName?.(task)}
               showScheduled={showScheduled}
               showDue={showDue}
@@ -610,7 +626,7 @@ export function DraggableTaskList({
   onTasksReorder,
   onTaskTitleChange,
   onTaskStatusToggle,
-  onTaskOpenDetail,
+  // onTaskOpenDetail - no longer used; selection syncs to detail store automatically
   onCreateTask,
   onDeleteTask,
   className,
@@ -728,7 +744,6 @@ export function DraggableTaskList({
         onTasksReorder={onTasksReorder}
         onTaskTitleChange={onTaskTitleChange}
         onTaskStatusToggle={onTaskStatusToggle}
-        onTaskOpenDetail={onTaskOpenDetail}
         onCreateTask={onCreateTask}
         onDeleteTask={onDeleteTask}
         className={className}
