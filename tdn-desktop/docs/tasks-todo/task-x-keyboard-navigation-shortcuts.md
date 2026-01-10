@@ -1,4 +1,4 @@
-# Task: Keyboard Navigation & Shortcuts
+# Task: Keyboard Navigation & Shortcuts Improvement
 
 ## Keyboard Navigation
 

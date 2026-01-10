@@ -117,11 +117,11 @@ export function loadFixtureVault(): {
 
 ### Tasks
 
-- [ ] Create all fixture markdown files with valid frontmatter
-- [ ] Create TypeScript factory functions in `src/test/helpers/vault.ts`
-- [ ] Create `withTempVault` helper using OS temp directories
-- [ ] Add fixture loading utilities
-- [ ] Document fixture contents and edge cases covered
+- [x] Create all fixture markdown files with valid frontmatter
+- [x] Create TypeScript factory functions in `src/test/helpers/vault.ts`
+- [x] Create `withTempVault` helper using OS temp directories
+- [x] Add fixture loading utilities
+- [x] Document fixture contents and edge cases covered
 
 ---
 
