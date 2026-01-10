@@ -4,67 +4,31 @@ import type { AppCommand } from './types'
 
 export const navigationCommands: AppCommand[] = [
   {
-    id: 'show-left-sidebar',
-    labelKey: 'commands.showLeftSidebar.label',
-    descriptionKey: 'commands.showLeftSidebar.description',
+    id: 'toggle-left-sidebar',
+    labelKey: 'commands.toggleLeftSidebar.label',
+    descriptionKey: 'commands.toggleLeftSidebar.description',
     icon: Sidebar,
     group: 'navigation',
-    shortcut: '⌘+1',
-    keywords: ['sidebar', 'left', 'panel', 'show'],
+    shortcut: 'CmdOrCtrl+1',
+    keywords: ['sidebar', 'left', 'panel', 'toggle', 'show', 'hide'],
 
     execute: () => {
-      useUIStore.getState().setLeftSidebarVisible(true)
+      useUIStore.getState().toggleLeftSidebar()
     },
-
-    isAvailable: () => !useUIStore.getState().leftSidebarVisible,
   },
 
   {
-    id: 'hide-left-sidebar',
-    labelKey: 'commands.hideLeftSidebar.label',
-    descriptionKey: 'commands.hideLeftSidebar.description',
-    icon: Sidebar,
-    group: 'navigation',
-    shortcut: '⌘+1',
-    keywords: ['sidebar', 'left', 'panel', 'hide'],
-
-    execute: () => {
-      useUIStore.getState().setLeftSidebarVisible(false)
-    },
-
-    isAvailable: () => useUIStore.getState().leftSidebarVisible,
-  },
-
-  {
-    id: 'show-right-sidebar',
-    labelKey: 'commands.showRightSidebar.label',
-    descriptionKey: 'commands.showRightSidebar.description',
+    id: 'toggle-right-sidebar',
+    labelKey: 'commands.toggleRightSidebar.label',
+    descriptionKey: 'commands.toggleRightSidebar.description',
     icon: PanelRight,
     group: 'navigation',
-    shortcut: '⌘+2',
-    keywords: ['sidebar', 'right', 'panel', 'show'],
+    shortcut: 'CmdOrCtrl+2',
+    keywords: ['sidebar', 'right', 'panel', 'toggle', 'show', 'hide'],
 
     execute: () => {
-      useUIStore.getState().setRightSidebarVisible(true)
+      useUIStore.getState().toggleRightSidebar()
     },
-
-    isAvailable: () => !useUIStore.getState().rightSidebarVisible,
-  },
-
-  {
-    id: 'hide-right-sidebar',
-    labelKey: 'commands.hideRightSidebar.label',
-    descriptionKey: 'commands.hideRightSidebar.description',
-    icon: PanelRight,
-    group: 'navigation',
-    shortcut: '⌘+2',
-    keywords: ['sidebar', 'right', 'panel', 'hide'],
-
-    execute: () => {
-      useUIStore.getState().setRightSidebarVisible(false)
-    },
-
-    isAvailable: () => useUIStore.getState().rightSidebarVisible,
   },
 
   {
@@ -73,7 +37,7 @@ export const navigationCommands: AppCommand[] = [
     descriptionKey: 'commands.openPreferences.description',
     icon: Settings,
     group: 'settings',
-    shortcut: '⌘+,',
+    shortcut: 'CmdOrCtrl+,',
     keywords: ['preferences', 'settings', 'config', 'options'],
 
     execute: context => {

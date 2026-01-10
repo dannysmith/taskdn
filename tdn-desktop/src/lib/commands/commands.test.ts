@@ -5,13 +5,24 @@ import type { CommandContext, AppCommand } from './types'
 const mockUIStore = {
   getState: vi.fn(() => ({
     leftSidebarVisible: true,
+    rightSidebarVisible: true,
     commandPaletteOpen: false,
-    setLeftSidebarVisible: vi.fn(),
+    toggleLeftSidebar: vi.fn(),
+    toggleRightSidebar: vi.fn(),
+    toggleCommandPalette: vi.fn(),
   })),
 }
 
 vi.mock('@/store/ui-store', () => ({
   useUIStore: mockUIStore,
+}))
+
+vi.mock('@/store/task-creation-store', () => ({
+  useTaskCreationStore: {
+    getState: vi.fn(() => ({
+      triggerCreate: vi.fn(),
+    })),
+  },
 }))
 
 const { registerCommands, getAllCommands, executeCommand } =
@@ -26,14 +37,10 @@ const createMockContext = (): CommandContext => ({
 // Mock translation function for testing
 const mockT = ((key: string): string => {
   const translations: Record<string, string> = {
-    'commands.showLeftSidebar.label': 'Show Left Sidebar',
-    'commands.showLeftSidebar.description': 'Show the left sidebar',
-    'commands.hideLeftSidebar.label': 'Hide Left Sidebar',
-    'commands.hideLeftSidebar.description': 'Hide the left sidebar',
-    'commands.showRightSidebar.label': 'Show Right Sidebar',
-    'commands.showRightSidebar.description': 'Show the right sidebar',
-    'commands.hideRightSidebar.label': 'Hide Right Sidebar',
-    'commands.hideRightSidebar.description': 'Hide the right sidebar',
+    'commands.toggleLeftSidebar.label': 'Toggle Left Sidebar',
+    'commands.toggleLeftSidebar.description': 'Show or hide the left sidebar',
+    'commands.toggleRightSidebar.label': 'Toggle Right Sidebar',
+    'commands.toggleRightSidebar.description': 'Show or hide the right sidebar',
     'commands.openPreferences.label': 'Open Preferences',
     'commands.openPreferences.description': 'Open the application preferences',
   }
@@ -58,29 +65,10 @@ describe('Simplified Command System', () => {
       expect(commands.length).toBeGreaterThan(0)
 
       const sidebarCommand = commands.find(
-        cmd => cmd.id === 'show-left-sidebar' || cmd.id === 'hide-left-sidebar'
+        cmd => cmd.id === 'toggle-left-sidebar'
       )
       expect(sidebarCommand).toBeDefined()
       expect(mockT(sidebarCommand?.labelKey ?? '')).toContain('Sidebar')
-    })
-
-    it('filters commands by availability', () => {
-      mockUIStore.getState.mockReturnValue({
-        leftSidebarVisible: false,
-        commandPaletteOpen: false,
-        setLeftSidebarVisible: vi.fn(),
-      })
-
-      const availableCommands = getAllCommands(mockContext)
-      const showSidebarCommand = availableCommands.find(
-        cmd => cmd.id === 'show-left-sidebar'
-      )
-      const hideSidebarCommand = availableCommands.find(
-        cmd => cmd.id === 'hide-left-sidebar'
-      )
-
-      expect(showSidebarCommand).toBeDefined()
-      expect(hideSidebarCommand).toBeUndefined()
     })
 
     it('filters commands by search term using translations', () => {
@@ -101,29 +89,16 @@ describe('Simplified Command System', () => {
   })
 
   describe('Command Execution', () => {
-    it('executes show-left-sidebar command correctly', async () => {
-      mockUIStore.getState.mockReturnValue({
-        leftSidebarVisible: false,
-        commandPaletteOpen: false,
-        setLeftSidebarVisible: vi.fn(),
-      })
-
-      const result = await executeCommand('show-left-sidebar', mockContext)
+    it('executes toggle-left-sidebar command correctly', async () => {
+      const result = await executeCommand('toggle-left-sidebar', mockContext)
 
       expect(result.success).toBe(true)
     })
 
-    it('fails to execute unavailable command', async () => {
-      mockUIStore.getState.mockReturnValue({
-        leftSidebarVisible: true,
-        commandPaletteOpen: false,
-        setLeftSidebarVisible: vi.fn(),
-      })
+    it('executes toggle-right-sidebar command correctly', async () => {
+      const result = await executeCommand('toggle-right-sidebar', mockContext)
 
-      const result = await executeCommand('show-left-sidebar', mockContext)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toContain('not available')
+      expect(result.success).toBe(true)
     })
 
     it('handles non-existent command', async () => {
