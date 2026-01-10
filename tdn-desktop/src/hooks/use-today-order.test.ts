@@ -27,7 +27,10 @@ describe('useTodayOrder', () => {
     })
     resetFactoryCounters()
     uuidCounter = 0
-    vi.mocked(crypto.randomUUID).mockImplementation(() => `heading-${++uuidCounter}`)
+    vi.mocked(crypto.randomUUID).mockImplementation(
+      () =>
+        `heading-${++uuidCounter}` as `${string}-${string}-${string}-${string}-${string}`
+    )
   })
 
   const createSections = (overrides?: {
@@ -131,7 +134,11 @@ describe('useTodayOrder', () => {
       const { result } = renderHook(() => useTodayOrder(sections))
       const orderedTasks = result.current.getOrderedTasks('scheduled-today')
 
-      expect(orderedTasks.map(t => t.id)).toEqual(['task-2', 'task-1', 'task-3'])
+      expect(orderedTasks.map(t => t.id)).toEqual([
+        'task-2',
+        'task-1',
+        'task-3',
+      ])
     })
   })
 
@@ -190,7 +197,7 @@ describe('useTodayOrder', () => {
       const items = result.current.getOrderedItems('scheduled-today')
 
       expect(items).toHaveLength(1)
-      expect(items[0].type).toBe('task')
+      expect(items[0]!.type).toBe('task')
     })
   })
 
@@ -557,12 +564,12 @@ describe('useTodayOrder', () => {
 
       const { result } = renderHook(() => useTodayOrder(sections))
 
-      expect(result.current.getOrderedTasks('scheduled-today').map(t => t.id)).toEqual(
-        ['task-2', 'task-1']
-      )
-      expect(result.current.getOrderedTasks('overdue-due-today').map(t => t.id)).toEqual(
-        ['task-4', 'task-3']
-      )
+      expect(
+        result.current.getOrderedTasks('scheduled-today').map(t => t.id)
+      ).toEqual(['task-2', 'task-1'])
+      expect(
+        result.current.getOrderedTasks('overdue-due-today').map(t => t.id)
+      ).toEqual(['task-4', 'task-3'])
     })
 
     it('preserves headings in order across sections', () => {
@@ -595,8 +602,8 @@ describe('useTodayOrder', () => {
       })
 
       const items = result.current.getOrderedItems('scheduled-today')
-      expect(items[0].type).toBe('heading')
-      expect(items[0].id).toBe('h1')
+      expect(items[0]!.type).toBe('heading')
+      expect(items[0]!.id).toBe('h1')
     })
   })
 
@@ -621,7 +628,7 @@ describe('useTodayOrder', () => {
       const { result } = renderHook(() => useTodayOrder(sections))
 
       expect(result.current.getOrderedTasks(sectionId)).toHaveLength(1)
-      expect(result.current.getOrderedTasks(sectionId)[0].id).toBe('task-1')
+      expect(result.current.getOrderedTasks(sectionId)[0]!.id).toBe('task-1')
     })
   })
 })

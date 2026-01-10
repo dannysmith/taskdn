@@ -153,7 +153,11 @@ test('toggles sidebar visibility', () => {
 Use factory functions from `src/test/helpers/vault.ts`:
 
 ```typescript
-import { createTestTask, createTestProject, resetFactoryCounters } from '@/test/helpers/vault'
+import {
+  createTestTask,
+  createTestProject,
+  resetFactoryCounters,
+} from '@/test/helpers/vault'
 
 beforeEach(() => {
   resetFactoryCounters() // Ensures deterministic IDs
@@ -175,6 +179,7 @@ const { tasks, projects, areas } = createTestVault({
 ### Test Fixtures
 
 Static fixtures in `src/test/fixtures/vault/` for integration tests:
+
 - `tasks/` - All 7 task statuses plus edge cases
 - `projects/` - All 6 project statuses
 - `areas/` - Active and archived areas
@@ -185,7 +190,7 @@ Use `withTempVault()` for write tests:
 import { withTempVault } from '@/test/helpers/vault'
 
 test('writes task to vault', async () => {
-  await withTempVault(async (vaultPath) => {
+  await withTempVault(async vaultPath => {
     // vaultPath has tasks/, projects/, areas/ subdirectories
     // Write tests here - temp dir cleaned up automatically
   })

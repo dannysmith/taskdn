@@ -213,6 +213,7 @@ These are thin wrappers but benefit from error path testing:
 **Decision: Not needed.**
 
 Phase 2 achieved sufficient coverage:
+
 - VaultIndex operations fully tested (18 tests) - the core data structure
 - VaultManager error paths tested (9 tests) - unconfigured state handling
 - Scanner, writer, and entity parsing already had comprehensive tests (49 existing tests)
@@ -238,14 +239,14 @@ Focus on pure logic separate from React components.
 
 This is the most critical TypeScript file - it handles ALL data fetching, mutations, optimistic updates, and error handling. Currently 0 tests.
 
-| Area | Test Cases | Est. Tests |
-| --- | --- | --- |
-| formatVaultError() | All error type variants (8 types) | 8 |
-| Query hooks (useTasks, etc.) | Success, error handling | 6 |
-| Mutation optimistic updates | onMutate snapshots correct data | 4 |
-| Mutation rollback | onError restores previous state | 4 |
-| Mutation debounce | markMutationStart/Complete timing | 3 |
-| useVaultHelpers() | Relationship helpers (getProjectsByAreaId, etc.) | 8 |
+| Area                         | Test Cases                                       | Est. Tests |
+| ---------------------------- | ------------------------------------------------ | ---------- |
+| formatVaultError()           | All error type variants (8 types)                | 8          |
+| Query hooks (useTasks, etc.) | Success, error handling                          | 6          |
+| Mutation optimistic updates  | onMutate snapshots correct data                  | 4          |
+| Mutation rollback            | onError restores previous state                  | 4          |
+| Mutation debounce            | markMutationStart/Complete timing                | 3          |
+| useVaultHelpers()            | Relationship helpers (getProjectsByAreaId, etc.) | 8          |
 
 **Total: ~33 tests**
 
@@ -545,11 +546,13 @@ Focus on components with significant testable behavior (not pure presentation).
 > **Decision: Minimal Component Tests**
 >
 > Phase 7 was intentionally kept minimal. The complex components (TaskList, TodayView) rely heavily on:
+>
 > - @dnd-kit for drag-and-drop (notoriously difficult to test)
 > - Multiple store interactions (already tested via store tests)
 > - Browser APIs like scrollIntoView (not available in jsdom)
 >
 > The underlying business logic is already well-tested through:
+>
 > - `commands.test.ts` for command system
 > - `date-utils.test.ts` for date filtering
 > - `use-today-order.test.ts` for ordering logic

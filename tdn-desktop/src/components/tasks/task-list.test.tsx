@@ -7,10 +7,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@/test/test-utils'
-import {
-  createTestTask,
-  resetFactoryCounters,
-} from '@/test/helpers/vault'
+import { createTestTask, resetFactoryCounters } from '@/test/helpers/vault'
 
 // Mock the task-dnd-context to avoid DnD complexity
 vi.mock('./task-dnd-context', () => ({

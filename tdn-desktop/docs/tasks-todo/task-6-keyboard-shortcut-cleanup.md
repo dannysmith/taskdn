@@ -8,12 +8,12 @@ The keyboard shortcut system has grown organically with shortcuts defined in mul
 
 ### Shortcut Definitions in 4 Places
 
-| Location | Format | What it does |
-|----------|--------|--------------|
-| `use-keyboard-shortcuts.ts` | Raw key checks (`e.key === ','`) | Actually handles keyboard events |
-| `navigation-commands.ts` | Display strings (`⌘+1`) | Shows in command palette (not used for matching) |
-| `menu.ts` | Tauri accelerators (`CmdOrCtrl+1`) | Native menu accelerators |
-| `CommandPalette.tsx`, `sidebar.tsx` | Raw key checks | Isolated component handlers |
+| Location                            | Format                             | What it does                                     |
+| ----------------------------------- | ---------------------------------- | ------------------------------------------------ |
+| `use-keyboard-shortcuts.ts`         | Raw key checks (`e.key === ','`)   | Actually handles keyboard events                 |
+| `navigation-commands.ts`            | Display strings (`⌘+1`)            | Shows in command palette (not used for matching) |
+| `menu.ts`                           | Tauri accelerators (`CmdOrCtrl+1`) | Native menu accelerators                         |
+| `CommandPalette.tsx`, `sidebar.tsx` | Raw key checks                     | Isolated component handlers                      |
 
 ### Consequences
 
@@ -25,17 +25,17 @@ The keyboard shortcut system has grown organically with shortcuts defined in mul
 
 ### Current Shortcut Coverage
 
-| Shortcut | Keyboard | Menu | Command | Status |
-|----------|----------|------|---------|--------|
-| Cmd+, | ✓ `use-keyboard-shortcuts.ts` | ✓ | ✓ | Working |
-| Cmd+1 | ✓ `use-keyboard-shortcuts.ts` | ✓ | ✓ | Working |
-| Cmd+2 | ✓ `use-keyboard-shortcuts.ts` | ✓ | ✓ | Working |
-| Cmd+N | ✓ `use-keyboard-shortcuts.ts` | ✗ | ✗ | Partial |
-| Cmd+K | ✓ `CommandPalette.tsx` | ✗ | ✗ | Hidden |
-| Cmd+B | ✓ `sidebar.tsx` | ✗ | ✗ | Hidden (dead?) |
-| Cmd+W | ✗ | ✗ | ✓ (declared) | Broken |
-| Cmd+M | ✗ | ✗ | ✓ (declared) | Broken |
-| F11 | ✗ | ✗ | ✓ (declared) | Broken |
+| Shortcut | Keyboard                      | Menu | Command      | Status         |
+| -------- | ----------------------------- | ---- | ------------ | -------------- |
+| Cmd+,    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working        |
+| Cmd+1    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working        |
+| Cmd+2    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working        |
+| Cmd+N    | ✓ `use-keyboard-shortcuts.ts` | ✗    | ✗            | Partial        |
+| Cmd+K    | ✓ `CommandPalette.tsx`        | ✗    | ✗            | Hidden         |
+| Cmd+B    | ✓ `sidebar.tsx`               | ✗    | ✗            | Hidden (dead?) |
+| Cmd+W    | ✗                             | ✗    | ✓ (declared) | Broken         |
+| Cmd+M    | ✗                             | ✗    | ✓ (declared) | Broken         |
+| F11      | ✗                             | ✗    | ✓ (declared) | Broken         |
 
 ## Target Architecture
 
@@ -80,6 +80,7 @@ formatForDisplay('CmdOrCtrl+1') → '⌘1' (Mac) or 'Ctrl+1' (Windows)
 ```
 
 This format:
+
 - Already used by Tauri menus
 - Handles cross-platform modifiers
 - Parseable for keyboard event matching
@@ -102,8 +103,8 @@ src/lib/shortcuts/
 ```typescript
 // types.ts
 interface ParsedShortcut {
-  key: string              // '1', ',', 'F11', 'Escape'
-  cmdOrCtrl: boolean       // CmdOrCtrl modifier
+  key: string // '1', ',', 'F11', 'Escape'
+  cmdOrCtrl: boolean // CmdOrCtrl modifier
   shift: boolean
   alt: boolean
 }
@@ -116,7 +117,10 @@ function formatForDisplay(shortcut: string, platform: 'mac' | 'other'): string
 // 'CmdOrCtrl+1' → '⌘1' (mac) or 'Ctrl+1' (other)
 
 // matcher.ts
-function matchesKeyboardEvent(shortcut: ParsedShortcut, event: KeyboardEvent): boolean
+function matchesKeyboardEvent(
+  shortcut: ParsedShortcut,
+  event: KeyboardEvent
+): boolean
 // Checks event.key, metaKey/ctrlKey, shiftKey, altKey
 ```
 
@@ -152,8 +156,9 @@ export function useGlobalShortcuts(context: CommandContext) {
 
       // Get fresh list of available commands (isAvailable filtering is dynamic)
       const commands = getAllCommands(context)
-      const match = commands.find(cmd =>
-        cmd.shortcut && matchesKeyboardEvent(parseShortcut(cmd.shortcut), e)
+      const match = commands.find(
+        cmd =>
+          cmd.shortcut && matchesKeyboardEvent(parseShortcut(cmd.shortcut), e)
       )
 
       if (match) {
@@ -190,7 +195,7 @@ Menu can use the same shortcut strings directly (they're already in Tauri format
 const toggleLeftSidebar = getCommand('toggle-left-sidebar')
 await MenuItem.new({
   text: t('menu.toggleLeftSidebar'),
-  accelerator: toggleLeftSidebar.shortcut,  // 'CmdOrCtrl+1'
+  accelerator: toggleLeftSidebar.shortcut, // 'CmdOrCtrl+1'
   action: () => executeCommand('toggle-left-sidebar', context),
 })
 
@@ -208,15 +213,18 @@ Option B is recommended - menu can have items without commands, and this keeps t
 #### 5. Consolidate Scattered Handlers
 
 **Cmd+K (Command Palette)**:
+
 - Add `toggle-command-palette` command with shortcut `CmdOrCtrl+K`
 - Remove keyboard handler from `CommandPalette.tsx`
 
 **Cmd+B (Sidebar)**:
+
 - Investigate: Is `SidebarProvider` state actually used?
 - If yes: Add as command, document it
 - If no: Remove the handler entirely (simplify)
 
 **Cmd+N (New Task)**:
+
 - Add `create-task` command with shortcut `CmdOrCtrl+N`
 - Component handlers (TaskList, OrderedItemList) continue to use `stopPropagation`
 - Global handler provides fallback when no list is focused
@@ -244,6 +252,7 @@ Net result: sidebar unchanged (toggle × 2)
 **Unknown**: Does Tauri's menu system prevent keyboard events from reaching the webview?
 
 **Action required**: Test empirically before implementing:
+
 1. Add console.log to both handlers
 2. Press Cmd+1, observe which handlers fire
 3. If both fire, we have a bug that's been hidden by double-toggle
@@ -254,10 +263,12 @@ If accelerators DON'T intercept: Remove menu accelerators or coordinate to avoid
 ### 2. Set vs Toggle Inconsistency (BUG)
 
 **Current behavior for Cmd+,**:
+
 - Menu handler: `setPreferencesOpen(true)` — idempotent SET
 - React handler: `commandContext.openPreferences()` → `togglePreferences()` — TOGGLE
 
 If both handlers fire (see issue #1), behavior depends on order:
+
 - Menu first, React second: preferences opens then closes
 - React first, Menu second: preferences opens and stays
 
@@ -274,6 +285,7 @@ If both handlers fire (see issue #1), behavior depends on order:
 **Finding**: Cmd+W, Cmd+M, F11 are defined in `window-commands.ts` but have no keyboard handlers.
 
 **Question**: Are these needed at all?
+
 - On macOS, Cmd+W (close), Cmd+M (minimize), Cmd+H (hide) are handled by the native window manager
 - Tauri apps with native decorations get these for free
 - Only need custom handlers if using custom window chrome
@@ -283,13 +295,15 @@ If both handlers fire (see issue #1), behavior depends on order:
 ### 5. Input Field Exclusion is Incomplete
 
 **Current exclusion** (`use-keyboard-shortcuts.ts:47-54`):
+
 ```typescript
 activeEl instanceof HTMLInputElement ||
-activeEl instanceof HTMLTextAreaElement ||
-(activeEl instanceof HTMLElement && activeEl.isContentEditable)
+  activeEl instanceof HTMLTextAreaElement ||
+  (activeEl instanceof HTMLElement && activeEl.isContentEditable)
 ```
 
 **Missing**:
+
 - `<select>` elements — keyboard shortcuts will fire when select is focused
 - Possibly modals/dialogs that should trap focus
 
@@ -302,21 +316,23 @@ activeEl instanceof HTMLTextAreaElement ||
 The original doc suggested building a static shortcut map. This is **wrong** because `isAvailable()` depends on dynamic state.
 
 **Wrong approach**:
+
 ```typescript
 useEffect(() => {
   const commands = getAllCommands(context)
-  const shortcutMap = buildShortcutMap(commands)  // Built once, becomes stale
+  const shortcutMap = buildShortcutMap(commands) // Built once, becomes stale
   // ...
 }, [context])
 ```
 
 **Correct approach**: Check availability on each keypress:
+
 ```typescript
 const handleKeyDown = (e: KeyboardEvent) => {
   // Get fresh list of available commands each time
-  const commands = getAllCommands(context)  // Already filtered by isAvailable
-  const match = commands.find(cmd =>
-    cmd.shortcut && matchesKeyboardEvent(parseShortcut(cmd.shortcut), e)
+  const commands = getAllCommands(context) // Already filtered by isAvailable
+  const match = commands.find(
+    cmd => cmd.shortcut && matchesKeyboardEvent(parseShortcut(cmd.shortcut), e)
   )
   if (match) {
     e.preventDefault()
@@ -330,6 +346,7 @@ With ~20 commands, iterating on each keypress is fine (< 1ms).
 ### Menu Integration Decision
 
 **Recommendation changed**: If accelerators intercept keyboard events (need to verify), then:
+
 - Menu accelerators handle keyboard shortcuts
 - React keyboard handler is ONLY for shortcuts WITHOUT menu items (Cmd+K, Cmd+N)
 - This avoids duplicate handlers
@@ -414,6 +431,7 @@ If accelerators don't intercept, use React keyboard handler for everything and r
 ### Component-Level Shortcuts
 
 Some shortcuts are context-dependent (Cmd+N creates task in focused list). These should:
+
 1. Be handled by the component with `stopPropagation()`
 2. Have a global fallback command for when no component handles them
 
@@ -422,6 +440,7 @@ The global handler checks `e.defaultPrevented` to respect component handling.
 ### Window Commands
 
 Window commands (Cmd+W, Cmd+M) are OS-standard shortcuts. Consider:
+
 - On macOS, Cmd+W and Cmd+M are handled by the OS/Tauri window frame
 - May not need keyboard handlers if using native decorations
 - Only add handlers if custom window chrome is used
@@ -429,26 +448,27 @@ Window commands (Cmd+W, Cmd+M) are OS-standard shortcuts. Consider:
 ### Context-Dependent Commands
 
 Some commands only make sense in certain contexts:
+
 - `isAvailable()` already handles this for command palette visibility
 - Keyboard handler should also check `isAvailable()` before executing
 
 ## Files to Change
 
-| File | Change |
-|------|--------|
-| `src/lib/shortcuts/*.ts` | New - shortcut utilities |
-| `src/lib/commands/types.ts` | Document shortcut format |
-| `src/lib/commands/navigation-commands.ts` | Update shortcut format |
-| `src/lib/commands/window-commands.ts` | Update shortcut format |
-| `src/lib/commands/index.ts` | Add new commands |
-| `src/hooks/use-global-shortcuts.ts` | New - unified handler |
-| `src/hooks/use-keyboard-shortcuts.ts` | Delete |
-| `src/hooks/use-main-window-event-listeners.ts` | Use new hook |
-| `src/components/command-palette/CommandPalette.tsx` | Remove Cmd+K handler |
-| `src/components/ui/sidebar.tsx` | Remove or keep Cmd+B |
-| `src/lib/menu.ts` | Use executeCommand |
-| `docs/developer/keyboard-shortcuts.md` | Rewrite |
-| `docs/developer/command-system.md` | Add shortcut section |
+| File                                                | Change                   |
+| --------------------------------------------------- | ------------------------ |
+| `src/lib/shortcuts/*.ts`                            | New - shortcut utilities |
+| `src/lib/commands/types.ts`                         | Document shortcut format |
+| `src/lib/commands/navigation-commands.ts`           | Update shortcut format   |
+| `src/lib/commands/window-commands.ts`               | Update shortcut format   |
+| `src/lib/commands/index.ts`                         | Add new commands         |
+| `src/hooks/use-global-shortcuts.ts`                 | New - unified handler    |
+| `src/hooks/use-keyboard-shortcuts.ts`               | Delete                   |
+| `src/hooks/use-main-window-event-listeners.ts`      | Use new hook             |
+| `src/components/command-palette/CommandPalette.tsx` | Remove Cmd+K handler     |
+| `src/components/ui/sidebar.tsx`                     | Remove or keep Cmd+B     |
+| `src/lib/menu.ts`                                   | Use executeCommand       |
+| `docs/developer/keyboard-shortcuts.md`              | Rewrite                  |
+| `docs/developer/command-system.md`                  | Add shortcut section     |
 
 ## Success Criteria
 

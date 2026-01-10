@@ -10,5 +10,6 @@ description: An active area with associated projects.
 This is an active area of responsibility used for testing.
 
 It has associated projects:
+
 - [[Test Project With Area]]
 - [[Test Project In-Progress]]

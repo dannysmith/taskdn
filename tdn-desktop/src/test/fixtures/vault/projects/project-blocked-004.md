@@ -5,7 +5,7 @@ description: A project blocked by another project.
 start-date: 2025-01-15
 end-date: 2025-03-15
 blocked-by:
-  - "[[Test Project In-Progress]]"
+  - '[[Test Project In-Progress]]'
 ---
 
 ## Overview

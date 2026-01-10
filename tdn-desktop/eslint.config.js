@@ -70,6 +70,13 @@ export default tseslint.config(
     },
   },
   {
+    // Test files have controlled data, so non-null assertions are acceptable
+    files: ['**/*.test.{ts,tsx}', '**/*.spec.{ts,tsx}'],
+    rules: {
+      '@typescript-eslint/no-non-null-assertion': 'off',
+    },
+  },
+  {
     files: ['scripts/**/*.js'],
     languageOptions: {
       ecmaVersion: 2022,

@@ -633,9 +633,18 @@ mod tests {
 
         let index = VaultIndex::from_scans(tasks, projects, areas);
 
-        assert_eq!(index.task_paths.get("/tasks/task-1.md"), Some(&"task-1".to_string()));
-        assert_eq!(index.project_paths.get("/projects/proj-1.md"), Some(&"proj-1".to_string()));
-        assert_eq!(index.area_paths.get("/areas/area-1.md"), Some(&"area-1".to_string()));
+        assert_eq!(
+            index.task_paths.get("/tasks/task-1.md"),
+            Some(&"task-1".to_string())
+        );
+        assert_eq!(
+            index.project_paths.get("/projects/proj-1.md"),
+            Some(&"proj-1".to_string())
+        );
+        assert_eq!(
+            index.area_paths.get("/areas/area-1.md"),
+            Some(&"area-1".to_string())
+        );
     }
 
     #[test]
@@ -752,7 +761,10 @@ mod tests {
 
         assert_eq!(index.tasks.len(), 1);
         assert!(index.get_task("task-1").is_some());
-        assert_eq!(index.task_paths.get("/tasks/task-1.md"), Some(&"task-1".to_string()));
+        assert_eq!(
+            index.task_paths.get("/tasks/task-1.md"),
+            Some(&"task-1".to_string())
+        );
     }
 
     #[test]
@@ -871,7 +883,10 @@ mod tests {
         let manager = VaultManager::new();
         let result = manager.list_tasks();
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), VaultError::NotConfigured { .. }));
+        assert!(matches!(
+            result.unwrap_err(),
+            VaultError::NotConfigured { .. }
+        ));
     }
 
     #[test]

@@ -53,7 +53,11 @@ describe('useSidebarOrder', () => {
 
     // Create test data
     area1 = createTestArea({ id: 'area-1', title: 'Work', status: 'active' })
-    area2 = createTestArea({ id: 'area-2', title: 'Personal', status: 'active' })
+    area2 = createTestArea({
+      id: 'area-2',
+      title: 'Personal',
+      status: 'active',
+    })
     archivedArea = createTestArea({
       id: 'area-3',
       title: 'Archived',
@@ -107,8 +111,8 @@ describe('useSidebarOrder', () => {
       const { result } = renderHook(() => useSidebarOrder())
 
       expect(result.current.orderedAreas).toHaveLength(2)
-      expect(result.current.orderedAreas[0].id).toBe('area-1')
-      expect(result.current.orderedAreas[1].id).toBe('area-2')
+      expect(result.current.orderedAreas[0]!.id).toBe('area-1')
+      expect(result.current.orderedAreas[1]!.id).toBe('area-2')
     })
 
     it('returns areas in stored order', () => {
@@ -118,8 +122,8 @@ describe('useSidebarOrder', () => {
 
       const { result } = renderHook(() => useSidebarOrder())
 
-      expect(result.current.orderedAreas[0].id).toBe('area-2')
-      expect(result.current.orderedAreas[1].id).toBe('area-1')
+      expect(result.current.orderedAreas[0]!.id).toBe('area-2')
+      expect(result.current.orderedAreas[1]!.id).toBe('area-1')
     })
 
     it('filters out deleted areas from stored order', () => {
@@ -130,7 +134,7 @@ describe('useSidebarOrder', () => {
       const { result } = renderHook(() => useSidebarOrder())
 
       expect(result.current.orderedAreas).toHaveLength(1)
-      expect(result.current.orderedAreas[0].id).toBe('area-1')
+      expect(result.current.orderedAreas[0]!.id).toBe('area-1')
     })
 
     it('excludes archived areas', () => {
@@ -156,7 +160,9 @@ describe('useSidebarOrder', () => {
       // Should have entries for area-1, area-2, and orphan container
       expect(result.current.order.projectOrder).toHaveProperty('area-1')
       expect(result.current.order.projectOrder).toHaveProperty('area-2')
-      expect(result.current.order.projectOrder).toHaveProperty(ORPHAN_CONTAINER_ID)
+      expect(result.current.order.projectOrder).toHaveProperty(
+        ORPHAN_CONTAINER_ID
+      )
     })
   })
 
@@ -362,7 +368,11 @@ describe('useSidebarOrder', () => {
       const { result } = renderHook(() => useSidebarOrder())
 
       act(() => {
-        result.current.moveProjectToArea('project-1', 'area-1', ORPHAN_CONTAINER_ID)
+        result.current.moveProjectToArea(
+          'project-1',
+          'area-1',
+          ORPHAN_CONTAINER_ID
+        )
       })
 
       expect(mockUpdateProjectMutate).toHaveBeenCalledWith(
@@ -415,7 +425,11 @@ describe('useSidebarOrder', () => {
       expect(result.current.orderedAreas).toHaveLength(2)
 
       // Add a new area
-      const area3 = createTestArea({ id: 'area-3', title: 'New Area', status: 'active' })
+      const area3 = createTestArea({
+        id: 'area-3',
+        title: 'New Area',
+        status: 'active',
+      })
       mockUseVaultHelpers.mockReturnValue({
         ...mockUseVaultHelpers(),
         getActiveAreas: vi.fn(() => [area1, area2, area3]),
