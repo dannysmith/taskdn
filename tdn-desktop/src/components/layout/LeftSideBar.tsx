@@ -14,7 +14,11 @@ export function LeftSideBar() {
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full min-h-0">
-      <AppSidebar selection={selection} onSelectionChange={setSelection} />
+      <AppSidebar
+        selection={selection}
+        onSelectionChange={setSelection}
+        className="rounded-tr-lg"
+      />
     </SidebarProvider>
   )
 }

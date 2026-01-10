@@ -8,7 +8,7 @@ interface RightSideBarProps {
 export function RightSideBar({ className }: RightSideBarProps) {
   return (
     <div
-      className={cn('flex h-full flex-col border-l bg-background', className)}
+      className={cn('flex h-full flex-col bg-sidebar rounded-tl-lg overflow-hidden', className)}
     >
       <TaskDetailPanel />
     </div>
