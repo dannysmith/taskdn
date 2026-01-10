@@ -320,6 +320,7 @@ export function SortableKanbanCard({
         variant={variant}
         projectName={projectName}
         areaName={areaName}
+        onClick={onEditClick}
         onStatusChange={onStatusChange}
         onTitleChange={onTitleChange}
         onScheduledChange={onScheduledChange}

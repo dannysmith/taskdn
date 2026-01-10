@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Flag, Calendar, X, CircleChevronRight, Hourglass } from 'lucide-react'
+import { Flag, Calendar, X, Hourglass } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { formatRelativeDate, isOverdue } from '@/lib/date-utils'
@@ -278,34 +278,14 @@ export function TaskCard({
             rows={1}
           />
         ) : (
-          <>
-            <span
-              className={cn(
-                'flex-1 text-xs @6xs:text-sm font-medium leading-snug',
-                isCompleted && 'line-through text-muted-foreground'
-              )}
-            >
-              {task.title}
-            </span>
-            {onEditClick && (
-              <button
-                type="button"
-                onClick={e => {
-                  e.stopPropagation()
-                  onEditClick()
-                }}
-                className={cn(
-                  'shrink-0 p-1 @6xs:p-1.5 -m-1 rounded-full text-primary/70',
-                  'opacity-0 group-hover:opacity-100 transition-opacity',
-                  'hover:text-primary hover:bg-primary/10',
-                  isSelected && 'opacity-100'
-                )}
-                title="Open details"
-              >
-                <CircleChevronRight className="size-3.5 @6xs:size-4" />
-              </button>
+          <span
+            className={cn(
+              'flex-1 text-xs @6xs:text-sm font-medium leading-snug',
+              isCompleted && 'line-through text-muted-foreground'
             )}
-          </>
+          >
+            {task.title}
+          </span>
         )}
       </div>
 

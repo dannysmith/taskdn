@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Flag, CircleChevronRight } from 'lucide-react'
+import { Flag } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { formatRelativeDate, isOverdue } from '@/lib/date-utils'
@@ -26,8 +26,6 @@ export interface TaskItemProps {
   onEndEdit: () => void
   onTitleChange: (newTitle: string) => void
   onStatusToggle: () => void
-  /** Called when the open-detail chevron is clicked */
-  onOpenDetail?: () => void
   /**
    * Called when edit is confirmed with Enter.
    * Used to distinguish Enter (confirm) from Escape (cancel) in the parent.
@@ -55,7 +53,6 @@ export function TaskItem({
   onEndEdit,
   onTitleChange,
   onStatusToggle,
-  onOpenDetail,
   onConfirmEdit,
   contextName,
   showScheduled = true,
@@ -192,29 +189,6 @@ export function TaskItem({
           >
             {task.title}
           </span>
-
-          {/* Open detail button - immediately after title */}
-          {onOpenDetail && (
-            <button
-              type="button"
-              onClick={e => {
-                e.stopPropagation()
-                onOpenDetail()
-              }}
-              className={cn(
-                'shrink-0 p-1.5 -m-1 rounded-full text-primary/70',
-                'hover:text-primary hover:bg-primary/10',
-                'transition-opacity duration-100',
-                // Show on hover (with delay) or when selected
-                isSelected
-                  ? 'opacity-100 delay-150'
-                  : 'opacity-0 group-hover:opacity-100 group-hover:delay-150'
-              )}
-              title="Open details"
-            >
-              <CircleChevronRight className="size-4" />
-            </button>
-          )}
 
           {/* Spacer pushes metadata to the right */}
           <div className="flex-1 min-w-2" />
