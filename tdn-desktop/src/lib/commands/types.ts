@@ -11,6 +11,22 @@ export interface AppCommand {
   keywords?: string[]
   execute: (context: CommandContext) => void | Promise<void>
   isAvailable?: (context: CommandContext) => boolean
+  /**
+   * Keyboard shortcut in Tauri accelerator format.
+   *
+   * This is the single source of truth for shortcuts - used for:
+   * - Keyboard event matching (via matchesKeyboardEvent)
+   * - Display in command palette (via formatForDisplay)
+   * - Menu accelerators (passed directly to Tauri)
+   *
+   * @example
+   * 'CmdOrCtrl+1'      // Cmd on Mac, Ctrl on Windows/Linux
+   * 'CmdOrCtrl+Shift+Z' // With shift modifier
+   * 'F11'              // Function key (no modifier)
+   * 'CmdOrCtrl+,'      // Special characters
+   *
+   * @see src/lib/shortcuts for parsing and formatting utilities
+   */
   shortcut?: string
 }
 
