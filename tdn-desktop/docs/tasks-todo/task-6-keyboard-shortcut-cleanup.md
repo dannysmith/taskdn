@@ -465,13 +465,13 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
    - Remove Cmd+K handler from `CommandPalette.tsx:59-69`
    - Update `use-main-window-event-listeners.ts` to use new hook
 
-### Phase 4: Menu Integration
+### Phase 4: Menu Integration ✅ [COMPLETE]
 
 9. Update `menu.ts` based on Phase 0 findings
    - If accelerators intercept keyboard events: Keep menu accelerators, remove React handlers for those shortcuts
    - If accelerators don't intercept: Remove menu accelerators OR have menu handlers call `executeCommand()` for consistency
 
-### Phase 5: Documentation & Cleanup
+### Phase 5: Documentation & Cleanup ✅ [COMPLETE]
 
 10. Update `docs/developer/keyboard-shortcuts.md`
     - Document the command-driven architecture

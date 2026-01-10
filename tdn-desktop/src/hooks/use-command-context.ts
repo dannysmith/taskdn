@@ -6,8 +6,10 @@ import type { CommandContext } from '@/lib/commands/types'
  * Module-level singleton actions safe to call outside React components.
  * Uses getState() at call time, so treat as imperative helpers, not hooks.
  * Note: Store must be initialized before use (always true after app mount).
+ *
+ * Exported for use in non-React contexts (e.g., menu handlers).
  */
-const commandContext: CommandContext = {
+export const commandContext: CommandContext = {
   openPreferences: () => useUIStore.getState().setPreferencesOpen(true),
   showToast: (message, type = 'info') =>
     void notify(message, undefined, { type }),
