@@ -1,6 +1,7 @@
 // Command system exports
 export * from './registry'
 export * from '../../hooks/use-command-context'
+import { appCommands } from './app-commands'
 import { navigationCommands } from './navigation-commands'
 import { windowCommands } from './window-commands'
 import { notificationCommands } from './notification-commands'
@@ -12,6 +13,7 @@ import { logger } from '@/lib/logger'
  * This should be called once during app initialization.
  */
 export function initializeCommandSystem(): void {
+  registerCommands(appCommands)
   registerCommands(navigationCommands)
   registerCommands(windowCommands)
   registerCommands(notificationCommands)
@@ -22,4 +24,4 @@ export function initializeCommandSystem(): void {
   }
 }
 
-export { navigationCommands, windowCommands, notificationCommands }
+export { appCommands, navigationCommands, windowCommands, notificationCommands }
