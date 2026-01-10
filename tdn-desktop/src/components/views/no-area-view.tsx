@@ -234,7 +234,7 @@ export function NoAreaView() {
         const newTask = await createTask.mutateAsync({
           title: '',
           status: 'ready',
-          projectId,
+          projectId: project?.title ?? null,
           areaId: project?.area ?? null,
           scheduled: null,
           due: null,

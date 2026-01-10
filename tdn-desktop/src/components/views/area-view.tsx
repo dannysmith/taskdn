@@ -212,7 +212,7 @@ export function AreaView({ areaId }: AreaViewProps) {
         title: '',
         status: 'ready',
         projectId: null,
-        areaId: areaId,
+        areaId: area?.title ?? null,
         scheduled: null,
         due: null,
         deferUntil: null,
@@ -256,7 +256,7 @@ export function AreaView({ areaId }: AreaViewProps) {
         const newTask = await createTask.mutateAsync({
           title: '',
           status: 'ready',
-          projectId,
+          projectId: project?.title ?? null,
           areaId: project?.area ?? null,
           scheduled: null,
           due: null,
