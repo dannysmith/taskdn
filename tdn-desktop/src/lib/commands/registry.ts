@@ -103,7 +103,14 @@ export async function executeCommand(
   context: CommandContext
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const command = commandRegistry.get(commandId)
+    // First check static registry
+    let command: AppCommand | undefined = commandRegistry.get(commandId)
+
+    // If not found, check dynamic commands (areas/projects)
+    if (!command) {
+      const dynamicCommands = getDynamicNavigationCommands(context)
+      command = dynamicCommands.find(cmd => cmd.id === commandId)
+    }
 
     if (!command) {
       return {
