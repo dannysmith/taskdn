@@ -43,6 +43,7 @@ chrono = { version = "0.4", features = ["serde"] }  # DateTime handling
 rayon = "1"                                  # Parallel file scanning
 globset = "0.4"                              # Ignore patterns
 uuid = { version = "1", features = ["v4"] }  # Unique ID generation
+xxhash-rust = { version = "0.8", features = ["xxh64"] }  # Stable cross-version hashing
 notify-debouncer-full = "0.5"                # File watching with debouncing
 parking_lot = "0.12"                         # Better RwLock implementation
 tempfile = "3"                               # For tests

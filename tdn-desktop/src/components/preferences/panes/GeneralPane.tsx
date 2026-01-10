@@ -140,10 +140,21 @@ export function GeneralPane() {
   // Handle ignore patterns change
   const handleIgnoreChange = (tags: Tag[]) => {
     if (!preferences) return
-    savePreferences.mutate({
-      ...preferences,
-      ignore: tags.length > 0 ? tags.map(tag => tag.text) : null,
-    })
+
+    // Normalize tags: trim whitespace, remove empty strings, deduplicate
+    const normalized = [
+      ...new Set(
+        tags.map(tag => tag.text.trim()).filter(text => text.length > 0)
+      ),
+    ]
+
+    savePreferences.mutate(
+      {
+        ...preferences,
+        ignore: normalized.length > 0 ? normalized : null,
+      },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
   }
 
   return (

@@ -64,7 +64,9 @@ export function ThemeProvider({
       localStorage.setItem(storageKey, newTheme)
       setTheme(newTheme)
       // Notify other windows (e.g., quick pane) of theme change
-      emit('theme-changed', { theme: newTheme })
+      void emit('theme-changed', { theme: newTheme }).catch(() => {
+        // Silently ignore emit failures (e.g., IPC errors) - theme is already applied locally
+      })
     },
   }
 

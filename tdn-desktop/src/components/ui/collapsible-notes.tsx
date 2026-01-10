@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { ChevronDown } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
 import { LazyMilkdownPreview } from '@/components/tasks/lazy-milkdown-editor'
@@ -21,19 +22,21 @@ interface CollapsibleNotesSectionProps {
 
 export function CollapsibleNotesSection({
   notes,
-  title = 'About this project',
+  title,
   defaultExpanded = false,
 }: CollapsibleNotesSectionProps) {
+  const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded)
 
   // Generate collapsed preview from notes (first 1-2 non-heading lines)
-  const collapsedPreview = React.useMemo(() => {
-    return notes
-      .split('\n')
-      .filter(line => line.trim() && !line.startsWith('#'))
-      .slice(0, 2)
-      .join(' ')
-  }, [notes])
+  // React Compiler handles memoization automatically
+  const collapsedPreview = notes
+    .split('\n')
+    .filter(line => line.trim() && !line.startsWith('#'))
+    .slice(0, 2)
+    .join(' ')
+
+  const displayTitle = title ?? t('collapsibleNotes.defaultTitle')
 
   if (!notes.trim()) {
     return null
@@ -52,7 +55,7 @@ export function CollapsibleNotesSection({
           )}
         />
         <span className="text-sm font-medium text-muted-foreground">
-          {title}
+          {displayTitle}
         </span>
       </button>
       <div
