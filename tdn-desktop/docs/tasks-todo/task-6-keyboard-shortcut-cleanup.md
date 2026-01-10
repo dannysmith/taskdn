@@ -27,17 +27,17 @@ The keyboard shortcut system has grown organically with shortcuts defined in mul
 
 ### Current Shortcut Coverage
 
-| Shortcut | Keyboard                      | Menu | Command      | Status         |
-| -------- | ----------------------------- | ---- | ------------ | -------------- |
-| Cmd+,    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working        |
-| Cmd+1    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working        |
-| Cmd+2    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working        |
-| Cmd+N    | ✓ `use-keyboard-shortcuts.ts` | ✗    | ✗            | Partial        |
-| Cmd+K    | ✓ `CommandPalette.tsx`        | ✗    | ✗            | Hidden         |
-| Cmd+B    | ✓ `sidebar.tsx`               | ✗    | ✗            | Hidden (dead?) |
-| Cmd+W    | ✗                             | ✗    | ✓ (declared) | Broken         |
-| Cmd+M    | ✗                             | ✗    | ✓ (declared) | Broken         |
-| F11      | ✗                             | ✗    | ✓ (declared) | Broken         |
+| Shortcut | Keyboard                      | Menu | Command      | Status              |
+| -------- | ----------------------------- | ---- | ------------ | ------------------- |
+| Cmd+,    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working             |
+| Cmd+1    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working             |
+| Cmd+2    | ✓ `use-keyboard-shortcuts.ts` | ✓    | ✓            | Working             |
+| Cmd+N    | ✓ `use-keyboard-shortcuts.ts` | ✗    | ✗            | Working (partial)   |
+| Cmd+K    | ✓ `CommandPalette.tsx`        | ✗    | ✗            | Hidden              |
+| Cmd+B    | ✓ `sidebar.tsx`               | ✗    | ✗            | DEAD CODE - REMOVE  |
+| Cmd+W    | ✗                             | ✗    | ✓ (declared) | Needs testing       |
+| Cmd+M    | ✗                             | ✗    | ✓ (declared) | Needs testing       |
+| F11      | ✗                             | ✗    | ✓ (declared) | Needs testing       |
 
 ## Target Architecture
 
@@ -139,7 +139,7 @@ Change shortcut format from display to parseable:
 }
 ```
 
-Note: Consider toggle commands vs show/hide pairs - toggle is simpler for shortcuts.
+**Design Decision**: Use toggle commands (`toggle-left-sidebar`) rather than show/hide pairs. This simplifies the codebase - no need for `isAvailable` checks to pick between show/hide variants. The existing separate show/hide commands in `navigation-commands.ts` will be consolidated into single toggle commands.
 
 #### 3. Unified Keyboard Handler
 
@@ -219,17 +219,18 @@ Option B is recommended - menu can have items without commands, and this keeps t
 - Add `toggle-command-palette` command with shortcut `CmdOrCtrl+K`
 - Remove keyboard handler from `CommandPalette.tsx`
 
-**Cmd+B (Sidebar)**:
+**Cmd+B (Sidebar)** - REMOVE:
 
-- Investigate: Is `SidebarProvider` state actually used?
-- If yes: Add as command, document it
-- If no: Remove the handler entirely (simplify)
+- **CONFIRMED DEAD CODE**: The handler toggles `SidebarProvider`'s internal `open` state, which is NOT connected to any visible UI. The actual sidebar visibility is controlled by `useUIStore.leftSidebarVisible`.
+- Remove the entire `useEffect` block from `sidebar.tsx:94-108`
 
-**Cmd+N (New Task)**:
+**Cmd+N (New Task)** - PRESERVE CAREFULLY:
 
 - Add `create-task` command with shortcut `CmdOrCtrl+N`
+- **CRITICAL**: Must route through `useTaskCreationStore.getState().triggerCreate()`
+- **CRITICAL**: Must check `e.defaultPrevented` before handling (component override)
 - Component handlers (TaskList, OrderedItemList) continue to use `stopPropagation`
-- Global handler provides fallback when no list is focused
+- See "CRITICAL: Cmd+N Task Creation Flow" in Edge Cases section
 
 ## Critical Issues to Verify First
 
@@ -280,19 +281,16 @@ If both handlers fire (see issue #1), behavior depends on order:
 
 **Finding**: The Cmd+B handler in `sidebar.tsx` toggles SidebarProvider's internal `open` state, which is NOT connected to actual UI visibility (controlled by `useUIStore.leftSidebarVisible`).
 
-**Action**: Remove the Cmd+B handler from `sidebar.tsx:95-108` entirely. The SidebarProvider's internal state is unused.
+**Action**: Remove the Cmd+B handler from `sidebar.tsx:95-108` entirely. The SidebarProvider's internal state is unused. Also remove it from the "Current Shortcut Coverage" table above.
 
-### 4. Window Commands May Be Unnecessary
+### 4. Window Commands - Add to Menus, Test Manually
 
 **Finding**: Cmd+W, Cmd+M, F11 are defined in `window-commands.ts` but have no keyboard handlers.
 
-**Question**: Are these needed at all?
+- On macOS, Cmd+W (close), Cmd+M (minimize), Cmd+H (hide) may be handled natively
+- Tauri apps with native decorations often get these for free
 
-- On macOS, Cmd+W (close), Cmd+M (minimize), Cmd+H (hide) are handled by the native window manager
-- Tauri apps with native decorations get these for free
-- Only need custom handlers if using custom window chrome
-
-**Action**: Test if these shortcuts work without any handlers. If yes, remove the window commands (they create false expectations).
+**Action**: Add window commands to the app menus (Task 11). Test manually whether they work via native handling. If they don't work and there's an easy Tauri solution, implement it. If not, remove them.
 
 ### 5. Input Field Exclusion is Incomplete
 
@@ -313,21 +311,9 @@ activeEl instanceof HTMLInputElement ||
 
 ## Corrected Implementation Approach
 
-### Show/Hide Pairs with isAvailable
+### Dynamic Command Matching
 
-The original doc suggested building a static shortcut map. This is **wrong** because `isAvailable()` depends on dynamic state.
-
-**Wrong approach**:
-
-```typescript
-useEffect(() => {
-  const commands = getAllCommands(context)
-  const shortcutMap = buildShortcutMap(commands) // Built once, becomes stale
-  // ...
-}, [context])
-```
-
-**Correct approach**: Check availability on each keypress:
+The keyboard handler should check command availability on each keypress (not cache at mount time), since `isAvailable()` depends on dynamic state.
 
 ```typescript
 const handleKeyDown = (e: KeyboardEvent) => {
@@ -345,6 +331,8 @@ const handleKeyDown = (e: KeyboardEvent) => {
 
 With ~20 commands, iterating on each keypress is fine (< 1ms).
 
+> **Note**: Since we're using toggle commands instead of show/hide pairs, the `isAvailable` pattern is mostly used for task-specific commands (requiring a selected task), not for sidebar toggles.
+
 ### Menu Integration Decision
 
 **Recommendation changed**: If accelerators intercept keyboard events (need to verify), then:
@@ -359,21 +347,85 @@ If accelerators don't intercept, use React keyboard handler for everything and r
 
 ### Phase 0: Verification (DO THIS FIRST)
 
-0. **Test double-firing behavior**
-   - Add console.log to `menu.ts` handlers and `use-keyboard-shortcuts.ts`
-   - Press Cmd+1, Cmd+2, Cmd+, and observe console
-   - Document which handlers fire
-   - This determines the entire approach for Phase 3 and 4
+> **Note**: Despite the theoretical double-firing concern documented above, all shortcuts (Cmd+1, Cmd+2, Cmd+,) currently work correctly from menu, keyboard, and command palette. The empirical testing below will confirm whether both handlers fire (with double-toggle canceling out) or only one fires.
 
-1. **Test window shortcuts**
-   - Press Cmd+W, Cmd+M, F11 in the app
-   - Do they work without any handlers? (native window management)
-   - If yes, remove window-commands.ts entries or mark as command-palette-only
+#### Step 0.1: Test Double-Firing Behavior
 
-2. **Quick fixes**
-   - Remove dead Cmd+B handler from `sidebar.tsx:95-108`
-   - Add `HTMLSelectElement` to exclusion in `use-keyboard-shortcuts.ts`
-   - Fix set/toggle inconsistency: change `commandContext.openPreferences` to use `setPreferencesOpen(true)` instead of `togglePreferences()`
+Add logging to determine if BOTH menu and keyboard handlers fire:
+
+1. **Add logging to `src/lib/menu.ts`** (temporarily):
+   ```typescript
+   function handleToggleLeftSidebar(): void {
+     console.log('🍎 MENU: handleToggleLeftSidebar fired')
+     logger.info('Toggle Left Sidebar menu item clicked')
+     useUIStore.getState().toggleLeftSidebar()
+   }
+
+   function handleOpenPreferences(): void {
+     console.log('🍎 MENU: handleOpenPreferences fired')
+     logger.info('Preferences menu item clicked')
+     useUIStore.getState().setPreferencesOpen(true)
+   }
+   ```
+
+2. **Add logging to `src/hooks/use-keyboard-shortcuts.ts`** (temporarily):
+   ```typescript
+   case ',': {
+     console.log('⌨️ KEYBOARD: Cmd+, handler fired')
+     e.preventDefault()
+     commandContext.openPreferences()
+     break
+   }
+   case '1': {
+     console.log('⌨️ KEYBOARD: Cmd+1 handler fired')
+     e.preventDefault()
+     // ... rest of handler
+   }
+   ```
+
+3. **Test each shortcut**:
+   - Press Cmd+1, Cmd+2, Cmd+, via keyboard
+   - Click the same items in the application menu
+   - Open console and note which log messages appear for each action
+
+4. **Document the results** below before proceeding:
+   - [ ] Cmd+1 keyboard: Which handlers fired? _______________
+   - [ ] Cmd+1 menu click: Which handlers fired? _______________
+   - [ ] Cmd+, keyboard: Which handlers fired? _______________
+   - [ ] Cmd+, menu click: Which handlers fired? _______________
+
+5. **Remove the logging** after testing.
+
+**Decision tree based on results**:
+- If ONLY menu handler fires for keyboard shortcuts → Menu accelerators intercept events, React handlers redundant
+- If ONLY keyboard handler fires → Menu accelerators are display-only, React handles all shortcuts
+- If BOTH fire → We have hidden double-toggle bug, need to remove one
+
+#### Step 0.2: Quick Fixes (Do These Regardless)
+
+1. **Remove dead Cmd+B handler** from `sidebar.tsx:94-108` (the entire useEffect block with `SIDEBAR_KEYBOARD_SHORTCUT`)
+2. **Add `HTMLSelectElement`** to exclusion in `use-keyboard-shortcuts.ts`:
+   ```typescript
+   if (
+     activeEl instanceof HTMLInputElement ||
+     activeEl instanceof HTMLTextAreaElement ||
+     activeEl instanceof HTMLSelectElement ||  // ADD THIS
+     (activeEl instanceof HTMLElement && activeEl.isContentEditable)
+   )
+   ```
+3. **Fix set/toggle inconsistency** in `use-command-context.ts`:
+   ```typescript
+   // Change from:
+   openPreferences: () => useUIStore.getState().togglePreferences(),
+   // To:
+   openPreferences: () => useUIStore.getState().setPreferencesOpen(true),
+   ```
+
+#### Step 0.3: Test Window Commands (Optional, Can Do Later)
+
+- Press Cmd+W, Cmd+M, F11 in the app
+- Note whether they work via native window management
+- Document findings for Task 11
 
 ### Phase 1: Foundation
 
@@ -430,7 +482,47 @@ If accelerators don't intercept, use React keyboard handler for everything and r
 
 ## Edge Cases
 
-### Component-Level Shortcuts
+### CRITICAL: Cmd+N Task Creation Flow (MUST PRESERVE)
+
+The Cmd+N shortcut has a sophisticated two-layer handler system that **must not be broken** during this refactor. Here's how it works:
+
+**Architecture** (in `task-creation-store.ts`):
+1. **Active List Handler** (priority 1): When a task is selected in TaskList or OrderedItemList
+2. **View Default Handler** (priority 2): Fallback when no task is selected
+
+**Component-Level Override Pattern**:
+- TaskList and OrderedItemList register handlers via `activateList()` when they have a selection
+- These components call `e.stopPropagation()` in their Cmd+N handlers
+- The global handler checks `e.defaultPrevented` and skips if component already handled it
+
+**What the new `use-global-shortcuts.ts` MUST do**:
+```typescript
+case 'n':
+case 'N': {
+  // CRITICAL: Skip if component already handled
+  if (e.defaultPrevented) break
+
+  // CRITICAL: Skip if in editable element
+  if (isEditableElement(document.activeElement)) break
+
+  e.preventDefault()
+  // Route through the task creation store (preserves two-layer system)
+  useTaskCreationStore.getState().triggerCreate()
+  break
+}
+```
+
+**DO NOT**:
+- Remove the `e.defaultPrevented` check
+- Bypass `triggerCreate()` with direct task creation
+- Change how TaskList/OrderedItemList call `stopPropagation()`
+
+**Related edit mode behavior**:
+- New tasks enter edit mode automatically
+- Pressing Escape deletes the newly created task (tracked via `newlyCreatedTaskId`)
+- This is handled in the list components, not the global shortcut handler
+
+### Component-Level Shortcuts (General Pattern)
 
 Some shortcuts are context-dependent (Cmd+N creates task in focused list). These should:
 
@@ -456,21 +548,22 @@ Some commands only make sense in certain contexts:
 
 ## Files to Change
 
-| File                                                | Change                   |
-| --------------------------------------------------- | ------------------------ |
-| `src/lib/shortcuts/*.ts`                            | New - shortcut utilities |
-| `src/lib/commands/types.ts`                         | Document shortcut format |
-| `src/lib/commands/navigation-commands.ts`           | Update shortcut format   |
-| `src/lib/commands/window-commands.ts`               | Update shortcut format   |
-| `src/lib/commands/index.ts`                         | Add new commands         |
-| `src/hooks/use-global-shortcuts.ts`                 | New - unified handler    |
-| `src/hooks/use-keyboard-shortcuts.ts`               | Delete                   |
-| `src/hooks/use-main-window-event-listeners.ts`      | Use new hook             |
-| `src/components/command-palette/CommandPalette.tsx` | Remove Cmd+K handler     |
-| `src/components/ui/sidebar.tsx`                     | Remove or keep Cmd+B     |
-| `src/lib/menu.ts`                                   | Use executeCommand       |
-| `docs/developer/keyboard-shortcuts.md`              | Rewrite                  |
-| `docs/developer/command-system.md`                  | Add shortcut section     |
+| File                                                | Change                                                   |
+| --------------------------------------------------- | -------------------------------------------------------- |
+| `src/lib/shortcuts/*.ts`                            | New - shortcut utilities (parser, matcher, formatter)    |
+| `src/lib/commands/types.ts`                         | Document shortcut format                                 |
+| `src/lib/commands/navigation-commands.ts`           | Consolidate to toggle commands, use Tauri format         |
+| `src/lib/commands/window-commands.ts`               | Update shortcut format (or remove if native handles it)  |
+| `src/lib/commands/index.ts`                         | Add new commands (toggle-command-palette, create-task)   |
+| `src/hooks/use-global-shortcuts.ts`                 | New - unified handler                                    |
+| `src/hooks/use-keyboard-shortcuts.ts`               | Delete                                                   |
+| `src/hooks/use-command-context.ts`                  | Fix set/toggle inconsistency                             |
+| `src/hooks/use-main-window-event-listeners.ts`      | Use new hook                                             |
+| `src/components/command-palette/CommandPalette.tsx` | Remove Cmd+K handler                                     |
+| `src/components/ui/sidebar.tsx`                     | Remove dead Cmd+B handler                                |
+| `src/lib/menu.ts`                                   | Use executeCommand, update based on Phase 0 findings     |
+| `docs/developer/keyboard-shortcuts.md`              | Rewrite                                                  |
+| `docs/developer/command-system.md`                  | Add shortcut section                                     |
 
 ## Success Criteria
 
