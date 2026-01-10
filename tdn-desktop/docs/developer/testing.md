@@ -124,20 +124,71 @@ test('component with query', () => {
 
 ### Testing Zustand Stores
 
+**Important:** Zustand stores persist state between tests. Always reset in `beforeEach`:
+
 ```typescript
-import { renderHook, act } from '@testing-library/react'
 import { useUIStore } from '@/store/ui-store'
 
-test('toggles sidebar visibility', () => {
-  const { result } = renderHook(() => useUIStore())
-
-  expect(result.current.leftSidebarVisible).toBe(true)
-
-  act(() => {
-    result.current.setLeftSidebarVisible(false)
+beforeEach(() => {
+  // Reset to initial state before each test
+  useUIStore.setState({
+    leftSidebarVisible: true,
+    commandPaletteOpen: false,
+    // ... other initial values
   })
+})
 
-  expect(result.current.leftSidebarVisible).toBe(false)
+test('toggles sidebar visibility', () => {
+  // Use getState() for direct state access (preferred pattern)
+  const { toggleLeftSidebar } = useUIStore.getState()
+
+  toggleLeftSidebar()
+
+  expect(useUIStore.getState().leftSidebarVisible).toBe(false)
+})
+```
+
+### Test Data Factories
+
+Use factory functions from `src/test/helpers/vault.ts`:
+
+```typescript
+import { createTestTask, createTestProject, resetFactoryCounters } from '@/test/helpers/vault'
+
+beforeEach(() => {
+  resetFactoryCounters() // Ensures deterministic IDs
+})
+
+test('task with custom status', () => {
+  const task = createTestTask({ status: 'done', title: 'Completed task' })
+  expect(task.status).toBe('done')
+})
+
+// Bulk data generation
+const { tasks, projects, areas } = createTestVault({
+  taskCount: 10,
+  projectCount: 3,
+  areaCount: 2,
+})
+```
+
+### Test Fixtures
+
+Static fixtures in `src/test/fixtures/vault/` for integration tests:
+- `tasks/` - All 7 task statuses plus edge cases
+- `projects/` - All 6 project statuses
+- `areas/` - Active and archived areas
+
+Use `withTempVault()` for write tests:
+
+```typescript
+import { withTempVault } from '@/test/helpers/vault'
+
+test('writes task to vault', async () => {
+  await withTempVault(async (vaultPath) => {
+    // vaultPath has tasks/, projects/, areas/ subdirectories
+    // Write tests here - temp dir cleaned up automatically
+  })
 })
 ```
 
