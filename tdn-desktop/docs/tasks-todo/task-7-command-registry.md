@@ -89,6 +89,12 @@ These are generated from current areas/projects (excluding archived areas, done/
 |----|-------|----------|----|----|
 | `open-preferences` | Preferences | ⌘, | Yes | Taskdn |
 | `toggle-fullscreen` | Toggle Full Screen | ⌃⌘F | Yes | View |
+| `open-help` | Taskdn Help | — | Yes | Help |
+| `create-task` | New Task | ⌘N | — | Yes | File |
+
+**Notes**:
+- `open-help` opens https://tdn.danny.is/desktop/overview/ in the default browser.
+- `create-task` is highly context-aware (see detailed spec below) - always available but behavior varies by context.
 
 ---
 
@@ -100,12 +106,10 @@ Available when a task is selected (and not in an editable element).
 
 | ID | Label | Shortcut | CM | CP | AM | Multi |
 |----|-------|----------|----|----|-----|-------|
-| `create-task` | New Task | ⌘N | — | Yes | File | — |
 | `paste-as-tasks` | Paste as Tasks | ⌘V | — | Yes | Edit | — |
 | `duplicate-task` | Duplicate | ⇧⌘D | Tasks | Yes | Edit | Yes |
 
 **Notes**:
-- `create-task` is highly context-aware (see detailed spec below)
 - `paste-as-tasks` creates one task per clipboard line, inserted below selected task
 - Standard paste (⌘V) behavior preserved in editable elements
 
@@ -140,9 +144,8 @@ Available when a task is selected (and not in an editable element).
 | ID | Label | Shortcut | CM | CP | AM | Multi |
 |----|-------|----------|----|----|-----|-------|
 | `copy-task-title` | Copy Title | ⌘C | Tasks | Yes | Edit | No |
-| `copy-task-path` | Copy Path | ⌥⌘C | Tasks | Yes | Edit | No |
 
-**Note**: Standard copy (⌘C) behavior preserved in editable elements.
+**Note**: Standard copy (⌘C) behavior preserved in editable elements. See also Entity File Operations for `copy-file-path` (⌥⌘C when task selected).
 
 ---
 
@@ -154,8 +157,8 @@ Available when any entity (task, project, or area) is selected. These appear in 
 |----|-------|----------|----|----|-----|-------|
 | `reveal-in-finder` | Reveal in Finder | — | All | Yes | File | "Reveal in Explorer" on Windows |
 | `open-in-default-app` | Open in Default App | — | All | Yes | File | Opens .md in system default |
-| `open-in-obsidian` | Open in Obsidian | — | All | Yes | File | Only if in Obsidian vault |
-| `copy-file-path` | Copy Path | — | All | Yes | Edit | Full absolute path |
+| `open-in-obsidian` | Open in Obsidian | — | All | Yes | File | Only if Obsidian Setting On |
+| `copy-file-path` | Copy Path | ⌥⌘C | All | Yes | Edit | Shortcut only when task selected |
 | `copy-local-url` | Copy Local URL | — | All | Yes | Edit | `taskdn://` URL |
 | `copy-as-markdown` | Copy as Markdown | — | All | Yes | Edit | Full file contents + path |
 
@@ -269,8 +272,7 @@ Window
 └── Bring All to Front
 
 Help
-├── Taskdn Help
-└── Report Issue...
+└── Taskdn Help (opens https://tdn.danny.is/desktop/overview/)
 ```
 
 ---
@@ -399,13 +401,6 @@ Highly context-aware task creation:
 | ⌘W | Close Window |
 | ⌘H | Hide App |
 | ⌘Q | Quit |
-
----
-
-## Open Questions
-
-1. **Help menu**: What should "Taskdn Help" link to? Documentation site?
-2. **Report Issue**: Should this open GitHub issues or a feedback form?
 
 ---
 
