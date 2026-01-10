@@ -8,7 +8,7 @@ import { devtools } from 'zustand/middleware'
  * 1. View Default Handler - Registered by views on mount. Used when no task is selected.
  * 2. Active List Handler - Registered by lists when they have a selection. Takes priority.
  *
- * Priority in triggerCreate: activeListHandler → viewDefaultHandler → legacy createTaskHandler
+ * Priority in triggerCreate: activeListHandler → viewDefaultHandler
  *
  * Views register their default handler for creating tasks in their primary section.
  * Lists (TaskList, OrderedItemList) register as "active" when they have a selection,
@@ -18,11 +18,6 @@ import { devtools } from 'zustand/middleware'
 export type CreateTaskHandler = (
   afterTaskId: string | null
 ) => Promise<string | undefined> | string | undefined
-
-export type InsertTaskInOrderHandler = (
-  newTaskId: string,
-  afterTaskId: string | null
-) => void
 
 interface ActiveListCallbacks {
   setEditingTaskId: ((id: string | null) => void) | null
@@ -68,45 +63,7 @@ interface TaskCreationState {
    */
   activeListCallbacks: ActiveListCallbacks | null
 
-  // === Legacy fields (for backward compat with DraggableTaskList) ===
-  /**
-   * The handler to call when Cmd+N is pressed.
-   * Returns the new task ID if successful, undefined otherwise.
-   */
-  createTaskHandler: CreateTaskHandler | null
-
-  /**
-   * The currently selected task ID in the active task list.
-   * New tasks will be inserted after this task.
-   * If null, new tasks are appended at the end.
-   */
-  selectedTaskId: string | null
-
-  /**
-   * Handler to insert the new task at the correct position in the order.
-   * Called after createTaskHandler succeeds.
-   */
-  insertInOrderHandler: InsertTaskInOrderHandler | null
-
-  /**
-   * Callback to set the editing task ID in the active list.
-   * Called after task creation to put the new task in edit mode.
-   */
-  setEditingTaskId: ((taskId: string | null) => void) | null
-
-  /**
-   * Callback to update the selection index in the active list.
-   * Called after task creation to select the new task.
-   */
-  setSelectedIndex: ((index: number | null) => void) | null
-
-  /**
-   * The current number of tasks in the active list.
-   * Used to calculate the new selection index.
-   */
-  taskCount: number
-
-  // === New Actions ===
+  // === Actions ===
   /**
    * Register the view's default handler for task creation.
    * Pass null to clear the registration.
@@ -147,27 +104,9 @@ interface TaskCreationState {
     index: number | null
   ) => void
 
-  // === Legacy Actions (keep working) ===
-  registerContext: (context: {
-    createTaskHandler: CreateTaskHandler
-    insertInOrderHandler?: InsertTaskInOrderHandler
-    setEditingTaskId?: (taskId: string | null) => void
-    setSelectedIndex?: (index: number | null) => void
-    taskCount?: number
-  }) => void
-
-  updateSelection: (
-    selectedTaskId: string | null,
-    selectedIndex: number | null
-  ) => void
-
-  updateTaskCount: (count: number) => void
-
-  unregisterContext: () => void
-
   /**
    * Trigger task creation via Cmd+N.
-   * Priority: activeListHandler → viewDefaultHandler → legacy createTaskHandler
+   * Priority: activeListHandler → viewDefaultHandler
    * Returns the new task ID if successful.
    */
   triggerCreate: () => Promise<string | undefined>
@@ -176,7 +115,7 @@ interface TaskCreationState {
 export const useTaskCreationStore = create<TaskCreationState>()(
   devtools(
     (set, get) => ({
-      // New state fields
+      // State
       viewDefaultHandler: null,
       viewDefaultOnTaskCreated: null,
       activeListId: null,
@@ -184,15 +123,7 @@ export const useTaskCreationStore = create<TaskCreationState>()(
       activeListSelectedTaskId: null,
       activeListCallbacks: null,
 
-      // Legacy state fields
-      createTaskHandler: null,
-      selectedTaskId: null,
-      insertInOrderHandler: null,
-      setEditingTaskId: null,
-      setSelectedIndex: null,
-      taskCount: 0,
-
-      // === New Actions ===
+      // Actions
       registerViewDefault: config => {
         if (config === null) {
           set(
@@ -257,45 +188,6 @@ export const useTaskCreationStore = create<TaskCreationState>()(
         )
       },
 
-      // === Legacy Actions ===
-      registerContext: context => {
-        set(
-          {
-            createTaskHandler: context.createTaskHandler,
-            insertInOrderHandler: context.insertInOrderHandler ?? null,
-            setEditingTaskId: context.setEditingTaskId ?? null,
-            setSelectedIndex: context.setSelectedIndex ?? null,
-            taskCount: context.taskCount ?? 0,
-          },
-          undefined,
-          'registerContext'
-        )
-      },
-
-      updateSelection: (selectedTaskId, _selectedIndex) => {
-        set({ selectedTaskId }, undefined, 'updateSelection')
-      },
-
-      updateTaskCount: count => {
-        set({ taskCount: count }, undefined, 'updateTaskCount')
-      },
-
-      unregisterContext: () => {
-        set(
-          {
-            createTaskHandler: null,
-            selectedTaskId: null,
-            insertInOrderHandler: null,
-            setEditingTaskId: null,
-            setSelectedIndex: null,
-            taskCount: 0,
-          },
-          undefined,
-          'unregisterContext'
-        )
-      },
-
-      // === Unified Trigger ===
       triggerCreate: async () => {
         const state = get()
 
@@ -319,27 +211,6 @@ export const useTaskCreationStore = create<TaskCreationState>()(
 
           if (newTaskId && state.viewDefaultOnTaskCreated) {
             state.viewDefaultOnTaskCreated(newTaskId) // Triggers edit mode in view
-          }
-
-          return newTaskId
-        }
-
-        // Priority 3: Legacy handler (for DraggableTaskList backward compat)
-        if (state.createTaskHandler) {
-          const afterTaskId = state.selectedTaskId
-          const result = state.createTaskHandler(afterTaskId)
-          const newTaskId = result instanceof Promise ? await result : result
-
-          if (newTaskId) {
-            // Insert in correct order position if handler provided
-            if (state.insertInOrderHandler) {
-              state.insertInOrderHandler(newTaskId, afterTaskId)
-            }
-
-            // Set the new task to editing mode
-            if (state.setEditingTaskId) {
-              state.setEditingTaskId(newTaskId)
-            }
           }
 
           return newTaskId
