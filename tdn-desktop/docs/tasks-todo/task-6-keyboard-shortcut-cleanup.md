@@ -68,7 +68,7 @@ Comprehensive review identified architectural issues in keyboard shortcut handli
    - Check if `SidebarProvider` state is actually used
    - If not, remove the keyboard handler and simplify
 
-### Longer Term
+### Sort the Command system
 
 4. **Make command system the source of truth**
 
