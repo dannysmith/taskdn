@@ -1,25 +1,190 @@
-# Task: Command Palette
+# Task: Command Palette & Command Implementation
 
+> **Requirements Reference**: See [Task 7: Command Registry](./task-7-command-registry.md) for the complete list of commands to implement.
 
-## Global Commands
+## Overview
 
-This is about ensuring that the global commands available in the command palette are appropriate and correctly wired up. There is a test one we should remove But all the others actually look sensible at the moment. I feel like we should add some global "navigation" commands:
+This task implements all commands defined in the registry and enhances the command palette to display them correctly. It builds on Task 6's shortcut infrastructure.
 
-- Today (Cmd 1)
-- This Week (Cmd 2)
-- Inbox (Cmd 3)
-- Calendar (Cmd 4)
-- NoArea (No keyboard shortcut)
+## Prerequisites
 
-I also feel like we should have commands to open each active Area and Project in a similar way. This should exclude any areas with status "archived" and any projects which are done or dropped?
+- Task 6 complete (shortcut parsing/matching utilities exist)
+- Task 7 reviewed (command registry defines what to implement)
 
-We might also want:
+## Scope
 
-- Collapse all areas (in sidebar)
-- Expand all areas (in sidebar)
+### 1. Update Existing Commands
 
-I can't think of any other global commands that we want at this point. 
+Convert existing commands to use Tauri accelerator format:
 
-## Contextual Commands
+```typescript
+// Before
+{ id: 'toggle-left-sidebar', shortcut: '⌘+1', ... }
 
-When in an area view we should see commands to open the Area file, copy the file path and open in Obsidian. Likewise for projects. When a task is selected we should see similar for the task. These are probably going to be very similar to the context menu commands.
+// After
+{ id: 'toggle-left-sidebar', shortcut: 'CmdOrCtrl+1', ... }
+```
+
+Files to update:
+- `src/lib/commands/navigation-commands.ts`
+- `src/lib/commands/window-commands.ts`
+
+### 2. Add Command Properties
+
+Extend `AppCommand` type to support registry properties:
+
+```typescript
+interface AppCommand {
+  // Existing
+  id: string
+  labelKey: string
+  shortcut?: string
+  execute: (context: CommandContext) => void | Promise<void>
+  isAvailable?: (context: CommandContext) => boolean
+
+  // New
+  surfaces?: {
+    commandPalette?: boolean  // Default: true
+    contextMenu?: EntityType[] // e.g., ['task', 'project', 'area']
+    appMenu?: string // Menu location, e.g., 'Edit', 'View'
+  }
+  supportsMultiSelect?: boolean // For future multi-select
+}
+```
+
+### 3. Implement New Commands
+
+#### Global Navigation Commands
+
+| Command | Notes |
+|---------|-------|
+| `navigate-today` | Set active view to Today |
+| `navigate-this-week` | Set active view to This Week |
+| `navigate-inbox` | Set active view to Inbox |
+| `navigate-calendar` | Set active view to Calendar |
+| `navigate-no-area` | Set active view to No Area |
+| `collapse-all-areas` | Collapse all areas in sidebar |
+| `expand-all-areas` | Expand all areas in sidebar |
+
+#### Dynamic Navigation Commands
+
+Generate commands for each active area/project:
+
+```typescript
+// Generate at runtime based on current areas/projects
+function getDynamicNavigationCommands(context: CommandContext): AppCommand[] {
+  const areas = context.getAreas().filter(a => a.status !== 'archived')
+  const projects = context.getProjects().filter(p =>
+    p.status !== 'done' && p.status !== 'dropped'
+  )
+
+  return [
+    ...areas.map(area => ({
+      id: `navigate-area-${area.id}`,
+      labelKey: area.title, // Direct title, not translation key
+      group: 'areas',
+      execute: () => context.navigateToArea(area.id),
+    })),
+    ...projects.map(project => ({
+      id: `navigate-project-${project.id}`,
+      labelKey: project.title,
+      group: 'projects',
+      execute: () => context.navigateToProject(project.id),
+    })),
+  ]
+}
+```
+
+#### Application Commands
+
+| Command | Notes |
+|---------|-------|
+| `open-help` | Opens https://tdn.danny.is/desktop/overview/ in browser |
+| `toggle-command-palette` | Already exists, ensure in registry |
+
+### 4. Command Palette Enhancements
+
+#### Contextual Command Display
+
+Commands should appear/hide based on context:
+
+```typescript
+// In command palette rendering
+const visibleCommands = allCommands.filter(cmd => {
+  // Check isAvailable
+  if (cmd.isAvailable && !cmd.isAvailable(context)) return false
+
+  // Check surface visibility
+  if (cmd.surfaces?.commandPalette === false) return false
+
+  return true
+})
+```
+
+#### Grouping
+
+Commands should be grouped in the palette:
+- Navigation (Today, This Week, etc.)
+- Areas (dynamic)
+- Projects (dynamic)
+- Settings
+- Window
+
+### 5. Extend CommandContext
+
+Add methods needed by new commands:
+
+```typescript
+interface CommandContext {
+  // Existing
+  openPreferences: () => void
+  showToast: (message: string, type?: ToastType) => void
+
+  // New
+  navigateToView: (view: ViewType) => void
+  navigateToArea: (areaId: string) => void
+  navigateToProject: (projectId: string) => void
+  getAreas: () => Area[]
+  getProjects: () => Project[]
+  collapseAllAreas: () => void
+  expandAllAreas: () => void
+  openExternalUrl: (url: string) => void
+}
+```
+
+## Implementation Steps
+
+1. Update `AppCommand` type with new properties
+2. Convert existing command shortcuts to Tauri format
+3. Implement static navigation commands
+4. Implement dynamic area/project command generation
+5. Extend `CommandContext` with needed methods
+6. Update command palette to filter by `surfaces.commandPalette`
+7. Update command palette grouping
+8. Add tests for new commands
+
+## Files to Change
+
+| File | Change |
+|------|--------|
+| `src/lib/commands/types.ts` | Add `surfaces`, `supportsMultiSelect` |
+| `src/lib/commands/navigation-commands.ts` | Update format, add new commands |
+| `src/lib/commands/window-commands.ts` | Update format |
+| `src/lib/commands/index.ts` | Add dynamic command generation |
+| `src/hooks/use-command-context.ts` | Extend context |
+| `src/components/command-palette/CommandPalette.tsx` | Update filtering/grouping |
+
+## Success Criteria
+
+1. All commands from registry are implemented
+2. Command palette shows correct commands based on context
+3. Dynamic navigation to any area/project works
+4. Commands use Tauri accelerator format for shortcuts
+5. Shortcuts display correctly in palette (formatted for platform)
+
+## Additional Work & Bugfixes
+
+After implementation, add any other tasks reported by the user here.
+
+- [ ] Visual cleanup - The command palette should be wide enough and look nice.
+- [ ] Keyboard navigation within the palette should be fast and not-janky. Check it works fine with fast filter searching and fast keyboard navigation.

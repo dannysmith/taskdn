@@ -1,5 +1,7 @@
 # Task: Command Registry
 
+IMPORTANT: This document is not really a task. We will make it a evergreen document when we are finished implementing the other tasks which rely upon it. 
+
 ## Overview
 
 This document defines ALL commands in Taskdn Desktop - their shortcuts, availability conditions, and where they appear (command palette, context menus, app menus). It serves as the single source of truth for requirements before implementation.
