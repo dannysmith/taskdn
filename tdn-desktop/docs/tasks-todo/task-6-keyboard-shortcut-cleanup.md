@@ -345,7 +345,7 @@ If accelerators don't intercept, use React keyboard handler for everything and r
 
 ## Implementation Steps
 
-### Phase 0: Verification (DO THIS FIRST)
+### Phase 0: Verification (DO THIS FIRST) ✅ [COMPLETE]
 
 > **Note**: Despite the theoretical double-firing concern documented above, all shortcuts (Cmd+1, Cmd+2, Cmd+,) currently work correctly from menu, keyboard, and command palette. The empirical testing below will confirm whether both handlers fire (with double-toggle canceling out) or only one fires.
 
@@ -429,7 +429,7 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
 - Note whether they work via native window management
 - Document findings for Task 11
 
-### Phase 1: Foundation
+### Phase 1: Foundation ✅ [COMPLETE]
 
 3. Create `src/lib/shortcuts/` utilities
    - `parseShortcut()` — parse `CmdOrCtrl+Shift+1` to structured form
@@ -441,7 +441,7 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
    - Document that `shortcut` uses Tauri accelerator format
    - Add helper to get display format for UI
 
-### Phase 2: Commands
+### Phase 2: Commands ✅ [COMPLETE]
 
 5. Update existing commands to use parseable format
    - `navigation-commands.ts`: Change `⌘+1` → `CmdOrCtrl+1`
@@ -451,7 +451,7 @@ Add logging to determine if BOTH menu and keyboard handlers fire:
    - `toggle-command-palette` (`CmdOrCtrl+K`)
    - `create-task` (`CmdOrCtrl+N`)
 
-### Phase 3: Unified Handler
+### Phase 3: Unified Handler ✅ [COMPLETE]
 
 7. Create `use-global-shortcuts.ts`
    - Query available commands on each keypress (dynamic `isAvailable` check)

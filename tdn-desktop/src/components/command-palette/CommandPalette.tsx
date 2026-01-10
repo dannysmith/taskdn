@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUIStore } from '@/store/ui-store'
 import { useCommandContext } from '@/hooks/use-command-context'
 import { getAllCommands, executeCommand } from '@/lib/commands'
+import { formatForDisplay } from '@/lib/shortcuts'
 import {
   CommandDialog,
   CommandInput,
@@ -17,7 +18,6 @@ export function CommandPalette() {
   const { t } = useTranslation()
   const commandPaletteOpen = useUIStore(state => state.commandPaletteOpen)
   const setCommandPaletteOpen = useUIStore(state => state.setCommandPaletteOpen)
-  const toggleCommandPalette = useUIStore(state => state.toggleCommandPalette)
   const commandContext = useCommandContext()
   const [search, setSearch] = useState('')
 
@@ -54,19 +54,6 @@ export function CommandPalette() {
       setSearch('') // Clear search when closing
     }
   }
-
-  // Keyboard shortcut handler
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        toggleCommandPalette()
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [toggleCommandPalette])
 
   // Helper function to get readable group labels
   const getGroupLabel = (groupName: string): string => {
@@ -109,7 +96,9 @@ export function CommandPalette() {
                   </span>
                 )}
                 {command.shortcut && (
-                  <CommandShortcut>{command.shortcut}</CommandShortcut>
+                  <CommandShortcut>
+                    {formatForDisplay(command.shortcut)}
+                  </CommandShortcut>
                 )}
               </CommandItem>
             ))}
