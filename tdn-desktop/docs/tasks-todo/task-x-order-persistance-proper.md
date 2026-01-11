@@ -7,6 +7,7 @@ Persist display order and Today view headings to the app data directory using Ru
 Currently, all ordering state lives in `display-order-store.ts` (Zustand) and is lost on app restart. This task implements proper disk persistence via Rust commands.
 
 **Note:** A simpler localStorage-based solution exists as task-0. This task is for when we need:
+
 - Per-vault storage (multiple vaults)
 - Better inspectability (JSON file in app data dir)
 - Atomic writes for robustness
@@ -15,6 +16,7 @@ Currently, all ordering state lives in `display-order-store.ts` (Zustand) and is
 ## What to Persist
 
 From `display-order-store.ts`:
+
 - `sidebarAreaOrder: string[] | null`
 - `sidebarProjectOrder: Record<string, string[]> | null`
 - `inboxOrder: string[] | null`
@@ -68,6 +70,7 @@ File location: `{app_data_dir}/display-order-{vault_hash}.json`
 Use vault path hash in filename for per-vault storage.
 
 Commands:
+
 - `load_display_order(vault_path: String)` - returns Default if missing
 - `save_display_order(vault_path: String, data: DisplayOrderData)` - atomic write
 
@@ -91,7 +94,7 @@ export function useDisplayOrderPersistence() {
   // 2. Subscribe to Zustand, debounced save
   useEffect(() => {
     const unsubscribe = useDisplayOrderStore.subscribe(
-      debounce((state) => {
+      debounce(state => {
         commands.saveDisplayOrder(vaultPath, extractPersistableState(state))
       }, 1000)
     )
@@ -104,7 +107,9 @@ export function useDisplayOrderPersistence() {
       const state = useDisplayOrderStore.getState()
       await commands.saveDisplayOrder(vaultPath, extractPersistableState(state))
     })
-    return () => { unlisten.then(fn => fn()) }
+    return () => {
+      unlisten.then(fn => fn())
+    }
   }, [vaultPath])
 }
 ```
@@ -118,6 +123,7 @@ export function useDisplayOrderPersistence() {
 ## Stale Data Handling
 
 **Already solved by existing hooks.** When order hooks render:
+
 1. Take persisted order array
 2. Filter out IDs not in current vault data
 3. Append any new IDs to end
@@ -129,6 +135,7 @@ No special handling needed. Persisted order with deleted task IDs just gets filt
 A previous attempt at this caused sync problems between Zustand state and file-watcher-triggered vault updates. The issue was trying to coordinate both directions of updates.
 
 **Solution:** Keep it one-directional:
+
 - Zustand is always the UI source of truth
 - Rust persistence is just save/load, not reactive
 - Don't try to update Zustand when files change (the filtering handles stale data)

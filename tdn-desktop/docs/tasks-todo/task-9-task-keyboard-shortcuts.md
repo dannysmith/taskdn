@@ -19,12 +19,7 @@ From the registry, these commands require "task selected" availability:
 
 | Command               | Shortcut | Description                       |
 | --------------------- | -------- | --------------------------------- |
-| `paste-as-tasks`      | ⌘V       | Create tasks from clipboard lines |
 | `duplicate-task`      | ⇧⌘D      | Duplicate selected task           |
-| `move-task-up`        | ⌘↑       | Move task up in list              |
-| `move-task-down`      | ⌘↓       | Move task down in list            |
-| `move-task-to-top`    | ⌥⌘↑      | Move task to top of list          |
-| `move-task-to-bottom` | ⌥⌘↓      | Move task to bottom of list       |
 | `edit-scheduled-date` | ⌘D       | Open scheduled date picker        |
 | `set-scheduled-today` | ⌘T       | Set scheduled date to today       |
 | `edit-due-date`       | ⌥⌘D      | Open due date picker              |
@@ -334,41 +329,9 @@ React to `pendingFocusField` and auto-focus/open the relevant picker when set.
 
 ---
 
-### Phase 3: Clipboard & Movement Commands
+### Phase 3: Clipboard Paste & Movement Commands
 
-**Goal**: Remaining commands including paste-as-tasks and movement.
-
-#### 3.1 paste-as-tasks (⌘V)
-
-More complex - needs to:
-
-1. Read clipboard text
-2. Split into lines
-3. Create tasks in appropriate location (depends on current view context)
-
-May need to understand task ordering/positioning system first.
-
-| Command          | Shortcut | Implementation                                   |
-| ---------------- | -------- | ------------------------------------------------ |
-| `paste-as-tasks` | ⌘V       | Parse clipboard lines, create tasks sequentially |
-
-#### 3.2 Movement Commands (May Defer)
-
-These depend on how task ordering works in the app:
-
-| Command               | Shortcut | Notes                      |
-| --------------------- | -------- | -------------------------- |
-| `move-task-up`        | ⌘↑       | Needs task ordering system |
-| `move-task-down`      | ⌘↓       | Needs task ordering system |
-| `move-task-to-top`    | ⌥⌘↑      | Needs task ordering system |
-| `move-task-to-bottom` | ⌥⌘↓      | Needs task ordering system |
-
-**Note**: Task movement may require backend support or a dedicated ordering store. The task doc mentions "[CURRENTLY WORKS IN TASK LISTS]" - need to investigate if there's existing movement logic we can leverage.
-
-#### Checkpoint
-
-- [ ] `⌘V` creates tasks from clipboard lines (when task selected, not in input)
-- [ ] Movement commands work (if implemented)
+NOTE: I HAVE REMOVED PHASE 3 - WE'll DO THIS ANOTHER TIME
 
 ---
 
