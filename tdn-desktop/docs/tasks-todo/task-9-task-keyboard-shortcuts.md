@@ -89,7 +89,7 @@ execute: async context => {
 }
 ```
 
-#### Movement Commands (⌘↑↓, ⌥⌘↑↓)
+#### Movement Commands (⌘↑↓, ⌥⌘↑↓) [CURRENTLY WORKS IN TASK LISTS]
 
 ```typescript
 // move-task-up
@@ -209,26 +209,169 @@ onKeyDown={(e) => {
 
 The global shortcut handler respects `e.defaultPrevented` and skips commands when a component has already handled the event.
 
-## Implementation Steps
+## Phased Implementation Plan
 
-1. Extend `CommandContext` with task operation methods
-2. Create `src/lib/commands/task-commands.ts`
-3. Implement each command with proper `isAvailable` check
-4. Register task commands in command system
-5. Ensure date picker / status dropdown can be triggered programmatically
-6. Add tests for each command
-7. Verify keyboard shortcuts work with task selected
-8. Ensure all existing keyboard functionality works as before (user to manually test and report)
+### Current State (from exploration)
 
-## Files to Change
+- **CommandContext**: Has navigation, toast, preferences. NO task-specific methods.
+- **task-detail-store**: Has `openTaskId` - can serve as "selected task" for commands.
+- **Vault mutations**: `useCreateTask`, `useUpdateTask`, `useDeleteTask` exist with optimistic updates.
+- **TaskUpdate**: Supports `title`, `status`, `project`, `area`, `scheduled`, `due`, `deferUntil`, `body`.
+- **No backend** for `duplicateTask` or `moveTask` ordering - but duplicate can be done client-side.
 
-| File                                | Change                                 |
-| ----------------------------------- | -------------------------------------- |
-| `src/lib/commands/task-commands.ts` | New - all task commands                |
-| `src/lib/commands/index.ts`         | Register task commands                 |
-| `src/hooks/use-command-context.ts`  | Add task operation methods             |
-| `src/stores/ui-store.ts`            | Add openDatePicker, openStatusDropdown |
-| `src/components/task-list/*`        | Expose methods for command context     |
+---
+
+### Phase 1: Foundation + Immediate Action Commands
+
+**Goal**: Establish task command infrastructure and implement commands that need no new UI.
+
+#### 1.1 Extend CommandContext (types.ts + use-command-context.ts)
+
+Add to `CommandContext` interface:
+```typescript
+// Task selection (reads from task-detail-store)
+selectedTaskId: string | null
+getSelectedTask: () => Task | null
+
+// Task mutations (wraps useUpdateTask via direct commands call)
+updateTaskScheduled: (taskId: string, date: string | null) => Promise<void>
+```
+
+Add shared availability helper:
+```typescript
+// Helper for task commands - checks selected task + not in editable element
+export function isTaskCommandAvailable(): boolean
+```
+
+#### 1.2 Create task-commands.ts
+
+Implement these commands (no new UI needed):
+
+| Command               | Shortcut | Implementation                                                |
+| --------------------- | -------- | ------------------------------------------------------------- |
+| `set-scheduled-today` | ⌘T       | `commands.updateTask({ id, scheduled: todayISO })`            |
+| `copy-task-title`     | ⌘C       | `navigator.clipboard.writeText(task.title)` + toast           |
+| `duplicate-task`      | ⇧⌘D      | `commands.createTask(...)` with same data, then open new task |
+
+#### 1.3 Register in command system
+
+- Add to `src/lib/commands/index.ts`
+- Ensure shortcuts work via global handler
+
+#### Files to Change (Phase 1)
+| File                                | Change                                        |
+| ----------------------------------- | --------------------------------------------- |
+| `src/lib/commands/types.ts`         | Add task-related CommandContext methods       |
+| `src/hooks/use-command-context.ts`  | Implement selectedTaskId, getSelectedTask, updateTaskScheduled |
+| `src/lib/commands/task-commands.ts` | NEW - set-scheduled-today, copy-task-title, duplicate-task |
+| `src/lib/commands/index.ts`         | Register task commands                        |
+
+#### Checkpoint
+- [ ] `⌘T` sets selected task's scheduled date to today
+- [ ] `⌘C` copies task title when task selected (not in input)
+- [ ] `⇧⌘D` duplicates task and opens the new task
+- [ ] Standard ⌘C/⌘V still work in inputs/textareas
+
+---
+
+### Phase 2: Date/Status Picker Commands
+
+**Goal**: Commands that open pickers/dropdowns for editing.
+
+#### Approach Decision
+
+**Option A**: Open task detail panel and programmatically focus the field
+- Pros: Uses existing UI, no new components
+- Cons: Forces detail panel open, might feel disruptive
+
+**Option B**: Create floating picker triggered by command
+- Pros: Non-intrusive, can work anywhere
+- Cons: More UI work, duplicate components
+
+**Recommended**: Option A for initial implementation - simpler, uses existing components.
+
+#### 2.1 Add UI store methods
+
+```typescript
+// In ui-store or task-detail-store
+pendingFocusField: 'scheduled' | 'due' | 'defer' | 'status' | null
+setPendingFocusField: (field: ...) => void
+```
+
+#### 2.2 Implement picker commands
+
+| Command               | Shortcut | Implementation                              |
+| --------------------- | -------- | ------------------------------------------- |
+| `edit-scheduled-date` | ⌘D       | Open detail panel, focus scheduled field    |
+| `edit-due-date`       | ⌥⌘D      | Open detail panel, focus due field          |
+| `edit-defer-date`     | ⇧⌥⌘D     | Open detail panel, focus defer field        |
+| `edit-status`         | ⌘S       | Open detail panel, focus status dropdown    |
+
+#### 2.3 Update TaskDetailPanel
+
+React to `pendingFocusField` and auto-focus/open the relevant picker when set.
+
+#### Files to Change (Phase 2)
+| File                                      | Change                              |
+| ----------------------------------------- | ----------------------------------- |
+| `src/lib/commands/task-commands.ts`       | Add 4 picker commands               |
+| `src/store/task-detail-store.ts`          | Add pendingFocusField state         |
+| `src/components/tasks/task-detail-panel.tsx` | Handle auto-focus on pendingFocusField |
+
+#### Checkpoint
+- [ ] `⌘D` opens detail panel with scheduled date picker focused/open
+- [ ] `⌥⌘D` opens detail panel with due date picker focused/open
+- [ ] `⇧⌥⌘D` opens detail panel with defer date picker focused/open
+- [ ] `⌘S` opens detail panel with status dropdown open
+
+---
+
+### Phase 3: Clipboard & Movement Commands
+
+**Goal**: Remaining commands including paste-as-tasks and movement.
+
+#### 3.1 paste-as-tasks (⌘V)
+
+More complex - needs to:
+1. Read clipboard text
+2. Split into lines
+3. Create tasks in appropriate location (depends on current view context)
+
+May need to understand task ordering/positioning system first.
+
+| Command          | Shortcut | Implementation                                   |
+| ---------------- | -------- | ------------------------------------------------ |
+| `paste-as-tasks` | ⌘V       | Parse clipboard lines, create tasks sequentially |
+
+#### 3.2 Movement Commands (May Defer)
+
+These depend on how task ordering works in the app:
+
+| Command               | Shortcut | Notes                                  |
+| --------------------- | -------- | -------------------------------------- |
+| `move-task-up`        | ⌘↑       | Needs task ordering system             |
+| `move-task-down`      | ⌘↓       | Needs task ordering system             |
+| `move-task-to-top`    | ⌥⌘↑      | Needs task ordering system             |
+| `move-task-to-bottom` | ⌥⌘↓      | Needs task ordering system             |
+
+**Note**: Task movement may require backend support or a dedicated ordering store. The task doc mentions "[CURRENTLY WORKS IN TASK LISTS]" - need to investigate if there's existing movement logic we can leverage.
+
+#### Checkpoint
+- [ ] `⌘V` creates tasks from clipboard lines (when task selected, not in input)
+- [ ] Movement commands work (if implemented)
+
+---
+
+## Files to Change (Summary)
+
+| File                                         | Phase | Change                                    |
+| -------------------------------------------- | ----- | ----------------------------------------- |
+| `src/lib/commands/types.ts`                  | 1     | Add task-related CommandContext methods   |
+| `src/hooks/use-command-context.ts`           | 1     | Implement task context methods            |
+| `src/lib/commands/task-commands.ts`          | 1,2,3 | NEW - all task commands                   |
+| `src/lib/commands/index.ts`                  | 1     | Register task commands                    |
+| `src/store/task-detail-store.ts`             | 2     | Add pendingFocusField for picker commands |
+| `src/components/tasks/task-detail-panel.tsx` | 2     | Handle auto-focus on field                |
 
 ## Success Criteria
 
@@ -237,7 +380,7 @@ The global shortcut handler respects `e.defaultPrevented` and skips commands whe
 3. Standard ⌘C/⌘V preserved in editable elements
 4. Date pickers open via keyboard shortcut
 5. Status dropdown opens via keyboard shortcut
-6. Task movement works across all views
+6. Task movement works across all views (if implemented)
 
 ## Reference
 
