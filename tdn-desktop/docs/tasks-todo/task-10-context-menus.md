@@ -25,11 +25,11 @@ Open in Obsidian          (if Obsidian Setting On)
 
 Edit Scheduled Date       ⌘D
 Set Scheduled to Today    ⌘T
-Edit Due Date             ⌥⌘D
-Edit Defer Until          ⇧⌥⌘D
+Edit Due Date             ⇧⌘D
+Edit Defer Until          ⌃⇧⌘D
 Edit Status               ⌘S
 ─────────────
-Duplicate                 ⇧⌘D
+Duplicate                 ⌘'
 ─────────────
 Copy Title                ⌘C
 Copy Path                 ⌥⌘C

@@ -26,6 +26,21 @@ export function matchesKeyboardEvent(
     return false
   }
 
+  // Ctrl key (⌃): always event.ctrlKey on Mac, but on Windows we need to be careful
+  // because ctrlKey might already be used for cmdOrCtrl
+  if (isMac) {
+    // On Mac, ctrl is separate from cmd
+    if (shortcut.ctrl !== event.ctrlKey) {
+      return false
+    }
+  } else {
+    // On Windows/Linux, if cmdOrCtrl is true, ctrlKey is already checked above
+    // Only check ctrl separately if cmdOrCtrl is false
+    if (!shortcut.cmdOrCtrl && shortcut.ctrl !== event.ctrlKey) {
+      return false
+    }
+  }
+
   if (shortcut.shift !== event.shiftKey) {
     return false
   }

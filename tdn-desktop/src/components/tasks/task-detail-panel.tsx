@@ -1,8 +1,12 @@
+import * as React from 'react'
 import { format } from 'date-fns'
 import { Calendar, Flag, Snowflake, FolderOpen, CircleDot } from 'lucide-react'
 
 import { useVaultData, useVaultHelpers, useUpdateTask } from '@/services/vault'
-import { useTaskDetailStore } from '@/store/task-detail-store'
+import {
+  useTaskDetailStore,
+  type FocusableField,
+} from '@/store/task-detail-store'
 import type { TaskStatus } from '@/lib/tauri-bindings'
 
 import { Textarea } from '@/components/ui/textarea'
@@ -29,6 +33,24 @@ import { LazyMilkdownEditor } from './lazy-milkdown-editor'
  */
 export function TaskDetailPanel() {
   const openTaskId = useTaskDetailStore(state => state.openTaskId)
+  const pendingFocusField = useTaskDetailStore(state => state.pendingFocusField)
+  const clearPendingFocus = useTaskDetailStore(state => state.clearPendingFocus)
+
+  // Track which field's popover/dropdown is currently open
+  const [openField, setOpenField] = React.useState<FocusableField>(null)
+
+  // When pendingFocusField changes, open the corresponding field
+  React.useEffect(() => {
+    if (pendingFocusField) {
+      setOpenField(pendingFocusField)
+      clearPendingFocus()
+    }
+  }, [pendingFocusField, clearPendingFocus])
+
+  // Handler to close a field (clears openField when popover/dropdown closes)
+  const handleFieldOpenChange = (field: FocusableField, open: boolean) => {
+    setOpenField(open ? field : null)
+  }
 
   const { tasks, projects, areas } = useVaultData()
   const { getActiveProjects, getActiveAreas, getProjectById, getAreaById } =
@@ -253,6 +275,8 @@ export function TaskDetailPanel() {
           <TaskStatusPill
             status={task.status}
             onStatusChange={handleStatusChange}
+            open={openField === 'status'}
+            onOpenChange={open => handleFieldOpenChange('status', open)}
           />
           <div className="flex-1 min-w-4" />
           <div className="flex items-center gap-1.5 @[280px]:gap-2">
@@ -262,6 +286,8 @@ export function TaskDetailPanel() {
               onChange={handleScheduledChange}
               tooltip="Scheduled"
               variant="scheduled"
+              open={openField === 'scheduled'}
+              onOpenChange={open => handleFieldOpenChange('scheduled', open)}
             />
             <DateButton
               icon={<Flag className="size-3" />}
@@ -269,6 +295,8 @@ export function TaskDetailPanel() {
               onChange={handleDueChange}
               tooltip="Due"
               variant="due"
+              open={openField === 'due'}
+              onOpenChange={open => handleFieldOpenChange('due', open)}
             />
             <DateButton
               icon={<Snowflake className="size-3" />}
@@ -276,6 +304,8 @@ export function TaskDetailPanel() {
               onChange={handleDeferUntilChange}
               tooltip="Defer"
               variant="defer"
+              open={openField === 'defer'}
+              onOpenChange={open => handleFieldOpenChange('defer', open)}
             />
           </div>
         </div>

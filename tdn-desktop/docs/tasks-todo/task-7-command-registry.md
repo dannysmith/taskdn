@@ -112,7 +112,7 @@ Available when a task is selected (and not in an editable element).
 | ID               | Label          | Shortcut | CM    | CP  | AM   | Multi |
 | ---------------- | -------------- | -------- | ----- | --- | ---- | ----- |
 | `paste-as-tasks` | Paste as Tasks | ⌘V       | —     | Yes | Edit | —     |
-| `duplicate-task` | Duplicate      | ⇧⌘D      | Tasks | Yes | Edit | Yes   |
+| `duplicate-task` | Duplicate      | ⌘'       | Tasks | Yes | Edit | Yes   |
 
 **Notes**:
 

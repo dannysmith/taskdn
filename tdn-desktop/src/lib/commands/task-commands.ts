@@ -5,7 +5,14 @@
  * the same availability check: task must be selected AND focus must NOT
  * be in an editable element (to preserve standard ⌘C/⌘V in inputs).
  */
-import { Calendar, Copy, CopyPlus } from 'lucide-react'
+import {
+  Calendar,
+  Copy,
+  CopyPlus,
+  Flag,
+  Snowflake,
+  CircleDot,
+} from 'lucide-react'
 import i18n from '@/i18n/config'
 import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
@@ -75,6 +82,70 @@ export const taskCommands: AppCommand[] = [
     },
   },
 
+  {
+    id: 'edit-scheduled-date',
+    labelKey: 'commands.editScheduledDate.label',
+    descriptionKey: 'commands.editScheduledDate.description',
+    icon: Calendar,
+    group: 'tasks',
+    shortcut: 'CmdOrCtrl+D',
+    keywords: ['schedule', 'date', 'when', 'edit'],
+    surfaces: { commandPalette: true, contextMenu: ['task'], appMenu: 'Edit' },
+    isAvailable: isTaskCommandAvailable,
+
+    execute: context => {
+      context.focusField('scheduled')
+    },
+  },
+
+  {
+    id: 'edit-due-date',
+    labelKey: 'commands.editDueDate.label',
+    descriptionKey: 'commands.editDueDate.description',
+    icon: Flag,
+    group: 'tasks',
+    shortcut: 'Shift+CmdOrCtrl+D',
+    keywords: ['due', 'deadline', 'date', 'edit'],
+    surfaces: { commandPalette: true, contextMenu: ['task'], appMenu: 'Edit' },
+    isAvailable: isTaskCommandAvailable,
+
+    execute: context => {
+      context.focusField('due')
+    },
+  },
+
+  {
+    id: 'edit-defer-date',
+    labelKey: 'commands.editDeferDate.label',
+    descriptionKey: 'commands.editDeferDate.description',
+    icon: Snowflake,
+    group: 'tasks',
+    shortcut: 'Ctrl+Shift+CmdOrCtrl+D',
+    keywords: ['defer', 'delay', 'snooze', 'date', 'edit'],
+    surfaces: { commandPalette: true, contextMenu: ['task'], appMenu: 'Edit' },
+    isAvailable: isTaskCommandAvailable,
+
+    execute: context => {
+      context.focusField('defer')
+    },
+  },
+
+  {
+    id: 'edit-status',
+    labelKey: 'commands.editStatus.label',
+    descriptionKey: 'commands.editStatus.description',
+    icon: CircleDot,
+    group: 'tasks',
+    shortcut: 'CmdOrCtrl+S',
+    keywords: ['status', 'state', 'edit'],
+    surfaces: { commandPalette: true, contextMenu: ['task'], appMenu: 'Edit' },
+    isAvailable: isTaskCommandAvailable,
+
+    execute: context => {
+      context.focusField('status')
+    },
+  },
+
   // ─────────────────────────────────────────────────────────────────────────────
   // Clipboard Commands
   // ─────────────────────────────────────────────────────────────────────────────
@@ -114,7 +185,7 @@ export const taskCommands: AppCommand[] = [
     descriptionKey: 'commands.duplicateTask.description',
     icon: CopyPlus,
     group: 'tasks',
-    shortcut: 'Shift+CmdOrCtrl+D',
+    shortcut: "CmdOrCtrl+'",
     keywords: ['duplicate', 'copy', 'clone'],
     surfaces: { commandPalette: true, contextMenu: ['task'], appMenu: 'Edit' },
     supportsMultiSelect: true,

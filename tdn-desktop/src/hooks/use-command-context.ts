@@ -75,6 +75,9 @@ export const commandContext: CommandContext = {
   openTask: (taskId: string) => {
     useTaskDetailStore.getState().openTask(taskId)
   },
+  focusField: field => {
+    useTaskDetailStore.getState().focusField(field)
+  },
 
   // Cache updates (for commands that modify data without going through mutation hooks)
   updateTaskInCache: (taskId: string, updatedTask: Task) => {

@@ -46,12 +46,12 @@ Edit
 ├── Copy Path (⌥⌘C)
 ├── Paste (⌘V)
 ├── ─────────────
-├── Duplicate (⇧⌘D)
+├── Duplicate (⌘')
 ├── ─────────────
 ├── Edit Scheduled Date (⌘D)
 ├── Set Scheduled to Today (⌘T)
-├── Edit Due Date (⌥⌘D)
-├── Edit Defer Until (⇧⌥⌘D)
+├── Edit Due Date (⇧⌘D)
+├── Edit Defer Until (⌃⇧⌘D)
 ├── Edit Status (⌘S)
 ├── ─────────────
 ├── Move Up (⌘↑)
@@ -111,7 +111,7 @@ Many menu items should be disabled based on context:
 // Task-specific items disabled when no task selected
 await MenuItem.new({
   text: t('menu.edit.duplicate'),
-  accelerator: 'CmdOrCtrl+Shift+D',
+  accelerator: "CmdOrCtrl+'",
   enabled: hasSelectedTask(),
   action: () => executeCommand('duplicate-task', context),
 })

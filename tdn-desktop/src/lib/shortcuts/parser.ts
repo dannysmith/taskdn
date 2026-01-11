@@ -12,6 +12,7 @@ export function parseShortcut(shortcut: string): ParsedShortcut {
   const parts = shortcut.split('+')
 
   let cmdOrCtrl = false
+  let ctrl = false
   let shift = false
   let alt = false
   let key = ''
@@ -21,10 +22,13 @@ export function parseShortcut(shortcut: string): ParsedShortcut {
     switch (normalized) {
       case 'cmdorctrl':
       case 'cmd':
-      case 'ctrl':
       case 'command':
-      case 'control':
         cmdOrCtrl = true
+        break
+      case 'ctrl':
+      case 'control':
+        // Ctrl is the Control key (⌃) - separate from CmdOrCtrl
+        ctrl = true
         break
       case 'shift':
         shift = true
@@ -39,7 +43,7 @@ export function parseShortcut(shortcut: string): ParsedShortcut {
     }
   }
 
-  return { key, cmdOrCtrl, shift, alt }
+  return { key, cmdOrCtrl, ctrl, shift, alt }
 }
 
 /**
@@ -62,7 +66,9 @@ export function formatForDisplay(
 
   if (platform === 'mac') {
     // Mac uses symbols, no separators
+    // Order: ⌃ (ctrl) ⌥ (alt) ⇧ (shift) ⌘ (cmd) Key
     const parts: string[] = []
+    if (parsed.ctrl) parts.push('⌃')
     if (parsed.alt) parts.push('⌥')
     if (parsed.shift) parts.push('⇧')
     if (parsed.cmdOrCtrl) parts.push('⌘')
@@ -72,6 +78,7 @@ export function formatForDisplay(
     // Windows/Linux uses text with + separators
     const parts: string[] = []
     if (parsed.cmdOrCtrl) parts.push('Ctrl')
+    if (parsed.ctrl) parts.push('Ctrl') // On Windows, ctrl is also Ctrl
     if (parsed.alt) parts.push('Alt')
     if (parsed.shift) parts.push('Shift')
     parts.push(formatKeyForDisplay(parsed.key, 'other'))
