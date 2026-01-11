@@ -6,9 +6,12 @@ import { notify } from '@/lib/notifications'
 import { queryClient } from '@/lib/query-client'
 import { vaultQueryKeys } from '@/services/vault'
 import { preferencesQueryKeys } from '@/services/preferences'
-import type { CommandContext } from '@/lib/commands/types'
+import type { CommandContext, ContextMenuEntity } from '@/lib/commands/types'
 import type { AppPreferences, Area, Project, Task } from '@/lib/tauri-bindings'
 import type { NavId } from '@/types/navigation'
+
+// Module-level storage for context menu target (not persisted, not reactive)
+let contextMenuTarget: ContextMenuEntity | null = null
 
 /**
  * Module-level singleton actions safe to call outside React components.
@@ -106,6 +109,12 @@ export const commandContext: CommandContext = {
 
     // Set individual task cache
     queryClient.setQueryData(vaultQueryKeys.task(task.id), task)
+  },
+
+  // Context menu target management
+  getContextMenuTarget: () => contextMenuTarget,
+  setContextMenuTarget: (target: ContextMenuEntity | null) => {
+    contextMenuTarget = target
   },
 }
 

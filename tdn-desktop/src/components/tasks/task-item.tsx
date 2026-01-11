@@ -31,6 +31,8 @@ export interface TaskItemProps {
    * Used to distinguish Enter (confirm) from Escape (cancel) in the parent.
    */
   onConfirmEdit?: () => void
+  /** Called on right-click to show context menu */
+  onContextMenu?: (e: React.MouseEvent) => void
   /** Optional context label (project or area name) shown on the right */
   contextName?: string
   /** Whether to show the scheduled date (default: true if exists) */
@@ -54,6 +56,7 @@ export function TaskItem({
   onTitleChange,
   onStatusToggle,
   onConfirmEdit,
+  onContextMenu,
   contextName,
   showScheduled = true,
   showDue = true,
@@ -94,6 +97,15 @@ export function TaskItem({
     // Don't trigger edit if clicking on the checkbox
     if ((e.target as HTMLElement).closest('button')) return
     onStartEdit()
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    // Select the task when right-clicking
+    onSelect()
+    onContextMenu(e)
   }
 
   const handleInputBlur = () => {
@@ -159,6 +171,7 @@ export function TaskItem({
       )}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       data-selected={isSelected}
       data-editing={isEditing}
       data-task-id={task.id}

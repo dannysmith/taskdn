@@ -49,6 +49,8 @@ import {
 import { cn } from '@/lib/utils'
 import { useSidebarOrder } from '@/hooks/use-sidebar-order'
 import { useVaultHelpers } from '@/services/vault'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showProjectContextMenu, showAreaContextMenu } from '@/lib/context-menu'
 import { DraggableArea } from './draggable-area'
 import {
   DraggableProject,
@@ -121,6 +123,7 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { getProjectCompletion, getAreaById, getProjectById } =
     useVaultHelpers()
+  const commandContext = useCommandContext()
   const {
     orderedAreas,
     orderedOrphanProjects,
@@ -338,6 +341,9 @@ export function AppSidebar({
                   onSelect={() =>
                     onSelectionChange({ type: 'area', id: area.id })
                   }
+                  onContextMenu={() =>
+                    showAreaContextMenu(area, commandContext)
+                  }
                 >
                   <SidebarMenu>
                     <SortableContext
@@ -360,6 +366,9 @@ export function AppSidebar({
                             })
                           }
                           completion={getProjectCompletion(project.id)}
+                          onContextMenu={() =>
+                            showProjectContextMenu(project, commandContext)
+                          }
                         />
                       ))}
                     </SortableContext>
@@ -423,6 +432,9 @@ export function AppSidebar({
                               })
                             }
                             completion={getProjectCompletion(project.id)}
+                            onContextMenu={() =>
+                              showProjectContextMenu(project, commandContext)
+                            }
                           />
                         ))}
                       </SortableContext>

@@ -23,6 +23,8 @@ import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu } from '@/lib/context-menu'
 import { TaskItem, type TaskItemProps } from './task-item'
 import { TaskStatusCheckbox } from './task-status-checkbox'
 import { useTaskDragPreview } from './task-dnd-context'
@@ -128,6 +130,7 @@ export function TaskList({
   onAutoEditConsumed,
 }: TaskListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const commandContext = useCommandContext()
 
   // Internal state (used when not controlled externally)
   const [internalSelectedIndex, setInternalSelectedIndex] = React.useState<
@@ -504,6 +507,7 @@ export function TaskList({
               onConfirmEdit={handleConfirmEdit}
               onTitleChange={newTitle => onTaskTitleChange(task.id, newTitle)}
               onStatusToggle={() => onTaskStatusToggle(task.id)}
+              onContextMenu={() => showTaskContextMenu(task, commandContext)}
               contextName={getContextName?.(task)}
               showScheduled={showScheduled}
               showDue={showDue}
@@ -547,6 +551,7 @@ function SortableTaskItem({
   droppedTaskInList,
   className,
   isEditing,
+  onContextMenu,
   ...taskItemProps
 }: SortableTaskItemProps) {
   const {
@@ -595,7 +600,12 @@ function SortableTaskItem({
         className
       )}
     >
-      <TaskItem task={task} isEditing={isEditing} {...taskItemProps} />
+      <TaskItem
+        task={task}
+        isEditing={isEditing}
+        onContextMenu={onContextMenu}
+        {...taskItemProps}
+      />
     </div>
   )
 }

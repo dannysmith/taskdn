@@ -79,6 +79,8 @@
   "commands.group.areas": "Areas",
   "commands.group.projects": "Projects",
   "commands.group.help": "Help",
+  "commands.group.file": "File",
+  "commands.group.clipboard": "Clipboard",
   "commands.group.other": "Other",
 
   "commands.toggleCommandPalette.label": "Toggle Command Palette",
@@ -147,6 +149,32 @@
   "commands.editDeferDate.description": "Open the defer until date picker",
   "commands.editStatus.label": "Edit Status",
   "commands.editStatus.description": "Open the status dropdown",
+
+  "commands.revealInFinder.description": "Show the file in the system file manager",
+  "commands.revealInFinder.error": "Failed to reveal file",
+
+  "commands.openInDefaultApp.label": "Open in Default App",
+  "commands.openInDefaultApp.description": "Open the file with the system default application",
+  "commands.openInDefaultApp.error": "Failed to open file",
+
+  "commands.openInObsidian.label": "Open in Obsidian",
+  "commands.openInObsidian.description": "Open the file in Obsidian",
+  "commands.openInObsidian.error": "Failed to open in Obsidian",
+
+  "commands.copyFilePath.label": "Copy Path",
+  "commands.copyFilePath.description": "Copy the file path to clipboard",
+  "commands.copyFilePath.success": "Path copied to clipboard",
+  "commands.copyFilePath.error": "Failed to copy path",
+
+  "commands.copyLocalUrl.label": "Copy Local URL",
+  "commands.copyLocalUrl.description": "Copy the taskdn:// URL to clipboard",
+  "commands.copyLocalUrl.success": "URL copied to clipboard",
+  "commands.copyLocalUrl.error": "Failed to copy URL",
+
+  "commands.copyAsMarkdown.label": "Copy as Markdown",
+  "commands.copyAsMarkdown.description": "Copy as a wikilink reference",
+  "commands.copyAsMarkdown.success": "Copied to clipboard",
+  "commands.copyAsMarkdown.error": "Failed to copy",
 
   "commandPalette.title": "Command Palette",
   "commandPalette.placeholder": "Type a command or search...",

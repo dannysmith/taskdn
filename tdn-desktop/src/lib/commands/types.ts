@@ -6,6 +6,12 @@ import type { FocusableField } from '@/store/task-detail-store'
 /** Entity types that can appear in context menus */
 export type EntityType = 'task' | 'project' | 'area'
 
+/** Union type for entities that can be targeted by context menu commands */
+export type ContextMenuEntity =
+  | { type: 'task'; entity: Task }
+  | { type: 'project'; entity: Project }
+  | { type: 'area'; entity: Area }
+
 /** Defines where a command appears in the UI */
 export interface CommandSurfaces {
   /** Show in command palette (default: true) */
@@ -101,6 +107,12 @@ export interface CommandContext {
   // These update the TanStack Query cache after Tauri commands succeed
   updateTaskInCache: (taskId: string, updatedTask: Task) => void
   addTaskToCache: (task: Task) => void
+
+  // Context menu target (set before showing context menu, read by entity commands)
+  /** Get the current context menu target entity */
+  getContextMenuTarget: () => ContextMenuEntity | null
+  /** Set the context menu target (called before showing context menu) */
+  setContextMenuTarget: (target: ContextMenuEntity | null) => void
 }
 
 /**
