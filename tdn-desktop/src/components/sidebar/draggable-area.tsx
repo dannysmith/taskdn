@@ -36,6 +36,8 @@ interface DraggableAreaProps {
   isSelected: boolean
   onSelect: () => void
   children: React.ReactNode
+  /** Called on right-click to show context menu */
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export function DraggableArea({
@@ -43,6 +45,7 @@ export function DraggableArea({
   isSelected,
   onSelect,
   children,
+  onContextMenu,
 }: DraggableAreaProps) {
   const dragId = getDragId('area', area.id)
 
@@ -72,6 +75,13 @@ export function DraggableArea({
     transition,
   }
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu(e)
+  }
+
   return (
     <div
       ref={setNodeRef}
@@ -93,6 +103,7 @@ export function DraggableArea({
               isSelected && 'bg-sidebar-accent text-sidebar-accent-foreground'
             )}
             onClick={onSelect}
+            onContextMenu={handleContextMenu}
             {...attributes}
             {...listeners}
           >

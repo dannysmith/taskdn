@@ -98,6 +98,8 @@ interface DraggableProjectProps {
   isSelected: boolean
   onSelect: () => void
   completion: number
+  /** Called on right-click to show context menu */
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export function DraggableProject({
@@ -106,6 +108,7 @@ export function DraggableProject({
   isSelected,
   onSelect,
   completion,
+  onContextMenu,
 }: DraggableProjectProps) {
   const dragId = getDragId('project', project.id)
 
@@ -130,6 +133,13 @@ export function DraggableProject({
     transition,
   }
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu(e)
+  }
+
   return (
     <SidebarMenuItem
       ref={setNodeRef}
@@ -143,6 +153,7 @@ export function DraggableProject({
         tooltip={project.title}
         isActive={isSelected}
         onClick={onSelect}
+        onContextMenu={handleContextMenu}
       >
         <ProjectStatusIndicator
           status={project.status}

@@ -5,6 +5,7 @@ import { appCommands } from './app-commands'
 import { navigationCommands } from './navigation-commands'
 import { windowCommands } from './window-commands'
 import { taskCommands } from './task-commands'
+import { entityCommands } from './entity-commands'
 import { registerCommands } from './registry'
 import { logger } from '@/lib/logger'
 
@@ -17,10 +18,17 @@ export function initializeCommandSystem(): void {
   registerCommands(navigationCommands)
   registerCommands(windowCommands)
   registerCommands(taskCommands)
+  registerCommands(entityCommands)
 
   if (import.meta.env.DEV) {
     logger.debug('Command system initialized')
   }
 }
 
-export { appCommands, navigationCommands, windowCommands, taskCommands }
+export {
+  appCommands,
+  navigationCommands,
+  windowCommands,
+  taskCommands,
+  entityCommands,
+}

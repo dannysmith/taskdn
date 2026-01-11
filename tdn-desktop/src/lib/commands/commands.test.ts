@@ -51,6 +51,9 @@ const createMockContext = (): CommandContext => ({
   // Cache update methods
   updateTaskInCache: vi.fn(),
   addTaskToCache: vi.fn(),
+  // Context menu target
+  getContextMenuTarget: vi.fn(() => null),
+  setContextMenuTarget: vi.fn(),
 })
 
 // Mock translation function for testing
