@@ -138,5 +138,40 @@ describe('Simplified Command System', () => {
       expect(result.success).toBe(false)
       expect(result.error).toContain('Test error')
     })
+
+    it('executes dynamic area navigation commands', async () => {
+      // Create context with mock areas
+      const contextWithAreas = createMockContext()
+      vi.mocked(contextWithAreas.getAreas).mockReturnValue([
+        { id: 'area-123', title: 'Work', status: 'active' },
+        { id: 'area-456', title: 'Personal', status: 'active' },
+      ] as never)
+
+      // Dynamic commands aren't in static registry - they're generated at runtime
+      const result = await executeCommand(
+        'navigate-area-area-123',
+        contextWithAreas
+      )
+
+      expect(result.success).toBe(true)
+      expect(contextWithAreas.navigateToArea).toHaveBeenCalledWith('area-123')
+    })
+
+    it('executes dynamic project navigation commands', async () => {
+      const contextWithProjects = createMockContext()
+      vi.mocked(contextWithProjects.getProjects).mockReturnValue([
+        { id: 'proj-789', title: 'Website Redesign', status: 'active' },
+      ] as never)
+
+      const result = await executeCommand(
+        'navigate-project-proj-789',
+        contextWithProjects
+      )
+
+      expect(result.success).toBe(true)
+      expect(contextWithProjects.navigateToProject).toHaveBeenCalledWith(
+        'proj-789'
+      )
+    })
   })
 })
