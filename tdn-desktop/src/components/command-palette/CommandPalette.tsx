@@ -17,11 +17,11 @@ import {
 /** Order in which groups should appear in the palette */
 const GROUP_ORDER = [
   'navigation',
-  'tasks',
   'areas',
   'projects',
+  'tasks',
+  'view',
   'settings',
-  'window',
   'help',
   'app',
   'other',
