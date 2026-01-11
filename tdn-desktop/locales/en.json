@@ -114,9 +114,6 @@
   "commands.windowExitFullscreen.label": "Exit Fullscreen",
   "commands.windowExitFullscreen.description": "Exit fullscreen mode",
 
-  "commands.testToast.label": "Test Toast Notification",
-  "commands.testToast.description": "Show a test toast notification",
-
   "commandPalette.title": "Command Palette",
   "commandPalette.placeholder": "Type a command or search...",
   "commandPalette.noResults": "No results found.",
@@ -129,8 +126,6 @@
   "titlebar.settings": "Settings",
 
   "toast.success.preferencesSaved": "Preferences saved",
-  "toast.success.testToast": "Test Toast",
-  "toast.success.testToastDescription": "This is a test notification",
   "toast.success.pathsImported": "Settings imported from CLI config",
   "toast.success.dummyVaultSet": "Paths set to dummy vault",
   "toast.error.generic": "Something went wrong",

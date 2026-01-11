@@ -117,8 +117,12 @@ export function CommandPalette() {
                 value={command.id}
                 onSelect={() => handleCommandSelect(command.id)}
               >
-                {command.icon && <command.icon className="mr-2 h-4 w-4 shrink-0" />}
-                <span className="min-w-40 truncate">{getCommandLabel(command, t)}</span>
+                {command.icon && (
+                  <command.icon className="mr-2 h-4 w-4 shrink-0" />
+                )}
+                <span className="min-w-40 truncate">
+                  {getCommandLabel(command, t)}
+                </span>
                 {command.descriptionKey && (
                   <span className="flex-1 truncate text-xs text-muted-foreground">
                     {t(command.descriptionKey)}
