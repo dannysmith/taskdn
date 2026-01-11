@@ -293,7 +293,7 @@ export function AppSidebar({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <SidebarContent className="gap-0 py-2">
+        <SidebarContent className="gap-0 py-2 overflow-x-hidden">
           {/* Navigation Items */}
           <SidebarGroup className="py-0">
             <SidebarMenu>
