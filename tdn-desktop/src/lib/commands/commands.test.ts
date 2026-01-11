@@ -46,6 +46,7 @@ const createMockContext = (): CommandContext => ({
   selectedTaskId: null,
   getSelectedTask: vi.fn(() => null),
   openTask: vi.fn(),
+  focusField: vi.fn(),
   // Cache update methods
   updateTaskInCache: vi.fn(),
   addTaskToCache: vi.fn(),

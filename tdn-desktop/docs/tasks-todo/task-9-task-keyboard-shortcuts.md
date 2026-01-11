@@ -19,11 +19,11 @@ This task implements task-specific commands - those that are only available when
 | --------------------- | -------- | ---------------------------- | ------ |
 | `set-scheduled-today` | ⌘T       | Set scheduled date to today  | Done   |
 | `copy-task-title`     | ⌘C       | Copy task title to clipboard | Done   |
-| `duplicate-task`      | ⇧⌘D      | Duplicate selected task      | Done   |
-| `edit-scheduled-date` | ⌘D       | Open scheduled date picker   | Todo   |
-| `edit-due-date`       | ⌥⌘D      | Open due date picker         | Todo   |
-| `edit-defer-date`     | ⇧⌥⌘D     | Open defer until date picker | Todo   |
-| `edit-status`         | ⌘S       | Open status dropdown         | Todo   |
+| `duplicate-task`      | ⌘'       | Duplicate selected task      | Done   |
+| `edit-scheduled-date` | ⌘D       | Open scheduled date picker   | Done   |
+| `edit-due-date`       | ⇧⌘D      | Open due date picker         | Done   |
+| `edit-defer-date`     | ⌃⇧⌘D     | Open defer until date picker | Done   |
+| `edit-status`         | ⌘S       | Open status dropdown         | Done   |
 
 ### Out of Scope (Deferred)
 
@@ -42,19 +42,19 @@ Three commands that perform immediate actions without requiring new UI:
 
 1. **`set-scheduled-today` (⌘T)** - Sets the selected task's scheduled date to today
 2. **`copy-task-title` (⌘C)** - Copies task title to clipboard (only when not in editable element)
-3. **`duplicate-task` (⇧⌘D)** - Creates a copy of the task and opens it in detail panel
+3. **`duplicate-task` (⌘')** - Creates a copy of the task and opens it in detail panel
 
 ### Files Changed
 
-| File                                | Change                                            |
-| ----------------------------------- | ------------------------------------------------- |
-| `src/lib/commands/types.ts`         | Added `isTaskCommandAvailable()` helper           |
-| `src/lib/commands/types.ts`         | Added `updateTaskInCache`, `addTaskToCache` to CommandContext |
+| File                                | Change                                                                     |
+| ----------------------------------- | -------------------------------------------------------------------------- |
+| `src/lib/commands/types.ts`         | Added `isTaskCommandAvailable()` helper                                    |
+| `src/lib/commands/types.ts`         | Added `updateTaskInCache`, `addTaskToCache` to CommandContext              |
 | `src/hooks/use-command-context.ts`  | Implemented `selectedTaskId`, `getSelectedTask`, `openTask`, cache methods |
-| `src/lib/commands/task-commands.ts` | NEW - All three Phase 1 commands                  |
-| `src/lib/commands/index.ts`         | Registered task commands                          |
-| `src/lib/menu.ts`                   | Added Edit menu (required for ⌘C/⌘V to work in inputs) |
-| `locales/en.json`                   | Added Edit menu translations                      |
+| `src/lib/commands/task-commands.ts` | NEW - All three Phase 1 commands                                           |
+| `src/lib/commands/index.ts`         | Registered task commands                                                   |
+| `src/lib/menu.ts`                   | Added Edit menu (required for ⌘C/⌘V to work in inputs)                     |
+| `locales/en.json`                   | Added Edit menu translations                                               |
 
 ### Key Implementation Pattern: Cache Updates
 
@@ -90,48 +90,47 @@ This ensures standard ⌘C/⌘V work normally in text inputs.
 
 - [x] `⌘T` sets selected task's scheduled date to today
 - [x] `⌘C` copies task title when task selected (not in input)
-- [x] `⇧⌘D` duplicates task and opens the new task
+- [x] `⌘'` duplicates task and opens the new task
 - [x] Standard ⌘C/⌘V/⌘A work in inputs/textareas (required adding Edit menu)
 
 ---
 
-## Phase 2: Date/Status Picker Commands - TODO
+## Phase 2: Date/Status Picker Commands - COMPLETE
 
 **Goal**: Commands that open pickers/dropdowns for editing.
 
-### Approach
+### What Was Implemented
 
-Open task detail panel and programmatically focus/open the relevant field. Uses existing UI components.
+Four commands that open the detail panel and auto-open the relevant picker:
 
-### Commands to Implement
+1. **`edit-scheduled-date` (⌘D)** - Opens scheduled date picker
+2. **`edit-due-date` (⇧⌘D)** - Opens due date picker
+3. **`edit-defer-date` (⌃⇧⌘D)** - Opens defer until picker
+4. **`edit-status` (⌘S)** - Opens status dropdown with keyboard navigation from current value
 
-| Command               | Shortcut | Implementation                           |
-| --------------------- | -------- | ---------------------------------------- |
-| `edit-scheduled-date` | ⌘D       | Open detail panel, focus scheduled field |
-| `edit-due-date`       | ⌥⌘D      | Open detail panel, focus due field       |
-| `edit-defer-date`     | ⇧⌥⌘D     | Open detail panel, focus defer field     |
-| `edit-status`         | ⌘S       | Open detail panel, focus status dropdown |
+### Shortcut Notes
 
-### Implementation Plan
+Original shortcuts `⌥⌘D` (due) and `⇧⌥⌘D` (defer) were changed because macOS intercepts `⌥⌘D` system-wide to show/hide the Dock. New shortcuts:
 
-1. Add `pendingFocusField` state to `task-detail-store`
-2. Add commands that set this field and open the detail panel
-3. Update `TaskDetailPanel` to react to `pendingFocusField` and auto-focus/open
+- `⇧⌘D` for due date (matches Things app convention)
+- `⌃⇧⌘D` for defer date
 
-### Files to Change
+### Files Changed
 
-| File                                         | Change                                 |
-| -------------------------------------------- | -------------------------------------- |
-| `src/lib/commands/task-commands.ts`          | Add 4 picker commands                  |
-| `src/store/task-detail-store.ts`             | Add pendingFocusField state            |
-| `src/components/tasks/task-detail-panel.tsx` | Handle auto-focus on pendingFocusField |
+| File                                         | Change                                          |
+| -------------------------------------------- | ----------------------------------------------- |
+| `src/lib/commands/task-commands.ts`          | Added 4 picker commands with focusField() calls |
+| `src/store/task-detail-store.ts`             | Added pendingFocusField state and focusField()  |
+| `src/components/tasks/task-detail-panel.tsx` | Handle pendingFocusField to auto-open pickers   |
+| `src/components/ui/date-button.tsx`          | Added controlled open/onOpenChange props        |
+| `src/components/tasks/task-status-pill.tsx`  | Converted to RadioGroup for proper keyboard nav |
 
-### Checkpoint
+### Checkpoint - All Pass
 
-- [ ] `⌘D` opens detail panel with scheduled date picker focused/open
-- [ ] `⌥⌘D` opens detail panel with due date picker focused/open
-- [ ] `⇧⌥⌘D` opens detail panel with defer date picker focused/open
-- [ ] `⌘S` opens detail panel with status dropdown open
+- [x] `⌘D` opens detail panel with scheduled date picker focused/open
+- [x] `⇧⌘D` opens detail panel with due date picker focused/open
+- [x] `⌃⇧⌘D` opens detail panel with defer date picker focused/open
+- [x] `⌘S` opens detail panel with status dropdown open (keyboard nav from current value)
 
 ---
 

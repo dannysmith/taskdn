@@ -42,6 +42,10 @@ export interface DateButtonProps {
   tooltip: string
   /** Visual variant affecting colors */
   variant: DateButtonVariant
+  /** Controlled open state (optional - uses internal state if not provided) */
+  open?: boolean
+  /** Callback when open state changes (required if open is controlled) */
+  onOpenChange?: (open: boolean) => void
 }
 
 // -----------------------------------------------------------------------------
@@ -73,8 +77,22 @@ export function DateButton({
   onChange,
   tooltip,
   variant,
+  open: controlledOpen,
+  onOpenChange,
 }: DateButtonProps) {
-  const [open, setOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+
+  // Use controlled state if provided, otherwise use internal state
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = (value: boolean) => {
+    if (isControlled && onOpenChange) {
+      onOpenChange(value)
+    } else {
+      setInternalOpen(value)
+    }
+  }
+
   const styles = dateButtonStyles[variant]
 
   const handleSelect = (date: Date | undefined) => {

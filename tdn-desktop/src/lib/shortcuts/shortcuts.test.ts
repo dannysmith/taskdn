@@ -7,6 +7,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('CmdOrCtrl+1')).toEqual({
         key: '1',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: false,
         alt: false,
       })
@@ -16,6 +17,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('CmdOrCtrl+Shift+Z')).toEqual({
         key: 'Z',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: true,
         alt: false,
       })
@@ -25,6 +27,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('CmdOrCtrl+Shift+Alt+K')).toEqual({
         key: 'K',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: true,
         alt: true,
       })
@@ -34,6 +37,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('F11')).toEqual({
         key: 'F11',
         cmdOrCtrl: false,
+        ctrl: false,
         shift: false,
         alt: false,
       })
@@ -43,6 +47,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('CmdOrCtrl+F5')).toEqual({
         key: 'F5',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: false,
         alt: false,
       })
@@ -52,6 +57,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('CmdOrCtrl+,')).toEqual({
         key: ',',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: false,
         alt: false,
       })
@@ -59,9 +65,10 @@ describe('shortcuts', () => {
 
     it('handles different modifier aliases', () => {
       expect(parseShortcut('Cmd+1').cmdOrCtrl).toBe(true)
-      expect(parseShortcut('Ctrl+1').cmdOrCtrl).toBe(true)
       expect(parseShortcut('Command+1').cmdOrCtrl).toBe(true)
-      expect(parseShortcut('Control+1').cmdOrCtrl).toBe(true)
+      // Ctrl and Control now map to ctrl, not cmdOrCtrl
+      expect(parseShortcut('Ctrl+1').ctrl).toBe(true)
+      expect(parseShortcut('Control+1').ctrl).toBe(true)
     })
 
     it('handles alt/option alias', () => {
@@ -73,6 +80,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('cmdorctrl+shift+1')).toEqual({
         key: '1',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: true,
         alt: false,
       })
@@ -87,6 +95,7 @@ describe('shortcuts', () => {
       expect(parseShortcut('Escape')).toEqual({
         key: 'Escape',
         cmdOrCtrl: false,
+        ctrl: false,
         shift: false,
         alt: false,
       })
@@ -96,7 +105,18 @@ describe('shortcuts', () => {
       expect(parseShortcut('CmdOrCtrl+Enter')).toEqual({
         key: 'Enter',
         cmdOrCtrl: true,
+        ctrl: false,
         shift: false,
+        alt: false,
+      })
+    })
+
+    it('parses Ctrl separate from CmdOrCtrl', () => {
+      expect(parseShortcut('Ctrl+Shift+CmdOrCtrl+D')).toEqual({
+        key: 'D',
+        cmdOrCtrl: true,
+        ctrl: true,
+        shift: true,
         alt: false,
       })
     })
@@ -114,6 +134,10 @@ describe('shortcuts', () => {
 
       it('formats all modifiers', () => {
         expect(formatForDisplay('CmdOrCtrl+Shift+Alt+K', 'mac')).toBe('⌥⇧⌘K')
+      })
+
+      it('formats ctrl key with ⌃ symbol', () => {
+        expect(formatForDisplay('Ctrl+Shift+CmdOrCtrl+D', 'mac')).toBe('⌃⇧⌘D')
       })
 
       it('formats function keys', () => {
@@ -239,6 +263,27 @@ describe('shortcuts', () => {
         const shortcut = parseShortcut('F11')
         const event = createKeyboardEvent({ key: 'F11' })
         expect(matchesKeyboardEvent(shortcut, event)).toBe(true)
+      })
+
+      it('matches Ctrl+Shift+CmdOrCtrl combination on Mac', () => {
+        const shortcut = parseShortcut('Ctrl+Shift+CmdOrCtrl+D')
+        const event = createKeyboardEvent({
+          key: 'd',
+          metaKey: true,
+          ctrlKey: true,
+          shiftKey: true,
+        })
+        expect(matchesKeyboardEvent(shortcut, event)).toBe(true)
+      })
+
+      it('does not match Ctrl+Shift+CmdOrCtrl without ctrlKey', () => {
+        const shortcut = parseShortcut('Ctrl+Shift+CmdOrCtrl+D')
+        const event = createKeyboardEvent({
+          key: 'd',
+          metaKey: true,
+          shiftKey: true,
+        })
+        expect(matchesKeyboardEvent(shortcut, event)).toBe(false)
       })
     })
 

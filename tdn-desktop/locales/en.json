@@ -136,6 +136,15 @@
   "commands.duplicateTask.success": "Task duplicated",
   "commands.duplicateTask.error": "Failed to duplicate task",
 
+  "commands.editScheduledDate.label": "Edit Scheduled Date",
+  "commands.editScheduledDate.description": "Open the scheduled date picker",
+  "commands.editDueDate.label": "Edit Due Date",
+  "commands.editDueDate.description": "Open the due date picker",
+  "commands.editDeferDate.label": "Edit Defer Date",
+  "commands.editDeferDate.description": "Open the defer until date picker",
+  "commands.editStatus.label": "Edit Status",
+  "commands.editStatus.description": "Open the status dropdown",
+
   "commandPalette.title": "Command Palette",
   "commandPalette.placeholder": "Type a command or search...",
   "commandPalette.noResults": "No results found.",

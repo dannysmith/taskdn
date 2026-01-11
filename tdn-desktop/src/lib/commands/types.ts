@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react'
 import type { Area, Project, Task } from '@/lib/tauri-bindings'
 import type { NavId } from '@/types/navigation'
+import type { FocusableField } from '@/store/task-detail-store'
 
 /** Entity types that can appear in context menus */
 export type EntityType = 'task' | 'project' | 'area'
@@ -91,6 +92,8 @@ export interface CommandContext {
 
   // Task operations
   openTask: (taskId: string) => void
+  /** Focus a field in the task detail panel (shows sidebar if hidden) */
+  focusField: (field: FocusableField) => void
 
   // Cache updates (for commands that modify data)
   // These update the TanStack Query cache after Tauri commands succeed
