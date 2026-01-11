@@ -28,6 +28,7 @@ vi.mock('@/store/task-creation-store', () => ({
 const { registerCommands, getAllCommands, executeCommand } =
   await import('./registry')
 const { navigationCommands } = await import('./navigation-commands')
+const { appCommands } = await import('./app-commands')
 
 const createMockContext = (): CommandContext => ({
   openPreferences: vi.fn(),
@@ -62,6 +63,7 @@ describe('Simplified Command System', () => {
   beforeEach(() => {
     mockContext = createMockContext()
     registerCommands(navigationCommands)
+    registerCommands(appCommands)
   })
 
   afterEach(() => {

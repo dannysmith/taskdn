@@ -24,6 +24,7 @@ Implement browser-style back/forward navigation using `Cmd+[` and `Cmd+]`. This 
 ### Commands
 
 Register `go-back` and `go-forward` in the command system:
+
 - Available via keyboard shortcuts
 - Optionally available in command palette (with `isAvailable` check for `canGoBack`/`canGoForward`)
 - Consider adding back/forward buttons to the toolbar (optional, lower priority)
@@ -31,6 +32,7 @@ Register `go-back` and `go-forward` in the command system:
 ### Edge Case: Deleted Items
 
 When navigating back to a project or area that no longer exists:
+
 - Skip the invalid entry and try the next one in history
 - Continue recursively until a valid selection is found or history is exhausted
 - This keeps the UX simple — user never sees a broken state
@@ -44,14 +46,14 @@ Extend `navigation-store.ts` to track history. No external dependencies needed.
 ```typescript
 interface NavigationState {
   selection: Selection | null
-  history: Selection[]      // Past selections (stack)
-  future: Selection[]       // Forward stack (cleared on new navigation)
+  history: Selection[] // Past selections (stack)
+  future: Selection[] // Forward stack (cleared on new navigation)
 
-  navigate: (selection: Selection) => void  // Replaces setSelection
+  navigate: (selection: Selection) => void // Replaces setSelection
   goBack: () => void
   goForward: () => void
-  canGoBack: boolean        // Computed
-  canGoForward: boolean     // Computed
+  canGoBack: boolean // Computed
+  canGoForward: boolean // Computed
 }
 ```
 
@@ -65,11 +67,13 @@ interface NavigationState {
 ## Desktop App Conventions (Research)
 
 Standard shortcuts across desktop apps:
+
 - **VS Code**: `Ctrl+-` / `Ctrl+Shift+-` (Windows/Linux), navigation history per workspace
 - **Obsidian**: `Cmd+[` / `Cmd+]` (macOS), per-pane history in multi-pane layouts
 - **Figma**: Lacks this feature entirely (users constantly request it)
 
 Common patterns:
+
 - History bounded at 20-100 entries
 - Per-window scope (not per-pane for simple apps like ours)
 - No duplicate consecutive entries
