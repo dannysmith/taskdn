@@ -2,7 +2,11 @@ import { useEffect } from 'react'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { initializeCommandSystem } from './lib/commands'
-import { buildAppMenu, setupMenuLanguageListener } from './lib/menu'
+import {
+  buildAppMenu,
+  setupMenuLanguageListener,
+  setupMenuSelectionListener,
+} from './lib/menu'
 import { initializeLanguage } from './i18n/language-init'
 import { logger } from './lib/logger'
 import { cleanupOldFiles } from './lib/recovery'
@@ -37,7 +41,10 @@ function App() {
         // Build the application menu with the initialized language
         await buildAppMenu()
         logger.debug('Application menu built')
+
+        // Set up listeners to rebuild menu when needed
         setupMenuLanguageListener()
+        setupMenuSelectionListener()
       } catch (error) {
         logger.warn('Failed to initialize language or menu', { error })
       }
