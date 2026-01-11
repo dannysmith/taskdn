@@ -187,10 +187,12 @@ function groupCommands(commands: AppCommand[]): Map<string, AppCommand[]> {
   // Assign commands to groups
   for (const cmd of commands) {
     const group = cmd.group ?? 'other'
-    if (!groups.has(group)) {
-      groups.set(group, [])
+    let groupArray = groups.get(group)
+    if (!groupArray) {
+      groupArray = []
+      groups.set(group, groupArray)
     }
-    groups.get(group)!.push(cmd)
+    groupArray.push(cmd)
   }
 
   // Remove empty groups

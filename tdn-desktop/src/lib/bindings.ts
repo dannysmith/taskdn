@@ -338,6 +338,18 @@ async deleteTask(id: string) : Promise<Result<null, VaultError>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Get raw file content for an entity (task, project, or area) by ID.
+ * Returns the entire markdown file as a string.
+ */
+async getEntityRawContent(entityType: string, id: string) : Promise<Result<string, VaultError>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_entity_raw_content", { entityType, id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 

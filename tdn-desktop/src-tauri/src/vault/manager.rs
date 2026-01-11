@@ -378,6 +378,45 @@ impl VaultManager {
             .ok_or_else(|| VaultError::entity_not_found("Area", id))
     }
 
+    /// Get raw file content for an entity by type and ID
+    pub fn get_entity_raw_content(
+        &self,
+        entity_type: &str,
+        id: &str,
+    ) -> Result<String, VaultError> {
+        self.ensure_configured()?;
+
+        // Get the entity's path based on type
+        let path = match entity_type {
+            "task" => self.inner.read().index.get_task(id).map(|t| t.path.clone()),
+            "project" => self
+                .inner
+                .read()
+                .index
+                .get_project(id)
+                .map(|p| p.path.clone()),
+            "area" => self.inner.read().index.get_area(id).map(|a| a.path.clone()),
+            _ => {
+                return Err(VaultError::validation_error(
+                    "entity_type",
+                    format!("Unknown entity type: {entity_type}"),
+                ))
+            }
+        };
+
+        // Capitalize entity type for error message
+        let entity_type_display = match entity_type {
+            "task" => "Task",
+            "project" => "Project",
+            "area" => "Area",
+            _ => entity_type,
+        };
+        let path = path.ok_or_else(|| VaultError::entity_not_found(entity_type_display, id))?;
+
+        // Read the raw file content
+        std::fs::read_to_string(&path).map_err(|e| VaultError::read_error(&path, e.to_string()))
+    }
+
     // =========================================================================
     // Write Operations
     // =========================================================================

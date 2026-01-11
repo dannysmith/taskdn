@@ -36,6 +36,7 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         vault::update_task,
         vault::update_project,
         vault::delete_task,
+        vault::get_entity_raw_content,
     ])
 }
 

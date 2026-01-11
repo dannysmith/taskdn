@@ -26,6 +26,7 @@
       "allow": [{ "url": "obsidian://*" }]
     },
     "clipboard-manager:default",
+    "clipboard-manager:allow-write-text",
     "dialog:default",
     "fs:default",
     "log:default",

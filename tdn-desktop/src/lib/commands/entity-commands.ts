@@ -6,7 +6,9 @@
  */
 import { FolderOpen, ExternalLink, Copy, Link, FileText } from 'lucide-react'
 import { revealItemInDir, openPath, openUrl } from '@tauri-apps/plugin-opener'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import i18n from '@/i18n/config'
+import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
 import { getPlatform } from '@/hooks/use-platform'
 import { getPlatformStrings } from '@/lib/platform-strings'
@@ -24,6 +26,7 @@ const t = i18n.t.bind(i18n)
  * Returns null if neither is available.
  */
 function getTargetEntity(context: CommandContext): {
+  id: string
   path: string
   title: string
   type: 'task' | 'project' | 'area'
@@ -32,6 +35,7 @@ function getTargetEntity(context: CommandContext): {
   const target = context.getContextMenuTarget()
   if (target) {
     return {
+      id: target.entity.id,
       path: target.entity.path,
       title: target.entity.title,
       type: target.type,
@@ -42,6 +46,7 @@ function getTargetEntity(context: CommandContext): {
   const selectedTask = context.getSelectedTask()
   if (selectedTask) {
     return {
+      id: selectedTask.id,
       path: selectedTask.path,
       title: selectedTask.title,
       type: 'task',
@@ -123,7 +128,10 @@ export const entityCommands: AppCommand[] = [
       try {
         await revealItemInDir(entity.path)
       } catch (error) {
-        logger.error('Failed to reveal in file manager', { error, path: entity.path })
+        logger.error('Failed to reveal in file manager', {
+          error,
+          path: entity.path,
+        })
         context.showToast(t('commands.revealInFinder.error'), 'error')
       }
     },
@@ -149,7 +157,10 @@ export const entityCommands: AppCommand[] = [
       try {
         await openPath(entity.path)
       } catch (error) {
-        logger.error('Failed to open in default app', { error, path: entity.path })
+        logger.error('Failed to open in default app', {
+          error,
+          path: entity.path,
+        })
         context.showToast(t('commands.openInDefaultApp.error'), 'error')
       }
     },
@@ -267,7 +278,7 @@ export const entityCommands: AppCommand[] = [
     descriptionKey: 'commands.copyAsMarkdown.description',
     icon: FileText,
     group: 'clipboard',
-    keywords: ['copy', 'markdown', 'md', 'link', 'reference'],
+    keywords: ['copy', 'markdown', 'md', 'file', 'content'],
     surfaces: {
       commandPalette: true,
       contextMenu: ['task', 'project', 'area'],
@@ -278,11 +289,20 @@ export const entityCommands: AppCommand[] = [
       const entity = getTargetEntity(context)
       if (!entity) return
 
-      // Format as Obsidian-style wikilink: [[Title]]
-      const markdown = `[[${entity.title}]]`
-
       try {
-        await navigator.clipboard.writeText(markdown)
+        // Get raw file content from Rust
+        const result = await commands.getEntityRawContent(
+          entity.type,
+          entity.id
+        )
+
+        if (result.status === 'error') {
+          logger.error('Failed to get entity content', { error: result.error })
+          context.showToast(t('commands.copyAsMarkdown.error'), 'error')
+          return
+        }
+
+        await writeText(result.data)
         context.showToast(t('commands.copyAsMarkdown.success'), 'success')
       } catch (error) {
         logger.error('Failed to copy as markdown', { error })
