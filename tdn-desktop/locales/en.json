@@ -43,6 +43,9 @@
   "preferences.general.ignorePatterns": "Ignored Patterns",
   "preferences.general.ignorePatternsDescription": "File patterns to exclude from scanning. Supports wildcards (e.g., \"*.tmp\", \"draft-*\").",
   "preferences.general.ignorePatternsPlaceholder": "Add pattern and press Enter",
+  "preferences.general.integrations": "Integrations",
+  "preferences.general.showObsidianFeatures": "Show Obsidian Features",
+  "preferences.general.showObsidianFeaturesDescription": "Enable if your task/project/area directories are inside an Obsidian vault. Adds 'Open in Obsidian' to context menus.",
 
   "preferences.appearance.theme": "Theme",
   "preferences.appearance.colorTheme": "Color Theme",

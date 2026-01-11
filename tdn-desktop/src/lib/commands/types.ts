@@ -65,6 +65,8 @@ export interface CommandGroup {
 export interface CommandContext {
   // Preferences
   openPreferences: () => void
+  /** Whether Obsidian features are enabled in preferences */
+  isObsidianEnabled: () => boolean
 
   // Notifications
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void

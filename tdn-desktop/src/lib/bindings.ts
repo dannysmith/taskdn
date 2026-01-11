@@ -381,7 +381,12 @@ projects_dir: string | null;
 /**
  * Filenames to ignore when scanning directories
  */
-ignore: string[] | null }
+ignore: string[] | null; 
+/**
+ * Whether to show Obsidian-related features (Open in Obsidian menu item, etc.)
+ * Indicates user's vault directories are inside an Obsidian vault
+ */
+show_obsidian_features: boolean | null }
 /**
  * Public area struct exposed to TypeScript via tauri-specta.
  */
