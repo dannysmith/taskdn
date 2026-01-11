@@ -30,6 +30,7 @@ export function usePreferences() {
           areas_dir: null,
           projects_dir: null,
           ignore: null,
+          show_obsidian_features: null,
         }
       }
 

@@ -5,8 +5,9 @@ import { useTaskDetailStore } from '@/store/task-detail-store'
 import { notify } from '@/lib/notifications'
 import { queryClient } from '@/lib/query-client'
 import { vaultQueryKeys } from '@/services/vault'
+import { preferencesQueryKeys } from '@/services/preferences'
 import type { CommandContext } from '@/lib/commands/types'
-import type { Area, Project, Task } from '@/lib/tauri-bindings'
+import type { AppPreferences, Area, Project, Task } from '@/lib/tauri-bindings'
 import type { NavId } from '@/types/navigation'
 
 /**
@@ -19,6 +20,12 @@ import type { NavId } from '@/types/navigation'
 export const commandContext: CommandContext = {
   // Preferences
   openPreferences: () => useUIStore.getState().setPreferencesOpen(true),
+  isObsidianEnabled: () => {
+    const prefs = queryClient.getQueryData<AppPreferences>(
+      preferencesQueryKeys.preferences()
+    )
+    return prefs?.show_obsidian_features === true
+  },
 
   // Notifications
   showToast: (message, type = 'info') =>

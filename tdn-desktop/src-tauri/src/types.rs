@@ -42,6 +42,9 @@ pub struct AppPreferences {
     pub projects_dir: Option<String>,
     /// Filenames to ignore when scanning directories
     pub ignore: Option<Vec<String>>,
+    /// Whether to show Obsidian-related features (Open in Obsidian menu item, etc.)
+    /// Indicates user's vault directories are inside an Obsidian vault
+    pub show_obsidian_features: Option<bool>,
 }
 
 impl Default for AppPreferences {
@@ -54,6 +57,7 @@ impl Default for AppPreferences {
             areas_dir: None,
             projects_dir: None,
             ignore: None,
+            show_obsidian_features: None, // None means disabled
         }
     }
 }
@@ -437,5 +441,6 @@ mod tests {
         assert!(prefs.areas_dir.is_none());
         assert!(prefs.projects_dir.is_none());
         assert!(prefs.ignore.is_none());
+        assert!(prefs.show_obsidian_features.is_none());
     }
 }

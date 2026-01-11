@@ -32,6 +32,7 @@ const { appCommands } = await import('./app-commands')
 
 const createMockContext = (): CommandContext => ({
   openPreferences: vi.fn(),
+  isObsidianEnabled: vi.fn(() => false),
   showToast: vi.fn(),
   navigateToView: vi.fn(),
   navigateToArea: vi.fn(),

@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import { TagInput, type Tag } from '@/components/ui/tag-input'
 import { ShortcutPicker } from '../ShortcutPicker'
 import { SettingsField, SettingsSection } from '../shared/SettingsComponents'
@@ -157,6 +158,15 @@ export function GeneralPane() {
     )
   }
 
+  // Handle Obsidian features toggle
+  const handleObsidianToggle = (checked: boolean) => {
+    if (!preferences) return
+    savePreferences.mutate(
+      { ...preferences, show_obsidian_features: checked ? true : null },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
+  }
+
   return (
     <div className="space-y-6">
       <SettingsSection title={t('preferences.general.keyboardShortcuts')}>
@@ -241,6 +251,19 @@ export function GeneralPane() {
             placeholder={t('preferences.general.ignorePatternsPlaceholder')}
             disabled={!preferences || savePreferences.isPending}
             allowDuplicates={false}
+          />
+        </SettingsField>
+      </SettingsSection>
+
+      <SettingsSection title={t('preferences.general.integrations')}>
+        <SettingsField
+          label={t('preferences.general.showObsidianFeatures')}
+          description={t('preferences.general.showObsidianFeaturesDescription')}
+        >
+          <Switch
+            checked={preferences?.show_obsidian_features === true}
+            onCheckedChange={handleObsidianToggle}
+            disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
       </SettingsSection>
