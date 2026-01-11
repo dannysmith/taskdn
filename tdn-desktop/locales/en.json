@@ -114,6 +114,21 @@
   "commands.windowExitFullscreen.label": "Exit Fullscreen",
   "commands.windowExitFullscreen.description": "Exit fullscreen mode",
 
+  "commands.setScheduledToday.label": "Set Scheduled to Today",
+  "commands.setScheduledToday.description": "Set the selected task's scheduled date to today",
+  "commands.setScheduledToday.success": "Task scheduled for today",
+  "commands.setScheduledToday.error": "Failed to set scheduled date",
+
+  "commands.copyTaskTitle.label": "Copy Task Title",
+  "commands.copyTaskTitle.description": "Copy the selected task's title to clipboard",
+  "commands.copyTaskTitle.success": "Title copied to clipboard",
+  "commands.copyTaskTitle.error": "Failed to copy title",
+
+  "commands.duplicateTask.label": "Duplicate Task",
+  "commands.duplicateTask.description": "Create a copy of the selected task",
+  "commands.duplicateTask.success": "Task duplicated",
+  "commands.duplicateTask.error": "Failed to duplicate task",
+
   "commandPalette.title": "Command Palette",
   "commandPalette.placeholder": "Type a command or search...",
   "commandPalette.noResults": "No results found.",

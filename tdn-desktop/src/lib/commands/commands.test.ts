@@ -42,6 +42,10 @@ const createMockContext = (): CommandContext => ({
   collapseAllAreas: vi.fn(),
   expandAllAreas: vi.fn(),
   openExternalUrl: vi.fn(),
+  // Task-specific context
+  selectedTaskId: null,
+  getSelectedTask: vi.fn(() => null),
+  openTask: vi.fn(),
 })
 
 // Mock translation function for testing

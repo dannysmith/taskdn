@@ -1,5 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
-import type { Area, Project } from '@/lib/tauri-bindings'
+import type { Area, Project, Task } from '@/lib/tauri-bindings'
 import type { NavId } from '@/types/navigation'
 
 /** Entity types that can appear in context menus */
@@ -84,4 +84,37 @@ export interface CommandContext {
 
   // External
   openExternalUrl: (url: string) => void
+
+  // Task selection (reads from task-detail-store.openTaskId)
+  selectedTaskId: string | null
+  getSelectedTask: () => Task | null
+
+  // Task operations
+  openTask: (taskId: string) => void
+}
+
+/**
+ * Checks if a task command should be available.
+ * Task commands require:
+ * 1. A task to be selected (open in detail panel)
+ * 2. Focus NOT in an editable element (input, textarea, select, contenteditable)
+ *
+ * This ensures standard keyboard shortcuts (⌘C, ⌘V) work normally in inputs.
+ */
+export function isTaskCommandAvailable(context: CommandContext): boolean {
+  // Must have a selected task
+  if (!context.selectedTaskId) return false
+
+  // Must not be in an editable element
+  const activeEl = document.activeElement
+  if (
+    activeEl instanceof HTMLInputElement ||
+    activeEl instanceof HTMLTextAreaElement ||
+    activeEl instanceof HTMLSelectElement ||
+    (activeEl instanceof HTMLElement && activeEl.isContentEditable)
+  ) {
+    return false
+  }
+
+  return true
 }
