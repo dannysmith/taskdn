@@ -155,3 +155,19 @@ pub fn update_project(
 pub fn delete_task(vault_manager: State<'_, VaultManager>, id: String) -> Result<(), VaultError> {
     vault_manager.delete_task(&id)
 }
+
+// =============================================================================
+// Raw Content
+// =============================================================================
+
+/// Get raw file content for an entity (task, project, or area) by ID.
+/// Returns the entire markdown file as a string.
+#[tauri::command]
+#[specta::specta]
+pub fn get_entity_raw_content(
+    vault_manager: State<'_, VaultManager>,
+    entity_type: String,
+    id: String,
+) -> Result<String, VaultError> {
+    vault_manager.get_entity_raw_content(&entity_type, &id)
+}
