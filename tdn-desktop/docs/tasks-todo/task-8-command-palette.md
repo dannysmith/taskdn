@@ -188,7 +188,7 @@ interface CommandContext {
 
 Bugs...
 
-- [ ] The command palette needs to be wider. Probably about half as wide again. 
+- [x] The command palette needs to be wider. Probably about half as wide again. 
 - [x] Selecting an area in the command palette fails with error "command navigate-area-xxxxxxxxxxxxx" not found. I assume this is because we're using a generated ID rather than the actual title/name of the area? (NoArea works fine)
 - [x] Same as above but for projects
 - [x] Areas and projects don't seem to be fuzzy searchable - they don't appear in results.
