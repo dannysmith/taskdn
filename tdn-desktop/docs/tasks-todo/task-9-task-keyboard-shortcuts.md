@@ -228,6 +228,7 @@ The global shortcut handler respects `e.defaultPrevented` and skips commands whe
 #### 1.1 Extend CommandContext (types.ts + use-command-context.ts)
 
 Add to `CommandContext` interface:
+
 ```typescript
 // Task selection (reads from task-detail-store)
 selectedTaskId: string | null
@@ -238,6 +239,7 @@ updateTaskScheduled: (taskId: string, date: string | null) => Promise<void>
 ```
 
 Add shared availability helper:
+
 ```typescript
 // Helper for task commands - checks selected task + not in editable element
 export function isTaskCommandAvailable(): boolean
@@ -259,14 +261,16 @@ Implement these commands (no new UI needed):
 - Ensure shortcuts work via global handler
 
 #### Files to Change (Phase 1)
-| File                                | Change                                        |
-| ----------------------------------- | --------------------------------------------- |
-| `src/lib/commands/types.ts`         | Add task-related CommandContext methods       |
+
+| File                                | Change                                                         |
+| ----------------------------------- | -------------------------------------------------------------- |
+| `src/lib/commands/types.ts`         | Add task-related CommandContext methods                        |
 | `src/hooks/use-command-context.ts`  | Implement selectedTaskId, getSelectedTask, updateTaskScheduled |
-| `src/lib/commands/task-commands.ts` | NEW - set-scheduled-today, copy-task-title, duplicate-task |
-| `src/lib/commands/index.ts`         | Register task commands                        |
+| `src/lib/commands/task-commands.ts` | NEW - set-scheduled-today, copy-task-title, duplicate-task     |
+| `src/lib/commands/index.ts`         | Register task commands                                         |
 
 #### Checkpoint
+
 - [ ] `⌘T` sets selected task's scheduled date to today
 - [ ] `⌘C` copies task title when task selected (not in input)
 - [ ] `⇧⌘D` duplicates task and opens the new task
@@ -281,10 +285,12 @@ Implement these commands (no new UI needed):
 #### Approach Decision
 
 **Option A**: Open task detail panel and programmatically focus the field
+
 - Pros: Uses existing UI, no new components
 - Cons: Forces detail panel open, might feel disruptive
 
 **Option B**: Create floating picker triggered by command
+
 - Pros: Non-intrusive, can work anywhere
 - Cons: More UI work, duplicate components
 
@@ -300,25 +306,27 @@ setPendingFocusField: (field: ...) => void
 
 #### 2.2 Implement picker commands
 
-| Command               | Shortcut | Implementation                              |
-| --------------------- | -------- | ------------------------------------------- |
-| `edit-scheduled-date` | ⌘D       | Open detail panel, focus scheduled field    |
-| `edit-due-date`       | ⌥⌘D      | Open detail panel, focus due field          |
-| `edit-defer-date`     | ⇧⌥⌘D     | Open detail panel, focus defer field        |
-| `edit-status`         | ⌘S       | Open detail panel, focus status dropdown    |
+| Command               | Shortcut | Implementation                           |
+| --------------------- | -------- | ---------------------------------------- |
+| `edit-scheduled-date` | ⌘D       | Open detail panel, focus scheduled field |
+| `edit-due-date`       | ⌥⌘D      | Open detail panel, focus due field       |
+| `edit-defer-date`     | ⇧⌥⌘D     | Open detail panel, focus defer field     |
+| `edit-status`         | ⌘S       | Open detail panel, focus status dropdown |
 
 #### 2.3 Update TaskDetailPanel
 
 React to `pendingFocusField` and auto-focus/open the relevant picker when set.
 
 #### Files to Change (Phase 2)
-| File                                      | Change                              |
-| ----------------------------------------- | ----------------------------------- |
-| `src/lib/commands/task-commands.ts`       | Add 4 picker commands               |
-| `src/store/task-detail-store.ts`          | Add pendingFocusField state         |
+
+| File                                         | Change                                 |
+| -------------------------------------------- | -------------------------------------- |
+| `src/lib/commands/task-commands.ts`          | Add 4 picker commands                  |
+| `src/store/task-detail-store.ts`             | Add pendingFocusField state            |
 | `src/components/tasks/task-detail-panel.tsx` | Handle auto-focus on pendingFocusField |
 
 #### Checkpoint
+
 - [ ] `⌘D` opens detail panel with scheduled date picker focused/open
 - [ ] `⌥⌘D` opens detail panel with due date picker focused/open
 - [ ] `⇧⌥⌘D` opens detail panel with defer date picker focused/open
@@ -333,6 +341,7 @@ React to `pendingFocusField` and auto-focus/open the relevant picker when set.
 #### 3.1 paste-as-tasks (⌘V)
 
 More complex - needs to:
+
 1. Read clipboard text
 2. Split into lines
 3. Create tasks in appropriate location (depends on current view context)
@@ -347,16 +356,17 @@ May need to understand task ordering/positioning system first.
 
 These depend on how task ordering works in the app:
 
-| Command               | Shortcut | Notes                                  |
-| --------------------- | -------- | -------------------------------------- |
-| `move-task-up`        | ⌘↑       | Needs task ordering system             |
-| `move-task-down`      | ⌘↓       | Needs task ordering system             |
-| `move-task-to-top`    | ⌥⌘↑      | Needs task ordering system             |
-| `move-task-to-bottom` | ⌥⌘↓      | Needs task ordering system             |
+| Command               | Shortcut | Notes                      |
+| --------------------- | -------- | -------------------------- |
+| `move-task-up`        | ⌘↑       | Needs task ordering system |
+| `move-task-down`      | ⌘↓       | Needs task ordering system |
+| `move-task-to-top`    | ⌥⌘↑      | Needs task ordering system |
+| `move-task-to-bottom` | ⌥⌘↓      | Needs task ordering system |
 
 **Note**: Task movement may require backend support or a dedicated ordering store. The task doc mentions "[CURRENTLY WORKS IN TASK LISTS]" - need to investigate if there's existing movement logic we can leverage.
 
 #### Checkpoint
+
 - [ ] `⌘V` creates tasks from clipboard lines (when task selected, not in input)
 - [ ] Movement commands work (if implemented)
 

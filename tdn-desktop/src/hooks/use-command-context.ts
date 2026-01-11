@@ -1,11 +1,12 @@
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useUIStore } from '@/store/ui-store'
 import { useNavigationStore } from '@/store/navigation-store'
+import { useTaskDetailStore } from '@/store/task-detail-store'
 import { notify } from '@/lib/notifications'
 import { queryClient } from '@/lib/query-client'
 import { vaultQueryKeys } from '@/services/vault'
 import type { CommandContext } from '@/lib/commands/types'
-import type { Area, Project } from '@/lib/tauri-bindings'
+import type { Area, Project, Task } from '@/lib/tauri-bindings'
 import type { NavId } from '@/types/navigation'
 
 /**
@@ -57,6 +58,23 @@ export const commandContext: CommandContext = {
 
   // External URLs
   openExternalUrl: (url: string) => void openUrl(url),
+
+  // Task selection (reads from task-detail-store)
+  get selectedTaskId() {
+    return useTaskDetailStore.getState().openTaskId
+  },
+  getSelectedTask: () => {
+    const taskId = useTaskDetailStore.getState().openTaskId
+    if (!taskId) return null
+
+    const tasks = queryClient.getQueryData<Task[]>(vaultQueryKeys.tasks())
+    return tasks?.find(t => t.id === taskId) ?? null
+  },
+
+  // Task operations
+  openTask: (taskId: string) => {
+    useTaskDetailStore.getState().openTask(taskId)
+  },
 }
 
 /**

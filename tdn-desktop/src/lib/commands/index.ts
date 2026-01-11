@@ -4,6 +4,7 @@ export * from '../../hooks/use-command-context'
 import { appCommands } from './app-commands'
 import { navigationCommands } from './navigation-commands'
 import { windowCommands } from './window-commands'
+import { taskCommands } from './task-commands'
 import { registerCommands } from './registry'
 import { logger } from '@/lib/logger'
 
@@ -15,10 +16,11 @@ export function initializeCommandSystem(): void {
   registerCommands(appCommands)
   registerCommands(navigationCommands)
   registerCommands(windowCommands)
+  registerCommands(taskCommands)
 
   if (import.meta.env.DEV) {
     logger.debug('Command system initialized')
   }
 }
 
-export { appCommands, navigationCommands, windowCommands }
+export { appCommands, navigationCommands, windowCommands, taskCommands }
