@@ -14,6 +14,7 @@ import {
   SidebarGroupLabel,
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
+import { useUIStore } from '@/store/ui-store'
 import type { Area } from '@/lib/tauri-bindings'
 import { getDragId } from '@/types/sidebar-order'
 import type { DragItem } from '@/types/sidebar-order'
@@ -44,6 +45,10 @@ export function DraggableArea({
   children,
 }: DraggableAreaProps) {
   const dragId = getDragId('area', area.id)
+
+  // Get collapsed state from UI store
+  const isCollapsed = useUIStore(state => state.collapsedAreaIds.has(area.id))
+  const toggleAreaCollapsed = useUIStore(state => state.toggleAreaCollapsed)
 
   const {
     attributes,
@@ -76,7 +81,11 @@ export function DraggableArea({
         isOver && 'ring-2 ring-primary/20 ring-inset rounded-md'
       )}
     >
-      <Collapsible defaultOpen className="group/collapsible">
+      <Collapsible
+        open={!isCollapsed}
+        onOpenChange={() => toggleAreaCollapsed(area.id)}
+        className="group/collapsible"
+      >
         <SidebarGroup className="py-0">
           <SidebarGroupLabel
             className={cn(
