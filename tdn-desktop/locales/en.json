@@ -11,6 +11,13 @@
   "menu.view": "View",
   "menu.toggleLeftSidebar": "Toggle Left Sidebar",
   "menu.toggleRightSidebar": "Toggle Right Sidebar",
+  "menu.edit": "Edit",
+  "menu.undo": "Undo",
+  "menu.redo": "Redo",
+  "menu.cut": "Cut",
+  "menu.copy": "Copy",
+  "menu.paste": "Paste",
+  "menu.selectAll": "Select All",
 
   "preferences.title": "Preferences",
   "preferences.description": "Customize your application preferences here.",

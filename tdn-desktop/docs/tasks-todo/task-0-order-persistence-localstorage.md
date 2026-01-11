@@ -17,13 +17,13 @@ import { devtools, persist } from 'zustand/middleware'
 export const useDisplayOrderStore = create<DisplayOrderState>()(
   devtools(
     persist(
-      (set) => ({
+      set => ({
         // ... existing state and actions unchanged
       }),
       {
         name: 'display-order-storage',
         // Only persist the data fields, not actions
-        partialize: (state) => ({
+        partialize: state => ({
           sidebarAreaOrder: state.sidebarAreaOrder,
           sidebarProjectOrder: state.sidebarProjectOrder,
           inboxOrder: state.inboxOrder,

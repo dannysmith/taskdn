@@ -9,6 +9,7 @@ import { Calendar, Copy, CopyPlus } from 'lucide-react'
 import i18n from '@/i18n/config'
 import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
+import { markMutationStart, markMutationComplete } from '@/services/vault'
 import type { AppCommand } from './types'
 import { isTaskCommandAvailable } from './types'
 
@@ -43,6 +44,10 @@ export const taskCommands: AppCommand[] = [
       if (!task) return
 
       const today = getTodayISO()
+
+      // Prevent file watcher from invalidating cache during our mutation
+      markMutationStart()
+
       const result = await commands.updateTask({
         id: task.id,
         title: null,
@@ -55,11 +60,16 @@ export const taskCommands: AppCommand[] = [
         body: null,
       })
 
+      markMutationComplete()
+
       if (result.status === 'error') {
         logger.error('Failed to set scheduled date', { error: result.error })
         context.showToast(t('commands.setScheduledToday.error'), 'error')
         return
       }
+
+      // Update TanStack Query cache with the returned task data
+      context.updateTaskInCache(task.id, result.data)
 
       context.showToast(t('commands.setScheduledToday.success'), 'success')
     },
@@ -114,6 +124,9 @@ export const taskCommands: AppCommand[] = [
       const task = context.getSelectedTask()
       if (!task) return
 
+      // Prevent file watcher from invalidating cache during our mutation
+      markMutationStart()
+
       // Create a new task with the same data (excluding id, path, timestamps)
       const result = await commands.createTask({
         title: task.title,
@@ -125,11 +138,16 @@ export const taskCommands: AppCommand[] = [
         deferUntil: task.deferUntil,
       })
 
+      markMutationComplete()
+
       if (result.status === 'error') {
         logger.error('Failed to duplicate task', { error: result.error })
         context.showToast(t('commands.duplicateTask.error'), 'error')
         return
       }
+
+      // Add the new task to TanStack Query cache
+      context.addTaskToCache(result.data)
 
       // Open the new task in the detail panel
       context.openTask(result.data.id)

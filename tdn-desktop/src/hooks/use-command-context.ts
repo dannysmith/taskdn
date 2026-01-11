@@ -75,6 +75,28 @@ export const commandContext: CommandContext = {
   openTask: (taskId: string) => {
     useTaskDetailStore.getState().openTask(taskId)
   },
+
+  // Cache updates (for commands that modify data without going through mutation hooks)
+  updateTaskInCache: (taskId: string, updatedTask: Task) => {
+    // Update individual task cache
+    queryClient.setQueryData(vaultQueryKeys.task(taskId), updatedTask)
+
+    // Update task in the list cache
+    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
+      if (!oldTasks) return oldTasks
+      return oldTasks.map(t => (t.id === taskId ? updatedTask : t))
+    })
+  },
+
+  addTaskToCache: (task: Task) => {
+    // Add to tasks list cache
+    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks =>
+      oldTasks ? [...oldTasks, task] : [task]
+    )
+
+    // Set individual task cache
+    queryClient.setQueryData(vaultQueryKeys.task(task.id), task)
+  },
 }
 
 /**

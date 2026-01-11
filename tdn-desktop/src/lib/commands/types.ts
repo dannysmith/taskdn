@@ -91,6 +91,11 @@ export interface CommandContext {
 
   // Task operations
   openTask: (taskId: string) => void
+
+  // Cache updates (for commands that modify data)
+  // These update the TanStack Query cache after Tauri commands succeed
+  updateTaskInCache: (taskId: string, updatedTask: Task) => void
+  addTaskToCache: (task: Task) => void
 }
 
 /**
