@@ -121,7 +121,7 @@ These products don't have release versions:
 | Product | Reason |
 |---------|--------|
 | tdn-obsidian-extras | Collection of templates, no versioning needed |
-| tdn-website | Deployed website, continuously updated |
+| website | Deployed website, continuously updated |
 
 ## GitHub Actions Workflows
 
