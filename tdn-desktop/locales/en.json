@@ -62,6 +62,7 @@
   "commands.group.navigation": "Navigation",
   "commands.group.settings": "Settings",
   "commands.group.tasks": "Tasks",
+  "commands.group.view": "View",
   "commands.group.window": "Window",
   "commands.group.notification": "Notifications",
   "commands.group.debug": "Debug",
