@@ -14,7 +14,7 @@ import { SearchableSelect } from '@/components/ui/searchable-select'
 import { DateButton } from '@/components/ui/date-button'
 import { TaskStatusCheckbox } from './task-status-checkbox'
 import { TaskStatusPill } from './task-status-pill'
-import { LazyMilkdownEditor } from './lazy-milkdown-editor'
+import { LazyMarkdownEditor } from '@/components/ui/lazy-markdown-editor'
 
 /**
  * TaskDetailPanel - Full task editing interface in the right sidebar.
@@ -335,7 +335,7 @@ export function TaskDetailPanel() {
       {/* Notes - fills remaining space with card background */}
       <div className="flex-1 min-h-0 overflow-hidden p-3 pt-0">
         <div className="h-full bg-card rounded-lg border overflow-hidden">
-          <LazyMilkdownEditor
+          <LazyMarkdownEditor
             editorKey={task.id}
             defaultValue={task.body ?? ''}
             onChange={handleBodyChange}
