@@ -6,13 +6,15 @@ Patterns for saving and loading data to disk.
 
 | Need               | Solution           | When to Use                                                           |
 | ------------------ | ------------------ | --------------------------------------------------------------------- |
+| Tasks/Projects/Areas | Vault System     | Core application data stored as markdown files                        |
 | App preferences    | Preferences System | Strongly-typed settings (theme, shortcuts)                            |
 | Emergency recovery | Recovery System    | Crash recovery, backup before risky operations                        |
-| Relational data    | SQLite             | User data requiring queries, relationships                            |
+| Relational data    | SQLite             | Complex queries, relationships (not currently used)                   |
 | External API data  | TanStack Query     | Remote data with caching (see [external-apis.md](./external-apis.md)) |
 
 ```
 Need to persist data?
+├─ Tasks, projects, or areas? → Vault System (markdown files)
 ├─ App settings? → Preferences (Rust struct + TanStack Query)
 ├─ User data with queries/relationships? → SQLite (see below)
 ├─ Remote API data? → external-apis.md
@@ -20,6 +22,89 @@ Need to persist data?
 ```
 
 All data goes through Rust for type safety and security. Use TanStack Query on the frontend for loading states and cache invalidation.
+
+## Vault System (Primary Data Storage)
+
+Taskdn stores tasks, projects, and areas as markdown files with YAML frontmatter. This provides human-readable storage that works well with version control and external editors like Obsidian.
+
+### Architecture
+
+```
+src-tauri/src/vault/
+├── entities.rs    # Task, Project, Area structs
+├── manager.rs     # VaultManager with caching and file watching
+├── scanner.rs     # Parallel file scanning with rayon
+├── writer.rs      # Atomic file writes with round-trip fidelity
+├── wikilink.rs    # Cross-reference parsing
+└── error.rs       # Structured error types
+```
+
+### Vault Structure
+
+```
+vault-directory/
+├── tasks/           # Task markdown files
+│   └── *.md
+├── projects/        # Project markdown files
+│   └── *.md
+└── areas/           # Area markdown files
+    └── *.md
+```
+
+### Entity File Format
+
+Each entity is a markdown file with YAML frontmatter:
+
+```markdown
+---
+status: in-progress
+scheduled: 2025-01-15
+due: 2025-01-20
+project: "[[My Project]]"
+---
+
+Task body content here (markdown supported).
+```
+
+### VaultManager Pattern
+
+The `VaultManager` maintains an in-memory index with file watching:
+
+- **Caching**: Entities are cached in memory after scanning
+- **File watching**: Debounced (100ms) file system events trigger re-scans
+- **Thread safety**: `RwLock` for concurrent read access
+- **Events**: Emits `vault-changed` events to React when files change
+
+### Frontend Integration
+
+```typescript
+// Vault data is loaded via TanStack Query
+import { useQuery } from '@tanstack/react-query'
+import { commands, unwrapResult } from '@/lib/tauri-bindings'
+
+export function useTasks() {
+  return useQuery({
+    queryKey: ['tasks'],
+    queryFn: async () => unwrapResult(await commands.listTasks()),
+  })
+}
+
+// Mutations invalidate queries to refresh data
+export function useCreateTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (task: CreateTaskInput) => commands.createTask(task),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
+  })
+}
+```
+
+### Key Design Decisions
+
+- **Markdown + YAML**: Human-readable, works with Obsidian, version-controllable
+- **File-based IDs**: Entity IDs derived from file paths for stability
+- **Round-trip fidelity**: Unknown frontmatter fields are preserved when writing
+- **Parallel scanning**: Uses `rayon` with DoS limits (10,000 files, 8 threads max)
 
 ## File Locations
 

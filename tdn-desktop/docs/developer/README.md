@@ -15,6 +15,7 @@ Technical documentation for building and extending this app. These docs describe
 
 | Document                                      | Description                                     |
 | --------------------------------------------- | ----------------------------------------------- |
+| [Command Registry](./command-registry.md)     | Complete list of all commands and shortcuts     |
 | [Command System](./command-system.md)         | Unified action dispatch, command registration   |
 | [Keyboard Shortcuts](./keyboard-shortcuts.md) | Global shortcut handling, platform modifiers    |
 | [Menus](./menus.md)                           | Native menu building with i18n                  |
@@ -24,12 +25,13 @@ Technical documentation for building and extending this app. These docs describe
 
 ## UI & UX
 
-| Document                                   | Description                                 |
-| ------------------------------------------ | ------------------------------------------- |
-| [UI Patterns](./ui-patterns.md)            | CSS architecture, shadcn/ui components      |
-| [Internationalization](./i18n-patterns.md) | Translation system, RTL support             |
-| [Notifications](./notifications.md)        | Toast and native notifications              |
-| [Cross-Platform](./cross-platform.md)      | Platform detection, OS-specific adaptations |
+| Document                                              | Description                                        |
+| ----------------------------------------------------- | -------------------------------------------------- |
+| [Design Conventions](./ui-design-guidelines.md)       | Colors, icons, entity schemas, interaction patterns |
+| [UI Patterns](./ui-patterns.md)                       | CSS architecture, shadcn/ui components             |
+| [Internationalization](./i18n-patterns.md)            | Translation system, RTL support                    |
+| [Notifications](./notifications.md)                   | Toast and native notifications                     |
+| [Cross-Platform](./cross-platform.md)                 | Platform detection, OS-specific adaptations        |
 
 ## Data & Storage
 

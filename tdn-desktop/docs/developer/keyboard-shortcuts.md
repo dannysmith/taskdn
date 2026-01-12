@@ -170,5 +170,6 @@ The global handler includes an `isEditableElement` check that can block shortcut
 
 ## Related Documentation
 
+- [Command Registry](./command-registry.md) - Complete list of all commands and shortcuts
 - [Command System](./command-system.md) - Full command system documentation
 - [Menus](./menus.md) - Native menu integration

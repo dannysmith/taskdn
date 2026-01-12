@@ -30,6 +30,7 @@ Guide to all Tauri plugins installed in this app, plus built-in features and gui
 | **os**                | OS information                    | `@tauri-apps/plugin-os`                |
 | **global-shortcut**   | System-wide keyboard shortcuts    | None (configured in Rust)              |
 | **updater**           | In-app updates                    | `@tauri-apps/plugin-updater`           |
+| **log**               | Logging to stdout and file        | None (Rust `log` crate macros)         |
 
 ### Platform-Specific
 
@@ -153,6 +154,16 @@ import { writeText, readText } from '@tauri-apps/plugin-clipboard-manager'
 
 await writeText('Hello, clipboard!')
 const text = await readText()
+```
+
+### Logging
+
+The log plugin provides structured logging with level filtering. See [logging.md](./logging.md) for usage patterns.
+
+```rust
+log::info!("Application starting");
+log::debug!("Debug value: {}", value);
+log::error!("Something went wrong: {}", error);
 ```
 
 ### Opener

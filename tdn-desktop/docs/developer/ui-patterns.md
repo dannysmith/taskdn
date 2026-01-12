@@ -24,6 +24,14 @@ src/
 
 **Multi-window theming**: `theme-variables.css` is imported by both `App.css` and `quick-pane.css` so all windows share the same theme tokens. When adding new color variables, add them to `theme-variables.css`.
 
+**Theme variables include**:
+- Standard shadcn/ui colors (background, foreground, primary, etc.)
+- Taskdn-specific status colors (`--color-status-inbox`, `--color-status-done`, etc.)
+- Entity accent colors (`--color-entity-project`, `--color-entity-area`)
+- Date colors (`--color-date-due`, `--color-date-overdue`)
+- Area type colors (6 slots for user-defined categories)
+- Custom container breakpoints for compact UI (`@4xs` through `@8xs`)
+
 ### Structure
 
 ```css
@@ -361,3 +369,7 @@ This preserves scroll position, form state, and resize dimensions.
 - Override shadcn components in place (copy and modify instead)
 - Add `cursor-pointer` everywhere (only for actual clickable elements)
 - Use viewport-based responsive design (this is a fixed-size desktop app)
+
+## Related Documentation
+
+- [Design Conventions](./ui-design-guidelines.md) - Colors, icons, entity schemas, interaction patterns

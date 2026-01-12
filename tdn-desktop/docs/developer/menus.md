@@ -187,3 +187,9 @@ The `CmdOrCtrl` accelerator automatically uses the correct modifier per platform
 | Translations not updating | Verify `setupMenuLanguageListener()` is called              |
 | Action not working        | Check handler uses `getState()` for current values          |
 | Accelerator conflicts     | Verify shortcut isn't used elsewhere in the app             |
+
+## Related Documentation
+
+- [Command Registry](./command-registry.md) - Complete menu structure and all commands
+- [Command System](./command-system.md) - How menus integrate with the command system
+- [Keyboard Shortcuts](./keyboard-shortcuts.md) - Shortcut handling patterns

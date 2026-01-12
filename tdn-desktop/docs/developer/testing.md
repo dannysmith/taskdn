@@ -156,11 +156,13 @@ Use factory functions from `src/test/helpers/vault.ts`:
 import {
   createTestTask,
   createTestProject,
+  createTestArea,
+  createTestVault,
   resetFactoryCounters,
 } from '@/test/helpers/vault'
 
 beforeEach(() => {
-  resetFactoryCounters() // Ensures deterministic IDs
+  resetFactoryCounters() // Ensures deterministic IDs (task-1, task-2, etc.)
 })
 
 test('task with custom status', () => {
@@ -176,26 +178,55 @@ const { tasks, projects, areas } = createTestVault({
 })
 ```
 
+**Factory features**:
+- Deterministic IDs (`task-1`, `project-1`, etc.) reset between tests
+- Fixed date `2025-01-15` for reproducible tests
+- All entity properties can be overridden
+
 ### Test Fixtures
 
-Static fixtures in `src/test/fixtures/vault/` for integration tests:
+Static fixtures in `src/test/fixtures/vault/` provide real markdown files for integration tests:
 
-- `tasks/` - All 7 task statuses plus edge cases
-- `projects/` - All 6 project statuses
-- `areas/` - Active and archived areas
+```
+src/test/fixtures/vault/
+├── tasks/
+│   ├── inbox-task.md, icebox-task.md, ready-task.md, ...
+│   ├── task-with-dates.md, task-with-project.md, ...
+│   └── archive/
+├── projects/
+│   ├── planning-project.md, in-progress-project.md, ...
+│   └── archive/
+└── areas/
+    ├── active-area.md, empty-area.md
+    └── archive/
+```
 
-Use `withTempVault()` for write tests:
+**Coverage**: All 7 task statuses, all 6 project statuses, edge cases (unicode, long notes, cross-links).
+
+### Temporary Vault Helpers
+
+Use `withTempVault()` for tests that write files:
 
 ```typescript
-import { withTempVault } from '@/test/helpers/vault'
+import { withTempVault, withTempVaultFromFixtures } from '@/test/helpers/vault'
 
-test('writes task to vault', async () => {
+// Empty temp vault
+test('creates task file', async () => {
   await withTempVault(async vaultPath => {
-    // vaultPath has tasks/, projects/, areas/ subdirectories
-    // Write tests here - temp dir cleaned up automatically
+    // vaultPath has empty tasks/, projects/, areas/ subdirectories
+    // Temp dir cleaned up automatically after test
+  })
+})
+
+// Temp vault pre-populated from fixtures
+test('modifies existing task', async () => {
+  await withTempVaultFromFixtures(async vaultPath => {
+    // vaultPath contains copies of all fixture files
   })
 })
 ```
+
+**Note**: There is no demo vault for manual testing. The fixtures vault is designed for automated tests only.
 
 ## Rust Testing
 
