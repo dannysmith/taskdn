@@ -335,7 +335,7 @@ export function TaskDetailPanel() {
           <span>Completed {formatShortDate(task.completedAt)}</span>
         )}
         <span className="font-mono opacity-50 truncate max-w-20 @xs:max-w-none">
-          {task.id}
+          {task.path.split('/').pop()}
         </span>
       </div>
     </div>
