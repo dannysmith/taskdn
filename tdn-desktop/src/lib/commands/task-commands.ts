@@ -19,7 +19,7 @@ import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
 import { markMutationStart, markMutationComplete } from '@/services/vault'
 import type { AppCommand } from './types'
-import { isTaskCommandAvailable } from './types'
+import { isTaskCommandAvailable, getTargetTask } from './types'
 
 const t = i18n.t.bind(i18n)
 
@@ -48,7 +48,7 @@ export const taskCommands: AppCommand[] = [
     isAvailable: isTaskCommandAvailable,
 
     execute: async context => {
-      const task = context.getSelectedTask()
+      const task = getTargetTask(context)
       if (!task) return
 
       const today = getTodayISO()
@@ -163,7 +163,7 @@ export const taskCommands: AppCommand[] = [
     isAvailable: isTaskCommandAvailable,
 
     execute: async context => {
-      const task = context.getSelectedTask()
+      const task = getTargetTask(context)
       if (!task) return
 
       try {
@@ -193,7 +193,7 @@ export const taskCommands: AppCommand[] = [
     isAvailable: isTaskCommandAvailable,
 
     execute: async context => {
-      const task = context.getSelectedTask()
+      const task = getTargetTask(context)
       if (!task) return
 
       // Prevent file watcher from invalidating cache during our mutation
@@ -240,7 +240,7 @@ export const taskCommands: AppCommand[] = [
     isAvailable: isTaskCommandAvailable,
 
     execute: async context => {
-      const task = context.getSelectedTask()
+      const task = getTargetTask(context)
       if (!task) return
 
       // Check if user prefers permanent deletion
