@@ -39,6 +39,18 @@ export function TaskDetailPanel() {
   // Track which field's popover/dropdown is currently open
   const [openField, setOpenField] = React.useState<FocusableField>(null)
 
+  // Ref for auto-resizing title textarea
+  const titleTextareaRef = React.useRef<HTMLTextAreaElement>(null)
+
+  // Auto-resize textarea to fit content
+  const resizeTextarea = React.useCallback(() => {
+    const textarea = titleTextareaRef.current
+    if (textarea) {
+      textarea.style.height = 'auto'
+      textarea.style.height = `${textarea.scrollHeight}px`
+    }
+  }, [])
+
   // When pendingFocusField changes, open the corresponding field
   React.useEffect(() => {
     if (pendingFocusField) {
@@ -60,6 +72,11 @@ export function TaskDetailPanel() {
   const task = openTaskId
     ? (tasks.find(t => t.id === openTaskId) ?? null)
     : null
+
+  // Resize title textarea when task changes or on mount
+  React.useEffect(() => {
+    resizeTextarea()
+  }, [task?.title, resizeTextarea])
 
   const activeProjects = getActiveProjects()
   const activeAreas = getActiveAreas()
@@ -231,16 +248,20 @@ export function TaskDetailPanel() {
   return (
     <div className="flex h-full flex-col">
       {/* Header: Checkbox + Title + Close */}
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex items-start gap-3 px-4 py-3">
         <TaskStatusCheckbox
           status={task.status}
           onToggle={handleToggleStatus}
-          className="size-5 shrink-0"
+          className="size-5 shrink-0 mt-1.5"
         />
         <Textarea
+          ref={titleTextareaRef}
           value={task.title}
-          onChange={e => handleTitleChange(e.target.value)}
-          className="flex-1 text-lg font-medium border-none shadow-none p-1 min-h-0 h-auto resize-none focus-visible:ring-1 focus-visible:ring-primary rounded-sm field-sizing-content"
+          onChange={e => {
+            handleTitleChange(e.target.value)
+            resizeTextarea()
+          }}
+          className="flex-1 text-lg font-medium border-none shadow-none p-1 min-h-0 h-auto resize-none overflow-hidden focus-visible:ring-1 focus-visible:ring-primary rounded-sm"
           placeholder="Task title..."
           rows={1}
         />
