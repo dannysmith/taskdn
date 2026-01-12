@@ -123,14 +123,23 @@ export interface CommandContext {
 
 /**
  * Checks if a task command should be available.
- * Task commands require:
- * 1. A task to be selected (open in detail panel)
- * 2. Focus NOT in an editable element (input, textarea, select, contenteditable)
  *
- * This ensures standard keyboard shortcuts (⌘C, ⌘V) work normally in inputs.
+ * For context menus: checks if there's a task context menu target.
+ * For command palette/keyboard: checks if a task is selected and focus isn't in an input.
+ *
+ * This ensures:
+ * - Context menu commands work on the right-clicked task (via contextMenuTarget)
+ * - Command palette/keyboard commands work on the selected task
+ * - Standard keyboard shortcuts (⌘C, ⌘V) work normally in inputs
  */
 export function isTaskCommandAvailable(context: CommandContext): boolean {
-  // Must have a selected task
+  // If there's a context menu target that's a task, always available
+  const target = context.getContextMenuTarget()
+  if (target !== null && target.type === 'task') {
+    return true
+  }
+
+  // For command palette/keyboard: must have a selected task
   if (!context.selectedTaskId) return false
 
   // Must not be in an editable element
@@ -145,4 +154,25 @@ export function isTaskCommandAvailable(context: CommandContext): boolean {
   }
 
   return true
+}
+
+/**
+ * Get the target task for a command.
+ *
+ * Priority:
+ * 1. Context menu target (if it's a task) - for right-click context menus
+ * 2. Selected task - for command palette and keyboard shortcuts
+ *
+ * Use this in task command execute functions instead of getSelectedTask()
+ * to ensure context menu commands operate on the right-clicked task.
+ */
+export function getTargetTask(context: CommandContext): Task | null {
+  // First check context menu target
+  const target = context.getContextMenuTarget()
+  if (target !== null && target.type === 'task') {
+    return target.entity
+  }
+
+  // Fall back to selected task
+  return context.getSelectedTask()
 }

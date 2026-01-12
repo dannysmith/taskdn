@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu } from '@/lib/context-menu'
 import type { HeadingColor } from '@/types/headings'
 import { toHeadingId } from '@/types/headings'
 import type { ResolvedOrderedItem } from '@/hooks/use-today-order'
@@ -116,6 +118,7 @@ export function OrderedItemList({
   className,
 }: OrderedItemListProps) {
   const containerRef = React.useRef<HTMLDivElement>(null)
+  const commandContext = useCommandContext()
 
   // Internal state (used when not controlled externally)
   const [internalSelectedIndex, setInternalSelectedIndex] = React.useState<
@@ -545,6 +548,9 @@ export function OrderedItemList({
                     onTaskTitleChange(item.id, newTitle)
                   }
                   onStatusToggle={() => onTaskStatusToggle(item.id)}
+                  onContextMenu={() =>
+                    showTaskContextMenu(item.data, commandContext)
+                  }
                   contextName={getContextName?.(item.data)}
                   showScheduled={showScheduled}
                   showDue={showDue}

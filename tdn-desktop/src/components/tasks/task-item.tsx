@@ -103,8 +103,12 @@ export function TaskItem({
     if (!onContextMenu) return
     e.preventDefault()
     e.stopPropagation()
-    // Select the task when right-clicking
-    onSelect()
+    // Note: We intentionally do NOT call onSelect() here.
+    // The context menu uses contextMenuTarget (set by showTaskContextMenu)
+    // which is independent of the selection state. Calling onSelect() here
+    // causes React state updates to interleave with Tauri's menu building,
+    // which can cause hangs on macOS. The right-clicked task is already
+    // passed directly to showTaskContextMenu, so selection isn't needed.
     onContextMenu(e)
   }
 

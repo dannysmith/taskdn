@@ -10,6 +10,24 @@ import type {
 import { executeCommand, getCommandLabel } from '@/lib/commands/registry'
 import { logger } from '@/lib/logger'
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Context Menu Mutex
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Guards against concurrent context menu operations.
+ * Only one context menu can be built/shown at a time.
+ */
+let contextMenuInProgress = false
+let contextMenuAbortController: AbortController | null = null
+
+/**
+ * Log context menu events for debugging hangs.
+ */
+function logContextMenu(event: string, details?: Record<string, unknown>) {
+  logger.debug(`[ContextMenu] ${event}`, details)
+}
+
 /**
  * Context menu utilities for native right-click menus.
  *
@@ -216,36 +234,64 @@ async function buildEntityContextMenu(
   const groupedCommands = groupCommands(commands)
   const menuItems: (MenuItem | PredefinedMenuItem)[] = []
 
+  // Log all commands being added to the menu for debugging
+  const commandSummary = commands.map(cmd => ({
+    id: cmd.id,
+    shortcut: cmd.shortcut ?? 'none',
+  }))
+  logContextMenu('building-menu-items', { commands: commandSummary })
+
   let isFirstGroup = true
-  for (const [, groupCommands] of groupedCommands) {
+  for (const [groupName, groupCommands] of groupedCommands) {
     // Add separator between groups
     if (!isFirstGroup) {
       menuItems.push(await PredefinedMenuItem.new({ item: 'Separator' }))
     }
     isFirstGroup = false
 
+    logContextMenu('adding-group', { groupName, count: groupCommands.length })
+
     // Add commands in this group
     for (const cmd of groupCommands) {
       const label = getCommandLabel(cmd, t)
-      menuItems.push(
-        await MenuItem.new({
+      logContextMenu('adding-menu-item', {
+        id: cmd.id,
+        label,
+        accelerator: cmd.shortcut ?? 'none',
+      })
+
+      try {
+        // Note: We intentionally omit accelerators from context menus.
+        // Context menus are accessed by right-click, not keyboard, so shortcuts
+        // aren't useful here. More importantly, complex accelerator strings
+        // can cause issues with native menu systems on some platforms.
+        menuItems.push(
+          await MenuItem.new({
+            id: cmd.id,
+            text: label,
+            // accelerator intentionally omitted - see note above
+            action: async () => {
+              const result = await executeCommand(cmd.id, context)
+              if (!result.success) {
+                logger.error('Context menu command failed', {
+                  commandId: cmd.id,
+                  error: result.error,
+                })
+              }
+            },
+          })
+        )
+      } catch (error) {
+        // Log but don't fail the entire menu for one bad item
+        logContextMenu('menu-item-error', {
           id: cmd.id,
-          text: label,
-          accelerator: cmd.shortcut,
-          action: async () => {
-            const result = await executeCommand(cmd.id, context)
-            if (!result.success) {
-              logger.error('Context menu command failed', {
-                commandId: cmd.id,
-                error: result.error,
-              })
-            }
-          },
+          error: String(error),
         })
-      )
+      }
     }
   }
 
+  logContextMenu('creating-menu', { itemCount: menuItems.length })
   return Menu.new({ items: menuItems })
 }
 
@@ -256,24 +302,96 @@ export async function showTaskContextMenu(
   task: Task,
   context: CommandContext
 ): Promise<void> {
+  await showEntityContextMenu('task', task, context)
+}
+
+/**
+ * Generic entity context menu handler with mutex protection.
+ * Prevents concurrent context menus which can cause hangs.
+ */
+async function showEntityContextMenu(
+  type: EntityType,
+  entity: Task | Project | Area,
+  context: CommandContext
+): Promise<void> {
+  const entityId = entity.id
+  const entityTitle = entity.title
+
+  logContextMenu('requested', { type, entityId, entityTitle })
+
+  // If another context menu is in progress, abort it first
+  if (contextMenuInProgress) {
+    logContextMenu('aborting-previous', { type, entityId })
+    contextMenuAbortController?.abort()
+    // Give a brief moment for the previous menu to clean up
+    await new Promise(resolve => setTimeout(resolve, 10))
+  }
+
+  // Check again after the brief delay
+  if (contextMenuInProgress) {
+    logContextMenu('skipped-still-in-progress', { type, entityId })
+    return
+  }
+
+  // Set up abort controller for this menu
+  contextMenuAbortController = new AbortController()
+  const abortSignal = contextMenuAbortController.signal
+
+  // Acquire the mutex
+  contextMenuInProgress = true
+  logContextMenu('acquired-mutex', { type, entityId })
+
   // Set the context menu target
-  const target: ContextMenuEntity = { type: 'task', entity: task }
+  const target: ContextMenuEntity = { type, entity } as ContextMenuEntity
   context.setContextMenuTarget(target)
 
   try {
-    const allCommands = await getRegisteredCommands(context)
-    const commands = getContextMenuCommands(allCommands, 'task', context)
-
-    if (commands.length === 0) {
-      logger.warn('No commands available for task context menu')
+    // Check for abort before expensive operations
+    if (abortSignal.aborted) {
+      logContextMenu('aborted-before-commands', { type, entityId })
       return
     }
 
+    logContextMenu('fetching-commands', { type, entityId })
+    const allCommands = await getRegisteredCommands(context)
+
+    if (abortSignal.aborted) {
+      logContextMenu('aborted-after-commands', { type, entityId })
+      return
+    }
+
+    const commands = getContextMenuCommands(allCommands, type, context)
+
+    if (commands.length === 0) {
+      logContextMenu('no-commands-available', { type, entityId })
+      return
+    }
+
+    logContextMenu('building-menu', {
+      type,
+      entityId,
+      commandCount: commands.length,
+    })
     const menu = await buildEntityContextMenu(commands, context)
+
+    if (abortSignal.aborted) {
+      logContextMenu('aborted-after-build', { type, entityId })
+      return
+    }
+
+    logContextMenu('showing-popup', { type, entityId })
     await menu.popup()
+    logContextMenu('popup-closed', { type, entityId })
+  } catch (error) {
+    logContextMenu('error', { type, entityId, error: String(error) })
+    throw error
   } finally {
     // Clear the target after menu closes
     context.setContextMenuTarget(null)
+    // Release the mutex
+    contextMenuInProgress = false
+    contextMenuAbortController = null
+    logContextMenu('released-mutex', { type, entityId })
   }
 }
 
@@ -284,25 +402,7 @@ export async function showProjectContextMenu(
   project: Project,
   context: CommandContext
 ): Promise<void> {
-  // Set the context menu target
-  const target: ContextMenuEntity = { type: 'project', entity: project }
-  context.setContextMenuTarget(target)
-
-  try {
-    const allCommands = await getRegisteredCommands(context)
-    const commands = getContextMenuCommands(allCommands, 'project', context)
-
-    if (commands.length === 0) {
-      logger.warn('No commands available for project context menu')
-      return
-    }
-
-    const menu = await buildEntityContextMenu(commands, context)
-    await menu.popup()
-  } finally {
-    // Clear the target after menu closes
-    context.setContextMenuTarget(null)
-  }
+  await showEntityContextMenu('project', project, context)
 }
 
 /**
@@ -312,23 +412,5 @@ export async function showAreaContextMenu(
   area: Area,
   context: CommandContext
 ): Promise<void> {
-  // Set the context menu target
-  const target: ContextMenuEntity = { type: 'area', entity: area }
-  context.setContextMenuTarget(target)
-
-  try {
-    const allCommands = await getRegisteredCommands(context)
-    const commands = getContextMenuCommands(allCommands, 'area', context)
-
-    if (commands.length === 0) {
-      logger.warn('No commands available for area context menu')
-      return
-    }
-
-    const menu = await buildEntityContextMenu(commands, context)
-    await menu.popup()
-  } finally {
-    // Clear the target after menu closes
-    context.setContextMenuTarget(null)
-  }
+  await showEntityContextMenu('area', area, context)
 }
