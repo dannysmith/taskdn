@@ -92,9 +92,9 @@ function MarkdownEditor({
 
   return (
     <div className={cn('relative flex flex-col', className)}>
-      {/* View toggle - small icons in top-right corner */}
+      {/* View toggle - small icons in bottom-right corner */}
       {showToggle && (
-        <div className="absolute top-1.5 right-2 z-10 flex gap-0.5">
+        <div className="absolute bottom-1.5 right-2 z-10 flex gap-0.5">
           <button
             type="button"
             onClick={switchToPreview}
