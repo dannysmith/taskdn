@@ -6,6 +6,7 @@ import {
   buildAppMenu,
   setupMenuLanguageListener,
   setupMenuSelectionListener,
+  setupMenuDataListener,
 } from './lib/menu'
 import { initializeLanguage } from './i18n/language-init'
 import { logger } from './lib/logger'
@@ -45,6 +46,7 @@ function App() {
         // Set up listeners to rebuild menu when needed
         setupMenuLanguageListener()
         setupMenuSelectionListener()
+        setupMenuDataListener()
       } catch (error) {
         logger.warn('Failed to initialize language or menu', { error })
       }

@@ -77,8 +77,8 @@ export function formatForDisplay(
   } else {
     // Windows/Linux uses text with + separators
     const parts: string[] = []
-    if (parsed.cmdOrCtrl) parts.push('Ctrl')
-    if (parsed.ctrl) parts.push('Ctrl') // On Windows, ctrl is also Ctrl
+    // Only output Ctrl once when either cmdOrCtrl or ctrl is true (or both)
+    if (parsed.cmdOrCtrl || parsed.ctrl) parts.push('Ctrl')
     if (parsed.alt) parts.push('Alt')
     if (parsed.shift) parts.push('Shift')
     parts.push(formatKeyForDisplay(parsed.key, 'other'))

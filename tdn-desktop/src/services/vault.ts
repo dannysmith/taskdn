@@ -10,6 +10,7 @@ import { listen } from '@tauri-apps/api/event'
 import { useEffect } from 'react'
 import { toast } from 'sonner'
 import { logger } from '@/lib/logger'
+import { filterActiveAreas, filterActiveProjects } from '@/lib/entity-filters'
 import {
   commands,
   type Task,
@@ -706,10 +707,9 @@ export function useVaultHelpers() {
 
     getOrphanTasks: () => tasks.filter(t => !t.project && !t.area),
 
-    getActiveProjects: () =>
-      projects.filter(p => p.status !== 'done' && p.status !== 'paused'),
+    getActiveProjects: () => filterActiveProjects(projects),
 
-    getActiveAreas: () => areas.filter(a => a.status !== 'archived'),
+    getActiveAreas: () => filterActiveAreas(areas),
 
     // Stats helpers
     getProjectCompletion: (projectId: string) => {

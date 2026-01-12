@@ -75,9 +75,9 @@ function keyEventToShortcut(e: KeyboardEvent): string | null {
   // Build the shortcut string
   const parts: string[] = []
 
-  // Use CommandOrControl for cross-platform compatibility
+  // Use CmdOrCtrl for cross-platform compatibility (consistent with command definitions)
   if (e.metaKey || e.ctrlKey) {
-    parts.push('CommandOrControl')
+    parts.push('CmdOrCtrl')
   }
   if (e.shiftKey) {
     parts.push('Shift')
