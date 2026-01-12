@@ -1,8 +1,10 @@
 import * as React from 'react'
 
 import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
-import type { TaskStatus } from '@/lib/tauri-bindings'
+import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu } from '@/lib/context-menu'
 import { MonthCalendar } from '@/components/calendar'
 
 /**
@@ -24,6 +26,12 @@ export function CalendarView() {
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
+  const commandContext = useCommandContext()
+
+  // Context menu handler for tasks
+  const handleTaskContextMenu = (task: Task) => {
+    showTaskContextMenu(task, commandContext)
+  }
 
   // Get task by ID for drag preview
   const getTaskById = React.useCallback(
@@ -96,6 +104,7 @@ export function CalendarView() {
         onTaskScheduleChange={handleScheduleChange}
         onTaskStatusChange={handleStatusChange}
         onTaskOpenDetail={handleOpenDetail}
+        onTaskContextMenu={handleTaskContextMenu}
         onCreateTask={handleCreateTask}
         className="flex-1"
       />

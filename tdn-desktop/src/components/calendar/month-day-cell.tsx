@@ -29,6 +29,8 @@ interface MonthDayCellProps {
   getTaskVariant?: (task: Task) => TaskCardVariant
   onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => void
   onTaskOpenDetail?: (taskId: string) => void
+  /** Called when a task is right-clicked */
+  onTaskContextMenu?: (task: Task) => void
   /** Called when + button is clicked to create a task */
   onCreateTask?: () => void
   /** ID of task currently being edited (for auto-focus) */
@@ -48,6 +50,7 @@ export function MonthDayCell({
   getTaskVariant,
   onTaskStatusChange,
   onTaskOpenDetail,
+  onTaskContextMenu,
   onCreateTask,
   editingTaskId,
   isDropTarget = false,
@@ -122,6 +125,9 @@ export function MonthDayCell({
                 }
                 onEditClick={
                   onTaskOpenDetail ? () => onTaskOpenDetail(task.id) : undefined
+                }
+                onContextMenu={
+                  onTaskContextMenu ? () => onTaskContextMenu(task) : undefined
                 }
                 autoFocusEdit={task.id === editingTaskId}
               />
