@@ -1,6 +1,7 @@
 import { Folder, FolderKanban } from 'lucide-react'
 import type { TFunction } from 'i18next'
 import type { AppCommand, CommandContext } from './types'
+import { filterActiveAreas, filterActiveProjects } from '@/lib/entity-filters'
 
 const commandRegistry = new Map<string, AppCommand>()
 
@@ -16,13 +17,9 @@ function getDynamicNavigationCommands(context: CommandContext): AppCommand[] {
   const areas = context.getAreas()
   const projects = context.getProjects()
 
-  // Filter to active areas (not archived)
-  const activeAreas = areas.filter(area => area.status !== 'archived')
-
-  // Filter to active projects (not done or paused)
-  const activeProjects = projects.filter(
-    project => project.status !== 'done' && project.status !== 'paused'
-  )
+  // Filter to active entities using shared filter functions
+  const activeAreas = filterActiveAreas(areas)
+  const activeProjects = filterActiveProjects(projects)
 
   const areaCommands: AppCommand[] = activeAreas.map(area => ({
     id: `navigate-area-${area.id}`,

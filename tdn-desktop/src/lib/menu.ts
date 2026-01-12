@@ -26,6 +26,8 @@ import {
 } from '@/lib/commands/registry'
 import { commandContext } from '@/hooks/use-command-context'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { queryClient } from '@/lib/query-client'
+import { filterActiveAreas, filterActiveProjects } from '@/lib/entity-filters'
 import type { AppCommand, CommandContext } from '@/lib/commands/types'
 
 const APP_NAME = 'Taskdn'
@@ -128,6 +130,23 @@ export function setupMenuSelectionListener(): () => void {
   return unsubscribe
 }
 
+/**
+ * Set up a listener to rebuild the menu when vault data (areas/projects) changes.
+ * This ensures the Go menu stays up-to-date when entities are created, deleted,
+ * archived, or renamed.
+ * Returns an unsubscribe function for cleanup.
+ */
+export function setupMenuDataListener(): () => void {
+  return queryClient.getQueryCache().subscribe(event => {
+    const key = event.query.queryKey[0]
+    if (key === 'areas' || key === 'projects') {
+      buildAppMenu().catch(error => {
+        logger.error('Failed to rebuild menu on data change', { error })
+      })
+    }
+  })
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Individual Menu Builders
 // ─────────────────────────────────────────────────────────────────────────────
@@ -157,6 +176,10 @@ async function createCommandMenuItem(
           commandId: cmd.id,
           error: result.error,
         })
+        context.showToast(
+          result.error || t('toast.error.commandFailed'),
+          'error'
+        )
       }
     },
   })
@@ -249,6 +272,10 @@ async function buildFileMenu(
   context: CommandContext
 ): Promise<Submenu> {
   const fileCommands = getCommandsForMenu(commands, 'File')
+  // Note: We check hasEntitySelected manually rather than using createCommandMenuItem()
+  // because entity commands' isAvailable() includes a focus check for keyboard shortcuts
+  // (to avoid capturing Cmd+C when typing in inputs). For menus, focus is irrelevant—
+  // we just care if a task is selected. The manual check correctly skips the focus check.
   const hasEntitySelected = context.selectedTaskId !== null
 
   // Get specific commands
@@ -514,10 +541,9 @@ async function buildGoMenu(
   t: TFunc,
   context: CommandContext
 ): Promise<Submenu> {
-  const areas = context.getAreas().filter(a => a.status !== 'archived')
-  const projects = context
-    .getProjects()
-    .filter(p => p.status !== 'done' && p.status !== 'paused')
+  // Filter to active entities using shared filter functions
+  const areas = filterActiveAreas(context.getAreas())
+  const projects = filterActiveProjects(context.getProjects())
 
   // Build Areas submenu
   const areaItems = await Promise.all(

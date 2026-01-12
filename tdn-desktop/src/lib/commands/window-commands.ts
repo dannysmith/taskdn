@@ -86,7 +86,8 @@ export const windowCommands: AppCommand[] = [
     id: 'window-exit-fullscreen',
     labelKey: 'commands.windowExitFullscreen.label',
     descriptionKey: 'commands.windowExitFullscreen.description',
-    shortcut: 'Escape',
+    // No shortcut - let OS/Tauri handle fullscreen exit natively.
+    // F11 toggle already works for keyboard access.
 
     execute: async context => {
       try {

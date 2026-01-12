@@ -59,10 +59,12 @@ The `window-exit-fullscreen` command has `shortcut: 'Escape'` but **no `isAvaila
 **Location**: `src/lib/menu.ts:96-129`
 
 The menu only rebuilds on two triggers:
+
 - `setupMenuLanguageListener()` - when language changes
 - `setupMenuSelectionListener()` - when task selection changes
 
 **Missing triggers**:
+
 - Areas/projects created, deleted, archived, or renamed
 - Obsidian setting toggled
 
@@ -77,10 +79,12 @@ The menu only rebuilds on two triggers:
 #### 3. Duplicate Filter Logic for Active Areas/Projects
 
 **Locations**:
+
 - `src/lib/commands/registry.ts:19-25`
 - `src/lib/menu.ts:517-520`
 
 Both contain identical filtering:
+
 ```typescript
 areas.filter(a => a.status !== 'archived')
 projects.filter(p => p.status !== 'done' && p.status !== 'paused')
@@ -89,10 +93,12 @@ projects.filter(p => p.status !== 'done' && p.status !== 'paused')
 **Existing helpers exist** in `useVaultHelpers()` (`getActiveAreas()`, `getActiveProjects()`), but these are React hooks and can't be used in registry.ts or menu.ts which aren't React components.
 
 **Fix**: Extract pure filter functions to a shared location (e.g., `src/lib/entity-filters.ts`):
+
 ```typescript
 export function filterActiveAreas(areas: Area[]): Area[]
 export function filterActiveProjects(projects: Project[]): Project[]
 ```
+
 Then use these in `useVaultHelpers()`, `registry.ts`, and `menu.ts`.
 
 ---
@@ -105,7 +111,7 @@ When both `cmdOrCtrl` and `ctrl` are true (e.g., `Ctrl+CmdOrCtrl+F`), the format
 
 ```typescript
 if (parsed.cmdOrCtrl) parts.push('Ctrl')
-if (parsed.ctrl) parts.push('Ctrl')  // Duplicate!
+if (parsed.ctrl) parts.push('Ctrl') // Duplicate!
 ```
 
 **Impact**: Edit > Edit Defer Until shows `Ctrl+Ctrl+Shift+D` instead of `Ctrl+Shift+D` on Windows.
@@ -113,6 +119,7 @@ if (parsed.ctrl) parts.push('Ctrl')  // Duplicate!
 **Mac is unaffected** because Mac uses separate symbols (`⌃⌘`). The matcher is correct—it properly handles the case where both map to the same physical key on Windows. Only the display is wrong.
 
 **Fix**: Only output Ctrl once when either or both are true:
+
 ```typescript
 if (parsed.cmdOrCtrl || parsed.ctrl) parts.push('Ctrl')
 ```
@@ -124,9 +131,13 @@ if (parsed.cmdOrCtrl || parsed.ctrl) parts.push('Ctrl')
 **Location**: `src/lib/menu.ts:153-160`
 
 When a menu command fails, it's only logged—user gets no feedback:
+
 ```typescript
 if (!result.success) {
-  logger.error('Menu command failed', { commandId: cmd.id, error: result.error })
+  logger.error('Menu command failed', {
+    commandId: cmd.id,
+    error: result.error,
+  })
   // User sees nothing!
 }
 ```
@@ -206,6 +217,7 @@ Call this from `App.tsx` alongside the existing listeners. Consider debouncing i
 **New file**: `src/lib/entity-filters.ts`
 
 Create pure filter functions:
+
 ```typescript
 import type { Area, Project } from '@/lib/tauri-bindings'
 
@@ -219,6 +231,7 @@ export function filterActiveProjects(projects: Project[]): Project[] {
 ```
 
 Update these files to use the new functions:
+
 1. `src/services/vault.ts` - `useVaultHelpers()` implementation
 2. `src/lib/commands/registry.ts` - `getDynamicNavigationCommands()`
 3. `src/lib/menu.ts` - `buildGoMenu()`
@@ -230,6 +243,7 @@ Update these files to use the new functions:
 **File**: `src/lib/shortcuts/parser.ts`
 
 In `formatForDisplay()`, around lines 80-81, change:
+
 ```typescript
 // Before (buggy)
 if (parsed.cmdOrCtrl) parts.push('Ctrl')
@@ -255,7 +269,10 @@ In `createCommandMenuItem()`, around lines 153-160, add a toast on failure:
 action: async () => {
   const result = await executeCommand(cmd.id, context)
   if (!result.success) {
-    logger.error('Menu command failed', { commandId: cmd.id, error: result.error })
+    logger.error('Menu command failed', {
+      commandId: cmd.id,
+      error: result.error,
+    })
     context.showToast(result.error || t('toast.error.commandFailed'), 'error')
   }
 }
