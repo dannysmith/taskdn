@@ -8,6 +8,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskCreationStore } from '@/store/task-creation-store'
+import { useTaskDetailStore } from '@/store/task-detail-store'
 import type { HeadingColor } from '@/types/headings'
 import { toHeadingId } from '@/types/headings'
 import type { ResolvedOrderedItem } from '@/hooks/use-today-order'
@@ -98,7 +99,6 @@ export function OrderedItemList({
   onItemsReorder,
   onTaskTitleChange,
   onTaskStatusToggle,
-  // onTaskOpenDetail - no longer used; selection syncs to detail store automatically
   onCreateTask,
   onDeleteTask,
   onHeadingTitleChange,
@@ -205,6 +205,18 @@ export function OrderedItemList({
       containerRef.current.focus()
     }
   }, [selectedIndex, editingItemId])
+
+  // Sync selection to task detail store (so right sidebar shows selected task)
+  const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
+  React.useEffect(() => {
+    if (selectedIndex !== null && selectedIndex >= 0 && selectedIndex < items.length) {
+      const selectedItem = items[selectedIndex]
+      // Only sync if the selected item is a task (not a heading)
+      if (selectedItem?.type === 'task') {
+        setOpenTaskId(selectedItem.id)
+      }
+    }
+  }, [selectedIndex, items, setOpenTaskId])
 
   // Auto-edit: when autoEditItemId is set, find the item and start editing
   React.useEffect(() => {
