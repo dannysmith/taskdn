@@ -122,9 +122,10 @@ MilkdownPreview (unchanged, separate concern - read-only rendering)
 #### 2.5 Integration
 
 - [x] Update `task-detail-panel.tsx` to use `LazyMarkdownEditor`
-- [ ] Test editing in both modes, toggling back and forth
-- [ ] Test with various content (checkboxes, links, code blocks, nested lists)
-- [ ] Verify custom features work in preview mode (URL linking, checkbox shortcut)
+- [x] Test editing in both modes, toggling back and forth
+- [x] Test with various content (checkboxes, links, code blocks, nested lists)
+- [x] Verify custom features work in preview mode (URL linking, checkbox shortcut)
+- [x] Refined toggle UI to use small icons (Eye/Code) instead of buttons
 
 ### Component Props Interface
 

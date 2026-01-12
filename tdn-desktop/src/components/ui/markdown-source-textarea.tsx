@@ -47,7 +47,8 @@ function MarkdownSourceTextarea({
       )}
       style={{
         // Explicit monospace font stack
-        fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+        fontFamily:
+          'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
         fontSize: '0.8125rem',
         lineHeight: '1.6',
         tabSize: 2,
