@@ -163,7 +163,7 @@ export function TaskItem({
   return (
     <div
       className={cn(
-        'group relative flex items-center gap-3 px-2 py-2 rounded-lg cursor-default transition-all',
+        'group relative flex items-center gap-3 px-2 py-2 rounded-lg cursor-default',
         'select-none',
         // Editing: thin primary border, no background
         isEditing && 'ring-2 ring-primary bg-transparent',
