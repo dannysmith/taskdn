@@ -31,6 +31,7 @@ export function usePreferences() {
           projects_dir: null,
           ignore: null,
           show_obsidian_features: null,
+          permanent_delete_tasks: null,
         }
       }
 

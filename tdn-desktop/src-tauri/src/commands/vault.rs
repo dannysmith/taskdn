@@ -149,11 +149,18 @@ pub fn update_project(
 // Delete Operations
 // =============================================================================
 
-/// Delete a task by ID
+/// Delete a task by ID.
+///
+/// If `permanent` is true, the file is permanently deleted.
+/// Otherwise, it's moved to the OS trash/recycle bin.
 #[tauri::command]
 #[specta::specta]
-pub fn delete_task(vault_manager: State<'_, VaultManager>, id: String) -> Result<(), VaultError> {
-    vault_manager.delete_task(&id)
+pub fn delete_task(
+    vault_manager: State<'_, VaultManager>,
+    id: String,
+    permanent: bool,
+) -> Result<(), VaultError> {
+    vault_manager.delete_task(&id, permanent)
 }
 
 // =============================================================================

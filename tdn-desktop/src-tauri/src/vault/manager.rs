@@ -520,17 +520,46 @@ impl VaultManager {
     // Delete Operations
     // =========================================================================
 
-    /// Delete a task by ID
-    pub fn delete_task(&self, id: &str) -> Result<(), VaultError> {
+    /// Delete a task by ID.
+    ///
+    /// If `permanent` is true, the file is permanently deleted.
+    /// Otherwise, it's moved to the OS trash/recycle bin.
+    pub fn delete_task(&self, id: &str, permanent: bool) -> Result<(), VaultError> {
         self.ensure_configured()?;
-        debug!("Deleting task: {id}");
+        debug!("Deleting task: {id} (permanent: {permanent})");
 
         let task = self.get_task(id)?;
 
         // Delete the file
         let _guard = WriteFlagGuard::new(self);
-        std::fs::remove_file(&task.path)
-            .map_err(|e| VaultError::write_error(&task.path, format!("Failed to delete: {e}")))?;
+
+        if permanent {
+            std::fs::remove_file(&task.path).map_err(|e| {
+                VaultError::write_error(&task.path, format!("Failed to delete: {e}"))
+            })?;
+            info!(
+                "Task permanently deleted: \"{}\" | Path: {}",
+                task.title, task.path
+            );
+        } else {
+            // Use TrashContext with NsFileManager on macOS for faster, permission-free trashing
+            #[cfg(target_os = "macos")]
+            {
+                use trash::macos::{DeleteMethod, TrashContextExtMacos};
+                let mut ctx = trash::TrashContext::new();
+                ctx.set_delete_method(DeleteMethod::NsFileManager);
+                ctx.delete(&task.path).map_err(|e| {
+                    VaultError::write_error(&task.path, format!("Failed to move to trash: {e}"))
+                })?;
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                trash::delete(&task.path).map_err(|e| {
+                    VaultError::write_error(&task.path, format!("Failed to move to trash: {e}"))
+                })?;
+            }
+            info!("Task trashed: \"{}\" | Path: {}", task.title, task.path);
+        }
 
         // Remove from index
         {
@@ -538,7 +567,6 @@ impl VaultManager {
             inner.index.remove_task_by_path(&task.path);
         }
 
-        info!("Task deleted: {id}");
         Ok(())
     }
 

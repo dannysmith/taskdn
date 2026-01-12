@@ -329,11 +329,14 @@ async updateProject(update: ProjectUpdate) : Promise<Result<Project, VaultError>
 }
 },
 /**
- * Delete a task by ID
+ * Delete a task by ID.
+ * 
+ * If `permanent` is true, the file is permanently deleted.
+ * Otherwise, it's moved to the OS trash/recycle bin.
  */
-async deleteTask(id: string) : Promise<Result<null, VaultError>> {
+async deleteTask(id: string, permanent: boolean) : Promise<Result<null, VaultError>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("delete_task", { id }) };
+    return { status: "ok", data: await TAURI_INVOKE("delete_task", { id, permanent }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -398,7 +401,13 @@ ignore: string[] | null;
  * Whether to show Obsidian-related features (Open in Obsidian menu item, etc.)
  * Indicates user's vault directories are inside an Obsidian vault
  */
-show_obsidian_features: boolean | null }
+show_obsidian_features: boolean | null; 
+/**
+ * Whether to permanently delete tasks instead of moving them to trash.
+ * If None or false, tasks are moved to the OS trash/recycle bin (default).
+ * If true, tasks are permanently deleted with no recovery option.
+ */
+permanent_delete_tasks: boolean | null }
 /**
  * Public area struct exposed to TypeScript via tauri-specta.
  */

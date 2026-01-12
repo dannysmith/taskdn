@@ -45,6 +45,10 @@ pub struct AppPreferences {
     /// Whether to show Obsidian-related features (Open in Obsidian menu item, etc.)
     /// Indicates user's vault directories are inside an Obsidian vault
     pub show_obsidian_features: Option<bool>,
+    /// Whether to permanently delete tasks instead of moving them to trash.
+    /// If None or false, tasks are moved to the OS trash/recycle bin (default).
+    /// If true, tasks are permanently deleted with no recovery option.
+    pub permanent_delete_tasks: Option<bool>,
 }
 
 impl Default for AppPreferences {
@@ -58,6 +62,7 @@ impl Default for AppPreferences {
             projects_dir: None,
             ignore: None,
             show_obsidian_features: None, // None means disabled
+            permanent_delete_tasks: None, // None means use trash (default)
         }
     }
 }
@@ -442,5 +447,6 @@ mod tests {
         assert!(prefs.projects_dir.is_none());
         assert!(prefs.ignore.is_none());
         assert!(prefs.show_obsidian_features.is_none());
+        assert!(prefs.permanent_delete_tasks.is_none());
     }
 }

@@ -167,6 +167,15 @@ export function GeneralPane() {
     )
   }
 
+  // Handle permanent delete toggle
+  const handlePermanentDeleteToggle = (checked: boolean) => {
+    if (!preferences) return
+    savePreferences.mutate(
+      { ...preferences, permanent_delete_tasks: checked ? true : null },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
+  }
+
   return (
     <div className="space-y-6">
       <SettingsSection title={t('preferences.general.keyboardShortcuts')}>
@@ -263,6 +272,19 @@ export function GeneralPane() {
           <Switch
             checked={preferences?.show_obsidian_features === true}
             onCheckedChange={handleObsidianToggle}
+            disabled={!preferences || savePreferences.isPending}
+          />
+        </SettingsField>
+      </SettingsSection>
+
+      <SettingsSection title={t('preferences.general.taskDeletion')}>
+        <SettingsField
+          label={t('preferences.general.permanentDelete')}
+          description={t('preferences.general.permanentDeleteDescription')}
+        >
+          <Switch
+            checked={preferences?.permanent_delete_tasks === true}
+            onCheckedChange={handlePermanentDeleteToggle}
             disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
