@@ -8,6 +8,8 @@ import {
   useVaultHelpers,
   useUpdateProject,
 } from '@/services/vault'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showProjectContextMenu, showAreaContextMenu } from '@/lib/context-menu'
 import { ViewHeader } from './ViewHeader'
 import {
   AreaView,
@@ -32,12 +34,17 @@ export function MainWindowContent() {
   const { projects, areas } = useVaultData()
   const { getProjectsByAreaId } = useVaultHelpers()
   const updateProject = useUpdateProject()
+  const commandContext = useCommandContext()
 
   // Get current project if in project view
   const currentProject =
     selection?.type === 'project'
       ? projects.find(p => p.id === selection.id)
       : null
+
+  // Get current area if in area view
+  const currentArea =
+    selection?.type === 'area' ? areas.find(a => a.id === selection.id) : null
 
   // Compute project status counts for area view
   const projectStatusCounts = useMemo(() => {
@@ -67,6 +74,15 @@ export function MainWindowContent() {
       endDate: null,
       body: null,
     })
+  }
+
+  // Handle context menu on view header (right-click on title)
+  const handleViewHeaderContextMenu = () => {
+    if (currentProject) {
+      showProjectContextMenu(currentProject, commandContext)
+    } else if (currentArea) {
+      showAreaContextMenu(currentArea, commandContext)
+    }
   }
 
   // Determine the view title based on selection
@@ -160,6 +176,11 @@ export function MainWindowContent() {
       <ViewHeader
         title={getViewTitle()}
         actions={viewModeKey && <HeaderViewToggle viewModeKey={viewModeKey} />}
+        onContextMenu={
+          currentProject || currentArea
+            ? handleViewHeaderContextMenu
+            : undefined
+        }
       >
         {projectStatusCounts && (
           <ProjectStatusBadges

@@ -78,6 +78,8 @@ interface MonthCalendarProps {
   onTaskStatusChange: (taskId: string, newStatus: TaskStatus) => void
   /** Called when a task should be opened in detail view */
   onTaskOpenDetail?: (taskId: string) => void
+  /** Called when a task is right-clicked */
+  onTaskContextMenu?: (task: Task) => void
   /** Called when + button is clicked to create a task. Returns the new task ID. */
   onCreateTask?: (
     scheduledDate: string
@@ -95,6 +97,7 @@ export function MonthCalendar({
   onTaskScheduleChange,
   onTaskStatusChange,
   onTaskOpenDetail,
+  onTaskContextMenu,
   onCreateTask,
   className,
 }: MonthCalendarProps) {
@@ -417,6 +420,7 @@ export function MonthCalendar({
                       getTaskVariant={getTaskVariant}
                       onTaskStatusChange={handleStatusChange}
                       onTaskOpenDetail={onTaskOpenDetail}
+                      onTaskContextMenu={onTaskContextMenu}
                       onCreateTask={
                         onCreateTask
                           ? () => handleCreateTask(dateKey)
