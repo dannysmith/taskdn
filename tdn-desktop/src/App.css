@@ -227,6 +227,13 @@
 .milkdown-editor .milkdown-list-item-block ol {
   list-style: none;
   padding-inline-start: 0.75em;
+  margin-bottom: 0; /* No bottom margin on nested lists */
+}
+
+/* Remove bottom margin from paragraph when followed by a nested list */
+.milkdown-editor .content-dom > p:has(+ ul),
+.milkdown-editor .content-dom > p:has(+ ol) {
+  margin-bottom: 0;
 }
 
 /* Bullet/ordered list labels */
