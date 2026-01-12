@@ -200,11 +200,28 @@ export function OrderedItemList({
   }, [items.length, selectedIndex, setSelectedIndex])
 
   // Focus container when selection changes (for keyboard events)
+  // Use preventScroll to avoid browser's default scroll-to-focused-element behavior
   React.useEffect(() => {
     if (selectedIndex !== null && !editingItemId && containerRef.current) {
-      containerRef.current.focus()
+      containerRef.current.focus({ preventScroll: true })
     }
   }, [selectedIndex, editingItemId])
+
+  // Scroll selected item into view (for keyboard navigation)
+  React.useEffect(() => {
+    if (selectedIndex !== null && selectedIndex < items.length) {
+      const selectedItem = items[selectedIndex]
+      if (selectedItem && containerRef.current) {
+        // Tasks have data-task-id, headings have data-heading-id
+        const selector =
+          selectedItem.type === 'task'
+            ? `[data-task-id="${selectedItem.id}"]`
+            : `[data-heading-id="${selectedItem.id}"]`
+        const element = containerRef.current.querySelector(selector)
+        element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [selectedIndex, items])
 
   // Sync selection to task detail store (so right sidebar shows selected task)
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
@@ -456,7 +473,7 @@ export function OrderedItemList({
     editConfirmedRef.current = false
 
     setEditingItemId(null)
-    containerRef.current?.focus()
+    containerRef.current?.focus({ preventScroll: true })
   }
 
   // Generate drag IDs for sortable context
