@@ -4,13 +4,13 @@ Patterns for saving and loading data to disk.
 
 ## Choosing a Storage Method
 
-| Need               | Solution           | When to Use                                                           |
-| ------------------ | ------------------ | --------------------------------------------------------------------- |
-| Tasks/Projects/Areas | Vault System     | Core application data stored as markdown files                        |
-| App preferences    | Preferences System | Strongly-typed settings (theme, shortcuts)                            |
-| Emergency recovery | Recovery System    | Crash recovery, backup before risky operations                        |
-| Relational data    | SQLite             | Complex queries, relationships (not currently used)                   |
-| External API data  | TanStack Query     | Remote data with caching (see [external-apis.md](./external-apis.md)) |
+| Need                 | Solution           | When to Use                                                           |
+| -------------------- | ------------------ | --------------------------------------------------------------------- |
+| Tasks/Projects/Areas | Vault System       | Core application data stored as markdown files                        |
+| App preferences      | Preferences System | Strongly-typed settings (theme, shortcuts)                            |
+| Emergency recovery   | Recovery System    | Crash recovery, backup before risky operations                        |
+| Relational data      | SQLite             | Complex queries, relationships (not currently used)                   |
+| External API data    | TanStack Query     | Remote data with caching (see [external-apis.md](./external-apis.md)) |
 
 ```
 Need to persist data?
@@ -60,7 +60,7 @@ Each entity is a markdown file with YAML frontmatter:
 status: in-progress
 scheduled: 2025-01-15
 due: 2025-01-20
-project: "[[My Project]]"
+project: '[[My Project]]'
 ---
 
 Task body content here (markdown supported).

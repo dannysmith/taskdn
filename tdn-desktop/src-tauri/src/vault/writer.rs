@@ -403,11 +403,7 @@ pub fn update_file_fields(path: &str, updates: Vec<FieldUpdate>) -> Result<(), V
         // (even to empty string). Removing title makes the file unparseable.
         if update.field == "title" {
             if let Some(value) = update.value {
-                set_yaml_field(
-                    &mut mapping,
-                    "title",
-                    serde_norway::Value::String(value),
-                );
+                set_yaml_field(&mut mapping, "title", serde_norway::Value::String(value));
             }
             continue;
         }

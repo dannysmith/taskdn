@@ -179,6 +179,7 @@ const { tasks, projects, areas } = createTestVault({
 ```
 
 **Factory features**:
+
 - Deterministic IDs (`task-1`, `project-1`, etc.) reset between tests
 - Fixed date `2025-01-15` for reproducible tests
 - All entity properties can be overridden

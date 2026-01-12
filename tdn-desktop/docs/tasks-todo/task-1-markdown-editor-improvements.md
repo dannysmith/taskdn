@@ -29,6 +29,7 @@ Improve the Markdown editor in the right panel with better styling, bug fixes, a
 There's a type inconsistency bug in Milkdown where the `spread` attribute is stored as a string when parsing markdown but as a boolean when parsing DOM (via `listItemBlockComponent`). The serializer uses string comparison `=== 'true'`, which fails when `spread` is boolean `true`.
 
 **Affected files in node_modules:**
+
 - `@milkdown/preset-gfm/src/node/task-list-item.ts` (line 84)
 - `@milkdown/preset-commonmark/src/node/ordered-list.ts` (line 74)
 - `@milkdown/preset-commonmark/src/node/list-item.ts` (line 52)
@@ -47,11 +48,13 @@ There's a type inconsistency bug in Milkdown where the `spread` attribute is sto
 ### Patch Details
 
 Change comparisons from:
+
 ```typescript
 const spread = node.attrs.spread === 'true'
 ```
 
 To:
+
 ```typescript
 const spread = node.attrs.spread === 'true' || node.attrs.spread === true
 ```
@@ -81,7 +84,7 @@ Current CSS uses `margin: 0` on all elements for a compact look. This makes cont
 
 ```css
 /* Headings */
-margin-top: 1.5rem;  /* 24px */
+margin-top: 1.5rem; /* 24px */
 margin-bottom: 1rem; /* 16px */
 line-height: 1.25;
 
@@ -192,6 +195,7 @@ interface MarkdownEditorProps {
 ### Example Usage
 
 **Standard usage (task detail panel):**
+
 ```tsx
 <LazyMarkdownEditor
   editorKey={task.id}
@@ -203,6 +207,7 @@ interface MarkdownEditorProps {
 ```
 
 **User prefers source mode by default:**
+
 ```tsx
 <LazyMarkdownEditor
   editorKey={task.id}
@@ -213,6 +218,7 @@ interface MarkdownEditorProps {
 ```
 
 **Source-only mode (no toggle):**
+
 ```tsx
 <LazyMarkdownEditor
   editorKey="quick-capture"
@@ -225,6 +231,7 @@ interface MarkdownEditorProps {
 ```
 
 **Preview-only mode (no toggle, WYSIWYG only):**
+
 ```tsx
 <LazyMarkdownEditor
   editorKey={task.id}

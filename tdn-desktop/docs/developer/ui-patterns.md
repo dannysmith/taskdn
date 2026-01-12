@@ -25,6 +25,7 @@ src/
 **Multi-window theming**: `theme-variables.css` is imported by both `App.css` and `quick-pane.css` so all windows share the same theme tokens. When adding new color variables, add them to `theme-variables.css`.
 
 **Theme variables include**:
+
 - Standard shadcn/ui colors (background, foreground, primary, etc.)
 - Taskdn-specific status colors (`--color-status-inbox`, `--color-status-done`, etc.)
 - Entity accent colors (`--color-entity-project`, `--color-entity-area`)

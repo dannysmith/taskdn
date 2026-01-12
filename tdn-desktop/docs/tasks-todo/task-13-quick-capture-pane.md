@@ -4,7 +4,6 @@
 - The user can type (or dictate with a third-party tool) the title of their task and have it immediately created with status "inbox".
 - Cmd+Shift+Enter opens a "body" textarea below the title. Text entered here will be added to the body of the task doc.
 
-
 ## Assigning Metadata
 
 - Area and projects should be able to be added in a similar way to the right sidebar.
