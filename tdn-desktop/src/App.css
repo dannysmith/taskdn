@@ -68,7 +68,7 @@
 
 .milkdown-editor {
   font-size: 0.875rem;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 /* Milkdown creates: wrapper > [data-milkdown-root] > .milkdown > .ProseMirror
@@ -104,7 +104,7 @@
   word-break: break-word;
 }
 
-/* All block elements: consistent spacing via line-height only, no margins */
+/* Block elements: reset padding, set margins for spacing */
 .milkdown-editor .ProseMirror p,
 .milkdown-editor .ProseMirror h1,
 .milkdown-editor .ProseMirror h2,
@@ -121,34 +121,70 @@
   padding: 0;
 }
 
-/* Headings */
+/* Paragraphs - subtle bottom spacing */
+.milkdown-editor .ProseMirror p {
+  margin-bottom: 0.5em;
+}
+.milkdown-editor .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings - spacing above and below */
+.milkdown-editor .ProseMirror h1,
+.milkdown-editor .ProseMirror h2,
+.milkdown-editor .ProseMirror h3 {
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+}
+.milkdown-editor .ProseMirror h4,
+.milkdown-editor .ProseMirror h5,
+.milkdown-editor .ProseMirror h6 {
+  margin-top: 1em;
+  margin-bottom: 0.375em;
+}
+
+/* First element has no top margin */
+.milkdown-editor .ProseMirror > :first-child {
+  margin-top: 0;
+}
+
+/* Heading styles */
 .milkdown-editor .ProseMirror h1 {
   font-size: 1.5em;
   font-weight: 600;
+  line-height: 1.25;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.25em;
 }
 .milkdown-editor .ProseMirror h2 {
   font-size: 1.25em;
   font-weight: 600;
+  line-height: 1.25;
   border-bottom: 1px solid var(--border);
   padding-bottom: 0.25em;
 }
 .milkdown-editor .ProseMirror h3 {
   font-size: 1.125em;
   font-weight: 600;
+  line-height: 1.3;
 }
 .milkdown-editor .ProseMirror h4,
 .milkdown-editor .ProseMirror h5,
 .milkdown-editor .ProseMirror h6 {
   font-size: 1em;
   font-weight: 600;
+  line-height: 1.4;
 }
 
-/* Lists */
+/* Lists - spacing around list blocks */
 .milkdown-editor .ProseMirror ul,
 .milkdown-editor .ProseMirror ol {
   padding-inline-start: 1em;
+  margin-bottom: 0.5em;
+}
+.milkdown-editor .ProseMirror ul:last-child,
+.milkdown-editor .ProseMirror ol:last-child {
+  margin-bottom: 0;
 }
 
 .milkdown-editor .ProseMirror ul {
@@ -156,6 +192,11 @@
 }
 .milkdown-editor .ProseMirror ol {
   list-style-type: decimal;
+}
+
+/* Spacing between consecutive list items */
+.milkdown-editor .ProseMirror li + li {
+  margin-top: 0.25em;
 }
 
 /* List Item Block Component (from @milkdown/components) */
@@ -173,7 +214,7 @@
   flex-shrink: 0;
   display: flex;
   align-items: center;
-  height: 1.5em; /* Match line-height */
+  height: 1.6em; /* Match line-height */
 }
 
 .milkdown-editor .milkdown-list-item-block .children {
@@ -254,11 +295,15 @@
 /* Code blocks */
 .milkdown-editor .ProseMirror pre {
   padding: 0.75em 1em;
+  margin-bottom: 0.5em;
   background: var(--muted);
   border-radius: 0.375em;
   overflow-x: auto;
   font-family: ui-monospace, monospace;
   font-size: 0.8125em;
+}
+.milkdown-editor .ProseMirror pre:last-child {
+  margin-bottom: 0;
 }
 
 .milkdown-editor .ProseMirror pre code {
@@ -269,15 +314,19 @@
 /* Blockquotes */
 .milkdown-editor .ProseMirror blockquote {
   padding-inline-start: 1em;
+  margin-bottom: 0.5em;
   border-inline-start: 2px solid var(--border);
   color: var(--muted-foreground);
+}
+.milkdown-editor .ProseMirror blockquote:last-child {
+  margin-bottom: 0;
 }
 
 /* Horizontal rule */
 .milkdown-editor .ProseMirror hr {
   border: none;
   border-top: 1px solid var(--border);
-  margin: 0.5em 0;
+  margin: 0.75em 0;
 }
 
 /* =============================================================================

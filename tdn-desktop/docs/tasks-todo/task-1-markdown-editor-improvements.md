@@ -2,7 +2,7 @@
 
 ## Overview
 
-Improve the Markdown editor in the right panel with better styling, bug fixes, and a source view toggle.
+Improve the Markdown editor in the right panel with better styling and a source view toggle.
 
 ## Current State
 
@@ -14,54 +14,12 @@ Improve the Markdown editor in the right panel with better styling, bug fixes, a
 
 ## Goals
 
-1. Fix blank newlines appearing after checklists and indented ordered lists
-2. Improve live preview typography/spacing
-3. Add toggle between "live preview" and "source view" modes
+1. Improve live preview typography/spacing
+2. Add toggle between "live preview" and "source view" modes
 
 ---
 
-## Phase 1: Fix Blank Newlines Bug
-
-**Deliverable:** Checklists and ordered lists no longer produce spurious blank lines.
-
-### Background
-
-There's a type inconsistency bug in Milkdown where the `spread` attribute is stored as a string when parsing markdown but as a boolean when parsing DOM (via `listItemBlockComponent`). The serializer uses string comparison `=== 'true'`, which fails when `spread` is boolean `true`.
-
-**Affected files in node_modules:**
-
-- `@milkdown/preset-gfm/src/node/task-list-item.ts` (line 84)
-- `@milkdown/preset-commonmark/src/node/ordered-list.ts` (line 74)
-- `@milkdown/preset-commonmark/src/node/list-item.ts` (line 52)
-- `@milkdown/preset-commonmark/src/node/bullet-list.ts` (line 41)
-
-### Tasks
-
-- [ ] Install `patch-package` if not already present
-- [ ] Create patch for `@milkdown/preset-gfm` to fix type comparison
-- [ ] Create patch for `@milkdown/preset-commonmark` to fix type comparison
-- [ ] Add `postinstall` script to apply patches
-- [ ] Test: Create task list, check/uncheck items, verify no blank lines appear
-- [ ] Test: Create nested ordered list, edit items, verify no blank lines
-- [ ] File issue upstream with Milkdown repository
-
-### Patch Details
-
-Change comparisons from:
-
-```typescript
-const spread = node.attrs.spread === 'true'
-```
-
-To:
-
-```typescript
-const spread = node.attrs.spread === 'true' || node.attrs.spread === true
-```
-
----
-
-## Phase 2: Improve Live Preview Styling
+## Phase 1: Improve Live Preview Styling
 
 **Deliverable:** Editor content has better visual spacing and typography, closer to GitHub markdown rendering.
 
@@ -71,12 +29,13 @@ Current CSS uses `margin: 0` on all elements for a compact look. This makes cont
 
 ### Tasks
 
-- [ ] Add spacing above headings (`margin-top: 1.25em` for h1-h3)
-- [ ] Add spacing below headings (`margin-bottom: 0.5em`)
-- [ ] Ensure first heading has no top margin
-- [ ] Add subtle spacing between paragraphs (`margin-bottom: 0.5em`)
-- [ ] Add spacing between consecutive list items (`margin-top: 0.25em` on `li + li`)
-- [ ] Consider adding `line-height: 1.6` for better readability
+- [x] Add spacing above headings (`margin-top: 1.25em` for h1-h3)
+- [x] Add spacing below headings (`margin-bottom: 0.5em`)
+- [x] Ensure first heading has no top margin
+- [x] Add subtle spacing between paragraphs (`margin-bottom: 0.5em`)
+- [x] Add spacing between consecutive list items (`margin-top: 0.25em` on `li + li`)
+- [x] Consider adding `line-height: 1.6` for better readability
+- [x] Added spacing for code blocks, blockquotes, and hr
 - [ ] Test with various content types (headers, lists, code blocks, mixed content)
 - [ ] Ensure spacing feels right for a note-taking context (not too loose)
 
@@ -99,7 +58,7 @@ Note: We may want tighter spacing than GitHub since this is a note-taking contex
 
 ---
 
-## Phase 3: Source View Toggle
+## Phase 2: Source View Toggle
 
 **Deliverable:** User can toggle between WYSIWYG "preview" and raw "source" modes via a unified MarkdownEditor component.
 
@@ -122,7 +81,7 @@ MilkdownPreview (unchanged, separate concern - read-only rendering)
 
 ### Tasks
 
-#### 3.1 Create MarkdownSourceTextarea Component
+#### 2.1 Create MarkdownSourceTextarea Component
 
 - [ ] Create `src/components/ui/markdown-source-textarea.tsx`
 - [ ] Style with monospace font (`ui-monospace, monospace`)
@@ -132,7 +91,7 @@ MilkdownPreview (unchanged, separate concern - read-only rendering)
 - [ ] Subtle styling (consider muted background to differentiate from preview)
 - [ ] Full height, resize: none, proper overflow handling
 
-#### 3.2 Create Unified MarkdownEditor Component
+#### 2.2 Create Unified MarkdownEditor Component
 
 - [ ] Create `src/components/ui/markdown-editor.tsx`
 - [ ] Implement props interface (see below)
@@ -144,7 +103,7 @@ MilkdownPreview (unchanged, separate concern - read-only rendering)
   - Source → Preview: remount Milkdown with current content
 - [ ] Handle `editorKey` changes (reset to defaultValue)
 
-#### 3.3 Create ViewToggle Component
+#### 2.3 Create ViewToggle Component
 
 - [ ] Inline in MarkdownEditor or separate small component
 - [ ] Use shadcn ToggleGroup or button group pattern
@@ -152,14 +111,14 @@ MilkdownPreview (unchanged, separate concern - read-only rendering)
 - [ ] Position: top-right corner of editor, subtle styling
 - [ ] Small size, doesn't distract from content
 
-#### 3.4 Create Lazy Wrapper
+#### 2.4 Create Lazy Wrapper
 
 - [ ] Create `src/components/ui/lazy-markdown-editor.tsx`
 - [ ] Code-split the unified component (React.lazy)
 - [ ] Wrap in error boundary (reuse existing pattern)
 - [ ] Suspense fallback with skeleton
 
-#### 3.5 Integration
+#### 2.5 Integration
 
 - [ ] Update `task-detail-panel.tsx` to use `LazyMarkdownEditor`
 - [ ] Test editing in both modes, toggling back and forth
@@ -281,8 +240,7 @@ setMilkdownKey(k => k + 1)
 
 ### Bundle Impact
 
-- Phase 1-2: No new dependencies
-- Phase 3: No new dependencies (using native textarea)
+- No new dependencies (Phase 1 is CSS only, Phase 2 uses native textarea)
 
 ---
 
