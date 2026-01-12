@@ -111,6 +111,30 @@ export const commandContext: CommandContext = {
     queryClient.setQueryData(vaultQueryKeys.task(task.id), task)
   },
 
+  deleteTaskFromCache: (taskId: string) => {
+    // Close detail panel if this task is open
+    const openTaskId = useTaskDetailStore.getState().openTaskId
+    if (openTaskId === taskId) {
+      useTaskDetailStore.getState().closeTask()
+    }
+
+    // Remove from tasks list cache
+    queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks =>
+      oldTasks ? oldTasks.filter(t => t.id !== taskId) : oldTasks
+    )
+
+    // Remove individual task cache
+    queryClient.removeQueries({ queryKey: vaultQueryKeys.task(taskId) })
+  },
+
+  // Preferences
+  isPermanentDeleteEnabled: () => {
+    const prefs = queryClient.getQueryData<AppPreferences>(
+      preferencesQueryKeys.preferences()
+    )
+    return prefs?.permanent_delete_tasks === true
+  },
+
   // Context menu target management
   getContextMenuTarget: () => contextMenuTarget,
   setContextMenuTarget: (target: ContextMenuEntity | null) => {

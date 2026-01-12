@@ -12,6 +12,7 @@ import {
   Flag,
   Snowflake,
   CircleDot,
+  Trash2,
 } from 'lucide-react'
 import i18n from '@/i18n/config'
 import { commands } from '@/lib/tauri-bindings'
@@ -223,6 +224,45 @@ export const taskCommands: AppCommand[] = [
       // Open the new task in the detail panel
       context.openTask(result.data.id)
       context.showToast(t('commands.duplicateTask.success'), 'success')
+    },
+  },
+
+  {
+    id: 'delete-task',
+    labelKey: 'commands.deleteTask.label',
+    descriptionKey: 'commands.deleteTask.description',
+    icon: Trash2,
+    group: 'tasks',
+    shortcut: 'CmdOrCtrl+Backspace',
+    keywords: ['delete', 'trash', 'remove'],
+    surfaces: { commandPalette: true, contextMenu: ['task'], appMenu: 'Edit' },
+    supportsMultiSelect: true,
+    isAvailable: isTaskCommandAvailable,
+
+    execute: async context => {
+      const task = context.getSelectedTask()
+      if (!task) return
+
+      // Check if user prefers permanent deletion
+      const permanent = context.isPermanentDeleteEnabled()
+
+      // Prevent file watcher from invalidating cache during our mutation
+      markMutationStart()
+
+      const result = await commands.deleteTask(task.id, permanent)
+
+      markMutationComplete()
+
+      if (result.status === 'error') {
+        logger.error('Failed to delete task', { error: result.error })
+        context.showToast(t('commands.deleteTask.error'), 'error')
+        return
+      }
+
+      // Remove from TanStack Query cache and close the detail panel
+      context.deleteTaskFromCache(task.id)
+
+      context.showToast(t('commands.deleteTask.success'), 'success')
     },
   },
 ]

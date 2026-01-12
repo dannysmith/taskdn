@@ -348,14 +348,16 @@ export function useDeleteTask() {
 
   return useMutation({
     mutationFn: async (id: string): Promise<void> => {
-      logger.debug('Deleting task', { id })
-      const result = await commands.deleteTask(id)
+      logger.debug('Deleting task (permanent - new task cancellation)', { id })
+      // When canceling a newly created task (Escape pressed), use permanent deletion
+      // since there's nothing meaningful to recover from an untitled/empty task
+      const result = await commands.deleteTask(id, true)
 
       if (result.status === 'error') {
         throw new Error(handleVaultError(result.error, 'Deleting task'))
       }
 
-      logger.info('Task deleted', { id })
+      logger.info('Task permanently deleted', { id })
     },
     onMutate: async id => {
       // Mark mutation start to prevent file watcher from invalidating during mutation

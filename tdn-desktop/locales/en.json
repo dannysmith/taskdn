@@ -60,6 +60,10 @@
   "preferences.general.showObsidianFeatures": "Show Obsidian Features",
   "preferences.general.showObsidianFeaturesDescription": "Enable if your task/project/area directories are inside an Obsidian vault. Adds 'Open in Obsidian' to context menus.",
 
+  "preferences.general.taskDeletion": "Task Deletion",
+  "preferences.general.permanentDelete": "Permanently Delete Tasks",
+  "preferences.general.permanentDeleteDescription": "When enabled, deleted tasks are permanently removed instead of being moved to the trash. Warning: This cannot be undone.",
+
   "preferences.appearance.theme": "Theme",
   "preferences.appearance.colorTheme": "Color Theme",
   "preferences.appearance.colorThemeDescription": "Choose your preferred color theme",
@@ -153,6 +157,11 @@
   "commands.duplicateTask.description": "Create a copy of the selected task",
   "commands.duplicateTask.success": "Task duplicated",
   "commands.duplicateTask.error": "Failed to duplicate task",
+
+  "commands.deleteTask.label": "Delete Task",
+  "commands.deleteTask.description": "Delete the selected task",
+  "commands.deleteTask.success": "Task deleted",
+  "commands.deleteTask.error": "Failed to delete task",
 
   "commands.editScheduledDate.label": "Edit Scheduled Date",
   "commands.editScheduledDate.description": "Open the scheduled date picker",

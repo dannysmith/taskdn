@@ -51,6 +51,9 @@ const createMockContext = (): CommandContext => ({
   // Cache update methods
   updateTaskInCache: vi.fn(),
   addTaskToCache: vi.fn(),
+  deleteTaskFromCache: vi.fn(),
+  // Preferences
+  isPermanentDeleteEnabled: vi.fn(() => false),
   // Context menu target
   getContextMenuTarget: vi.fn(() => null),
   setContextMenuTarget: vi.fn(),

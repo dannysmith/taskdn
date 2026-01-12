@@ -107,6 +107,12 @@ export interface CommandContext {
   // These update the TanStack Query cache after Tauri commands succeed
   updateTaskInCache: (taskId: string, updatedTask: Task) => void
   addTaskToCache: (task: Task) => void
+  /** Remove a task from the cache and close the detail panel if it was open */
+  deleteTaskFromCache: (taskId: string) => void
+
+  // Preferences
+  /** Check if permanent deletion is enabled in preferences */
+  isPermanentDeleteEnabled: () => boolean
 
   // Context menu target (set before showing context menu, read by entity commands)
   /** Get the current context menu target entity */
