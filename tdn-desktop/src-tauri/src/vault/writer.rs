@@ -399,6 +399,19 @@ pub fn update_file_fields(path: &str, updates: Vec<FieldUpdate>) -> Result<(), V
     let (mut mapping, body) = parse_file_parts(&content)?;
 
     for update in updates {
+        // Title is a required field in the schema - never remove it, always set
+        // (even to empty string). Removing title makes the file unparseable.
+        if update.field == "title" {
+            if let Some(value) = update.value {
+                set_yaml_field(
+                    &mut mapping,
+                    "title",
+                    serde_norway::Value::String(value),
+                );
+            }
+            continue;
+        }
+
         match update.value {
             Some(value) if !value.is_empty() => {
                 // Handle special cases for array fields
@@ -418,7 +431,7 @@ pub fn update_file_fields(path: &str, updates: Vec<FieldUpdate>) -> Result<(), V
                 }
             }
             _ => {
-                // Remove the field
+                // Remove the field (for optional fields only)
                 if update.field == "project" {
                     remove_yaml_field(&mut mapping, "projects");
                 } else {
@@ -880,5 +893,34 @@ due: 2025-01-15
 
         assert!(file_path.exists());
         assert_eq!(fs::read_to_string(&file_path).unwrap(), "nested content");
+    }
+
+    #[test]
+    fn test_update_title_to_empty_preserves_field() {
+        // Regression test: empty title should set title: "" not remove the field
+        // Removing the title field corrupts the file (title is required in schema)
+        let temp = TempDir::new().unwrap();
+        let file_path = temp.path().join("task.md");
+
+        let content = r#"---
+title: My Task
+status: ready
+---
+"#;
+        fs::write(&file_path, content).unwrap();
+
+        let updates = vec![FieldUpdate {
+            field: "title".to_string(),
+            value: Some("".to_string()),
+        }];
+        update_file_fields(file_path.to_str().unwrap(), updates).unwrap();
+
+        let updated_content = fs::read_to_string(&file_path).unwrap();
+        // Title field should still exist (with empty value), not be removed
+        assert!(
+            updated_content.contains("title:"),
+            "Title field should be preserved, got: {updated_content}"
+        );
+        assert!(updated_content.contains("status: ready"));
     }
 }
