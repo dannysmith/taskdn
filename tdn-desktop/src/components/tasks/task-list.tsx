@@ -228,11 +228,25 @@ export function TaskList({
   }, [selectedIndex, tasks, setOpenTaskId])
 
   // Focus container when selection changes (for keyboard events)
+  // Use preventScroll to avoid browser's default scroll-to-focused-element behavior
   React.useEffect(() => {
     if (selectedIndex !== null && !editingTaskId && containerRef.current) {
-      containerRef.current.focus()
+      containerRef.current.focus({ preventScroll: true })
     }
   }, [selectedIndex, editingTaskId])
+
+  // Scroll selected item into view (for keyboard navigation)
+  React.useEffect(() => {
+    if (selectedIndex !== null && selectedIndex < tasks.length) {
+      const selectedTask = tasks[selectedIndex]
+      if (selectedTask && containerRef.current) {
+        const element = containerRef.current.querySelector(
+          `[data-task-id="${selectedTask.id}"]`
+        )
+        element?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
+    }
+  }, [selectedIndex, tasks])
 
   // Auto-edit: when autoEditItemId is set, find the task and start editing
   // This is used when a task is created via the view's default handler
@@ -445,7 +459,7 @@ export function TaskList({
 
     setEditingTaskId(null)
     // Re-focus container for keyboard navigation
-    containerRef.current?.focus()
+    containerRef.current?.focus({ preventScroll: true })
   }
 
   // Generate drag IDs with project prefix for uniqueness across containers
