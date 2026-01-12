@@ -36,8 +36,9 @@ Current CSS uses `margin: 0` on all elements for a compact look. This makes cont
 - [x] Add spacing between consecutive list items (`margin-top: 0.25em` on `li + li`)
 - [x] Consider adding `line-height: 1.6` for better readability
 - [x] Added spacing for code blocks, blockquotes, and hr
-- [ ] Test with various content types (headers, lists, code blocks, mixed content)
-- [ ] Ensure spacing feels right for a note-taking context (not too loose)
+- [x] Fixed nested list spacing (no gap before indented lists)
+- [x] Test with various content types (headers, lists, code blocks, mixed content)
+- [x] Ensure spacing feels right for a note-taking context (not too loose)
 
 ### Reference Values (GitHub Markdown CSS)
 
@@ -83,44 +84,44 @@ MilkdownPreview (unchanged, separate concern - read-only rendering)
 
 #### 2.1 Create MarkdownSourceTextarea Component
 
-- [ ] Create `src/components/ui/markdown-source-textarea.tsx`
-- [ ] Style with monospace font (`ui-monospace, monospace`)
-- [ ] Match editor padding and sizing from Milkdown editor
-- [ ] Handle controlled value/onChange
-- [ ] Good line-height for readability (1.5 or 1.6)
-- [ ] Subtle styling (consider muted background to differentiate from preview)
-- [ ] Full height, resize: none, proper overflow handling
+- [x] Create `src/components/ui/markdown-source-textarea.tsx`
+- [x] Style with monospace font (`ui-monospace, monospace`)
+- [x] Match editor padding and sizing from Milkdown editor
+- [x] Handle controlled value/onChange
+- [x] Good line-height for readability (1.5 or 1.6)
+- [x] Subtle styling (consider muted background to differentiate from preview)
+- [x] Full height, resize: none, proper overflow handling
 
 #### 2.2 Create Unified MarkdownEditor Component
 
-- [ ] Create `src/components/ui/markdown-editor.tsx`
-- [ ] Implement props interface (see below)
-- [ ] Internal state for current view mode (uncontrolled)
-- [ ] Render toggle (conditionally based on `showToggle`)
-- [ ] Render MilkdownEditor or MarkdownSourceTextarea based on mode
-- [ ] Sync content between views when toggling:
+- [x] Create `src/components/ui/markdown-editor.tsx`
+- [x] Implement props interface (see below)
+- [x] Internal state for current view mode (uncontrolled)
+- [x] Render toggle (conditionally based on `showToggle`)
+- [x] Render MilkdownEditor or MarkdownSourceTextarea based on mode
+- [x] Sync content between views when toggling:
   - Preview → Source: content already in state, just switch view
   - Source → Preview: remount Milkdown with current content
-- [ ] Handle `editorKey` changes (reset to defaultValue)
+- [x] Handle `editorKey` changes (reset to defaultValue)
 
 #### 2.3 Create ViewToggle Component
 
-- [ ] Inline in MarkdownEditor or separate small component
-- [ ] Use shadcn ToggleGroup or button group pattern
-- [ ] Labels: "Preview" / "Source" (keep it simple)
-- [ ] Position: top-right corner of editor, subtle styling
-- [ ] Small size, doesn't distract from content
+- [x] Inline in MarkdownEditor or separate small component
+- [x] Use shadcn ToggleGroup or button group pattern
+- [x] Labels: "Preview" / "Source" (keep it simple)
+- [x] Position: top-right corner of editor, subtle styling
+- [x] Small size, doesn't distract from content
 
 #### 2.4 Create Lazy Wrapper
 
-- [ ] Create `src/components/ui/lazy-markdown-editor.tsx`
-- [ ] Code-split the unified component (React.lazy)
-- [ ] Wrap in error boundary (reuse existing pattern)
-- [ ] Suspense fallback with skeleton
+- [x] Create `src/components/ui/lazy-markdown-editor.tsx`
+- [x] Code-split the unified component (React.lazy)
+- [x] Wrap in error boundary (reuse existing pattern)
+- [x] Suspense fallback with skeleton
 
 #### 2.5 Integration
 
-- [ ] Update `task-detail-panel.tsx` to use `LazyMarkdownEditor`
+- [x] Update `task-detail-panel.tsx` to use `LazyMarkdownEditor`
 - [ ] Test editing in both modes, toggling back and forth
 - [ ] Test with various content (checkboxes, links, code blocks, nested lists)
 - [ ] Verify custom features work in preview mode (URL linking, checkbox shortcut)
