@@ -1,5 +1,7 @@
 # Internationalization (i18n)
 
+> **Priority Note:** Full internationalization is not currently a priority for Taskdn. Some parts of the application may not be fully translated. The infrastructure exists for when i18n becomes important.
+
 ## Overview
 
 This app uses [react-i18next](https://react.i18next.com/) for internationalization. All user-facing strings, including native menus, are translated from a single source of truth in JSON translation files.

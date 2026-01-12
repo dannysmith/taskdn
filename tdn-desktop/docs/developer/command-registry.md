@@ -1,12 +1,10 @@
-# Task: Command Registry
+# Command Registry
 
-IMPORTANT: This document is not really a task. We will make it a evergreen document when we are finished implementing the other tasks which rely upon it.
-
-## Overview
-
-This document defines ALL commands in Taskdn Desktop - their shortcuts, availability conditions, and where they appear (command palette, context menus, app menus). It serves as the single source of truth for requirements before implementation.
+Reference for all commands in Taskdn Desktop - their shortcuts, availability conditions, and where they appear (command palette, context menus, app menus).
 
 **Principle**: Commands are defined once. Keyboard shortcuts, menus, command palette, and context menus all derive from this registry.
+
+See also: [command-system.md](./command-system.md) for implementation patterns, [keyboard-shortcuts.md](./keyboard-shortcuts.md) for shortcut handling, [menus.md](./menus.md) for menu implementation.
 
 ## Command Properties
 
@@ -353,8 +351,6 @@ Highly context-aware task creation:
 | In project view (no task selected) | Create in project                                   |
 | Global (no list context)           | Create in Inbox                                     |
 
-**Implementation note**: Existing logic in the app handles all this. The command should wrap that logic.
-
 ### `paste-as-tasks` (⌘V when task selected)
 
 - Reads clipboard text
@@ -407,21 +403,3 @@ Highly context-aware task creation:
 | ⌘W       | Close Window                        |
 | ⌘H       | Hide App                            |
 | ⌘Q       | Quit                                |
-
----
-
-## Implementation Notes
-
-This document defines requirements. Implementation tasks will reference this document:
-
-- **Task 6**: Keyboard shortcut infrastructure (parsing, matching, unified handler)
-- **Task 8**: Command palette enhancements (contextual commands display)
-- **Task 9**: Task-specific shortcuts implementation
-- **Task 10**: Context menus (native Tauri menus)
-- **Task 11**: App menus (macOS menu bar)
-
-The implementation should:
-
-1. Define commands with a `surfaces` property indicating where they appear
-2. Use `isAvailable()` for context-dependent commands
-3. Include a `supportsMultiSelect` flag for future multi-select support

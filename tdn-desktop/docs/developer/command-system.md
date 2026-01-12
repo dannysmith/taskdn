@@ -304,5 +304,6 @@ Group labels are translated via `commands.group.{groupName}` keys.
 
 ## Related Documentation
 
+- [Command Registry](./command-registry.md) - Complete list of all commands and their properties
 - [Keyboard Shortcuts](./keyboard-shortcuts.md) - Shortcut-specific patterns
 - [Menus](./menus.md) - Native menu integration

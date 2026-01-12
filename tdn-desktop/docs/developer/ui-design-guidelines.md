@@ -265,3 +265,10 @@ For one-off cases, use arbitrary values: `@[280px]:flex-row`
 
 - All displayed dates should be clickable to open a date picker
 - Clearing a date removes it (nullable)
+
+---
+
+## Related Documentation
+
+- [UI Patterns](./ui-patterns.md) - CSS architecture, Tailwind v4, shadcn/ui components
+- [Command Registry](./command-registry.md) - Keyboard shortcuts and interaction patterns
