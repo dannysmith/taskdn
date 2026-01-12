@@ -8,6 +8,8 @@ import {
 } from '@/services/vault'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu } from '@/lib/context-menu'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useViewMode } from '@/store/view-mode-store'
 import { useDisplayOrderStore } from '@/store/display-order-store'
@@ -43,8 +45,14 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
+  const commandContext = useCommandContext()
   const { viewMode } = useViewMode('project')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
+
+  // Context menu handler for tasks
+  const handleTaskContextMenu = (task: Task) => {
+    showTaskContextMenu(task, commandContext)
+  }
 
   // State for auto-editing newly created tasks
   const [pendingEditItemId, setPendingEditItemId] = React.useState<
@@ -388,6 +396,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
             onTaskDueChange={handleDueChange}
             onTaskEditClick={handleOpenDetail}
             onCreateTask={handleKanbanCreateTask}
+            onTaskContextMenu={handleTaskContextMenu}
           />
         )}
       </section>

@@ -68,6 +68,8 @@ export interface TaskCardProps {
   isSelected?: boolean
   /** Start in editing mode (for newly created tasks) */
   autoFocusEdit?: boolean
+  /** Called on right-click to show context menu */
+  onContextMenu?: () => void
   className?: string
 }
 
@@ -87,6 +89,7 @@ export function TaskCard({
   onDueChange,
   isSelected,
   autoFocusEdit = false,
+  onContextMenu,
   className,
 }: TaskCardProps) {
   const [isEditing, setIsEditing] = React.useState(autoFocusEdit)
@@ -131,6 +134,13 @@ export function TaskCard({
     if (onTitleChange && !isEditing) {
       setIsEditing(true)
     }
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -204,6 +214,7 @@ export function TaskCard({
     return (
       <div
         onClick={onEditClick}
+        onContextMenu={handleContextMenu}
         className={cn(
           'group flex items-center gap-2 rounded-lg border px-2 py-1.5 transition-all cursor-pointer',
           'hover:shadow-sm hover:shadow-black/5',
@@ -240,6 +251,7 @@ export function TaskCard({
     <div
       onClick={onClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
       onKeyDown={handleKeyDown}
       tabIndex={0}
       className={cn(

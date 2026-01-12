@@ -41,6 +41,8 @@ interface ProjectTaskGroupProps {
   showDue?: boolean
   /** Initial expanded state (default: true) */
   defaultExpanded?: boolean
+  /** Called on right-click on project header to show context menu */
+  onProjectContextMenu?: () => void
   className?: string
 }
 
@@ -63,6 +65,7 @@ export function ProjectTaskGroup({
   showScheduled = true,
   showDue = true,
   defaultExpanded = true,
+  onProjectContextMenu,
   className,
 }: ProjectTaskGroupProps) {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded)
@@ -79,6 +82,7 @@ export function ProjectTaskGroup({
         isExpanded={isExpanded}
         onToggleExpand={handleToggleExpand}
         onOpenProject={onOpenProject}
+        onContextMenu={onProjectContextMenu}
       />
 
       {/* Collapsible task list */}

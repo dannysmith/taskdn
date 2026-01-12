@@ -92,6 +92,8 @@ interface WeekCalendarProps {
   onNavigateToProject?: (projectId: string) => void
   /** Called when navigating to an area */
   onNavigateToArea?: (areaId: string) => void
+  /** Called when a task is right-clicked */
+  onTaskContextMenu?: (task: Task) => void
   /** Called when + button is clicked to create a task. Returns the new task ID. */
   onCreateTask?: (
     scheduledDate: string
@@ -114,6 +116,7 @@ export function WeekCalendar({
   onTaskOpenDetail,
   onNavigateToProject,
   onNavigateToArea,
+  onTaskContextMenu,
   onCreateTask,
   className,
 }: WeekCalendarProps) {
@@ -460,6 +463,7 @@ export function WeekCalendar({
                   onTaskOpenDetail={onTaskOpenDetail}
                   onNavigateToProject={onNavigateToProject}
                   onNavigateToArea={onNavigateToArea}
+                  onTaskContextMenu={onTaskContextMenu}
                   onCreateTask={
                     onCreateTask ? () => handleCreateTask(dateKey) : undefined
                   }

@@ -3,6 +3,8 @@ import { format } from 'date-fns'
 import { Calendar, Flag, Snowflake, FolderOpen, CircleDot } from 'lucide-react'
 
 import { useVaultData, useVaultHelpers, useUpdateTask } from '@/services/vault'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu } from '@/lib/context-menu'
 import {
   useTaskDetailStore,
   type FocusableField,
@@ -68,6 +70,7 @@ export function TaskDetailPanel() {
   const { getActiveProjects, getActiveAreas, getProjectById, getAreaById } =
     useVaultHelpers()
   const updateTask = useUpdateTask()
+  const commandContext = useCommandContext()
 
   const task = openTaskId
     ? (tasks.find(t => t.id === openTaskId) ?? null)
@@ -116,6 +119,27 @@ export function TaskDetailPanel() {
     currentArea && !activeAreas.find(a => a.id === currentArea.id)
       ? [currentArea, ...activeAreas]
       : activeAreas
+
+  // Context menu handler - only triggers on panel background, not controls
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!task) return
+    // Only trigger if clicking directly on this element or a non-interactive child
+    // Check if click was on an interactive element
+    const target = e.target as HTMLElement
+    if (
+      target.closest('button') ||
+      target.closest('input') ||
+      target.closest('textarea') ||
+      target.closest('select') ||
+      target.closest('[role="combobox"]') ||
+      target.closest('[role="listbox"]') ||
+      target.closest('[data-radix-popper-content-wrapper]')
+    ) {
+      return
+    }
+    e.preventDefault()
+    showTaskContextMenu(task, commandContext)
+  }
 
   if (!task) {
     return (
@@ -246,7 +270,7 @@ export function TaskDetailPanel() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col" onContextMenu={handleContextMenu}>
       {/* Header: Checkbox + Title + Close */}
       <div className="flex items-start gap-3 px-4 py-3">
         <TaskStatusCheckbox

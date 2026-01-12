@@ -4,6 +4,8 @@ import { startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns'
 import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu } from '@/lib/context-menu'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useViewMode } from '@/store/view-mode-store'
 import { useKanbanOrder } from '@/hooks/use-kanban-order'
@@ -28,9 +30,15 @@ export function WeekView() {
   const updateTask = useUpdateTask()
   const createTask = useCreateTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
+  const commandContext = useCommandContext()
   const setSelection = useNavigationStore(state => state.setSelection)
   const { viewMode } = useViewMode('this-week')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
+
+  // Context menu handler for tasks
+  const handleTaskContextMenu = (task: Task) => {
+    showTaskContextMenu(task, commandContext)
+  }
 
   // Filter tasks for this week (scheduled or due within the week) - used for kanban
   const thisWeekTasks = React.useMemo(() => {
@@ -332,6 +340,7 @@ export function WeekView() {
           onTaskOpenDetail={handleOpenDetail}
           onNavigateToProject={handleNavigateToProject}
           onNavigateToArea={handleNavigateToArea}
+          onTaskContextMenu={handleTaskContextMenu}
           onCreateTask={handleCreateTask}
           className="flex-1"
         />
@@ -352,6 +361,7 @@ export function WeekView() {
           onProjectClick={handleKanbanProjectClick}
           onAreaClick={handleKanbanAreaClick}
           onCreateTask={handleKanbanCreateTask}
+          onTaskContextMenu={handleTaskContextMenu}
           className="flex-1"
         />
       )}
