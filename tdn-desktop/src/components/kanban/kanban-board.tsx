@@ -80,6 +80,8 @@ interface KanbanBoardProps {
   onCreateTask?: (
     status: TaskStatus
   ) => string | undefined | Promise<string | undefined>
+  /** Called when task is right-clicked to show context menu */
+  onTaskContextMenu?: (task: Task) => void
   /** Column order - defaults to DEFAULT_STATUS_ORDER */
   columnOrder?: TaskStatus[]
   /** Which statuses to display - defaults to all in columnOrder */
@@ -107,6 +109,7 @@ export function KanbanBoard({
   onProjectClick,
   onAreaClick,
   onCreateTask,
+  onTaskContextMenu,
   columnOrder = DEFAULT_STATUS_ORDER,
   visibleStatuses,
   className,
@@ -201,6 +204,7 @@ export function KanbanBoard({
               onCreateTask={
                 onCreateTask ? () => handleCreateTask(status) : undefined
               }
+              onTaskContextMenu={onTaskContextMenu}
               editingTaskId={editingTaskId}
             />
           )

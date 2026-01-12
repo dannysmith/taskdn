@@ -9,8 +9,10 @@ import {
   useDeleteTask,
 } from '@/services/vault'
 import { useDisplayOrderStore } from '@/store/display-order-store'
-import type { Task, TaskStatus } from '@/lib/tauri-bindings'
+import type { Task, TaskStatus, Project } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showTaskContextMenu, showProjectContextMenu } from '@/lib/context-menu'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useViewMode } from '@/store/view-mode-store'
@@ -101,9 +103,19 @@ export function AreaView({ areaId }: AreaViewProps) {
   const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
+  const commandContext = useCommandContext()
   const setSelection = useNavigationStore(state => state.setSelection)
   const { viewMode } = useViewMode('area')
   const { collapsedColumns, toggleColumn } = useAreaCollapsedColumns()
+
+  // Context menu handlers
+  const handleTaskContextMenu = (task: Task) => {
+    showTaskContextMenu(task, commandContext)
+  }
+
+  const handleProjectContextMenu = (project: Project) => {
+    showProjectContextMenu(project, commandContext)
+  }
 
   // State for auto-editing newly created items
   const [pendingEditItemId, setPendingEditItemId] = React.useState<
@@ -651,6 +663,7 @@ export function AreaView({ areaId }: AreaViewProps) {
                   taskCount={taskCount}
                   completedTaskCount={completedTaskCount}
                   onClick={() => handleNavigateToProject(project.id)}
+                  onContextMenu={() => handleProjectContextMenu(project)}
                 />
               )
             })}
@@ -715,6 +728,9 @@ export function AreaView({ areaId }: AreaViewProps) {
                     onDeleteTask={handleDeleteTask}
                     showScheduled={true}
                     showDue={true}
+                    onProjectContextMenu={() =>
+                      handleProjectContextMenu(project)
+                    }
                   />
                 )
               })}
@@ -743,6 +759,7 @@ export function AreaView({ areaId }: AreaViewProps) {
             onTaskDueChange={handleDueChange}
             onTaskEditClick={handleOpenDetail}
             onProjectClick={handleNavigateToProject}
+            onTaskContextMenu={handleTaskContextMenu}
           />
         )}
       </section>

@@ -62,6 +62,8 @@ interface KanbanColumnProps {
   onAreaClick?: (areaId: string) => void
   /** Called when + button is clicked to create a task */
   onCreateTask?: () => void
+  /** Called when task is right-clicked to show context menu */
+  onTaskContextMenu?: (task: Task) => void
   /** ID of task currently being edited (for auto-focus) */
   editingTaskId?: string | null
   className?: string
@@ -86,6 +88,7 @@ export function KanbanColumn({
   onProjectClick,
   onAreaClick,
   onCreateTask,
+  onTaskContextMenu,
   editingTaskId,
   className,
 }: KanbanColumnProps) {
@@ -212,6 +215,9 @@ export function KanbanColumn({
                   ? () => onAreaClick(task.area as string)
                   : undefined
               }
+              onContextMenu={
+                onTaskContextMenu ? () => onTaskContextMenu(task) : undefined
+              }
               autoFocusEdit={task.id === editingTaskId}
             />
           ))}
@@ -262,6 +268,7 @@ interface SortableKanbanCardProps {
   onEditClick?: () => void
   onProjectClick?: () => void
   onAreaClick?: () => void
+  onContextMenu?: () => void
   autoFocusEdit?: boolean
 }
 
@@ -278,6 +285,7 @@ export function SortableKanbanCard({
   onEditClick,
   onProjectClick,
   onAreaClick,
+  onContextMenu,
   autoFocusEdit,
 }: SortableKanbanCardProps) {
   const {
@@ -328,6 +336,7 @@ export function SortableKanbanCard({
         onEditClick={onEditClick}
         onProjectClick={onProjectClick}
         onAreaClick={onAreaClick}
+        onContextMenu={onContextMenu}
         autoFocusEdit={autoFocusEdit}
       />
     </div>

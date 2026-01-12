@@ -33,6 +33,8 @@ export interface ProjectCardProps {
   onAreaClick?: () => void
   /** Whether the card is selected */
   isSelected?: boolean
+  /** Called on right-click to show context menu */
+  onContextMenu?: () => void
   className?: string
 }
 export function ProjectCard({
@@ -44,6 +46,7 @@ export function ProjectCard({
   onClick,
   onAreaClick,
   isSelected,
+  onContextMenu,
   className,
 }: ProjectCardProps) {
   const status = project.status ?? 'planning'
@@ -54,9 +57,17 @@ export function ProjectCard({
     onAreaClick?.()
   }
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu()
+  }
+
   return (
     <div
       onClick={onClick}
+      onContextMenu={handleContextMenu}
       className={cn(
         '@container group bg-card rounded-xl border border-border/60 p-3 @7xs:p-4 transition-all',
         'hover:border-border hover:shadow-sm',

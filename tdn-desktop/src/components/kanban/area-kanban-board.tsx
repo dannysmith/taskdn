@@ -72,6 +72,8 @@ interface AreaKanbanBoardProps {
   onTaskEditClick?: (taskId: string) => void
   /** Called when project name is clicked (to navigate) */
   onProjectClick?: (projectId: string) => void
+  /** Called when task is right-clicked to show context menu */
+  onTaskContextMenu?: (task: Task) => void
   className?: string
 }
 
@@ -94,6 +96,7 @@ export function AreaKanbanBoard({
   onTaskDueChange,
   onTaskEditClick,
   onProjectClick,
+  onTaskContextMenu,
   className,
 }: AreaKanbanBoardProps) {
   // Build tasksByStatus from tasksByProject + areaDirectTasks (for DnD context)
@@ -199,6 +202,7 @@ export function AreaKanbanBoard({
               onTaskDueChange={onTaskDueChange}
               onTaskEditClick={onTaskEditClick}
               onProjectClick={onProjectClick}
+              onTaskContextMenu={onTaskContextMenu}
             />
           )
         })}
@@ -224,6 +228,7 @@ interface AreaKanbanColumnProps {
   onTaskDueChange?: (taskId: string, date: string | undefined) => void
   onTaskEditClick?: (taskId: string) => void
   onProjectClick?: (projectId: string) => void
+  onTaskContextMenu?: (task: Task) => void
 }
 
 function AreaKanbanColumn({
@@ -239,6 +244,7 @@ function AreaKanbanColumn({
   onTaskDueChange,
   onTaskEditClick,
   onProjectClick,
+  onTaskContextMenu,
 }: AreaKanbanColumnProps) {
   const config = taskStatusConfig[status]
 
@@ -335,6 +341,7 @@ function AreaKanbanColumn({
             onTaskScheduledChange={onTaskScheduledChange}
             onTaskDueChange={onTaskDueChange}
             onTaskEditClick={onTaskEditClick}
+            onTaskContextMenu={onTaskContextMenu}
           />
         )}
 
@@ -354,6 +361,7 @@ function AreaKanbanColumn({
               onTaskDueChange={onTaskDueChange}
               onTaskEditClick={onTaskEditClick}
               onProjectClick={onProjectClick}
+              onTaskContextMenu={onTaskContextMenu}
             />
           )
         })}
@@ -382,6 +390,7 @@ interface ProjectSwimlaneProps {
   onTaskDueChange?: (taskId: string, date: string | undefined) => void
   onTaskEditClick?: (taskId: string) => void
   onProjectClick?: (projectId: string) => void
+  onTaskContextMenu?: (task: Task) => void
 }
 
 function ProjectSwimlane({
@@ -394,6 +403,7 @@ function ProjectSwimlane({
   onTaskDueChange,
   onTaskEditClick,
   onProjectClick,
+  onTaskContextMenu,
 }: ProjectSwimlaneProps) {
   const taskIds = tasks.map(t => t.id)
 
@@ -475,6 +485,9 @@ function ProjectSwimlane({
               onEditClick={
                 onTaskEditClick ? () => onTaskEditClick(task.id) : undefined
               }
+              onContextMenu={
+                onTaskContextMenu ? () => onTaskContextMenu(task) : undefined
+              }
             />
           ))}
         </SortableContext>
@@ -507,6 +520,7 @@ interface LooseTasksSwimlaneProps {
   onTaskScheduledChange?: (taskId: string, date: string | undefined) => void
   onTaskDueChange?: (taskId: string, date: string | undefined) => void
   onTaskEditClick?: (taskId: string) => void
+  onTaskContextMenu?: (task: Task) => void
 }
 
 function LooseTasksSwimlane({
@@ -517,6 +531,7 @@ function LooseTasksSwimlane({
   onTaskScheduledChange,
   onTaskDueChange,
   onTaskEditClick,
+  onTaskContextMenu,
 }: LooseTasksSwimlaneProps) {
   const taskIds = tasks.map(t => t.id)
 
@@ -584,6 +599,9 @@ function LooseTasksSwimlane({
               }
               onEditClick={
                 onTaskEditClick ? () => onTaskEditClick(task.id) : undefined
+              }
+              onContextMenu={
+                onTaskContextMenu ? () => onTaskContextMenu(task) : undefined
               }
             />
           ))}

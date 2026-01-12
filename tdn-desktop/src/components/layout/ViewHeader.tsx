@@ -1,3 +1,4 @@
+import * as React from 'react'
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
@@ -25,6 +26,8 @@ interface ViewHeaderProps {
   children?: ReactNode
   /** Optional actions for the right area (view toggles, buttons) */
   actions?: ReactNode
+  /** Called on right-click to show context menu (for entity views) */
+  onContextMenu?: () => void
   className?: string
 }
 
@@ -32,14 +35,23 @@ export function ViewHeader({
   title,
   children,
   actions,
+  onContextMenu,
   className,
 }: ViewHeaderProps) {
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu()
+  }
+
   return (
     <header
       className={cn(
         '@container flex h-14 shrink-0 items-center gap-2 px-3 @sm:gap-3 @sm:px-4',
         className
       )}
+      onContextMenu={handleContextMenu}
     >
       <h1 className="shrink-0 truncate text-lg font-semibold @sm:text-xl">
         {title}

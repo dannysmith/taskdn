@@ -44,6 +44,8 @@ interface DayColumnProps {
   onTaskOpenDetail?: (taskId: string) => void
   onNavigateToProject?: (projectId: string) => void
   onNavigateToArea?: (areaId: string) => void
+  /** Called when a task is right-clicked */
+  onTaskContextMenu?: (task: Task) => void
   /** Called when + button is clicked to create a task */
   onCreateTask?: () => void
   /** ID of task currently being edited (for auto-focus) */
@@ -69,6 +71,7 @@ export function DayColumn({
   onTaskOpenDetail,
   onNavigateToProject,
   onNavigateToArea,
+  onTaskContextMenu,
   onCreateTask,
   editingTaskId,
   isDropTarget = false,
@@ -159,6 +162,9 @@ export function DayColumn({
                         if (id) onNavigateToArea(id)
                       }
                     : undefined
+                }
+                onContextMenu={
+                  onTaskContextMenu ? () => onTaskContextMenu(task) : undefined
                 }
                 autoFocusEdit={task.id === editingTaskId}
               />

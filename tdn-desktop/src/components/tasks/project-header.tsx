@@ -1,3 +1,4 @@
+import * as React from 'react'
 import { ChevronRight } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
@@ -27,6 +28,8 @@ interface ProjectHeaderProps {
   isExpanded: boolean
   onToggleExpand: () => void
   onOpenProject: () => void
+  /** Called on right-click to show context menu */
+  onContextMenu?: () => void
 }
 
 /**
@@ -40,6 +43,7 @@ export function ProjectHeader({
   isExpanded,
   onToggleExpand,
   onOpenProject,
+  onContextMenu,
 }: ProjectHeaderProps) {
   const handleClick = () => {
     onToggleExpand()
@@ -47,6 +51,13 @@ export function ProjectHeader({
 
   const handleDoubleClick = () => {
     onOpenProject()
+  }
+
+  const handleContextMenu = (e: React.MouseEvent) => {
+    if (!onContextMenu) return
+    e.preventDefault()
+    e.stopPropagation()
+    onContextMenu()
   }
 
   const status = project.status ?? 'planning'
@@ -61,6 +72,7 @@ export function ProjectHeader({
       )}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleContextMenu}
     >
       {/* Expand/collapse chevron */}
       <ChevronRight
