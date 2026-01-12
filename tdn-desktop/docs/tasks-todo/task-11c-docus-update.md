@@ -4,6 +4,8 @@ Pre work: Move `tdn-desktop/docs/tasks-todo/task-7-command-registry.md` into dev
 
 Having now implemented most of the UI and backend and having fully implemented tasks 6-10, Now feels like an appropriate time to update our developer documentation. Read `docs/developer/writing-docs.md` for some basic guidance. Then review all the docs in `developer/` using the checklist below. For those that probably don't need touching, you can just do a quick skim for anything that looks extremely um out of date and make any changes that I've suggested. And then for the individual docs, we probably need to go through these a little bit in a little bit more detail. So try to identify uh where we need to update them. You may need to explore the current code base a little bit. If necessary, work in phases making recommendations for changes to related sets of docs together. Remember these documents are intended both for humans to help them understand the patterns and best practices in this project, but they're also intended as reference for AI agents to help them better understand the why behind certain patterns and how they should be writing code. These are often provided to AI agents by the user as background context when working on new features.
 
+# Phase 1
+
 ## Probably don't need touching
 
 - [ ] bundle-optimization.md - No change
@@ -31,6 +33,8 @@ Having now implemented most of the UI and backend and having fully implemented t
 - [ ] tauri-plugins.md - Um this is straight out of the template. We can probably strip some of this out. We should make sure that we've got an accurate list of the plugins we've currently got installed, along with what they do and the patterns needed for them.
 - [ ] testing.md - This will almost certainly need updating to provide good examples of how we're doing testing and the different types of tests we have. Should also include notes on the dummy demo vault for manual testing and also on the fixtures vault in this project for some of the automated testing.
 - [ ] ui-design-guidelines.md and ui-patterns.md - The UI design guidelines was originally intended to be uh more a reference for the kinds of colours to use for things and their semantic meanings and so on. Um, and also some of the kind of patterns that we expect to use in a more general sense, whereas the UI patterns originally came in from a template and that basically just has a bunch of stuff in it to help make AI agents better at um working with CSS and Tailwind and Shadien in this kind of project. We could maybe consider merging them or perhaps even splitting them down but in a different way. Uh I need to think about this one together probably. Obviously, this should also include some basic information about how we do light and dark mode and the kind of UI patterns that we have here.
+
+# Phase 2
 
 ## Overview/pointer docs
 
