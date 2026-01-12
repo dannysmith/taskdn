@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 import type { Heading } from '@/types/headings'
 import type { TaskStatus } from '@/lib/tauri-bindings'
 
@@ -13,8 +13,8 @@ import type { TaskStatus } from '@/lib/tauri-bindings'
  * - Project/area task lists
  * - Kanban column ordering (per-view, per-status)
  *
- * Order is session-persistent (survives component unmount, lost on app restart).
- * Disk persistence will be added later via Rust commands + TanStack Query.
+ * Order is persisted to localStorage via Zustand persist middleware.
+ * Stale IDs (deleted tasks) are filtered out by hooks; new IDs are appended.
  *
  * Design:
  * - null means "use natural order from data"
@@ -105,145 +105,163 @@ interface DisplayOrderState {
 
 export const useDisplayOrderStore = create<DisplayOrderState>()(
   devtools(
-    set => ({
-      // Initial state: null = use natural order
-      sidebarAreaOrder: null,
-      sidebarProjectOrder: null,
-      inboxOrder: null,
-      projectTaskOrder: null,
-      areaTaskOrder: null,
-      todaySectionOrder: null,
-      todayHeadings: null,
-      kanbanColumnOrder: null,
+    persist(
+      set => ({
+        // Initial state: null = use natural order
+        sidebarAreaOrder: null,
+        sidebarProjectOrder: null,
+        inboxOrder: null,
+        projectTaskOrder: null,
+        areaTaskOrder: null,
+        todaySectionOrder: null,
+        todayHeadings: null,
+        kanbanColumnOrder: null,
 
-      // Sidebar actions
-      setSidebarAreaOrder: order =>
-        set({ sidebarAreaOrder: order }, undefined, 'setSidebarAreaOrder'),
+        // Sidebar actions
+        setSidebarAreaOrder: order =>
+          set({ sidebarAreaOrder: order }, undefined, 'setSidebarAreaOrder'),
 
-      setSidebarProjectOrder: (containerId, order) =>
-        set(
-          state => ({
-            sidebarProjectOrder: {
-              ...state.sidebarProjectOrder,
-              [containerId]: order,
-            },
-          }),
-          undefined,
-          'setSidebarProjectOrder'
-        ),
-
-      setSidebarProjectOrderBatch: orders =>
-        set(
-          state => ({
-            sidebarProjectOrder: {
-              ...state.sidebarProjectOrder,
-              ...orders,
-            },
-          }),
-          undefined,
-          'setSidebarProjectOrderBatch'
-        ),
-
-      // Inbox actions
-      setInboxOrder: order =>
-        set({ inboxOrder: order }, undefined, 'setInboxOrder'),
-
-      // Project task actions
-      setProjectTaskOrder: (projectId, order) =>
-        set(
-          state => ({
-            projectTaskOrder: {
-              ...state.projectTaskOrder,
-              [projectId]: order,
-            },
-          }),
-          undefined,
-          'setProjectTaskOrder'
-        ),
-
-      // Area task actions
-      setAreaTaskOrder: (areaId, order) =>
-        set(
-          state => ({
-            areaTaskOrder: {
-              ...state.areaTaskOrder,
-              [areaId]: order,
-            },
-          }),
-          undefined,
-          'setAreaTaskOrder'
-        ),
-
-      // Today section actions
-      setTodaySectionOrder: (sectionId, order) =>
-        set(
-          state => ({
-            todaySectionOrder: {
-              ...state.todaySectionOrder,
-              [sectionId]: order,
-            },
-          }),
-          undefined,
-          'setTodaySectionOrder'
-        ),
-
-      // Today heading actions
-      setTodayHeading: (headingId, heading) =>
-        set(
-          state => ({
-            todayHeadings: {
-              ...state.todayHeadings,
-              [headingId]: heading,
-            },
-          }),
-          undefined,
-          'setTodayHeading'
-        ),
-
-      deleteTodayHeading: headingId =>
-        set(
-          state => {
-            if (!state.todayHeadings) return state
-            const { [headingId]: _, ...rest } = state.todayHeadings
-            return { todayHeadings: Object.keys(rest).length > 0 ? rest : null }
-          },
-          undefined,
-          'deleteTodayHeading'
-        ),
-
-      // Kanban column actions
-      setKanbanColumnOrder: (viewId, status, order) =>
-        set(
-          state => ({
-            kanbanColumnOrder: {
-              ...state.kanbanColumnOrder,
-              [viewId]: {
-                ...(state.kanbanColumnOrder?.[viewId] ?? {}),
-                [status]: order,
+        setSidebarProjectOrder: (containerId, order) =>
+          set(
+            state => ({
+              sidebarProjectOrder: {
+                ...state.sidebarProjectOrder,
+                [containerId]: order,
               },
-            },
-          }),
-          undefined,
-          'setKanbanColumnOrder'
-        ),
+            }),
+            undefined,
+            'setSidebarProjectOrder'
+          ),
 
-      // Reset
-      resetAllOrder: () =>
-        set(
-          {
-            sidebarAreaOrder: null,
-            sidebarProjectOrder: null,
-            inboxOrder: null,
-            projectTaskOrder: null,
-            areaTaskOrder: null,
-            todaySectionOrder: null,
-            todayHeadings: null,
-            kanbanColumnOrder: null,
-          },
-          undefined,
-          'resetAllOrder'
-        ),
-    }),
+        setSidebarProjectOrderBatch: orders =>
+          set(
+            state => ({
+              sidebarProjectOrder: {
+                ...state.sidebarProjectOrder,
+                ...orders,
+              },
+            }),
+            undefined,
+            'setSidebarProjectOrderBatch'
+          ),
+
+        // Inbox actions
+        setInboxOrder: order =>
+          set({ inboxOrder: order }, undefined, 'setInboxOrder'),
+
+        // Project task actions
+        setProjectTaskOrder: (projectId, order) =>
+          set(
+            state => ({
+              projectTaskOrder: {
+                ...state.projectTaskOrder,
+                [projectId]: order,
+              },
+            }),
+            undefined,
+            'setProjectTaskOrder'
+          ),
+
+        // Area task actions
+        setAreaTaskOrder: (areaId, order) =>
+          set(
+            state => ({
+              areaTaskOrder: {
+                ...state.areaTaskOrder,
+                [areaId]: order,
+              },
+            }),
+            undefined,
+            'setAreaTaskOrder'
+          ),
+
+        // Today section actions
+        setTodaySectionOrder: (sectionId, order) =>
+          set(
+            state => ({
+              todaySectionOrder: {
+                ...state.todaySectionOrder,
+                [sectionId]: order,
+              },
+            }),
+            undefined,
+            'setTodaySectionOrder'
+          ),
+
+        // Today heading actions
+        setTodayHeading: (headingId, heading) =>
+          set(
+            state => ({
+              todayHeadings: {
+                ...state.todayHeadings,
+                [headingId]: heading,
+              },
+            }),
+            undefined,
+            'setTodayHeading'
+          ),
+
+        deleteTodayHeading: headingId =>
+          set(
+            state => {
+              if (!state.todayHeadings) return state
+              const { [headingId]: _, ...rest } = state.todayHeadings
+              return {
+                todayHeadings: Object.keys(rest).length > 0 ? rest : null,
+              }
+            },
+            undefined,
+            'deleteTodayHeading'
+          ),
+
+        // Kanban column actions
+        setKanbanColumnOrder: (viewId, status, order) =>
+          set(
+            state => ({
+              kanbanColumnOrder: {
+                ...state.kanbanColumnOrder,
+                [viewId]: {
+                  ...(state.kanbanColumnOrder?.[viewId] ?? {}),
+                  [status]: order,
+                },
+              },
+            }),
+            undefined,
+            'setKanbanColumnOrder'
+          ),
+
+        // Reset
+        resetAllOrder: () =>
+          set(
+            {
+              sidebarAreaOrder: null,
+              sidebarProjectOrder: null,
+              inboxOrder: null,
+              projectTaskOrder: null,
+              areaTaskOrder: null,
+              todaySectionOrder: null,
+              todayHeadings: null,
+              kanbanColumnOrder: null,
+            },
+            undefined,
+            'resetAllOrder'
+          ),
+      }),
+      {
+        name: 'display-order-storage',
+        version: 1,
+        partialize: state => ({
+          sidebarAreaOrder: state.sidebarAreaOrder,
+          sidebarProjectOrder: state.sidebarProjectOrder,
+          inboxOrder: state.inboxOrder,
+          projectTaskOrder: state.projectTaskOrder,
+          areaTaskOrder: state.areaTaskOrder,
+          todaySectionOrder: state.todaySectionOrder,
+          todayHeadings: state.todayHeadings,
+          kanbanColumnOrder: state.kanbanColumnOrder,
+        }),
+      }
+    ),
     { name: 'display-order-store' }
   )
 )
