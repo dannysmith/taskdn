@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { initializeCommandSystem } from './lib/commands'
+import { usePreventEscapeExitsFullscreen } from './hooks/use-prevent-escape-exits-fullscreen'
 import {
   buildAppMenu,
   setupMenuLanguageListener,
@@ -19,6 +20,9 @@ import { ThemeProvider } from './components/ThemeProvider'
 import { ErrorBoundary } from './components/ErrorBoundary'
 
 function App() {
+  // Prevent Escape from exiting macOS fullscreen (must be before other hooks)
+  usePreventEscapeExitsFullscreen()
+
   // Set up vault file watcher event listener
   useVaultInitialization()
 
