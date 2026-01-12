@@ -213,6 +213,8 @@ export function TaskList({
   }, [tasks.length, selectedIndex, setSelectedIndex])
 
   // Sync selection to task detail store (so right sidebar shows selected task)
+  // Use startTransition to defer this update - the detail panel can be expensive
+  // to render, and we don't want it to block the selection visual feedback
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   React.useEffect(() => {
     if (
@@ -222,7 +224,9 @@ export function TaskList({
     ) {
       const selectedTask = tasks[selectedIndex]
       if (selectedTask) {
-        setOpenTaskId(selectedTask.id)
+        React.startTransition(() => {
+          setOpenTaskId(selectedTask.id)
+        })
       }
     }
   }, [selectedIndex, tasks, setOpenTaskId])
@@ -236,6 +240,7 @@ export function TaskList({
   }, [selectedIndex, editingTaskId])
 
   // Scroll selected item into view (for keyboard navigation)
+  // block: 'nearest' ensures minimal scrolling - no scroll if already visible
   React.useEffect(() => {
     if (selectedIndex !== null && selectedIndex < tasks.length) {
       const selectedTask = tasks[selectedIndex]
