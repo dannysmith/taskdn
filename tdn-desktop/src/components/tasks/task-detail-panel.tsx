@@ -53,10 +53,20 @@ export function TaskDetailPanel() {
     }
   }, [])
 
-  // When pendingFocusField changes, open the corresponding field
+  // When pendingFocusField changes, open the corresponding field or focus title
   React.useEffect(() => {
     if (pendingFocusField) {
-      setOpenField(pendingFocusField)
+      if (pendingFocusField === 'title') {
+        // Focus the title textarea and select all text
+        const textarea = titleTextareaRef.current
+        if (textarea) {
+          textarea.focus()
+          textarea.select()
+        }
+      } else {
+        // Open the corresponding popover/dropdown
+        setOpenField(pendingFocusField)
+      }
       clearPendingFocus()
     }
   }, [pendingFocusField, clearPendingFocus])

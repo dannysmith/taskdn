@@ -60,6 +60,11 @@
     }
   },
   "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["taskdn"]
+      }
+    },
     "updater": {
       "active": true,
       "endpoints": [

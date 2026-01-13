@@ -3,6 +3,7 @@ import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { initializeCommandSystem } from './lib/commands'
 import { usePreventEscapeExitsFullscreen } from './hooks/use-prevent-escape-exits-fullscreen'
+import { useDeepLink } from './hooks/use-deep-link'
 import {
   buildAppMenu,
   setupMenuLanguageListener,
@@ -25,6 +26,9 @@ function App() {
 
   // Set up vault file watcher event listener
   useVaultInitialization()
+
+  // Set up deep link listener for taskdn:// URLs
+  useDeepLink()
 
   // Initialize command system and cleanup on app startup
   useEffect(() => {
