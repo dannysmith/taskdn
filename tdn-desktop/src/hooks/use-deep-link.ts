@@ -21,6 +21,7 @@ import {
   type CreateTaskFromUrlOptions,
 } from '@/lib/deep-link'
 import { useNavigationStore } from '@/store/navigation-store'
+import { validTaskStatusSet } from '@/config/status'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import {
   commands,
@@ -199,19 +200,6 @@ async function handleOpenView(view: string): Promise<boolean> {
 }
 
 /**
- * Valid status values that map to TaskStatus.
- */
-const VALID_STATUSES: ReadonlySet<string> = new Set([
-  'inbox',
-  'icebox',
-  'ready',
-  'in-progress',
-  'blocked',
-  'dropped',
-  'done',
-])
-
-/**
  * Find a project by title (case-insensitive).
  */
 function findProjectByTitle(title: string, data: VaultData): Project | null {
@@ -282,7 +270,7 @@ async function handleNew(options: CreateTaskFromUrlOptions): Promise<boolean> {
 
   // Determine status (default to inbox)
   let status: TaskStatus = 'inbox'
-  if (options.status && VALID_STATUSES.has(options.status)) {
+  if (options.status && validTaskStatusSet.has(options.status)) {
     status = options.status as TaskStatus
   }
 

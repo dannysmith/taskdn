@@ -1,8 +1,191 @@
 ---
 title: 'URL Scheme'
-description: 'taskdn:// URL format reference'
+description: 'Complete reference for taskdn:// URL scheme'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Aside } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+Deep link into Taskdn Desktop from external tools like Alfred, Raycast, Obsidian, or browser bookmarks.
+
+## Commands
+
+| Command | Purpose |
+|---------|---------|
+| `taskdn://open` | Open an entity or navigate to a view |
+| `taskdn://new` | Create a new task |
+
+---
+
+## open
+
+Opens an existing task, project, area, or navigates to a view.
+
+### Open by File Path
+
+```text frame="none"
+taskdn://open?path=<url-encoded-path>
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `path` | Yes | URL-encoded absolute path to a `.md` file |
+
+**Where the entity opens:**
+
+| Entity Type | Navigation |
+|-------------|------------|
+| Task (inbox) | Inbox view, task selected |
+| Task (in project) | Project view, task selected |
+| Task (in area, no project) | Area view, task selected |
+| Task (orphan) | No Area view, task selected |
+| Project | Project view |
+| Area | Area view |
+
+**Examples:**
+
+```text frame="none"
+taskdn://open?path=%2FUsers%2Fdanny%2Fnotes%2Ftasks%2Fmy-task.md
+taskdn://open?path=%2FUsers%2Fdanny%2Fnotes%2Fprojects%2Fwebsite.md
+```
+
+### Open by View
+
+```text frame="none"
+taskdn://open?view=<view-name>
+```
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `view` | Yes | View identifier (lowercase, kebab-case) |
+
+**Supported views:**
+
+| View | Description |
+|------|-------------|
+| `today` | Today view |
+| `this-week` | This Week view |
+| `inbox` | Inbox view |
+| `calendar` | Calendar view |
+| `no-area` | No Area view (orphan tasks/projects) |
+
+**Examples:**
+
+```text frame="none"
+taskdn://open?view=today
+taskdn://open?view=inbox
+```
+
+---
+
+## new
+
+Creates a new task and opens it for editing.
+
+```text frame="none"
+taskdn://new?title=<title>&status=<status>&...
+```
+
+| Parameter | Required | Format | Description |
+|-----------|----------|--------|-------------|
+| `title` | No | URL-encoded string | Task title (default: "New Task") |
+| `status` | No | Lowercase kebab-case | Task status (default: `inbox`) |
+| `due` | No | `YYYY-MM-DD` | Due date |
+| `scheduled` | No | `YYYY-MM-DD` | Scheduled date |
+| `defer-until` | No | `YYYY-MM-DD` | Defer until date |
+| `project` | No | URL-encoded string | Project title (case-insensitive match) |
+| `area` | No | URL-encoded string | Area title (case-insensitive match) |
+| `body` | No | URL-encoded string | Task notes (Markdown, newlines) |
+
+**Valid status values:**
+
+- `inbox` (default)
+- `icebox`
+- `ready`
+- `in-progress`
+- `blocked`
+- `dropped`
+- `done`
+
+**Behavior:**
+
+1. Creates the task with provided parameters
+2. Navigates to appropriate view
+3. Opens detail panel with title field focused
+
+**Examples:**
+
+```text frame="none"
+# Simple inbox task
+taskdn://new?title=Buy%20groceries
+
+# Task with project
+taskdn://new?title=Update%20homepage&project=Website%20Redesign
+
+# Task with dates
+taskdn://new?title=Review%20PR&due=2025-01-20&scheduled=2025-01-15
+
+# Task with body content
+taskdn://new?title=Meeting%20notes&body=Discussed%3A%0A-%20Budget%0A-%20Timeline
+
+# Minimal (creates "New Task" in inbox)
+taskdn://new
+```
+
+**Project/Area matching:**
+
+- Case-insensitive title match
+- First match wins if duplicates exist
+- Unmatched values are silently ignored
+
+---
+
+## General Behavior
+
+### Window Focus
+
+- **Valid URLs**: App comes to foreground
+- **Invalid URLs**: App stays in background (silent failure)
+
+### URL Encoding
+
+All parameter values must be URL-encoded:
+
+| Character | Encoded |
+|-----------|---------|
+| Space | `%20` |
+| Newline | `%0A` |
+| `/` | `%2F` |
+| `?` | `%3F` |
+| `&` | `%26` |
+| `=` | `%3D` |
+
+<Aside type="tip">
+  Use **Edit > Copy Local URL** (right-click a task, project, or area) to get a properly formatted URL you can use elsewhere.
+</Aside>
+
+---
+
+## Integration Examples
+
+### Alfred/Raycast
+
+Create a workflow that runs:
+
+```bash frame="none"
+open "taskdn://new?title={query}"
+```
+
+### Obsidian
+
+Link to a task from your notes:
+
+```markdown frame="none"
+[Open task](taskdn://open?path=%2FUsers%2Fdanny%2Fnotes%2Ftasks%2Fmy-task.md)
+```
+
+### Shell Script
+
+```bash frame="none"
+# Quick capture
+open "taskdn://new?title=$(echo "$1" | jq -sRr @uri)"
+```

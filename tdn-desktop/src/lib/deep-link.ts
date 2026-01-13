@@ -8,6 +8,7 @@
  */
 
 import type { NavId } from '@/types/navigation'
+import { validTaskStatusSet } from '@/config/status'
 
 // =============================================================================
 // Types
@@ -48,16 +49,6 @@ const VALID_VIEWS: ReadonlySet<string> = new Set([
   'no-area',
 ])
 
-/** Valid status values for taskdn://new?status= */
-const VALID_STATUSES: ReadonlySet<string> = new Set([
-  'inbox',
-  'icebox',
-  'ready',
-  'in-progress',
-  'blocked',
-  'dropped',
-  'done',
-])
 
 // =============================================================================
 // URL Parsing
@@ -138,7 +129,7 @@ function parseNewCommand(params: URLSearchParams): DeepLinkCommand {
 
   // Status (optional, must be valid lowercase kebab-case)
   const status = params.get('status')
-  if (status && VALID_STATUSES.has(status)) {
+  if (status && validTaskStatusSet.has(status)) {
     options.status = status
   }
 
