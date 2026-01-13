@@ -13,25 +13,25 @@
 import { useState } from 'react'
 import {
   CalendarIcon,
-  CheckIcon,
   ChevronRightIcon,
   FlagIcon,
+  FolderOpen,
+  CircleDot,
   PlusIcon,
   SearchIcon,
   SettingsIcon,
   SnowflakeIcon,
   TrashIcon,
   UserIcon,
+  ClockIcon,
 } from 'lucide-react'
 
 // UI Primitives
 import { Button } from '@/components/ui/button'
-import { ButtonGroup } from '@/components/ui/button-group'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -40,15 +40,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
 import { Badge } from '@/components/ui/badge'
 import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ProgressCircle } from '@/components/ui/progress-circle'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
 import { Separator } from '@/components/ui/separator'
-import { Toggle } from '@/components/ui/toggle'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ViewToggle, type ViewMode } from '@/components/ui/view-toggle'
 import {
   Tooltip,
@@ -56,15 +53,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { EmptyState } from '@/components/ui/empty-state'
 import {
   Dialog,
@@ -100,14 +88,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from '@/components/ui/sheet'
-import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -121,48 +101,114 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
-import { Field, FieldLabel, FieldContent, FieldError } from '@/components/ui/field'
-import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupAddon,
-  InputGroupButton,
-} from '@/components/ui/input-group'
-import { DatePicker } from '@/components/ui/date-picker'
 import { DateButton } from '@/components/ui/date-button'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { TagInput, type Tag } from '@/components/ui/tag-input'
-import { Calendar } from '@/components/ui/calendar'
+import { LazyMarkdownEditor } from '@/components/ui/lazy-markdown-editor'
+import { CollapsibleNotesSection } from '@/components/ui/collapsible-notes'
+import {
+  CommandDialog,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandShortcut,
+} from '@/components/ui/command'
 
-// App Components
+// App Components - Tasks
 import { TaskCard } from '@/components/cards/TaskCard'
-import { ProjectCard } from '@/components/cards/ProjectCard'
-import { AreaCard } from '@/components/cards/AreaCard'
+import { TaskItem } from '@/components/tasks/TaskItem'
 import { TaskStatusCheckbox } from '@/components/tasks/TaskStatusCheckbox'
 import { TaskStatusPill } from '@/components/tasks/TaskStatusPill'
+import { SectionHeader } from '@/components/tasks/SectionHeader'
+
+// App Components - Projects
+import { ProjectCard } from '@/components/cards/ProjectCard'
 import { ProjectStatusPill } from '@/components/projects/ProjectStatusPill'
 import { ProjectStatusBadges } from '@/components/projects/ProjectStatusBadges'
+import { ProjectStatusIndicator } from '@/components/sidebar/DraggableProject'
+
+// App Components - Areas
+import { AreaCard } from '@/components/cards/AreaCard'
+
+// App Components - Layout
+import { ViewHeader } from '@/components/layout/ViewHeader'
+import { HeadingListItem } from '@/components/headings/HeadingListItem'
+
+// Types
 import type { Task, Project, Area } from '@/lib/tauri-bindings'
 
-// Fake data for examples
-const todayStr = new Date().toISOString().split('T')[0]!
-const todayOrNull: string | null = todayStr
+// -----------------------------------------------------------------------------
+// Fake Data
+// -----------------------------------------------------------------------------
 
-const FAKE_TASK: Task = {
-  id: 'task-1',
-  path: '/tasks/task-1.md',
-  title: 'Review pull request for authentication feature',
-  status: 'ready',
-  project: 'project-1',
-  area: null,
-  due: todayOrNull,
-  scheduled: null,
-  deferUntil: null,
-  body: '',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  completedAt: null,
-}
+const todayStr = new Date().toISOString().split('T')[0]!
+const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]!
+const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0]!
+
+const FAKE_TASKS: Task[] = [
+  {
+    id: 'task-1',
+    path: '/tasks/task-1.md',
+    title: 'Review pull request for authentication feature',
+    status: 'ready',
+    project: 'project-1',
+    area: null,
+    due: tomorrowStr,
+    scheduled: todayStr,
+    deferUntil: null,
+    body: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    completedAt: null,
+  },
+  {
+    id: 'task-2',
+    path: '/tasks/task-2.md',
+    title: 'Fix critical bug in payment processing',
+    status: 'in-progress',
+    project: 'project-1',
+    area: null,
+    due: yesterdayStr, // overdue
+    scheduled: null,
+    deferUntil: null,
+    body: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    completedAt: null,
+  },
+  {
+    id: 'task-3',
+    path: '/tasks/task-3.md',
+    title: 'Write documentation for new API endpoints',
+    status: 'ready',
+    project: null,
+    area: 'area-1',
+    due: null,
+    scheduled: null,
+    deferUntil: tomorrowStr, // deferred
+    body: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    completedAt: null,
+  },
+  {
+    id: 'task-4',
+    path: '/tasks/task-4.md',
+    title: 'Deploy staging environment',
+    status: 'done',
+    project: 'project-1',
+    area: null,
+    due: null,
+    scheduled: null,
+    deferUntil: null,
+    body: '',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    completedAt: new Date().toISOString(),
+  },
+]
 
 const FAKE_PROJECT: Project = {
   id: 'project-1',
@@ -172,7 +218,7 @@ const FAKE_PROJECT: Project = {
   area: 'area-1',
   startDate: null,
   endDate: null,
-  description: 'Implement user authentication',
+  description: 'Implement user authentication with OAuth2',
   blockedBy: null,
   body: '',
 }
@@ -187,36 +233,352 @@ const FAKE_AREA: Area = {
   body: '',
 }
 
+// -----------------------------------------------------------------------------
+// Component
+// -----------------------------------------------------------------------------
+
 export function ComponentReference() {
+  // Form state
   const [checkboxChecked, setCheckboxChecked] = useState(false)
   const [switchChecked, setSwitchChecked] = useState(false)
-  const [radioValue, setRadioValue] = useState('option-1')
   const [selectValue, setSelectValue] = useState('')
-  const [togglePressed, setTogglePressed] = useState(false)
-  const [toggleGroupValue, setToggleGroupValue] = useState(['left'])
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [collapsibleOpen, setCollapsibleOpen] = useState(false)
-  const [dateValue, setDateValue] = useState<Date | undefined>(undefined)
-  const [dateButtonValue, setDateButtonValue] = useState<string | undefined>(todayStr)
+  const [dateButtonValue, setDateButtonValue] = useState<string | undefined>(
+    todayStr
+  )
   const [tags, setTags] = useState<Tag[]>([
     { id: '1', text: 'tag1' },
     { id: '2', text: 'tag2' },
   ])
-  const [searchableSelectValue, setSearchableSelectValue] = useState<string | undefined>(undefined)
+  const [searchableSelectValue, setSearchableSelectValue] = useState<
+    string | undefined
+  >(undefined)
+  const [commandOpen, setCommandOpen] = useState(false)
+  const [markdownContent, setMarkdownContent] = useState(
+    '# Notes\n\nSome **bold** and *italic* text.\n\n- List item 1\n- List item 2'
+  )
+
+  // Task/heading state for demos
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null)
+  const [editingTaskId, setEditingTaskId] = useState<string | null>(null)
+  const [sectionExpanded, setSectionExpanded] = useState(true)
 
   return (
     <TooltipProvider>
       <ScrollArea className="h-full">
-        <div className="space-y-12 p-6 pb-24">
+        <div className="space-y-12 p-6 pb-24 max-w-4xl">
           <header>
             <h1 className="text-2xl font-bold">Component Reference</h1>
             <p className="text-muted-foreground mt-1">
-              Development-only showcase of all reusable components
+              All reusable UI components used in Taskdn
             </p>
           </header>
 
-          {/* Basic Inputs */}
-          <Section title="Basic Inputs">
+          {/* ----------------------------------------------------------------- */}
+          {/* TASK COMPONENTS */}
+          {/* ----------------------------------------------------------------- */}
+          <Section title="Task Components">
+            <ComponentGroup title="TaskItem (list row)">
+              <p className="text-xs text-muted-foreground mb-3">
+                Core task row used in TodayView, InboxView, WeekView. Click to
+                select, double-click to edit.
+              </p>
+              <div className="border rounded-lg overflow-hidden">
+                {FAKE_TASKS.slice(0, 2).map(task => (
+                  <TaskItem
+                    key={task.id}
+                    task={task}
+                    isSelected={selectedTaskId === task.id}
+                    isEditing={editingTaskId === task.id}
+                    onSelect={() => setSelectedTaskId(task.id)}
+                    onStartEdit={() => setEditingTaskId(task.id)}
+                    onEndEdit={() => setEditingTaskId(null)}
+                    onTitleChange={() => {}}
+                    onStatusToggle={() => {}}
+                    contextName="Authentication System"
+                  />
+                ))}
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="TaskCard (default size)">
+              <p className="text-xs text-muted-foreground mb-3">
+                Rich card for Kanban boards and week calendar. Shows full
+                metadata.
+              </p>
+              <div className="grid gap-3 max-w-xs">
+                <TaskCard
+                  task={FAKE_TASKS[0]!}
+                  projectName="Authentication System"
+                  onStatusChange={() => {}}
+                  onTitleChange={() => {}}
+                />
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="TaskCard (compact size)">
+              <p className="text-xs text-muted-foreground mb-3">
+                Compact card for month calendar cells. Just checkbox + title.
+              </p>
+              <div className="grid gap-2 max-w-[200px]">
+                <TaskCard task={FAKE_TASKS[0]!} size="compact" />
+                <TaskCard task={FAKE_TASKS[3]!} size="compact" variant="done" />
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="TaskCard variants">
+              <p className="text-xs text-muted-foreground mb-3">
+                Visual states: default, overdue (red), deferred (muted/dashed),
+                done (green).
+              </p>
+              <div className="grid gap-3 max-w-xs">
+                <TaskCard task={FAKE_TASKS[0]!} variant="default" />
+                <TaskCard task={FAKE_TASKS[1]!} variant="overdue" />
+                <TaskCard task={FAKE_TASKS[2]!} variant="deferred" />
+                <TaskCard task={FAKE_TASKS[3]!} variant="done" />
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="TaskStatusCheckbox">
+              <p className="text-xs text-muted-foreground mb-3">
+                Status indicator that toggles between states on click.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex flex-col items-center gap-1">
+                  <TaskStatusCheckbox status="ready" onToggle={() => {}} />
+                  <span className="text-2xs text-muted-foreground">ready</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <TaskStatusCheckbox status="in-progress" onToggle={() => {}} />
+                  <span className="text-2xs text-muted-foreground">
+                    in-progress
+                  </span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <TaskStatusCheckbox status="blocked" onToggle={() => {}} />
+                  <span className="text-2xs text-muted-foreground">blocked</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <TaskStatusCheckbox status="done" onToggle={() => {}} />
+                  <span className="text-2xs text-muted-foreground">done</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <TaskStatusCheckbox status="dropped" onToggle={() => {}} />
+                  <span className="text-2xs text-muted-foreground">dropped</span>
+                </div>
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="TaskStatusPill">
+              <p className="text-xs text-muted-foreground mb-3">
+                Dropdown to change task status. Click to open menu.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <TaskStatusPill status="inbox" onStatusChange={() => {}} />
+                <TaskStatusPill status="ready" onStatusChange={() => {}} />
+                <TaskStatusPill status="in-progress" onStatusChange={() => {}} />
+                <TaskStatusPill status="blocked" onStatusChange={() => {}} />
+                <TaskStatusPill status="done" onStatusChange={() => {}} />
+              </div>
+            </ComponentGroup>
+          </Section>
+
+          {/* ----------------------------------------------------------------- */}
+          {/* PROJECT COMPONENTS */}
+          {/* ----------------------------------------------------------------- */}
+          <Section title="Project Components">
+            <ComponentGroup title="ProjectCard">
+              <div className="max-w-sm">
+                <ProjectCard
+                  project={FAKE_PROJECT}
+                  completion={42}
+                  taskCount={12}
+                  completedTaskCount={5}
+                  areaName="Work"
+                  onClick={() => {}}
+                />
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="ProjectStatusPill">
+              <div className="flex flex-wrap gap-2">
+                <ProjectStatusPill status="planning" onStatusChange={() => {}} />
+                <ProjectStatusPill status="ready" onStatusChange={() => {}} />
+                <ProjectStatusPill
+                  status="in-progress"
+                  onStatusChange={() => {}}
+                />
+                <ProjectStatusPill status="blocked" onStatusChange={() => {}} />
+                <ProjectStatusPill status="paused" onStatusChange={() => {}} />
+                <ProjectStatusPill status="done" onStatusChange={() => {}} />
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="ProjectStatusBadges">
+              <p className="text-xs text-muted-foreground mb-3">
+                Shown in ViewHeader when viewing an area.
+              </p>
+              <ProjectStatusBadges
+                counts={{
+                  planning: 2,
+                  'in-progress': 5,
+                  blocked: 1,
+                  done: 8,
+                }}
+              />
+            </ComponentGroup>
+
+            <ComponentGroup title="ProjectStatusIndicator">
+              <p className="text-xs text-muted-foreground mb-3">
+                Compact status indicator showing progress circle or status icon.
+                Used in sidebar, ProjectHeader, and ProjectCard.
+              </p>
+              <div className="flex items-center gap-6">
+                <div className="flex flex-col items-center gap-1">
+                  <ProjectStatusIndicator status="planning" completion={0} />
+                  <span className="text-2xs text-muted-foreground">planning</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <ProjectStatusIndicator status="ready" completion={0} />
+                  <span className="text-2xs text-muted-foreground">ready</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <ProjectStatusIndicator status="in-progress" completion={42} />
+                  <span className="text-2xs text-muted-foreground">in-progress</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <ProjectStatusIndicator status="blocked" completion={50} />
+                  <span className="text-2xs text-muted-foreground">blocked</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <ProjectStatusIndicator status="paused" completion={75} />
+                  <span className="text-2xs text-muted-foreground">paused</span>
+                </div>
+                <div className="flex flex-col items-center gap-1">
+                  <ProjectStatusIndicator status="done" completion={100} />
+                  <span className="text-2xs text-muted-foreground">done</span>
+                </div>
+              </div>
+            </ComponentGroup>
+          </Section>
+
+          {/* ----------------------------------------------------------------- */}
+          {/* AREA COMPONENTS */}
+          {/* ----------------------------------------------------------------- */}
+          <Section title="Area Components">
+            <ComponentGroup title="AreaCard">
+              <div className="max-w-sm">
+                <AreaCard
+                  area={FAKE_AREA}
+                  projectCount={4}
+                  activeProjectCount={2}
+                  onClick={() => {}}
+                />
+              </div>
+            </ComponentGroup>
+          </Section>
+
+          {/* ----------------------------------------------------------------- */}
+          {/* SECTION HEADERS & LAYOUT */}
+          {/* ----------------------------------------------------------------- */}
+          <Section title="Section Headers & Layout">
+            <ComponentGroup title="SectionHeader">
+              <p className="text-xs text-muted-foreground mb-3">
+                Collapsible section header with task count and action buttons.
+              </p>
+              <div className="border rounded-lg overflow-hidden">
+                <SectionHeader
+                  title="Scheduled for Today"
+                  icon={<ClockIcon className="size-4" />}
+                  taskCount={5}
+                  isExpanded={sectionExpanded}
+                  onToggleExpand={() => setSectionExpanded(!sectionExpanded)}
+                  onAddTask={() => {}}
+                  onAddHeading={() => {}}
+                />
+                {sectionExpanded && (
+                  <div className="p-2 text-sm text-muted-foreground">
+                    Section content appears here when expanded
+                  </div>
+                )}
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="ViewHeader">
+              <p className="text-xs text-muted-foreground mb-3">
+                Top header bar for all views. Title + optional badges + actions.
+              </p>
+              <div className="border rounded-lg overflow-hidden bg-background">
+                <ViewHeader
+                  title="Today"
+                  actions={
+                    <ViewToggle
+                      value={viewMode}
+                      onChange={setViewMode}
+                      availableModes={['list', 'kanban']}
+                    />
+                  }
+                />
+              </div>
+              <div className="border rounded-lg overflow-hidden bg-background mt-3">
+                <ViewHeader
+                  title="Work"
+                  children={
+                    <ProjectStatusBadges
+                      counts={{ 'in-progress': 3, ready: 2 }}
+                    />
+                  }
+                  actions={
+                    <ViewToggle
+                      value={viewMode}
+                      onChange={setViewMode}
+                      availableModes={['list', 'kanban']}
+                    />
+                  }
+                />
+              </div>
+            </ComponentGroup>
+
+            <ComponentGroup title="HeadingListItem">
+              <p className="text-xs text-muted-foreground mb-3">
+                Colored divider heading for organizing tasks in Today view.
+              </p>
+              <div className="border rounded-lg overflow-hidden">
+                <HeadingListItem
+                  heading={{ id: 'h1', title: 'Morning Tasks', color: 'blue' }}
+                  isSelected={false}
+                  isEditing={false}
+                  onSelect={() => {}}
+                  onStartEdit={() => {}}
+                  onEndEdit={() => {}}
+                  onTitleChange={() => {}}
+                  onColorChange={() => {}}
+                  onDelete={() => {}}
+                  dragId="heading-h1"
+                  containerId="demo"
+                />
+                <HeadingListItem
+                  heading={{ id: 'h2', title: 'Afternoon Focus', color: 'amber' }}
+                  isSelected={false}
+                  isEditing={false}
+                  onSelect={() => {}}
+                  onStartEdit={() => {}}
+                  onEndEdit={() => {}}
+                  onTitleChange={() => {}}
+                  onColorChange={() => {}}
+                  onDelete={() => {}}
+                  dragId="heading-h2"
+                  containerId="demo"
+                />
+              </div>
+            </ComponentGroup>
+          </Section>
+
+          {/* ----------------------------------------------------------------- */}
+          {/* FORM COMPONENTS */}
+          {/* ----------------------------------------------------------------- */}
+          <Section title="Form Components">
             <ComponentGroup title="Button">
               <div className="flex flex-wrap gap-2">
                 <Button>Default</Button>
@@ -226,152 +588,104 @@ export function ComponentReference() {
                 <Button variant="ghost">Ghost</Button>
                 <Button variant="link">Link</Button>
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 mt-3">
                 <Button size="lg">Large</Button>
                 <Button size="default">Default</Button>
                 <Button size="sm">Small</Button>
-                <Button size="xs">Extra Small</Button>
-                <Button size="icon"><PlusIcon /></Button>
-              </div>
-              <div className="flex flex-wrap gap-2">
+                <Button size="xs">XS</Button>
+                <Button size="icon">
+                  <PlusIcon />
+                </Button>
                 <Button disabled>Disabled</Button>
-                <Button><Spinner className="mr-2" /> Loading</Button>
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="ButtonGroup">
-              <ButtonGroup>
-                <Button variant="outline">Left</Button>
-                <Button variant="outline">Center</Button>
-                <Button variant="outline">Right</Button>
-              </ButtonGroup>
-              <ButtonGroup orientation="vertical">
-                <Button variant="outline" size="sm">Top</Button>
-                <Button variant="outline" size="sm">Middle</Button>
-                <Button variant="outline" size="sm">Bottom</Button>
-              </ButtonGroup>
-            </ComponentGroup>
-
-            <ComponentGroup title="Input">
-              <Input placeholder="Default input" />
-              <Input placeholder="Disabled" disabled />
-              <Input type="password" placeholder="Password" />
-              <Input aria-invalid="true" placeholder="Invalid input" />
-            </ComponentGroup>
-
-            <ComponentGroup title="Textarea">
-              <Textarea placeholder="Enter your message..." />
-              <Textarea placeholder="Disabled" disabled />
-            </ComponentGroup>
-
-            <ComponentGroup title="Checkbox">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="checkbox-demo"
-                  checked={checkboxChecked}
-                  onCheckedChange={c => setCheckboxChecked(c === true)}
-                />
-                <Label htmlFor="checkbox-demo">Accept terms and conditions</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="checkbox-disabled" disabled />
-                <Label htmlFor="checkbox-disabled">Disabled checkbox</Label>
+            <ComponentGroup title="Input & Textarea">
+              <div className="space-y-2 max-w-xs">
+                <Input placeholder="Default input" />
+                <Input placeholder="Disabled" disabled />
+                <Textarea placeholder="Textarea..." />
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="Switch">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="switch-demo"
-                  checked={switchChecked}
-                  onCheckedChange={setSwitchChecked}
-                />
-                <Label htmlFor="switch-demo">Airplane mode</Label>
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="RadioGroup">
-              <RadioGroup value={radioValue} onValueChange={v => setRadioValue(v as string)}>
+            <ComponentGroup title="Checkbox & Switch">
+              <p className="text-xs text-muted-foreground mb-3">
+                Switch is used in Preferences for toggles.
+              </p>
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="option-1" id="r1" />
-                  <Label htmlFor="r1">Option 1</Label>
+                  <Checkbox
+                    id="checkbox-demo"
+                    checked={checkboxChecked}
+                    onCheckedChange={c => setCheckboxChecked(c === true)}
+                  />
+                  <Label htmlFor="checkbox-demo">Checkbox option</Label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <RadioGroupItem value="option-2" id="r2" />
-                  <Label htmlFor="r2">Option 2</Label>
+                  <Switch
+                    id="switch-demo"
+                    checked={switchChecked}
+                    onCheckedChange={setSwitchChecked}
+                  />
+                  <Label htmlFor="switch-demo">Enable feature</Label>
                 </div>
-                <div className="flex items-center gap-2">
-                  <RadioGroupItem value="option-3" id="r3" />
-                  <Label htmlFor="r3">Option 3</Label>
-                </div>
-              </RadioGroup>
+              </div>
             </ComponentGroup>
 
             <ComponentGroup title="Select">
-              <Select value={selectValue} onValueChange={v => v && setSelectValue(v)}>
+              <p className="text-xs text-muted-foreground mb-3">
+                Used in Preferences for theme/language selection.
+              </p>
+              <Select
+                value={selectValue}
+                onValueChange={v => v && setSelectValue(v)}
+              >
                 <SelectTrigger className="w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="apple">Apple</SelectItem>
-                  <SelectItem value="banana">Banana</SelectItem>
-                  <SelectItem value="orange">Orange</SelectItem>
+                  <SelectItem value="light">Light</SelectItem>
+                  <SelectItem value="dark">Dark</SelectItem>
+                  <SelectItem value="system">System</SelectItem>
                 </SelectContent>
               </Select>
             </ComponentGroup>
 
-            <ComponentGroup title="NativeSelect">
-              <NativeSelect className="w-[200px]">
-                <NativeSelectOption value="">Select...</NativeSelectOption>
-                <NativeSelectOption value="1">Option 1</NativeSelectOption>
-                <NativeSelectOption value="2">Option 2</NativeSelectOption>
-              </NativeSelect>
-            </ComponentGroup>
-          </Section>
-
-          {/* Form Components */}
-          <Section title="Form Components">
-            <ComponentGroup title="Field">
-              <Field>
-                <FieldLabel>Email</FieldLabel>
-                <FieldContent>
-                  <Input type="email" placeholder="email@example.com" />
-                </FieldContent>
-              </Field>
-              <Field>
-                <FieldLabel>Username</FieldLabel>
-                <FieldContent>
-                  <Input placeholder="johndoe" aria-invalid="true" />
-                </FieldContent>
-                <FieldError>Username is already taken</FieldError>
-              </Field>
-            </ComponentGroup>
-
-            <ComponentGroup title="InputGroup">
-              <InputGroup>
-                <InputGroupAddon>
-                  <SearchIcon className="size-4" />
-                </InputGroupAddon>
-                <InputGroupInput placeholder="Search..." />
-              </InputGroup>
-              <InputGroup>
-                <InputGroupAddon>https://</InputGroupAddon>
-                <InputGroupInput placeholder="example.com" />
-                <InputGroupButton>
-                  <Button size="sm">Go</Button>
-                </InputGroupButton>
-              </InputGroup>
+            <ComponentGroup title="SearchableSelect">
+              <p className="text-xs text-muted-foreground mb-3">
+                Used in TaskDetailPanel for project/area selection.
+              </p>
+              <div className="flex gap-2">
+                <SearchableSelect
+                  options={[
+                    { value: 'proj-1', label: 'Authentication System' },
+                    { value: 'proj-2', label: 'Dashboard Redesign' },
+                    { value: 'proj-3', label: 'API Documentation' },
+                  ]}
+                  value={searchableSelectValue}
+                  onChange={setSearchableSelectValue}
+                  placeholder="Project..."
+                  icon={<CircleDot className="size-3 text-entity-project" />}
+                  emptyText="No projects found"
+                />
+                <SearchableSelect
+                  options={[
+                    { value: 'area-1', label: 'Work' },
+                    { value: 'area-2', label: 'Personal' },
+                  ]}
+                  value={undefined}
+                  onChange={() => {}}
+                  placeholder="Area..."
+                  icon={<FolderOpen className="size-3 text-entity-area" />}
+                  emptyText="No areas found"
+                />
+              </div>
             </ComponentGroup>
 
-            <ComponentGroup title="DatePicker">
-              <DatePicker
-                value={dateValue}
-                onChange={setDateValue}
-                placeholder="Pick a date"
-              />
-            </ComponentGroup>
-
-            <ComponentGroup title="DateButton (Custom)">
+            <ComponentGroup title="DateButton">
+              <p className="text-xs text-muted-foreground mb-3">
+                Compact date picker buttons used in TaskDetailPanel.
+              </p>
               <div className="flex gap-2">
                 <DateButton
                   variant="scheduled"
@@ -397,22 +711,10 @@ export function ComponentReference() {
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="SearchableSelect">
-              <SearchableSelect
-                options={[
-                  { value: 'react', label: 'React' },
-                  { value: 'vue', label: 'Vue' },
-                  { value: 'angular', label: 'Angular' },
-                  { value: 'svelte', label: 'Svelte' },
-                ]}
-                value={searchableSelectValue}
-                onChange={setSearchableSelectValue}
-                placeholder="Select framework..."
-                emptyText="No framework found."
-              />
-            </ComponentGroup>
-
             <ComponentGroup title="TagInput">
+              <p className="text-xs text-muted-foreground mb-3">
+                Used in Preferences for ignore patterns.
+              </p>
               <TagInput
                 tags={tags}
                 onTagsChange={setTags}
@@ -420,18 +722,26 @@ export function ComponentReference() {
               />
             </ComponentGroup>
 
-            <ComponentGroup title="Calendar">
-              <Calendar
-                mode="single"
-                selected={dateValue}
-                onSelect={setDateValue}
-                className="rounded-md border"
-              />
+            <ComponentGroup title="MarkdownEditor">
+              <p className="text-xs text-muted-foreground mb-3">
+                WYSIWYG markdown editor with preview/source toggle. Used in
+                TaskDetailPanel for notes. Loaded lazily (Milkdown is large).
+              </p>
+              <div className="border rounded-lg h-48 overflow-hidden">
+                <LazyMarkdownEditor
+                  editorKey="demo-editor"
+                  defaultValue={markdownContent}
+                  onChange={setMarkdownContent}
+                  placeholder="Write some notes..."
+                />
+              </div>
             </ComponentGroup>
           </Section>
 
-          {/* Display Components */}
-          <Section title="Display">
+          {/* ----------------------------------------------------------------- */}
+          {/* DISPLAY & FEEDBACK */}
+          {/* ----------------------------------------------------------------- */}
+          <Section title="Display & Feedback">
             <ComponentGroup title="Badge">
               <div className="flex flex-wrap gap-2">
                 <Badge>Default</Badge>
@@ -441,23 +751,25 @@ export function ComponentReference() {
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="Spinner">
-              <div className="flex items-center gap-4">
-                <Spinner />
-                <Spinner className="size-8" />
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="Skeleton">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-[250px]" />
-                <Skeleton className="h-4 w-[200px]" />
-                <Skeleton className="h-4 w-[150px]" />
+            <ComponentGroup title="Spinner & Skeleton">
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Spinner />
+                  <span className="text-sm">Loading...</span>
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-[150px]" />
+                  <Skeleton className="h-4 w-[100px]" />
+                </div>
               </div>
             </ComponentGroup>
 
             <ComponentGroup title="ProgressCircle">
+              <p className="text-xs text-muted-foreground mb-3">
+                Used in sidebar for project completion indicator.
+              </p>
               <div className="flex items-center gap-4">
+                <ProgressCircle value={0} />
                 <ProgressCircle value={25} />
                 <ProgressCircle value={50} />
                 <ProgressCircle value={75} />
@@ -465,57 +777,46 @@ export function ComponentReference() {
               </div>
             </ComponentGroup>
 
+            <ComponentGroup title="ViewToggle">
+              <ViewToggle
+                value={viewMode}
+                onChange={setViewMode}
+                availableModes={['list', 'kanban', 'calendar']}
+              />
+            </ComponentGroup>
+
             <ComponentGroup title="Kbd">
-              <div className="flex items-center gap-2">
-                <Kbd>⌘</Kbd>
-                <Kbd>K</Kbd>
-              </div>
-              <KbdGroup>
-                <Kbd>⌘</Kbd>
-                <Kbd>Shift</Kbd>
-                <Kbd>P</Kbd>
-              </KbdGroup>
-            </ComponentGroup>
-
-            <ComponentGroup title="Separator">
-              <div className="space-y-4">
-                <Separator />
-                <div className="flex items-center gap-4">
-                  <span>Left</span>
-                  <Separator orientation="vertical" className="h-4" />
-                  <span>Right</span>
+              <p className="text-xs text-muted-foreground mb-3">
+                Keyboard shortcut display.
+              </p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-1">
+                  <Kbd>⌘</Kbd>
+                  <Kbd>K</Kbd>
                 </div>
+                <KbdGroup>
+                  <Kbd>⌘</Kbd>
+                  <Kbd>Shift</Kbd>
+                  <Kbd>P</Kbd>
+                </KbdGroup>
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="Card">
-              <Card className="w-[350px]">
-                <CardHeader>
-                  <CardTitle>Card Title</CardTitle>
-                  <CardDescription>Card description goes here</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>Card content with some example text.</p>
-                </CardContent>
-                <CardFooter>
-                  <Button>Action</Button>
-                </CardFooter>
-              </Card>
-            </ComponentGroup>
-
-            <ComponentGroup title="Alert">
-              <Alert>
-                <AlertTitle>Heads up!</AlertTitle>
-                <AlertDescription>
-                  You can add components to your app using the cli.
-                </AlertDescription>
-              </Alert>
-              <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                  Something went wrong. Please try again.
-                </AlertDescription>
-              </Alert>
+            <ComponentGroup title="Breadcrumb">
+              <p className="text-xs text-muted-foreground mb-3">
+                Used in Preferences dialog for navigation.
+              </p>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink href="#">Settings</BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbPage>General</BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
             </ComponentGroup>
 
             <ComponentGroup title="EmptyState">
@@ -524,55 +825,35 @@ export function ComponentReference() {
                 description="Create a new task to get started"
               />
             </ComponentGroup>
-          </Section>
 
-          {/* Navigation */}
-          <Section title="Navigation">
-            <ComponentGroup title="Toggle">
-              <Toggle pressed={togglePressed} onPressedChange={setTogglePressed}>
-                <CheckIcon className="size-4" />
-              </Toggle>
+            <ComponentGroup title="CollapsibleNotesSection">
+              <p className="text-xs text-muted-foreground mb-3">
+                Expandable notes panel used in ProjectView and AreaView for
+                descriptions. Shows preview when collapsed.
+              </p>
+              <div className="max-w-md">
+                <CollapsibleNotesSection
+                  notes="This is a **project description** with some markdown content.\n\nIt can contain multiple paragraphs and formatting to describe the purpose and goals of the project or area."
+                  title="Notes"
+                />
+              </div>
             </ComponentGroup>
 
-            <ComponentGroup title="ToggleGroup">
-              <ToggleGroup
-                value={toggleGroupValue}
-                onValueChange={setToggleGroupValue}
-              >
-                <ToggleGroupItem value="left">Left</ToggleGroupItem>
-                <ToggleGroupItem value="center">Center</ToggleGroupItem>
-                <ToggleGroupItem value="right">Right</ToggleGroupItem>
-              </ToggleGroup>
-            </ComponentGroup>
-
-            <ComponentGroup title="ViewToggle">
-              <ViewToggle
-                value={viewMode}
-                onChange={setViewMode}
-                availableModes={['list', 'kanban']}
-              />
-            </ComponentGroup>
-
-            <ComponentGroup title="Breadcrumb">
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="#">Home</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="#">Projects</BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Current</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
+            <ComponentGroup title="Separator">
+              <div className="space-y-4 max-w-xs">
+                <Separator />
+                <div className="flex items-center gap-4">
+                  <span>Left</span>
+                  <Separator orientation="vertical" className="h-4" />
+                  <span>Right</span>
+                </div>
+              </div>
             </ComponentGroup>
           </Section>
 
-          {/* Overlays */}
+          {/* ----------------------------------------------------------------- */}
+          {/* OVERLAYS */}
+          {/* ----------------------------------------------------------------- */}
           <Section title="Overlays">
             <ComponentGroup title="Tooltip">
               <Tooltip>
@@ -590,11 +871,11 @@ export function ComponentReference() {
                 <PopoverTrigger render={<Button variant="outline" />}>
                   Open popover
                 </PopoverTrigger>
-                <PopoverContent className="w-80">
+                <PopoverContent className="w-64">
                   <div className="space-y-2">
                     <h4 className="font-medium">Popover Title</h4>
                     <p className="text-sm text-muted-foreground">
-                      This is the popover content.
+                      Popover content goes here.
                     </p>
                   </div>
                 </PopoverContent>
@@ -610,7 +891,7 @@ export function ComponentReference() {
                   <DialogHeader>
                     <DialogTitle>Dialog Title</DialogTitle>
                     <DialogDescription>
-                      This is a description of what this dialog does.
+                      Dialog description text.
                     </DialogDescription>
                   </DialogHeader>
                   <div className="py-4">Dialog content goes here.</div>
@@ -631,13 +912,12 @@ export function ComponentReference() {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      This action cannot be undone. This will permanently delete your
-                      item.
+                      This action cannot be undone.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction>Continue</AlertDialogAction>
+                    <AlertDialogAction>Delete</AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
@@ -649,7 +929,7 @@ export function ComponentReference() {
                   Open menu
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuLabel>Actions</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem>
                     <UserIcon className="mr-2 size-4" />
@@ -668,27 +948,11 @@ export function ComponentReference() {
               </DropdownMenu>
             </ComponentGroup>
 
-            <ComponentGroup title="Sheet">
-              <Sheet>
-                <SheetTrigger render={<Button variant="outline" />}>
-                  Open sheet
-                </SheetTrigger>
-                <SheetContent>
-                  <SheetHeader>
-                    <SheetTitle>Sheet Title</SheetTitle>
-                    <SheetDescription>
-                      Sheet content goes here. Use for sidepanels.
-                    </SheetDescription>
-                  </SheetHeader>
-                </SheetContent>
-              </Sheet>
-            </ComponentGroup>
-          </Section>
-
-          {/* Layout */}
-          <Section title="Layout">
             <ComponentGroup title="Collapsible">
-              <Collapsible open={collapsibleOpen} onOpenChange={setCollapsibleOpen}>
+              <Collapsible
+                open={collapsibleOpen}
+                onOpenChange={setCollapsibleOpen}
+              >
                 <CollapsibleTrigger
                   render={
                     <Button variant="ghost" className="flex items-center gap-2" />
@@ -700,92 +964,49 @@ export function ComponentReference() {
                   Click to expand
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-2 rounded-md border p-4">
-                  This content is collapsible. Click the button above to toggle.
+                  Collapsible content appears here.
                 </CollapsibleContent>
               </Collapsible>
             </ComponentGroup>
-          </Section>
 
-          {/* App Components */}
-          <Section title="App Components">
-            <ComponentGroup title="TaskStatusCheckbox">
-              <div className="flex items-center gap-4">
-                <TaskStatusCheckbox status="ready" onToggle={() => {}} />
-                <TaskStatusCheckbox status="in-progress" onToggle={() => {}} />
-                <TaskStatusCheckbox status="done" onToggle={() => {}} />
-                <TaskStatusCheckbox status="blocked" onToggle={() => {}} />
-                <TaskStatusCheckbox status="icebox" onToggle={() => {}} />
-                <TaskStatusCheckbox status="inbox" onToggle={() => {}} />
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="TaskStatusPill">
-              <div className="flex flex-wrap gap-2">
-                <TaskStatusPill status="ready" onStatusChange={() => {}} />
-                <TaskStatusPill status="in-progress" onStatusChange={() => {}} />
-                <TaskStatusPill status="done" onStatusChange={() => {}} />
-                <TaskStatusPill status="blocked" onStatusChange={() => {}} />
-                <TaskStatusPill status="icebox" onStatusChange={() => {}} />
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="ProjectStatusPill">
-              <div className="flex flex-wrap gap-2">
-                <ProjectStatusPill status="planning" onStatusChange={() => {}} />
-                <ProjectStatusPill status="ready" onStatusChange={() => {}} />
-                <ProjectStatusPill status="in-progress" onStatusChange={() => {}} />
-                <ProjectStatusPill status="blocked" onStatusChange={() => {}} />
-                <ProjectStatusPill status="paused" onStatusChange={() => {}} />
-                <ProjectStatusPill status="done" onStatusChange={() => {}} />
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="ProjectStatusBadges">
-              <ProjectStatusBadges
-                counts={{
-                  planning: 2,
-                  'in-progress': 5,
-                  blocked: 1,
-                  done: 8,
-                }}
-              />
-            </ComponentGroup>
-
-            <ComponentGroup title="TaskCard">
-              <div className="max-w-sm">
-                <TaskCard
-                  task={FAKE_TASK}
-                  onStatusChange={() => {}}
-                  onTitleChange={() => {}}
-                  onScheduledChange={() => {}}
-                  onDueChange={() => {}}
-                  projectName="Authentication System"
-                />
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="ProjectCard">
-              <div className="max-w-sm">
-                <ProjectCard
-                  project={FAKE_PROJECT}
-                  completion={42}
-                  taskCount={12}
-                  completedTaskCount={5}
-                  areaName="Work"
-                  onClick={() => {}}
-                />
-              </div>
-            </ComponentGroup>
-
-            <ComponentGroup title="AreaCard">
-              <div className="max-w-sm">
-                <AreaCard
-                  area={FAKE_AREA}
-                  projectCount={4}
-                  activeProjectCount={2}
-                  onClick={() => {}}
-                />
-              </div>
+            <ComponentGroup title="Command Palette">
+              <p className="text-xs text-muted-foreground mb-3">
+                Global command palette (Cmd+K).
+              </p>
+              <Button variant="outline" onClick={() => setCommandOpen(true)}>
+                <SearchIcon className="mr-2 size-4" />
+                Open Command Palette
+              </Button>
+              <CommandDialog
+                open={commandOpen}
+                onOpenChange={setCommandOpen}
+                title="Command Palette"
+                description="Search for commands..."
+              >
+                <CommandInput placeholder="Type a command or search..." />
+                <CommandList>
+                  <CommandEmpty>No results found.</CommandEmpty>
+                  <CommandGroup heading="Navigation">
+                    <CommandItem>
+                      <CalendarIcon className="mr-2 size-4" />
+                      Go to Today
+                      <CommandShortcut>⌘T</CommandShortcut>
+                    </CommandItem>
+                    <CommandItem>
+                      <FolderOpen className="mr-2 size-4" />
+                      Go to Inbox
+                      <CommandShortcut>⌘I</CommandShortcut>
+                    </CommandItem>
+                  </CommandGroup>
+                  <CommandGroup heading="Actions">
+                    <CommandItem>
+                      <PlusIcon className="mr-2 size-4" />
+                      New Task
+                      <CommandShortcut>⌘N</CommandShortcut>
+                    </CommandItem>
+                  </CommandGroup>
+                </CommandList>
+              </CommandDialog>
             </ComponentGroup>
           </Section>
         </div>
@@ -794,7 +1015,10 @@ export function ComponentReference() {
   )
 }
 
-// Helper components for organization
+// -----------------------------------------------------------------------------
+// Helper Components
+// -----------------------------------------------------------------------------
+
 function Section({
   title,
   children,
