@@ -1,31 +1,134 @@
 # Task: UI Component Review
 
-Okay, I have a few things I want to do here.
+This task involves reviewing and restructuring our React component architecture. It combines review work (requiring decisions) with implementation work (clear actions).
 
-## UI Components Style etc
+NOTE: Well this document provides a structure to work from and I particularly want to focus on the things in it, If in the course of your various reviews and exploration you find other architectural problems to do with our React code you are free to suggest those two.
 
-Firstly, I want to look over all of our UI components in the desktop app alongside all of the other components which use them. I want to make sure that they are organized and structured in a sensible way with layout components specifically just handling main app layout, UI components being reusable anywhere, generally follow shadcn's patterns and where appropriate use BaseUI primatives in the same way shadcn does. We may also want to separate the Shad Cn components from the various custom UI components we have produced, although they should all be in `ui/` and feel similar to use. I'm only suggesting this because we may want to make updates to these components from new releases to shadcn at certain points. Well we don't need to keep the Shadsian components identical, as in we can play with them and edit them, that's the whole point of shadcn, But it is helpful to distinguish the ones that we hand wrote from the ones which we originally pulled in from shadcn. If we do put them in separate f directories, we should try to make it easy to import these consistently. We should also bear in mind that many of the Shadsian components contain in them multiple components.
+---
 
-## NAming Convention for React Components
+## Phase 1: Review & Analysis
 
-Secondly, I think I want to rename all components except those in `ui/` to use PascalCase rather than kebab case. I guess the rule here is that any kibab case components are completely reusable UI components that don't do anything. Or have any side effects. Basically our design system uh library components. Whereas those that are Pascal case are particular to this app.
+**Goal**: Understand the current state before making any changes. This phase produces a findings document with recommendations.
 
-## React Component Organisation, Naming etc
+### 1.1 UI Component Inventory
 
-Thirdly, I'd like to look at how we are structuring these components in terms of their file tree. It's clear what `ui/` contains, and what `layout/` contains (the top level main app layout) and what `quick-pane/` contains (the completely separate window, which will eventually become our quick entry pane) and `preferences/` (all the preferences pane stuff). I guess the command palette is also very much "independent" here? But it's less clear how everything else is set up and perhaps things should go. `tasks/` seems to contain a bunch of things which are admittedly all very closely related to tasks. And `views/` makes total sense to me. So I guess what I'm saying is there's nothing inherently bad about how we're organising these components at the moment. It's fairly logical. I just want us to think about whether there is a better way of structuring all of this that will make it more intuitive and easier to work with as we develop more and more components.
+Review all components in `ui/` and document:
 
-Fourth, I'd like to review the top level kinda hierarchy and structure. Currently it's:
+- Which components originated from shadcn vs hand-written
+- Whether they follow shadcn patterns (using BaseUI primitives correctly, etc.)
+- Any components that are near-duplicates or have inconsistent prop APIs
+- Multi-component systems (like `sidebar.tsx`) that export many related components
 
-1. main.tsx renders App.tsx wrapped in QueryClientProvider
-2. App.tsx renders MainWindow wrapped in ThemeProvider wrapped in ErrorBoundary
-3. MainWindow.tsx is our kinda "Primary app container" and contains TitleBar, LeftSideBar, RightSideBar and MainWindowContent, all of which are arranged in the main window, sometimes using shadcns resizable panes etc. This is also where we have the components which are invisible by default, the command palette, the toaster, the preferences, etcetera.
-4. TitleBar renders a suitable titlebar depending on the OS.
-5. LeftSidebar is a wrapper around AppSidebar
-6. RightSidebar is a wrapper around TaskDetailPanel
-7. MainWindowContent Contains the View header and renders the various views.
+**Context**: We want to potentially separate shadcn-sourced components from custom ones. Not to keep shadcn pristine (editing them is the point), but to know which ones to check when updating from shadcn. If we do separate them (e.g., `ui/primitives/` vs `ui/components/`), we need consistent imports. Bear in mind many shadcn components export multiple sub-components.
 
-Now on the face of it, this makes sense to me. The only thing that might not is the fact that LeftSidebar and Rightsidebar are wrappers over the actual sidebar components. I think in particular this makes less sense for the left sidebar, because I think that's always going to contain the app sidebar. it may make sense to have a right sidebar wrapper for the task details panel since I can imagine in the future we may want to display something other than task detail panel in the right sidebar. Regardless, I would just like us to critically review this structure, looking for opportunities to simplify it, opportunities to give better names to some of these components. Anywhere where we have unnecessary wrappers (either components or divs with tailwind styling) Which could be moved either up or down in the component tree. And we should also make sure that the actual functionality that is being implemented at each of these layers is logical. As an example, query client provider being in main.tss, while theme provider and error boundary are in app.tss actually makes loads of sense to me. But if there are other places where that logic should all be together in one place, let's make sure that that w it's in the right place and it's obvious why we have certain functionality or hooks or whatever in one place in the hierarchy and and not lower down or higher up, et cetera. Effectively the main goal of this is ensuring that our front end component hierarchy and structure is obvious, easy to work with, and it's obvious to both humans and AI agents where they should go to find certain things and where they should put new code depending on what it does.
+### 1.2 Component Hierarchy Review
 
-## UI Component Reference
+Critically review the current hierarchy:
 
-Fifth, I want to create a new view which is only available in development mode and contains example representations of all of the available reusable components. This should include UI components (whetehr UI primitives installed from shadcn or coded by us) as well as the various other reusable components in the system. An example of this would be TaskCard or AreaCard or TaskListItem or DueDatePicker or whatever. Now the goal of this is that it's a single view that I can look at and work on styling and interactivity in a component without worrying too much about interference from the components around it or where it's located, and especially without worrying about actual real data. Because all of these components in this page should include fake data passed in simply via the slot or a prop. Having this page will also allow me to look for visual inconsistencies or perhaps for components which are duplicated or which are similar but have different names for props or whatever, right? Now the key thing here is I'm only interested in components which are potentially reusable in many contexts. Soe we wont need to include things like ViewHeader or AppSidebar. We need to think carefully about the kinds of things we want to include in here, particularly when it comes to multi component systems from shadcn like `sidebar.tsx` Which exports many components that all need to be used in a specific way.
+```
+main.tsx
+  └─ QueryClientProvider
+      └─ App.tsx
+          └─ ThemeProvider
+              └─ ErrorBoundary
+                  └─ MainWindow.tsx
+                      ├─ TitleBar (OS-specific)
+                      ├─ LeftSidebar → AppSidebar
+                      ├─ RightSidebar → TaskDetailPanel
+                      ├─ MainWindowContent → ViewHeader + Views
+                      └─ (invisible: CommandPalette, Toaster, Preferences)
+```
+
+Look for:
+
+- **Unnecessary wrappers**: LeftSidebar wrapping AppSidebar seems redundant if it's always 1:1. RightSidebar may be justified if we'll show other content there in future.
+- **Misplaced logic**: Is functionality at the right level? (QueryClientProvider in main.tsx, ThemeProvider in App.tsx makes sense—are there other cases that don't?)
+- **Naming improvements**: Are component names clear about what they do?
+- **Wrapper divs with Tailwind**: Could styling move up/down the tree for clarity?
+
+**Goal**: The hierarchy should be obvious to both humans and AI agents—where to find things, where to add new code.
+
+### 1.3 File Tree Organization Review
+
+Review how components are organized in the file tree:
+
+- `ui/` - Clear: design system primitives
+- `layout/` - Clear: top-level main app layout
+- `quick-pane/` - Clear: separate window (future quick entry pane)
+- `preferences/` - Clear: preferences pane components, all showin in the prefpane modal.
+- `command-palette/` - Clear: Pretty independant "modal" interface.
+- `views/` - Clear: One per "main view" in the app. This is what gets rendered in MainWindoContent
+- `tasks/` - Contains task-related components (TaskCard, TaskListItem, etc.)
+- etc
+
+**Question**: Is there a better structure as the codebase grows? The current organization is fairly logical in may ways, and we should certainally keep `ui`, `layout`, `quick-pane` etc. But there may be a solid opportunity to thing more about the rest. **This is about thinking ahead for future maintainability**
+
+---
+
+## Phase 2: Decisions
+
+Based on Phase 1 findings, make decisions on:
+
+1. **shadcn separation**: Should we separate shadcn-sourced from custom UI components? If so, what structure?
+2. **Hierarchy changes**: What wrappers should be eliminated or added? Any renamings?
+3. **File tree changes**: Any reorganization needed?
+
+These decisions inform Phase 3.
+
+---
+
+## Phase 3: Structural Changes
+
+Implement the decisions from Phase 2:
+
+- Reorganize `ui/` directory structure (if decided)
+- Simplify component hierarchy (eliminate unnecessary wrappers, rename components)
+- Restructure file tree (if decided)
+- Ensure imports remain clean and consistent
+
+---
+
+## Phase 4: Naming Convention Migration
+
+**Clear action, no decision needed.**
+
+Rename all component files outside `ui/` from kebab-case to PascalCase.
+
+**The rule**:
+- **kebab-case** (`button.tsx`) = Design system primitives in `ui/`. Stateless, no side effects, reusable anywhere.
+- **PascalCase** (`TaskCard.tsx`) = App-specific components. May have side effects, tied to this application.
+
+This should happen after structural changes are complete to avoid churn.
+
+---
+
+## Phase 5: UI Component Reference
+
+**Clear action, but depends on Phases 1-4 being complete.**
+
+Create a development-only view that showcases all reusable components with fake data.
+
+**Scope**:
+- UI primitives (shadcn-sourced and custom)
+- Reusable app components (TaskCard, AreaCard, TaskListItem, DueDatePicker, etc.)
+
+**Not in scope**:
+- Layout components (ViewHeader, AppSidebar)
+- Non-reusable components tied to specific features
+
+**Purpose**:
+- Work on styling/interactivity in isolation
+- Spot visual inconsistencies
+- Find duplicated or similar components with inconsistent APIs
+- Document component APIs (props)
+
+**Consideration**: For multi-component systems like `sidebar.tsx`, show them in a usage pattern rather than individually.
+
+---
+
+## Execution Notes
+
+- **Phase 1** is pure review—no code changes. Produces a findings document.
+- **Phase 2** requires your input on decisions.
+- **Phases 3-5** are implementation work.
+- **Phase 5** could theoretically be built earlier as a review tool, but makes more sense after restructuring is complete so we're not documenting a moving target.
