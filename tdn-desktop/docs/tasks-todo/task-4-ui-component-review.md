@@ -95,6 +95,7 @@ Implement the decisions from Phase 2:
 Rename all component files outside `ui/` from kebab-case to PascalCase.
 
 **The rule**:
+
 - **kebab-case** (`button.tsx`) = Design system primitives in `ui/`. Stateless, no side effects, reusable anywhere.
 - **PascalCase** (`TaskCard.tsx`) = App-specific components. May have side effects, tied to this application.
 
@@ -109,14 +110,17 @@ This should happen after structural changes are complete to avoid churn.
 Create a development-only view that showcases all reusable components with fake data.
 
 **Scope**:
+
 - UI primitives (shadcn-sourced and custom)
 - Reusable app components (TaskCard, AreaCard, TaskListItem, DueDatePicker, etc.)
 
 **Not in scope**:
+
 - Layout components (ViewHeader, AppSidebar)
 - Non-reusable components tied to specific features
 
 **Purpose**:
+
 - Work on styling/interactivity in isolation
 - Spot visual inconsistencies
 - Find duplicated or similar components with inconsistent APIs

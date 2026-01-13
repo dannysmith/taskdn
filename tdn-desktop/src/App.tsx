@@ -17,8 +17,8 @@ import { commands } from './lib/tauri-bindings'
 import { useVaultInitialization } from './services/vault'
 import './App.css'
 import { MainWindow } from './components/layout/MainWindow'
-import { ThemeProvider } from './components/ThemeProvider'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { ThemeProvider } from './components/providers/ThemeProvider'
+import { ErrorBoundary } from './components/providers/ErrorBoundary'
 
 function App() {
   // Prevent Escape from exiting macOS fullscreen (must be before other hooks)
