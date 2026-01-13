@@ -242,25 +242,11 @@ export const entityCommands: AppCommand[] = [
     isAvailable: isEntityCommandAvailable,
 
     execute: async context => {
-      // Get target from context menu or selected task
-      const explicitTarget = context.getContextMenuTarget()
-      const selectedTask = context.getSelectedTask()
+      const entity = getTargetEntity(context)
+      if (!entity) return
 
-      let type: 'task' | 'project' | 'area'
-      let id: string
-
-      if (explicitTarget) {
-        type = explicitTarget.type
-        id = explicitTarget.entity.id
-      } else if (selectedTask) {
-        type = 'task'
-        id = selectedTask.id
-      } else {
-        return
-      }
-
-      // Build taskdn:// URL format: taskdn://{type}/{id}
-      const localUrl = `taskdn://${type}/${encodeURIComponent(id)}`
+      // Build taskdn://open?path= URL format (matches Obsidian convention)
+      const localUrl = `taskdn://open?path=${encodeURIComponent(entity.path)}`
 
       try {
         await navigator.clipboard.writeText(localUrl)

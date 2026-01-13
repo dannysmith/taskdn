@@ -288,7 +288,6 @@ All parameter values must be URL-encoded. Standard percent-encoding applies:
 ### Phase 7: Documentation
 
 1. **Update user guide** with URL scheme reference
-2. **Document Obsidian integration** setup
 
 ---
 

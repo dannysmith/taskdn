@@ -40,6 +40,12 @@ pub fn run() {
         }));
     }
 
+    // Deep link plugin for taskdn:// URL scheme
+    #[cfg(desktop)]
+    {
+        app_builder = app_builder.plugin(tauri_plugin_deep_link::init());
+    }
+
     // Window state plugin - saves/restores window position and size
     // Note: Only applies to windows listed in capabilities (main window only, not quick-pane)
     #[cfg(desktop)]
