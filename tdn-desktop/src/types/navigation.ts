@@ -8,8 +8,12 @@
 
 export type NavId = 'today' | 'this-week' | 'inbox' | 'calendar'
 
+/** Dev-only nav IDs - only available when import.meta.env.DEV is true */
+export type DevNavId = 'component-reference'
+
 export type Selection =
   | { type: 'nav'; id: NavId }
+  | { type: 'dev-nav'; id: DevNavId }
   | { type: 'area'; id: string }
   | { type: 'project'; id: string }
   | { type: 'no-area' }

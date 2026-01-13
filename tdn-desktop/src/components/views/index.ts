@@ -1,5 +1,6 @@
 export { AreaView } from './AreaView'
 export { CalendarView } from './CalendarView'
+export { ComponentReference } from './ComponentReference'
 export { InboxView } from './InboxView'
 export { NoAreaView } from './NoAreaView'
 export { ProjectView } from './ProjectView'
