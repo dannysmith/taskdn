@@ -188,138 +188,43 @@ All parameter values must be URL-encoded. Standard percent-encoding applies:
 
 ---
 
-## Implementation Plan
+## Implementation Summary
 
-### Phase 1: Tauri Deep Link Setup
+### Completed Work
 
-1. **Install deep-link plugin**
-   ```bash
-   bun run tauri add deep-link
-   ```
+**Files Created:**
+- `src/lib/deep-link.ts` - URL parsing module with types and validation
+- `src/lib/deep-link.test.ts` - 26 unit tests for URL parsing
+- `src/hooks/use-deep-link.ts` - React hook for handling deep link events
 
-2. **Configure URL scheme in `tauri.conf.json`**
-   - Register `taskdn` as the custom protocol
-   - Configure for macOS (and Windows/Linux if needed)
+**Files Modified:**
+- `src-tauri/src/lib.rs` - Deep-link plugin registration (after single-instance)
+- `src-tauri/tauri.conf.json` - Added `taskdn` scheme configuration
+- `src-tauri/capabilities/desktop.json` - Added `deep-link:default` permission
+- `src/App.tsx` - Added `useDeepLink()` hook at app root
+- `src/store/task-detail-store.ts` - Added `'title'` to `FocusableField` type
+- `src/components/tasks/task-detail-panel.tsx` - Implemented title focusing with text selection
+- `src/lib/commands/entity-commands.ts` - Updated `copy-local-url` to use new URL format
 
-3. **Add capability permissions** for deep-link plugin
+**Packages Added:**
+- `tauri-plugin-deep-link` (Rust)
+- `@tauri-apps/plugin-deep-link` (JavaScript)
 
-4. **Create Rust handler** for incoming deep link events
-   - Parse URL into command and parameters
-   - Emit event to frontend with parsed data
+### Testing Notes
 
-### Phase 2: URL Parsing
+- **macOS limitation**: Deep links only work with a bundled .app, not in `tauri dev` mode
+- **Build command**: `bun run tauri build --debug --bundles app`
+- **Testing method**: Paste URLs directly in browser address bar (works reliably)
+- The `open "taskdn://..."` terminal command may not work on all systems
 
-1. **Create URL parser module** (`src/lib/deep-link.ts`)
-   - Parse `taskdn://` URLs
-   - Extract command (`open` or `new`)
-   - Parse and validate parameters
-   - Handle URL decoding
+### Remaining Work
 
-2. **Define TypeScript types** for parsed URLs
-   ```typescript
-   type DeepLinkCommand =
-     | { type: 'open-path'; path: string }
-     | { type: 'open-view'; view: NavId | 'no-area' }
-     | { type: 'new'; options: CreateTaskFromUrlOptions }
-   ```
-
-### Phase 3: `open` Command Implementation
-
-1. **Path resolution**
-   - Look up entity by file path in loaded data
-   - Determine entity type (task/project/area)
-   - Return null if not found
-
-2. **View navigation logic**
-   - For tasks: determine correct view based on status/project/area
-   - For projects/areas: navigate directly to entity view
-
-3. **Entity selection**
-   - For tasks: call `openTask()` to select and show detail panel
-   - For projects/areas: set navigation selection
-
-4. **Window focus**
-   - Use Tauri window API to bring window to front
-   - Only focus if entity was found
-
-### Phase 4: `new` Command Implementation
-
-1. **Parameter validation**
-   - Validate status values
-   - Validate date formats (ISO only)
-   - URL-decode all string values
-
-2. **Project/Area resolution**
-   - Case-insensitive title matching
-   - First match wins for duplicates
-
-3. **Task creation**
-   - Call existing `createTask` command with resolved options
-   - Handle title default ("New Task")
-
-4. **Post-creation behavior**
-   - Navigate to appropriate view
-   - Open detail panel
-   - Focus title field with text selected
-
-5. **Add `title` to focusable fields**
-   - Extend `FocusableField` type to include `'title'`
-   - Implement title focusing in `TaskDetailPanel`
-
-### Phase 5: Update Existing Features
-
-1. **Update `copy-local-url` command**
-   - Change from `taskdn://{type}/{id}` to `taskdn://open?path=<encoded-path>`
-   - Update in `src/lib/commands/entity-commands.ts`
-
-2. **Update translations**
-   - Any user-facing strings for deep link features
-
-### Phase 6: Testing
-
-1. **Manual testing**
-   - Test all URL formats from terminal: `open "taskdn://..."`
-   - Test with Obsidian integration
-   - Test invalid URLs (should do nothing)
-
-2. **Unit tests**
-   - URL parsing logic
-   - Parameter validation
-   - Project/area title matching
-
-### Phase 7: Documentation
-
-1. **Update user guide** with URL scheme reference
+1. **Documentation** - Add URL scheme reference to user guide
+2. **Obsidian integration docs** - Document how to use with Obsidian plugin
 
 ---
 
-## Technical Notes
-
-### Existing Infrastructure
-
-- **Navigation store**: `src/store/navigation-store.ts` — handles view switching
-- **Task detail store**: `src/store/task-detail-store.ts` — handles task selection and panel
-- **Entity commands**: `src/lib/commands/entity-commands.ts` — has `copy-local-url` to update
-- **Create task**: `CreateTaskOptions` type in `src-tauri/src/vault/entities.rs`
-
-### Deep Link Plugin
-
-Tauri v2 deep-link plugin: https://v2.tauri.app/plugin/deep-link/
-
-The plugin emits events when the app receives a deep link URL. We listen in Rust and forward to the frontend.
-
-### Focus Title Implementation
-
-Current `FocusableField` type: `'scheduled' | 'due' | 'defer' | 'status' | null`
-
-Need to:
-1. Add `'title'` to the type
-2. Implement focusing logic in `TaskDetailPanel` for the title textarea
-3. Select all text when focusing title
-
----
-
-## Open Questions (Resolved)
+## Design Decisions (Resolved)
 
 These questions were discussed and resolved during planning:
 

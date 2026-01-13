@@ -60,6 +60,12 @@ export const taskPrimaryStatuses: TaskStatus[] = [
 ]
 export const taskSecondaryStatuses: TaskStatus[] = ['icebox', 'dropped']
 
+/** All valid task statuses (derived from config keys) */
+export const allTaskStatuses = Object.keys(taskStatusConfig) as TaskStatus[]
+
+/** Set of valid task status strings for validation */
+export const validTaskStatusSet: ReadonlySet<string> = new Set(allTaskStatuses)
+
 // Project status ordering
 export const projectPrimaryStatuses: ProjectStatus[] = [
   'planning',
