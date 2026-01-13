@@ -11,4 +11,3 @@ With the app pretty much fully functioning, we need to conduct some full reviews
 - [ ] Security Audit
 - [ ] Test Coverage Review
 - [ ] Developer Docs Review
-- [ ]
