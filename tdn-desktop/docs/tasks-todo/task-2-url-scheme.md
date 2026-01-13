@@ -2,6 +2,8 @@
 
 https://github.com/dannysmith/taskdn/issues/19
 
+**Status: Implementation Complete** - Ready for documentation and final testing.
+
 ## Overview
 
 Taskdn Desktop supports a `taskdn://` URL scheme for deep linking into the app. This enables:

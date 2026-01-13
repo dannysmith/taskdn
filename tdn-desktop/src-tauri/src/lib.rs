@@ -21,9 +21,20 @@ pub use types::DEFAULT_QUICK_PANE_SHORTCUT;
 pub fn run() {
     let builder = bindings::generate_bindings();
 
-    // Export TypeScript bindings in debug builds
+    // Export TypeScript bindings in debug builds, but only when not bundled
+    // (bundled apps run from a different directory and can't write to source)
     #[cfg(debug_assertions)]
-    bindings::export_ts_bindings();
+    if std::env::var("TAURI_ENV").ok().as_deref() != Some("production") {
+        // Only try to export if we can find the target file path
+        // This will fail gracefully in bundled debug builds
+        if let Ok(cwd) = std::env::current_dir() {
+            if cwd.join("../src/lib/bindings.ts").exists()
+                || cwd.join("src/lib/bindings.ts").exists()
+            {
+                bindings::export_ts_bindings();
+            }
+        }
+    }
 
     // Build with common plugins
     let mut app_builder = tauri::Builder::default();
