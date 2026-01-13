@@ -268,17 +268,28 @@ export function ComponentReference() {
     <TooltipProvider>
       <ScrollArea className="h-full">
         <div className="space-y-12 p-6 pb-24 max-w-4xl">
-          <header>
-            <h1 className="text-2xl font-bold">Component Reference</h1>
-            <p className="text-muted-foreground mt-1">
-              All reusable UI components used in Taskdn
-            </p>
+          <header className="space-y-4">
+            <div>
+              <h1 className="text-2xl font-bold">Component Reference</h1>
+              <p className="text-muted-foreground mt-1">
+                All reusable UI components used in Taskdn
+              </p>
+            </div>
+            <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+              <a href="#tasks" className="text-muted-foreground hover:text-foreground hover:underline">Tasks</a>
+              <a href="#projects" className="text-muted-foreground hover:text-foreground hover:underline">Projects</a>
+              <a href="#areas" className="text-muted-foreground hover:text-foreground hover:underline">Areas</a>
+              <a href="#layout" className="text-muted-foreground hover:text-foreground hover:underline">Layout</a>
+              <a href="#forms" className="text-muted-foreground hover:text-foreground hover:underline">Forms</a>
+              <a href="#display" className="text-muted-foreground hover:text-foreground hover:underline">Display</a>
+              <a href="#overlays" className="text-muted-foreground hover:text-foreground hover:underline">Overlays</a>
+            </nav>
           </header>
 
           {/* ----------------------------------------------------------------- */}
           {/* TASK COMPONENTS */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Task Components">
+          <Section id="tasks" title="Task Components">
             <ComponentGroup title="TaskItem (list row)">
               <p className="text-xs text-muted-foreground mb-3">
                 Core task row used in TodayView, InboxView, WeekView. Click to
@@ -370,7 +381,7 @@ export function ComponentReference() {
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="TaskStatusPill">
+            <ComponentGroup title="TaskStatusPill" isLast>
               <p className="text-xs text-muted-foreground mb-3">
                 Dropdown to change task status. Click to open menu.
               </p>
@@ -387,7 +398,7 @@ export function ComponentReference() {
           {/* ----------------------------------------------------------------- */}
           {/* PROJECT COMPONENTS */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Project Components">
+          <Section id="projects" title="Project Components">
             <ComponentGroup title="ProjectCard">
               <div className="max-w-sm">
                 <ProjectCard
@@ -429,7 +440,7 @@ export function ComponentReference() {
               />
             </ComponentGroup>
 
-            <ComponentGroup title="ProjectStatusIndicator">
+            <ComponentGroup title="ProjectStatusIndicator" isLast>
               <p className="text-xs text-muted-foreground mb-3">
                 Compact status indicator showing progress circle or status icon.
                 Used in sidebar, ProjectHeader, and ProjectCard.
@@ -466,8 +477,8 @@ export function ComponentReference() {
           {/* ----------------------------------------------------------------- */}
           {/* AREA COMPONENTS */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Area Components">
-            <ComponentGroup title="AreaCard">
+          <Section id="areas" title="Area Components">
+            <ComponentGroup title="AreaCard" isLast>
               <div className="max-w-sm">
                 <AreaCard
                   area={FAKE_AREA}
@@ -482,7 +493,7 @@ export function ComponentReference() {
           {/* ----------------------------------------------------------------- */}
           {/* SECTION HEADERS & LAYOUT */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Section Headers & Layout">
+          <Section id="layout" title="Section Headers & Layout">
             <ComponentGroup title="SectionHeader">
               <p className="text-xs text-muted-foreground mb-3">
                 Collapsible section header with task count and action buttons.
@@ -540,7 +551,7 @@ export function ComponentReference() {
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="HeadingListItem">
+            <ComponentGroup title="HeadingListItem" isLast>
               <p className="text-xs text-muted-foreground mb-3">
                 Colored divider heading for organizing tasks in Today view.
               </p>
@@ -578,7 +589,7 @@ export function ComponentReference() {
           {/* ----------------------------------------------------------------- */}
           {/* FORM COMPONENTS */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Form Components">
+          <Section id="forms" title="Form Components">
             <ComponentGroup title="Button">
               <div className="flex flex-wrap gap-2">
                 <Button>Default</Button>
@@ -722,7 +733,7 @@ export function ComponentReference() {
               />
             </ComponentGroup>
 
-            <ComponentGroup title="MarkdownEditor">
+            <ComponentGroup title="MarkdownEditor" isLast>
               <p className="text-xs text-muted-foreground mb-3">
                 WYSIWYG markdown editor with preview/source toggle. Used in
                 TaskDetailPanel for notes. Loaded lazily (Milkdown is large).
@@ -741,7 +752,7 @@ export function ComponentReference() {
           {/* ----------------------------------------------------------------- */}
           {/* DISPLAY & FEEDBACK */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Display & Feedback">
+          <Section id="display" title="Display & Feedback">
             <ComponentGroup title="Badge">
               <div className="flex flex-wrap gap-2">
                 <Badge>Default</Badge>
@@ -839,7 +850,7 @@ export function ComponentReference() {
               </div>
             </ComponentGroup>
 
-            <ComponentGroup title="Separator">
+            <ComponentGroup title="Separator" isLast>
               <div className="space-y-4 max-w-xs">
                 <Separator />
                 <div className="flex items-center gap-4">
@@ -854,7 +865,7 @@ export function ComponentReference() {
           {/* ----------------------------------------------------------------- */}
           {/* OVERLAYS */}
           {/* ----------------------------------------------------------------- */}
-          <Section title="Overlays">
+          <Section id="overlays" title="Overlays">
             <ComponentGroup title="Tooltip">
               <Tooltip>
                 <TooltipTrigger render={<Button variant="outline" />}>
@@ -969,7 +980,7 @@ export function ComponentReference() {
               </Collapsible>
             </ComponentGroup>
 
-            <ComponentGroup title="Command Palette">
+            <ComponentGroup title="Command Palette" isLast>
               <p className="text-xs text-muted-foreground mb-3">
                 Global command palette (Cmd+K).
               </p>
@@ -1020,16 +1031,20 @@ export function ComponentReference() {
 // -----------------------------------------------------------------------------
 
 function Section({
+  id,
   title,
   children,
 }: {
+  id: string
   title: string
   children: React.ReactNode
 }) {
   return (
-    <section className="space-y-6">
-      <h2 className="text-xl font-semibold border-b pb-2">{title}</h2>
-      <div className="grid gap-8">{children}</div>
+    <section id={id} className="scroll-mt-6">
+      <div className="border-l-4 border-primary/60 pl-4 mb-6">
+        <h2 className="text-lg font-semibold">{title}</h2>
+      </div>
+      <div className="grid gap-6 pl-5">{children}</div>
     </section>
   )
 }
@@ -1037,13 +1052,17 @@ function Section({
 function ComponentGroup({
   title,
   children,
+  isLast = false,
 }: {
   title: string
   children: React.ReactNode
+  isLast?: boolean
 }) {
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-medium text-muted-foreground">{title}</h3>
+    <div
+      className={`space-y-3 pb-6 ${!isLast ? 'border-b border-dashed border-border/60' : ''}`}
+    >
+      <h3 className="font-mono text-sm font-medium">{title}</h3>
       <div className="space-y-4">{children}</div>
     </div>
   )
