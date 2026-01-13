@@ -10,7 +10,7 @@ import { render, screen } from '@/test/test-utils'
 import { createTestTask, resetFactoryCounters } from '@/test/helpers/vault'
 
 // Mock the task-dnd-context to avoid DnD complexity
-vi.mock('./task-dnd-context', () => ({
+vi.mock('./TaskDndContext', () => ({
   useTaskDragPreview: () => ({
     lastDroppedTaskId: null,
     clearLastDroppedTaskId: vi.fn(),
@@ -34,7 +34,7 @@ vi.mock('@/store/task-detail-store', () => ({
 }))
 
 // Import after mocks
-const { TaskList, DraggableTaskList } = await import('./task-list')
+const { TaskList, DraggableTaskList } = await import('./TaskList')
 
 describe('TaskList', () => {
   beforeEach(() => {

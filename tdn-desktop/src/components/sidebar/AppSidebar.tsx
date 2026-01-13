@@ -51,12 +51,12 @@ import { useSidebarOrder } from '@/hooks/use-sidebar-order'
 import { useVaultHelpers } from '@/services/vault'
 import { useCommandContext } from '@/hooks/use-command-context'
 import { showProjectContextMenu, showAreaContextMenu } from '@/lib/context-menu'
-import { DraggableArea } from './draggable-area'
+import { DraggableArea } from './DraggableArea'
 import {
   DraggableProject,
   ProjectStatusIndicator,
   getProjectTitleClass,
-} from './draggable-project'
+} from './DraggableProject'
 import type { Selection, NavId } from '@/types/navigation'
 import { getDragId, ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
 import type { DragItem } from '@/types/sidebar-order'

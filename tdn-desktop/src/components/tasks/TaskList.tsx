@@ -25,9 +25,9 @@ import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useCommandContext } from '@/hooks/use-command-context'
 import { showTaskContextMenu } from '@/lib/context-menu'
-import { TaskItem, type TaskItemProps } from './task-item'
-import { TaskStatusCheckbox } from './task-status-checkbox'
-import { useTaskDragPreview } from './task-dnd-context'
+import { TaskItem, type TaskItemProps } from './TaskItem'
+import { TaskStatusCheckbox } from './TaskStatusCheckbox'
+import { useTaskDragPreview } from './TaskDndContext'
 
 /**
  * Task List Components

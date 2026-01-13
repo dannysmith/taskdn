@@ -14,8 +14,8 @@ import type { TaskStatus } from '@/lib/tauri-bindings'
 import { Textarea } from '@/components/ui/textarea'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 import { DateButton } from '@/components/ui/date-button'
-import { TaskStatusCheckbox } from './task-status-checkbox'
-import { TaskStatusPill } from './task-status-pill'
+import { TaskStatusCheckbox } from './TaskStatusCheckbox'
+import { TaskStatusPill } from './TaskStatusPill'
 import { LazyMarkdownEditor } from '@/components/ui/lazy-markdown-editor'
 
 /**

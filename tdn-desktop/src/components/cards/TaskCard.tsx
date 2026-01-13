@@ -11,8 +11,8 @@ import {
   PopoverContent,
 } from '@/components/ui/popover'
 import { Button } from '@/components/ui/button'
-import { TaskStatusPill } from '@/components/tasks/task-status-pill'
-import { TaskStatusCheckbox } from '@/components/tasks/task-status-checkbox'
+import { TaskStatusPill } from '@/components/tasks/TaskStatusPill'
+import { TaskStatusCheckbox } from '@/components/tasks/TaskStatusCheckbox'
 
 /**
  * TaskCard - Visual card representation of a task.

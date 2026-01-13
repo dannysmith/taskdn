@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Eye, Code } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
-import { MilkdownEditor } from '@/components/tasks/milkdown-editor'
+import { MilkdownEditor } from '@/components/tasks/MilkdownEditor'
 import { MarkdownSourceTextarea } from '@/components/ui/markdown-source-textarea'
 
 /**

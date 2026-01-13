@@ -3,9 +3,9 @@ import { useDroppable } from '@dnd-kit/core'
 
 import { cn } from '@/lib/utils'
 import type { Project, Task } from '@/lib/tauri-bindings'
-import { ProjectHeader } from './project-header'
-import { TaskList } from './task-list'
-import { useTaskDragPreview } from './task-dnd-context'
+import { ProjectHeader } from './ProjectHeader'
+import { TaskList } from './TaskList'
+import { useTaskDragPreview } from './TaskDndContext'
 
 /**
  * ProjectTaskGroup - Collapsible project header with its task list underneath.

@@ -149,16 +149,16 @@ src/components/
 | tasks/ is largest (16 files) | Manageable - will subdivide if it grows past 20 |
 | quick-pane/ has only 1 file  | Intentional - separate Tauri window context     |
 
-### Remaining Work: Naming Convention (Phase 4)
+### Naming Convention - RESOLVED
 
-Two conventions currently coexist:
+After Phase 4 migration, naming is now consistent:
 
-| Convention     | Where Used                                                                      |
-| -------------- | ------------------------------------------------------------------------------- |
-| **PascalCase** | layout/, titlebar/, preferences/, command-palette/, quick-pane/, providers/     |
-| **kebab-case** | tasks/, views/, calendar/, kanban/, cards/, sidebar/, headings/, projects/, ui/ |
+| Convention     | Where Used                                                                                                                             |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **PascalCase** | All component directories except ui/ (layout/, titlebar/, preferences/, command-palette/, quick-pane/, providers/, tasks/, views/, calendar/, kanban/, cards/, sidebar/, headings/, projects/) |
+| **kebab-case** | ui/ only (design system primitives)                                                                                                    |
 
-**Phase 4 action**: Rename all non-ui/ files to PascalCase for consistency.
+**Rule**: kebab-case = design system primitives in `ui/`. PascalCase = everything else.
 
 ---
 
@@ -209,8 +209,44 @@ Two conventions currently coexist:
 
 ---
 
+## Phase 4 Changes Made
+
+### Files Renamed (42 total)
+
+All component files outside `ui/` renamed from kebab-case to PascalCase:
+
+**tasks/ (15 files)**
+`task-status-checkbox.tsx` → `TaskStatusCheckbox.tsx`, `milkdown-editor.tsx` → `MilkdownEditor.tsx`, `task-list-item.tsx` → `TaskListItem.tsx`, `section-task-group.tsx` → `SectionTaskGroup.tsx`, `task-dnd-context.tsx` → `TaskDndContext.tsx`, `task-list.test.tsx` → `TaskList.test.tsx`, `section-header.tsx` → `SectionHeader.tsx`, `task-status-pill.tsx` → `TaskStatusPill.tsx`, `lazy-markdown-preview.tsx` → `LazyMarkdownPreview.tsx`, `ordered-item-list.tsx` → `OrderedItemList.tsx`, `project-header.tsx` → `ProjectHeader.tsx`, `project-task-group.tsx` → `ProjectTaskGroup.tsx`, `task-item.tsx` → `TaskItem.tsx`, `task-list.tsx` → `TaskList.tsx`, `task-detail-panel.tsx` → `TaskDetailPanel.tsx`
+
+**views/ (7 files)**
+`inbox-view.tsx` → `InboxView.tsx`, `today-view.tsx` → `TodayView.tsx`, `no-area-view.tsx` → `NoAreaView.tsx`, `project-view.tsx` → `ProjectView.tsx`, `week-view.tsx` → `WeekView.tsx`, `area-view.tsx` → `AreaView.tsx`, `calendar-view.tsx` → `CalendarView.tsx`
+
+**calendar/ (5 files)**
+`draggable-task-card.tsx` → `DraggableTaskCard.tsx`, `day-column.tsx` → `DayColumn.tsx`, `week-calendar.tsx` → `WeekCalendar.tsx`, `month-day-cell.tsx` → `MonthDayCell.tsx`, `month-calendar.tsx` → `MonthCalendar.tsx`
+
+**kanban/ (4 files)**
+`kanban-dnd-context.tsx` → `KanbanDndContext.tsx`, `kanban-column.tsx` → `KanbanColumn.tsx`, `kanban-board.tsx` → `KanbanBoard.tsx`, `area-kanban-board.tsx` → `AreaKanbanBoard.tsx`
+
+**cards/ (3 files)**
+`task-card.tsx` → `TaskCard.tsx`, `project-card.tsx` → `ProjectCard.tsx`, `area-card.tsx` → `AreaCard.tsx`
+
+**sidebar/ (3 files)**
+`draggable-project.tsx` → `DraggableProject.tsx`, `draggable-area.tsx` → `DraggableArea.tsx`, `app-sidebar.tsx` → `AppSidebar.tsx`
+
+**headings/ (3 files)**
+`heading-color-picker.tsx` → `HeadingColorPicker.tsx`, `heading-drag-preview.tsx` → `HeadingDragPreview.tsx`, `heading-list-item.tsx` → `HeadingListItem.tsx`
+
+**projects/ (2 files)**
+`project-status-pill.tsx` → `ProjectStatusPill.tsx`, `project-status-badges.tsx` → `ProjectStatusBadges.tsx`
+
+### Imports Updated
+
+All internal (`./`) and cross-directory (`@/components/`) imports updated across the entire codebase.
+
+---
+
 ## Remaining Phases
 
-- **Phase 3**: No structural changes needed beyond what was done here
-- **Phase 4**: Naming convention migration (kebab-case → PascalCase for non-ui/)
+- **Phase 3**: No structural changes needed beyond what was done here - COMPLETE
+- **Phase 4**: Naming convention migration - COMPLETE
 - **Phase 5**: UI Component Reference view (dev-only showcase)

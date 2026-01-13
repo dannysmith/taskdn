@@ -13,7 +13,7 @@ import {
 import { arrayMove } from '@dnd-kit/sortable'
 
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
-import { TaskCard } from '@/components/cards/task-card'
+import { TaskCard } from '@/components/cards/TaskCard'
 
 /**
  * KanbanDndContext - Drag-and-drop context for Kanban boards.

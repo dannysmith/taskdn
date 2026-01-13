@@ -14,9 +14,9 @@ import { showTaskContextMenu } from '@/lib/context-menu'
 import type { HeadingColor } from '@/types/headings'
 import { toHeadingId } from '@/types/headings'
 import type { ResolvedOrderedItem } from '@/hooks/use-today-order'
-import { TaskListItem } from './task-list-item'
+import { TaskListItem } from './TaskListItem'
 import { HeadingListItem } from '@/components/headings'
-import { useTaskDragPreview } from './task-dnd-context'
+import { useTaskDragPreview } from './TaskDndContext'
 
 /**
  * OrderedItemList - Mixed list of tasks and inline headings with drag-and-drop.

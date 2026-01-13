@@ -1,5 +1,5 @@
 import { SidebarProvider } from '@/components/ui/sidebar'
-import { AppSidebar } from '@/components/sidebar/app-sidebar'
+import { AppSidebar } from '@/components/sidebar/AppSidebar'
 import { useNavigationStore } from '@/store/navigation-store'
 
 /**

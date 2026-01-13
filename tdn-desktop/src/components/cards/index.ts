@@ -1,8 +1,8 @@
-export { TaskCard } from './task-card'
-export type { TaskCardProps, TaskCardVariant, TaskCardSize } from './task-card'
+export { TaskCard } from './TaskCard'
+export type { TaskCardProps, TaskCardVariant, TaskCardSize } from './TaskCard'
 
-export { ProjectCard } from './project-card'
-export type { ProjectCardProps } from './project-card'
+export { ProjectCard } from './ProjectCard'
+export type { ProjectCardProps } from './ProjectCard'
 
-export { AreaCard } from './area-card'
-export type { AreaCardProps } from './area-card'
+export { AreaCard } from './AreaCard'
+export type { AreaCardProps } from './AreaCard'

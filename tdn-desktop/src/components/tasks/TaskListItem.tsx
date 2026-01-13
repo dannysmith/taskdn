@@ -12,7 +12,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
 import { cn } from '@/lib/utils'
-import { TaskItem, type TaskItemProps } from './task-item'
+import { TaskItem, type TaskItemProps } from './TaskItem'
 
 export interface TaskListItemProps extends Omit<TaskItemProps, 'className'> {
   /** Used for dnd-kit sortable */
@@ -81,5 +81,5 @@ export function TaskListItem({
 }
 
 // Re-export TaskItem for cases where only the presentational component is needed
-export { TaskItem } from './task-item'
-export type { TaskItemProps } from './task-item'
+export { TaskItem } from './TaskItem'
+export type { TaskItemProps } from './TaskItem'

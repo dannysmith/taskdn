@@ -3,7 +3,7 @@ import { ChevronDown } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
-import { LazyMarkdownPreview } from '@/components/tasks/lazy-markdown-preview'
+import { LazyMarkdownPreview } from '@/components/tasks/LazyMarkdownPreview'
 
 /**
  * CollapsibleNotesSection - Expandable notes panel for areas and projects.

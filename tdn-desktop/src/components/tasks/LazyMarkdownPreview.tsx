@@ -15,7 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
  */
 
 const MilkdownPreview = lazy(() =>
-  import('./milkdown-editor').then(mod => ({ default: mod.MilkdownPreview }))
+  import('./MilkdownEditor').then(mod => ({ default: mod.MilkdownPreview }))
 )
 
 // Error boundary to catch rendering errors

@@ -6,7 +6,7 @@ import { Minus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Heading, HeadingColor } from '@/types/headings'
 import { headingColorConfig } from '@/config/heading-colors'
-import { HeadingColorPicker } from './heading-color-picker'
+import { HeadingColorPicker } from './HeadingColorPicker'
 
 /**
  * HeadingListItem - Inline heading row for organizing tasks in lists.

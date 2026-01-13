@@ -2,8 +2,8 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
-import { KanbanColumn } from './kanban-column'
-import { KanbanDndContext } from './kanban-dnd-context'
+import { KanbanColumn } from './KanbanColumn'
+import { KanbanDndContext } from './KanbanDndContext'
 
 /**
  * KanbanBoard - Horizontal board with status columns for task management.
