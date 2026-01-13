@@ -35,9 +35,9 @@ import {
 } from '@/types/calendar-order'
 import { useCalendarOrder } from '@/hooks/use-calendar-order'
 import { Button } from '@/components/ui/button'
-import type { TaskCardVariant } from '@/components/cards/task-card'
-import { DayColumn } from './day-column'
-import { TaskCardDragPreview } from './draggable-task-card'
+import type { TaskCardVariant } from '@/components/cards/TaskCard'
+import { DayColumn } from './DayColumn'
+import { TaskCardDragPreview } from './DraggableTaskCard'
 
 /**
  * WeekCalendar - 7-day column layout with drag-and-drop scheduling.

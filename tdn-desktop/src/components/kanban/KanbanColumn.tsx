@@ -11,12 +11,12 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { taskStatusConfig } from '@/config/status'
-import { TaskCard } from '@/components/cards/task-card'
+import { TaskCard } from '@/components/cards/TaskCard'
 import {
   createKanbanTaskData,
   createEmptyColumnData,
   useKanbanDragPreview,
-} from './kanban-dnd-context'
+} from './KanbanDndContext'
 
 /**
  * KanbanColumn - A single status column in a Kanban board.

@@ -6,8 +6,8 @@ import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { getCalendarTaskDragId } from '@/types/calendar-order'
-import { SortableTaskCard } from './draggable-task-card'
-import type { TaskCardVariant } from '@/components/cards/task-card'
+import { SortableTaskCard } from './DraggableTaskCard'
+import type { TaskCardVariant } from '@/components/cards/TaskCard'
 
 /**
  * MonthDayCell - Single day cell in the month calendar grid.

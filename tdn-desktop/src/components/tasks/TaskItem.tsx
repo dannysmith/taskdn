@@ -4,7 +4,7 @@ import { Flag } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatRelativeDate, isOverdue } from '@/lib/date-utils'
 import type { Task } from '@/lib/tauri-bindings'
-import { TaskStatusCheckbox } from './task-status-checkbox'
+import { TaskStatusCheckbox } from './TaskStatusCheckbox'
 
 /**
  * TaskItem - Pure presentational component for a task row in list views.

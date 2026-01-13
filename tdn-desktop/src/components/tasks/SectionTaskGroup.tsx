@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils'
 import type { Task } from '@/lib/tauri-bindings'
 import type { HeadingColor } from '@/types/headings'
 import type { ResolvedOrderedItem } from '@/hooks/use-today-order'
-import { SectionHeader } from './section-header'
-import { DraggableTaskList, TaskList } from './task-list'
-import { OrderedItemList } from './ordered-item-list'
-import { useTaskDragPreview } from './task-dnd-context'
+import { SectionHeader } from './SectionHeader'
+import { DraggableTaskList, TaskList } from './TaskList'
+import { OrderedItemList } from './OrderedItemList'
+import { useTaskDragPreview } from './TaskDndContext'
 
 /**
  * SectionTaskGroup - Collapsible section with a task list (and optional headings).

@@ -18,14 +18,14 @@ import { useNavigationStore } from '@/store/navigation-store'
 import { useViewMode } from '@/store/view-mode-store'
 import { useAreaOrder } from '@/hooks/use-area-order'
 import { useKanbanOrder } from '@/hooks/use-kanban-order'
-import { ProjectTaskGroup } from '@/components/tasks/project-task-group'
-import { SectionTaskGroup } from '@/components/tasks/section-task-group'
+import { ProjectTaskGroup } from '@/components/tasks/ProjectTaskGroup'
+import { SectionTaskGroup } from '@/components/tasks/SectionTaskGroup'
 import {
   TaskDndContext,
   getLooseTasksProjectId,
   isLooseTasksProjectId,
-} from '@/components/tasks/task-dnd-context'
-import { ProjectCard } from '@/components/cards/project-card'
+} from '@/components/tasks/TaskDndContext'
+import { ProjectCard } from '@/components/cards/ProjectCard'
 import { CollapsibleNotesSection } from '@/components/ui/collapsible-notes'
 import { EmptyState } from '@/components/ui/empty-state'
 import {

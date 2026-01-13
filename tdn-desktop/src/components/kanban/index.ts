@@ -3,17 +3,17 @@ export {
   useCollapsedColumns,
   DEFAULT_STATUS_ORDER,
   DEFAULT_EXPANDED_STATUSES,
-} from './kanban-board'
-export { KanbanColumn, SortableKanbanCard } from './kanban-column'
+} from './KanbanBoard'
+export { KanbanColumn, SortableKanbanCard } from './KanbanColumn'
 export {
   KanbanDndContext,
   useKanbanDragPreview,
   createKanbanTaskData,
   createEmptyColumnData,
   createEmptySwimlaneData,
-} from './kanban-dnd-context'
+} from './KanbanDndContext'
 export {
   AreaKanbanBoard,
   useAreaCollapsedColumns,
   LOOSE_TASKS_SWIMLANE_ID,
-} from './area-kanban-board'
+} from './AreaKanbanBoard'

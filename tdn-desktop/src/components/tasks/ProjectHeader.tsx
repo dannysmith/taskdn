@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   ProjectStatusIndicator,
   getProjectTitleClass,
-} from '@/components/sidebar/draggable-project'
+} from '@/components/sidebar/DraggableProject'
 import type { Project } from '@/lib/tauri-bindings'
 import { projectStatusConfig } from '@/config/status'
 

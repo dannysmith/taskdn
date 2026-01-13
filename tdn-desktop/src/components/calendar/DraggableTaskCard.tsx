@@ -12,7 +12,7 @@ import {
   TaskCard,
   type TaskCardVariant,
   type TaskCardSize,
-} from '@/components/cards/task-card'
+} from '@/components/cards/TaskCard'
 
 /**
  * SortableTaskCard - TaskCard with dnd-kit sortable for calendar views.

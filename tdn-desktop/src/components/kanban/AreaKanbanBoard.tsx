@@ -6,13 +6,13 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus, Project } from '@/lib/tauri-bindings'
 import { taskStatusConfig } from '@/config/status'
-import { SortableKanbanCard } from './kanban-column'
+import { SortableKanbanCard } from './KanbanColumn'
 import {
   KanbanDndContext,
   createEmptySwimlaneData,
   useKanbanDragPreview,
-} from './kanban-dnd-context'
-import { DEFAULT_STATUS_ORDER } from './kanban-board'
+} from './KanbanDndContext'
+import { DEFAULT_STATUS_ORDER } from './KanbanBoard'
 
 /**
  * AreaKanbanBoard - Kanban board with project swimlanes for area views.

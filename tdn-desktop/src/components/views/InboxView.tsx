@@ -11,7 +11,7 @@ import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import { useInboxOrder } from '@/hooks/use-inbox-order'
-import { DraggableTaskList } from '@/components/tasks/task-list'
+import { DraggableTaskList } from '@/components/tasks/TaskList'
 import { EmptyState } from '@/components/ui/empty-state'
 
 /**

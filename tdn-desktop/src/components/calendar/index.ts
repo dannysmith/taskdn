@@ -1,9 +1,9 @@
-export { MonthCalendar } from './month-calendar'
-export { WeekCalendar } from './week-calendar'
-export { MonthDayCell } from './month-day-cell'
-export { DayColumn } from './day-column'
+export { MonthCalendar } from './MonthCalendar'
+export { WeekCalendar } from './WeekCalendar'
+export { MonthDayCell } from './MonthDayCell'
+export { DayColumn } from './DayColumn'
 export {
   SortableTaskCard,
   DraggableTaskCard,
   TaskCardDragPreview,
-} from './draggable-task-card'
+} from './DraggableTaskCard'

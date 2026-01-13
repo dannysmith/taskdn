@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { TaskDetailPanel } from '@/components/tasks/task-detail-panel'
+import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
 
 interface RightSideBarProps {
   className?: string

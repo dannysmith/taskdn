@@ -1,7 +1,7 @@
-export { AppSidebar } from './app-sidebar'
-export { DraggableArea } from './draggable-area'
+export { AppSidebar } from './AppSidebar'
+export { DraggableArea } from './DraggableArea'
 export {
   DraggableProject,
   ProjectStatusIndicator,
   getProjectTitleClass,
-} from './draggable-project'
+} from './DraggableProject'

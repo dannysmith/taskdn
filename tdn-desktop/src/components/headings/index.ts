@@ -1,3 +1,3 @@
-export { HeadingColorPicker } from './heading-color-picker'
-export { HeadingDragPreview } from './heading-drag-preview'
-export { HeadingListItem, type HeadingListItemProps } from './heading-list-item'
+export { HeadingColorPicker } from './HeadingColorPicker'
+export { HeadingDragPreview } from './HeadingDragPreview'
+export { HeadingListItem, type HeadingListItemProps } from './HeadingListItem'

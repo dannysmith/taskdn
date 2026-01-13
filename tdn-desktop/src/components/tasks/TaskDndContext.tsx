@@ -17,7 +17,7 @@ import { arrayMove } from '@dnd-kit/sortable'
 
 import type { Task } from '@/lib/tauri-bindings'
 import type { Heading } from '@/types/headings'
-import { TaskDragPreview } from './task-list'
+import { TaskDragPreview } from './TaskList'
 import { HeadingDragPreview } from '@/components/headings'
 
 /**

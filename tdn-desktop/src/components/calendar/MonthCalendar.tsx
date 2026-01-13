@@ -37,9 +37,9 @@ import {
 } from '@/types/calendar-order'
 import { useCalendarOrder } from '@/hooks/use-calendar-order'
 import { Button } from '@/components/ui/button'
-import type { TaskCardVariant } from '@/components/cards/task-card'
-import { MonthDayCell } from './month-day-cell'
-import { TaskCardDragPreview } from './draggable-task-card'
+import type { TaskCardVariant } from '@/components/cards/TaskCard'
+import { MonthDayCell } from './MonthDayCell'
+import { TaskCardDragPreview } from './DraggableTaskCard'
 
 /**
  * MonthCalendar - Full month grid view with drag-and-drop scheduling.
