@@ -25,6 +25,7 @@ import {
   CalendarIcon,
   CalendarDaysIcon,
   ChevronRight,
+  ComponentIcon,
   FolderIcon,
   InboxIcon,
   SunIcon,
@@ -38,6 +39,7 @@ import {
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -451,6 +453,30 @@ export function AppSidebar({
           {renderDragPreview()}
         </DragOverlay>
       </DndContext>
+
+      {/* Dev-only: Component Reference link */}
+      {import.meta.env.DEV && (
+        <SidebarFooter className="border-t border-border">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="text-muted-foreground"
+                tooltip="Component Reference"
+                isActive={
+                  selection?.type === 'dev-nav' &&
+                  selection.id === 'component-reference'
+                }
+                onClick={() =>
+                  onSelectionChange({ type: 'dev-nav', id: 'component-reference' })
+                }
+              >
+                <ComponentIcon className="size-4" />
+                <span>Components</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
     </Sidebar>
   )
 }
