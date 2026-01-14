@@ -1,16 +1,15 @@
 import * as React from 'react'
-import { Flag, Calendar, X, Hourglass } from 'lucide-react'
+import { Flag, Calendar, Hourglass } from 'lucide-react'
+import { DatePicker } from '@dannysmith/datepicker'
 
 import { cn } from '@/lib/utils'
 import { formatRelativeDate, isOverdue } from '@/lib/date-utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
-import { Calendar as CalendarPicker } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverTrigger,
   PopoverContent,
 } from '@/components/ui/popover'
-import { Button } from '@/components/ui/button'
 import { TaskStatusPill } from '@/components/tasks/TaskStatusPill'
 import { TaskStatusCheckbox } from '@/components/tasks/TaskStatusCheckbox'
 
@@ -354,7 +353,7 @@ export function TaskCard({
 /**
  * DatePickerButton - Inline date picker for task cards.
  *
- * Shows a date icon + formatted date that opens a calendar popover on click.
+ * Shows a date icon + formatted date that opens a natural language date picker.
  * When no date is set but canEdit is true, shows a muted icon to add a date.
  * Includes a "Clear date" button inside the popover to remove the date.
  */
@@ -385,9 +384,10 @@ function DatePickerButton({
     e.stopPropagation()
   }
 
-  const handleClear = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onSelect(undefined)
+  // Handle explicit commit (click or Enter) - save and close popover
+  const handleCommit = (newDate: Date | null) => {
+    onSelect(newDate ?? undefined)
+    onOpenChange(false)
   }
 
   if (!date) {
@@ -399,12 +399,11 @@ function DatePickerButton({
         >
           {icon}
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
-          <CalendarPicker
-            mode="single"
-            selected={date}
-            onSelect={onSelect}
-            initialFocus
+        <PopoverContent className="w-auto p-0 overflow-hidden border-0" align="end">
+          <DatePicker
+            value={null}
+            onCommit={handleCommit}
+            placeholder={label}
           />
         </PopoverContent>
       </Popover>
@@ -429,26 +428,13 @@ function DatePickerButton({
         {formatRelativeDate(date.toISOString())}
       </PopoverTrigger>
       {canEdit && (
-        <PopoverContent className="w-auto p-0" align="end">
-          <div className="flex flex-col">
-            <CalendarPicker
-              mode="single"
-              selected={date}
-              onSelect={onSelect}
-              initialFocus
-            />
-            <div className="border-t p-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full justify-start text-muted-foreground"
-                onClick={handleClear}
-              >
-                <X className="size-3 me-2" />
-                Clear {label.toLowerCase()} date
-              </Button>
-            </div>
-          </div>
+        <PopoverContent className="w-auto p-0 overflow-hidden border-0" align="end">
+          <DatePicker
+            value={date}
+            onCommit={handleCommit}
+            placeholder={label}
+            showClearButton
+          />
         </PopoverContent>
       )}
     </Popover>

@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import './theme-variables.css';
+@import '@dannysmith/datepicker/styles.css';
 
 /* Ensure field-sizing utility is available */
 @utility field-sizing-content {

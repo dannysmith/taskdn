@@ -2,7 +2,7 @@
 
 This directory contains the design system primitives for the Taskdn desktop app.
 
-## shadcn/ui Components (37)
+## shadcn/ui Components (36)
 
 These components originated from [shadcn/ui](https://ui.shadcn.com/docs/components) and may have been customized:
 
@@ -12,7 +12,6 @@ These components originated from [shadcn/ui](https://ui.shadcn.com/docs/componen
 - `breadcrumb.tsx`
 - `button-group.tsx`
 - `button.tsx`
-- `calendar.tsx`
 - `card.tsx`
 - `checkbox.tsx`
 - `collapsible.tsx`
@@ -44,16 +43,17 @@ These components originated from [shadcn/ui](https://ui.shadcn.com/docs/componen
 - `toggle.tsx`
 - `tooltip.tsx`
 
-## Custom Components (10)
+## Custom Components (11)
 
 These components were written specifically for this app:
 
 - `collapsible-notes.tsx` - Expandable notes section with preview teaser
-- `date-button.tsx` - Compact date display with calendar popover (scheduled/due/defer variants)
+- `date-button.tsx` - Compact date display with natural language date picker (scheduled/due/defer variants)
 - `empty-state.tsx` - Simple centered placeholder (alternative to Empty)
 - `lazy-markdown-editor.tsx` - Code-split wrapper with error boundary
 - `markdown-editor.tsx` - Unified editor with preview/source toggle
 - `markdown-source-textarea.tsx` - Raw markdown textarea
+- `popover-date-picker.tsx` - Natural language date picker in a popover (uses @dannysmith/datepicker)
 - `progress-circle.tsx` - SVG circular progress indicator
 - `searchable-select.tsx` - Combobox using Command + Popover
 - `tag-input.tsx` - Multi-select tags with keyboard handling
@@ -65,3 +65,4 @@ These components were written specifically for this app:
 - shadcn components can be customized - the goal is not to keep them pristine
 - When updating from shadcn, check https://ui.shadcn.com/docs/components for the latest component list
 - Many shadcn components export multiple sub-components (e.g., `sidebar.tsx` exports 22 components)
+- The `date-picker.tsx` and `date-button.tsx` components use `@dannysmith/datepicker` for natural language input

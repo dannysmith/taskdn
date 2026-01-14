@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { DatePicker } from '@dannysmith/datepicker'
 import { format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
@@ -8,14 +9,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Calendar as CalendarComponent } from '@/components/ui/calendar'
 
 /**
- * DateButton - Compact date display with calendar popover for editing.
+ * DateButton - Compact date display with natural language date picker.
  *
  * Used in TaskDetailPanel for scheduled, due, and deferUntil dates.
  * Shows an icon + formatted date (or placeholder when empty). Click opens
- * a calendar picker. Has a "Clear date" button when a date is set.
+ * a natural language date picker with fuzzy matching and infinite scroll.
  *
  * Three visual variants with different color schemes:
  * - scheduled: Neutral gray (most common, non-urgent)
@@ -95,7 +95,11 @@ export function DateButton({
 
   const styles = dateButtonStyles[variant]
 
-  const handleSelect = (date: Date | undefined) => {
+  // Convert ISO string to Date for the datepicker (null if no value)
+  const dateValue = value ? new Date(value) : null
+
+  // Handle explicit commit (click or Enter) - save and close popover
+  const handleCommit = (date: Date | null) => {
     if (date) {
       onChange(format(date, 'yyyy-MM-dd'))
     } else {
@@ -124,27 +128,13 @@ export function DateButton({
           {value ? format(new Date(value), 'MMM d') : tooltip}
         </span>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="end">
-        <CalendarComponent
-          mode="single"
-          selected={value ? new Date(value) : undefined}
-          onSelect={handleSelect}
+      <PopoverContent className="w-auto p-0 overflow-hidden border-0" align="end">
+        <DatePicker
+          value={dateValue}
+          onCommit={handleCommit}
+          placeholder={tooltip}
+          showClearButton={!!value}
         />
-        {value && (
-          <div className="border-t p-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full"
-              onClick={() => {
-                onChange(undefined)
-                setOpen(false)
-              }}
-            >
-              Clear date
-            </Button>
-          </div>
-        )}
       </PopoverContent>
     </Popover>
   )
