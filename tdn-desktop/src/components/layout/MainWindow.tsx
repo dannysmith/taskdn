@@ -8,6 +8,7 @@ import { LeftSideBar } from './LeftSideBar'
 import { RightSideBar } from './RightSideBar'
 import { MainWindowContent } from './MainWindowContent'
 import { CommandPalette } from '@/components/command-palette/CommandPalette'
+import { QuickSearch } from '@/components/quick-search/QuickSearch'
 import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/hooks/use-theme'
@@ -81,6 +82,7 @@ export function MainWindow() {
 
       {/* Global UI Components (hidden until triggered) */}
       <CommandPalette />
+      <QuickSearch />
       <PreferencesDialog />
       <Toaster
         position="bottom-right"

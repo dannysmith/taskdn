@@ -1,5 +1,6 @@
 import {
   Command,
+  Search,
   Plus,
   Maximize,
   HelpCircle,
@@ -28,6 +29,21 @@ export const appCommands: AppCommand[] = [
 
     execute: () => {
       useUIStore.getState().toggleCommandPalette()
+    },
+  },
+
+  {
+    id: 'quick-search',
+    labelKey: 'commands.quickSearch.label',
+    descriptionKey: 'commands.quickSearch.description',
+    icon: Search,
+    group: 'app',
+    shortcut: 'CmdOrCtrl+P',
+    keywords: ['search', 'find', 'task', 'quick', 'go', 'open'],
+    surfaces: { commandPalette: false, appMenu: 'View' }, // Only via shortcut
+
+    execute: () => {
+      useUIStore.getState().setQuickSearchOpen(true)
     },
   },
 
