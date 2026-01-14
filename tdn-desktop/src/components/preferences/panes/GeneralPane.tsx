@@ -119,7 +119,9 @@ export function GeneralPane() {
             disabled={savePreferences.isPending}
           >
             <SelectTrigger>
-              <SelectValue>{getLanguageLabel(currentLanguageValue)}</SelectValue>
+              <SelectValue>
+                {getLanguageLabel(currentLanguageValue)}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="system">

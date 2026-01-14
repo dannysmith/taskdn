@@ -104,7 +104,7 @@ export function AreaView({ areaId }: AreaViewProps) {
   const deleteTask = useDeleteTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   const commandContext = useCommandContext()
-  const setSelection = useNavigationStore(state => state.setSelection)
+  const navigate = useNavigationStore(state => state.navigate)
   const { viewMode } = useViewMode('area')
   const { collapsedColumns, toggleColumn } = useAreaCollapsedColumns()
 
@@ -211,9 +211,9 @@ export function AreaView({ areaId }: AreaViewProps) {
   // Navigate to project
   const handleNavigateToProject = React.useCallback(
     (projectId: string) => {
-      setSelection({ type: 'project', id: projectId })
+      navigate({ type: 'project', id: projectId })
     },
-    [setSelection]
+    [navigate]
   )
 
   // Handler for creating loose tasks (no project)

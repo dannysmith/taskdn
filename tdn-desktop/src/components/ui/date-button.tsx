@@ -128,7 +128,10 @@ export function DateButton({
           {value ? format(new Date(value), 'MMM d') : tooltip}
         </span>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0 overflow-hidden border-0" align="end">
+      <PopoverContent
+        className="w-auto p-0 overflow-hidden border-0"
+        align="end"
+      >
         <DatePicker
           value={dateValue}
           onCommit={handleCommit}

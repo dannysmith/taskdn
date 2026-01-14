@@ -20,10 +20,10 @@ The scheme follows conventions from [Obsidian URI](https://help.obsidian.md/Exte
 
 ### Commands
 
-| Command | Purpose |
-|---------|---------|
+| Command         | Purpose                              |
+| --------------- | ------------------------------------ |
 | `taskdn://open` | Open an entity or navigate to a view |
-| `taskdn://new` | Create a new task |
+| `taskdn://new`  | Create a new task                    |
 
 ---
 
@@ -37,20 +37,20 @@ Opens an existing task, project, area, or navigates to a view.
 taskdn://open?path=<url-encoded-absolute-path>
 ```
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `path` | Yes | URL-encoded absolute path to a `.md` file |
+| Parameter | Required | Description                               |
+| --------- | -------- | ----------------------------------------- |
+| `path`    | Yes      | URL-encoded absolute path to a `.md` file |
 
 **Behavior by entity type:**
 
-| Entity | View Opened | Selection |
-|--------|-------------|-----------|
-| Task (status: inbox) | Inbox | Task selected, detail panel opens |
-| Task (in project) | Project view | Task selected, detail panel opens |
-| Task (in area, no project) | Area view | Task selected, detail panel opens |
+| Entity                     | View Opened  | Selection                         |
+| -------------------------- | ------------ | --------------------------------- |
+| Task (status: inbox)       | Inbox        | Task selected, detail panel opens |
+| Task (in project)          | Project view | Task selected, detail panel opens |
+| Task (in area, no project) | Area view    | Task selected, detail panel opens |
 | Task (no area, no project) | No Area view | Task selected, detail panel opens |
-| Project | Project view | — |
-| Area | Area view | — |
+| Project                    | Project view | —                                 |
+| Area                       | Area view    | —                                 |
 
 **Examples:**
 
@@ -67,19 +67,19 @@ taskdn://open?path=%2FUsers%2Fdanny%2Fvault%2Fprojects%2Fwebsite-redesign.md
 taskdn://open?view=<view-name>
 ```
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `view` | Yes | View identifier (lowercase, kebab-case) |
+| Parameter | Required | Description                             |
+| --------- | -------- | --------------------------------------- |
+| `view`    | Yes      | View identifier (lowercase, kebab-case) |
 
 **Supported views:**
 
-| View Name | Description |
-|-----------|-------------|
-| `today` | Today view |
-| `this-week` | This Week view |
-| `inbox` | Inbox view |
-| `calendar` | Calendar view |
-| `no-area` | No Area view (orphan tasks/projects) |
+| View Name   | Description                          |
+| ----------- | ------------------------------------ |
+| `today`     | Today view                           |
+| `this-week` | This Week view                       |
+| `inbox`     | Inbox view                           |
+| `calendar`  | Calendar view                        |
+| `no-area`   | No Area view (orphan tasks/projects) |
 
 **Examples:**
 
@@ -101,16 +101,16 @@ Creates a new task and opens it for editing.
 taskdn://new?title=<title>&status=<status>&...
 ```
 
-| Parameter | Required | Format | Description |
-|-----------|----------|--------|-------------|
-| `title` | No | URL-encoded string | Task title. Defaults to "New Task" if omitted. |
-| `status` | No | Lowercase kebab-case | Task status. Defaults to `inbox`. |
-| `due` | No | ISO date (`YYYY-MM-DD`) | Due date |
-| `scheduled` | No | ISO date (`YYYY-MM-DD`) | Scheduled date |
-| `defer-until` | No | ISO date (`YYYY-MM-DD`) | Defer until date |
-| `project` | No | URL-encoded string | Project title (case-insensitive match) |
-| `area` | No | URL-encoded string | Area title (case-insensitive match) |
-| `body` | No | URL-encoded string | Task notes (supports Markdown, newlines) |
+| Parameter     | Required | Format                  | Description                                    |
+| ------------- | -------- | ----------------------- | ---------------------------------------------- |
+| `title`       | No       | URL-encoded string      | Task title. Defaults to "New Task" if omitted. |
+| `status`      | No       | Lowercase kebab-case    | Task status. Defaults to `inbox`.              |
+| `due`         | No       | ISO date (`YYYY-MM-DD`) | Due date                                       |
+| `scheduled`   | No       | ISO date (`YYYY-MM-DD`) | Scheduled date                                 |
+| `defer-until` | No       | ISO date (`YYYY-MM-DD`) | Defer until date                               |
+| `project`     | No       | URL-encoded string      | Project title (case-insensitive match)         |
+| `area`        | No       | URL-encoded string      | Area title (case-insensitive match)            |
+| `body`        | No       | URL-encoded string      | Task notes (supports Markdown, newlines)       |
 
 **Valid status values:**
 
@@ -132,12 +132,12 @@ taskdn://new?title=<title>&status=<status>&...
 
 **View selection after creation:**
 
-| Condition | View Opened |
-|-----------|-------------|
-| Status is `inbox` | Inbox |
-| Project provided (and valid) | Project view |
-| Area provided (and valid, no project) | Area view |
-| Otherwise | No Area view |
+| Condition                             | View Opened  |
+| ------------------------------------- | ------------ |
+| Status is `inbox`                     | Inbox        |
+| Project provided (and valid)          | Project view |
+| Area provided (and valid, no project) | Area view    |
+| Otherwise                             | No Area view |
 
 **Examples:**
 
@@ -178,13 +178,13 @@ taskdn://new
 All parameter values must be URL-encoded. Standard percent-encoding applies:
 
 | Character | Encoded |
-|-----------|---------|
-| Space | `%20` |
-| Newline | `%0A` |
-| `/` | `%2F` |
-| `?` | `%3F` |
-| `&` | `%26` |
-| `=` | `%3D` |
+| --------- | ------- |
+| Space     | `%20`   |
+| Newline   | `%0A`   |
+| `/`       | `%2F`   |
+| `?`       | `%3F`   |
+| `&`       | `%26`   |
+| `=`       | `%3D`   |
 
 ---
 
@@ -193,11 +193,13 @@ All parameter values must be URL-encoded. Standard percent-encoding applies:
 ### Completed Work
 
 **Files Created:**
+
 - `src/lib/deep-link.ts` - URL parsing module with types and validation
 - `src/lib/deep-link.test.ts` - 26 unit tests for URL parsing
 - `src/hooks/use-deep-link.ts` - React hook for handling deep link events
 
 **Files Modified:**
+
 - `src-tauri/src/lib.rs` - Deep-link plugin registration (after single-instance)
 - `src-tauri/tauri.conf.json` - Added `taskdn` scheme configuration
 - `src-tauri/capabilities/desktop.json` - Added `deep-link:default` permission
@@ -207,6 +209,7 @@ All parameter values must be URL-encoded. Standard percent-encoding applies:
 - `src/lib/commands/entity-commands.ts` - Updated `copy-local-url` to use new URL format
 
 **Packages Added:**
+
 - `tauri-plugin-deep-link` (Rust)
 - `@tauri-apps/plugin-deep-link` (JavaScript)
 

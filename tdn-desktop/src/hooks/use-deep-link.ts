@@ -129,7 +129,7 @@ async function handleOpenPath(path: string): Promise<boolean> {
     return false
   }
 
-  const { setSelection } = useNavigationStore.getState()
+  const { navigate } = useNavigationStore.getState()
   const { openTask } = useTaskDetailStore.getState()
 
   switch (result.type) {
@@ -139,18 +139,18 @@ async function handleOpenPath(path: string): Promise<boolean> {
         data.projects,
         data.areas
       )
-      setSelection(selection)
+      navigate(selection)
       openTask(result.entity.id)
       break
     }
     case 'project': {
       const selection = getSelectionForProject(result.entity)
-      setSelection(selection)
+      navigate(selection)
       break
     }
     case 'area': {
       const selection = getSelectionForArea(result.entity)
-      setSelection(selection)
+      navigate(selection)
       break
     }
   }
@@ -162,12 +162,12 @@ async function handleOpenPath(path: string): Promise<boolean> {
  * Handle the open-view command.
  */
 async function handleOpenView(view: string): Promise<boolean> {
-  const { setSelection } = useNavigationStore.getState()
+  const { navigate } = useNavigationStore.getState()
 
   if (view === 'no-area') {
-    setSelection({ type: 'no-area' })
+    navigate({ type: 'no-area' })
   } else {
-    setSelection({ type: 'nav', id: view as NavId })
+    navigate({ type: 'nav', id: view as NavId })
   }
 
   return true
@@ -314,9 +314,9 @@ async function handleNew(options: CreateTaskFromUrlOptions): Promise<boolean> {
     }
 
     // Navigate to appropriate view
-    const { setSelection } = useNavigationStore.getState()
+    const { navigate } = useNavigationStore.getState()
     const selection = getViewForNewTask(status, projectId, areaId)
-    setSelection(selection)
+    navigate(selection)
 
     // Open task in detail panel with title focused
     const { openTask } = useTaskDetailStore.getState()

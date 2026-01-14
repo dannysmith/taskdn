@@ -59,10 +59,29 @@ interface NavigationState {
 
 ### Key Implementation Details
 
-1. **Replace `setSelection` with `navigate`** — All existing call sites need updating
-2. **Duplicate prevention** — Compare selections before pushing (same type + same id = skip)
+1. **Replace `setSelection` with `navigate`** — All existing call sites need updating (see call sites below)
+2. **Duplicate prevention** — Compare selections before pushing (same type + same id = skip). Handle all selection types: `nav`, `dev-nav`, `area`, `project`, `no-area`
 3. **Bounded history** — Slice to max length on push
 4. **Invalid selection handling** — Check if project/area exists before applying; skip if not
+
+### `setSelection` Call Sites (as of Jan 2026)
+
+Primary path via command context:
+
+- `src/hooks/use-command-context.ts` — 4 navigation methods (`navigateToView`, `navigateToArea`, `navigateToProject`, `navigateToNoArea`)
+
+Direct calls:
+
+- `src/components/quick-search/QuickSearch.tsx` — after task search
+- `src/hooks/use-deep-link.ts` — deep link handling (multiple calls)
+- `src/components/views/AreaView.tsx` — navigate to project
+- `src/components/views/WeekView.tsx` — navigate to project/area
+- `src/components/views/NoAreaView.tsx` — navigate to project
+- `src/components/layout/LeftSideBar.tsx` — passes as `onSelectionChange` prop to AppSidebar
+
+Tests:
+
+- `src/store/navigation-store.test.ts` — extensive test coverage to update
 
 ## Desktop App Conventions (Research)
 
@@ -94,13 +113,31 @@ Rejected. These are URL-based routing solutions for web apps using browser histo
 
 ## Implementation Checklist
 
-- [ ] Extend `navigation-store.ts` with history/future arrays and new actions
-- [ ] Add `selectionsEqual` helper for duplicate prevention
-- [ ] Add validity check helper (does project/area still exist?)
-- [ ] Update all `setSelection` call sites to use `navigate`
-- [ ] Register `go-back` and `go-forward` commands with shortcuts
-- [ ] Add i18n strings for command labels
-- [ ] Test: basic back/forward flow
-- [ ] Test: navigating to same view doesn't create entry
-- [ ] Test: new navigation clears future stack
-- [ ] Test: back to deleted project skips to next valid entry
+### Store Updates
+
+- [x] Extend `navigation-store.ts` with history/future arrays and new actions
+- [x] Add `selectionsEqual` helper for duplicate prevention (handle all 5 selection types)
+- [x] Add validity check helper (does project/area still exist?) — use TanStack Query cache
+- [x] Update store tests in `navigation-store.test.ts`
+
+### Call Site Updates
+
+- [x] Update `use-command-context.ts` — 4 navigation methods
+- [x] Update `QuickSearch.tsx` — use navigate
+- [x] Update `use-deep-link.ts` — multiple calls
+- [x] Update `AreaView.tsx`, `WeekView.tsx`, `NoAreaView.tsx` — navigate to project/area
+- [x] Update `LeftSideBar.tsx` — rename prop usage
+
+### Command System
+
+- [x] Add `go-back` command to `navigation-commands.ts` (Cmd+[, isAvailable: canGoBack)
+- [x] Add `go-forward` command to `navigation-commands.ts` (Cmd+], isAvailable: canGoForward)
+- [x] Add i18n strings in `locales/en.json`
+
+### Testing
+
+- [x] Test: basic back/forward flow
+- [x] Test: navigating to same view doesn't create entry
+- [x] Test: new navigation clears future stack
+- [x] Test: back to deleted project skips to next valid entry
+- [x] Test: history bounded at 50 entries

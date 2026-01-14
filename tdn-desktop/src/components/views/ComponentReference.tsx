@@ -144,7 +144,9 @@ import type { Task, Project, Area } from '@/lib/tauri-bindings'
 // -----------------------------------------------------------------------------
 
 const todayStr = new Date().toISOString().split('T')[0]!
-const yesterdayStr = new Date(Date.now() - 86400000).toISOString().split('T')[0]!
+const yesterdayStr = new Date(Date.now() - 86400000)
+  .toISOString()
+  .split('T')[0]!
 const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0]!
 
 const FAKE_TASKS: Task[] = [
@@ -276,13 +278,48 @@ export function ComponentReference() {
               </p>
             </div>
             <nav className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-              <a href="#tasks" className="text-muted-foreground hover:text-foreground hover:underline">Tasks</a>
-              <a href="#projects" className="text-muted-foreground hover:text-foreground hover:underline">Projects</a>
-              <a href="#areas" className="text-muted-foreground hover:text-foreground hover:underline">Areas</a>
-              <a href="#layout" className="text-muted-foreground hover:text-foreground hover:underline">Layout</a>
-              <a href="#forms" className="text-muted-foreground hover:text-foreground hover:underline">Forms</a>
-              <a href="#display" className="text-muted-foreground hover:text-foreground hover:underline">Display</a>
-              <a href="#overlays" className="text-muted-foreground hover:text-foreground hover:underline">Overlays</a>
+              <a
+                href="#tasks"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Tasks
+              </a>
+              <a
+                href="#projects"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Projects
+              </a>
+              <a
+                href="#areas"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Areas
+              </a>
+              <a
+                href="#layout"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Layout
+              </a>
+              <a
+                href="#forms"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Forms
+              </a>
+              <a
+                href="#display"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Display
+              </a>
+              <a
+                href="#overlays"
+                className="text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Overlays
+              </a>
             </nav>
           </header>
 
@@ -361,14 +398,19 @@ export function ComponentReference() {
                   <span className="text-2xs text-muted-foreground">ready</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <TaskStatusCheckbox status="in-progress" onToggle={() => {}} />
+                  <TaskStatusCheckbox
+                    status="in-progress"
+                    onToggle={() => {}}
+                  />
                   <span className="text-2xs text-muted-foreground">
                     in-progress
                   </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <TaskStatusCheckbox status="blocked" onToggle={() => {}} />
-                  <span className="text-2xs text-muted-foreground">blocked</span>
+                  <span className="text-2xs text-muted-foreground">
+                    blocked
+                  </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <TaskStatusCheckbox status="done" onToggle={() => {}} />
@@ -376,7 +418,9 @@ export function ComponentReference() {
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <TaskStatusCheckbox status="dropped" onToggle={() => {}} />
-                  <span className="text-2xs text-muted-foreground">dropped</span>
+                  <span className="text-2xs text-muted-foreground">
+                    dropped
+                  </span>
                 </div>
               </div>
             </ComponentGroup>
@@ -388,7 +432,10 @@ export function ComponentReference() {
               <div className="flex flex-wrap gap-2">
                 <TaskStatusPill status="inbox" onStatusChange={() => {}} />
                 <TaskStatusPill status="ready" onStatusChange={() => {}} />
-                <TaskStatusPill status="in-progress" onStatusChange={() => {}} />
+                <TaskStatusPill
+                  status="in-progress"
+                  onStatusChange={() => {}}
+                />
                 <TaskStatusPill status="blocked" onStatusChange={() => {}} />
                 <TaskStatusPill status="done" onStatusChange={() => {}} />
               </div>
@@ -414,7 +461,10 @@ export function ComponentReference() {
 
             <ComponentGroup title="ProjectStatusPill">
               <div className="flex flex-wrap gap-2">
-                <ProjectStatusPill status="planning" onStatusChange={() => {}} />
+                <ProjectStatusPill
+                  status="planning"
+                  onStatusChange={() => {}}
+                />
                 <ProjectStatusPill status="ready" onStatusChange={() => {}} />
                 <ProjectStatusPill
                   status="in-progress"
@@ -448,19 +498,28 @@ export function ComponentReference() {
               <div className="flex items-center gap-6">
                 <div className="flex flex-col items-center gap-1">
                   <ProjectStatusIndicator status="planning" completion={0} />
-                  <span className="text-2xs text-muted-foreground">planning</span>
+                  <span className="text-2xs text-muted-foreground">
+                    planning
+                  </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <ProjectStatusIndicator status="ready" completion={0} />
                   <span className="text-2xs text-muted-foreground">ready</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <ProjectStatusIndicator status="in-progress" completion={42} />
-                  <span className="text-2xs text-muted-foreground">in-progress</span>
+                  <ProjectStatusIndicator
+                    status="in-progress"
+                    completion={42}
+                  />
+                  <span className="text-2xs text-muted-foreground">
+                    in-progress
+                  </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <ProjectStatusIndicator status="blocked" completion={50} />
-                  <span className="text-2xs text-muted-foreground">blocked</span>
+                  <span className="text-2xs text-muted-foreground">
+                    blocked
+                  </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <ProjectStatusIndicator status="paused" completion={75} />
@@ -570,7 +629,11 @@ export function ComponentReference() {
                   containerId="demo"
                 />
                 <HeadingListItem
-                  heading={{ id: 'h2', title: 'Afternoon Focus', color: 'amber' }}
+                  heading={{
+                    id: 'h2',
+                    title: 'Afternoon Focus',
+                    color: 'amber',
+                  }}
                   isSelected={false}
                   isEditing={false}
                   onSelect={() => {}}
@@ -966,7 +1029,10 @@ export function ComponentReference() {
               >
                 <CollapsibleTrigger
                   render={
-                    <Button variant="ghost" className="flex items-center gap-2" />
+                    <Button
+                      variant="ghost"
+                      className="flex items-center gap-2"
+                    />
                   }
                 >
                   <ChevronRightIcon

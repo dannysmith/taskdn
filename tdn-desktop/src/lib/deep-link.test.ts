@@ -4,7 +4,8 @@ import { parseDeepLinkUrl, buildOpenPathUrl } from './deep-link'
 describe('parseDeepLinkUrl', () => {
   describe('open command with path', () => {
     it('parses a valid path URL', () => {
-      const url = 'taskdn://open?path=%2FUsers%2Fdanny%2Fvault%2Ftasks%2Fmy-task.md'
+      const url =
+        'taskdn://open?path=%2FUsers%2Fdanny%2Fvault%2Ftasks%2Fmy-task.md'
       const result = parseDeepLinkUrl(url)
 
       expect(result).toEqual({
@@ -14,7 +15,8 @@ describe('parseDeepLinkUrl', () => {
     })
 
     it('handles paths with spaces', () => {
-      const url = 'taskdn://open?path=%2FUsers%2Fdanny%2FMy%20Vault%2Ftasks%2Fmy%20task.md'
+      const url =
+        'taskdn://open?path=%2FUsers%2Fdanny%2FMy%20Vault%2Ftasks%2Fmy%20task.md'
       const result = parseDeepLinkUrl(url)
 
       expect(result).toEqual({
@@ -164,7 +166,8 @@ describe('parseDeepLinkUrl', () => {
     })
 
     it('handles body with markdown', () => {
-      const url = 'taskdn://new?body=%23%20Heading%0A-%20Item%201%0A-%20Item%202'
+      const url =
+        'taskdn://new?body=%23%20Heading%0A-%20Item%201%0A-%20Item%202'
       const result = parseDeepLinkUrl(url)
 
       expect(result).toEqual({

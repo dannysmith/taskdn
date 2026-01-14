@@ -31,12 +31,14 @@ Replace the current `react-day-picker` calendar-based date selection with `@dann
    - Will become obsolete after migration
 
 ### Current Dependencies
+
 - `react-day-picker` (^9.13.0) - Current calendar UI
 - `date-fns` (^4.1.0) - Date formatting (still needed)
 
 ## New Package: @dannysmith/datepicker
 
 ### Key Features
+
 - **Natural language input**: "tomorrow", "next friday", "in 3 weeks", "3 months"
 - **Fuzzy matching**: Handles typos and partial input ("tomorow" → tomorrow)
 - **Virtualized scrolling**: Smooth infinite scroll through dates
@@ -45,23 +47,25 @@ Replace the current `react-day-picker` calendar-based date selection with `@dann
 - **CSS theming**: OKLCH-based variables (compatible with our theme)
 
 ### Component API
+
 ```tsx
 import { DatePicker } from '@dannysmith/datepicker'
 import '@dannysmith/datepicker/styles.css'
-
-<DatePicker
-  value={date}           // Date object
-  onChange={setDate}     // (date: Date) => void
-  placeholder="When"     // Input placeholder
-  minDate={new Date()}   // Optional constraint
-  maxDate={someDate}     // Optional constraint
+;<DatePicker
+  value={date} // Date object
+  onChange={setDate} // (date: Date) => void
+  placeholder="When" // Input placeholder
+  minDate={new Date()} // Optional constraint
+  maxDate={someDate} // Optional constraint
 />
 ```
 
 ### Rendering Behavior
+
 The component renders as an **input field with a scrollable date list below**. This differs from our current pattern (button → popover → calendar grid). We'll need to wrap it in a Popover for our compact button-trigger UI.
 
 ### CSS Variables
+
 ```css
 --dp-bg           /* Container background */
 --dp-elevated     /* Input/hover backgrounds */
@@ -76,11 +80,13 @@ The component renders as an **input field with a scrollable date list below**. T
 ### Phase 1: Setup & Theme Integration
 
 #### 1.1 Install Package
+
 ```bash
 bun add @dannysmith/datepicker
 ```
 
 #### 1.2 Theme Variable Mapping
+
 Create datepicker theme overrides in `src/theme-variables.css`:
 
 ```css
@@ -105,7 +111,9 @@ Create datepicker theme overrides in `src/theme-variables.css`:
 ```
 
 #### 1.3 Import Styles
+
 Add to `src/App.css`:
+
 ```css
 @import '@dannysmith/datepicker/styles.css';
 ```
@@ -113,6 +121,7 @@ Add to `src/App.css`:
 ### Phase 2: Create Wrapper Component
 
 #### 2.1 Create PopoverDatePicker
+
 New component: `src/components/ui/popover-date-picker.tsx`
 
 This wraps the datepicker in our existing Popover pattern:
@@ -139,6 +148,7 @@ interface PopoverDatePickerProps {
 ```
 
 Key implementation details:
+
 - Convert between ISO strings and Date objects
 - Close popover on date selection
 - Include "Clear date" button when value is set
@@ -148,9 +158,11 @@ Key implementation details:
 ### Phase 3: Migrate DateButton
 
 #### 3.1 Update DateButton Component
+
 Replace Calendar usage with PopoverDatePicker in `src/components/ui/date-button.tsx`:
 
 Changes:
+
 - Remove `Calendar` import
 - Import `PopoverDatePicker`
 - Keep existing variant styles (scheduled/due/defer)
@@ -162,6 +174,7 @@ The visual trigger button remains unchanged; only the popover content changes.
 ### Phase 4: Migrate TaskCard DatePickerButton
 
 #### 4.1 Update DatePickerButton
+
 Refactor inline `DatePickerButton` in `src/components/cards/TaskCard.tsx:355-456`:
 
 - Extract to shared component or reuse PopoverDatePicker
@@ -172,9 +185,11 @@ Refactor inline `DatePickerButton` in `src/components/cards/TaskCard.tsx:355-456
 ### Phase 5: Update Generic DatePicker
 
 #### 5.1 Refactor DatePicker Component
+
 Update `src/components/ui/date-picker.tsx`:
 
 Options:
+
 1. Replace entirely with PopoverDatePicker re-export
 2. Keep as standalone component using new datepicker
 3. Mark as deprecated if no longer needed
@@ -184,29 +199,32 @@ Review actual usage to determine best approach.
 ### Phase 6: Cleanup
 
 #### 6.1 Remove Obsolete Code
+
 - Consider removing `src/components/ui/calendar.tsx` if no longer used elsewhere
 - Remove `react-day-picker` dependency if fully replaced
 
 #### 6.2 Update Component Reference
+
 Update `src/components/views/ComponentReference.tsx:701-719` to demo new datepicker with all three variants.
 
 #### 6.3 Update README
+
 Update `src/components/ui/README.md` to reflect component changes.
 
 ## Files to Modify
 
-| File | Action |
-|------|--------|
-| `package.json` | Add @dannysmith/datepicker |
-| `src/theme-variables.css` | Add datepicker CSS variable mappings |
-| `src/App.css` | Import datepicker styles |
-| `src/components/ui/popover-date-picker.tsx` | **Create** - Wrapper component |
-| `src/components/ui/date-button.tsx` | Replace Calendar with new datepicker |
-| `src/components/cards/TaskCard.tsx` | Update DatePickerButton |
-| `src/components/ui/date-picker.tsx` | Update or deprecate |
-| `src/components/ui/calendar.tsx` | Remove (if unused) |
-| `src/components/views/ComponentReference.tsx` | Update demo |
-| `src/components/ui/README.md` | Update component list |
+| File                                          | Action                               |
+| --------------------------------------------- | ------------------------------------ |
+| `package.json`                                | Add @dannysmith/datepicker           |
+| `src/theme-variables.css`                     | Add datepicker CSS variable mappings |
+| `src/App.css`                                 | Import datepicker styles             |
+| `src/components/ui/popover-date-picker.tsx`   | **Create** - Wrapper component       |
+| `src/components/ui/date-button.tsx`           | Replace Calendar with new datepicker |
+| `src/components/cards/TaskCard.tsx`           | Update DatePickerButton              |
+| `src/components/ui/date-picker.tsx`           | Update or deprecate                  |
+| `src/components/ui/calendar.tsx`              | Remove (if unused)                   |
+| `src/components/views/ComponentReference.tsx` | Update demo                          |
+| `src/components/ui/README.md`                 | Update component list                |
 
 ## Testing Checklist
 
@@ -226,7 +244,9 @@ Update `src/components/ui/README.md` to reflect component changes.
 ## Considerations
 
 ### Date Format Conversion
+
 The app uses ISO strings (`yyyy-MM-dd`) internally, but the datepicker uses Date objects. The wrapper must convert between formats:
+
 ```tsx
 // String to Date (for datepicker)
 const dateValue = value ? new Date(value) : undefined
@@ -236,16 +256,21 @@ onChange(format(date, 'yyyy-MM-dd'))
 ```
 
 ### Popover vs Standalone
+
 The datepicker renders its own input field + scrolling list. For the compact button-trigger UI used in TaskDetailPanel and TaskCard, we wrap it in a Popover so the trigger can be a small icon+date button.
 
 ### Focus Management
+
 Ensure focus moves into the datepicker input when popover opens, and returns to trigger on close.
 
 ### minDate/maxDate Constraints
+
 Consider whether any date fields need constraints:
+
 - Due date: No past dates? (debatable)
 - Defer until: No past dates (makes sense)
 - Scheduled: Usually no constraints
 
 ### i18n
+
 Natural language parsing likely works best in English. Consider whether this affects non-English users. The datepicker may need locale configuration if available.

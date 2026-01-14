@@ -36,15 +36,19 @@ export const commandContext: CommandContext = {
 
   // Navigation
   navigateToView: (view: NavId) =>
-    useNavigationStore.getState().setSelection({ type: 'nav', id: view }),
+    useNavigationStore.getState().navigate({ type: 'nav', id: view }),
   navigateToArea: (areaId: string) =>
-    useNavigationStore.getState().setSelection({ type: 'area', id: areaId }),
+    useNavigationStore.getState().navigate({ type: 'area', id: areaId }),
   navigateToProject: (projectId: string) =>
-    useNavigationStore
-      .getState()
-      .setSelection({ type: 'project', id: projectId }),
+    useNavigationStore.getState().navigate({ type: 'project', id: projectId }),
   navigateToNoArea: () =>
-    useNavigationStore.getState().setSelection({ type: 'no-area' }),
+    useNavigationStore.getState().navigate({ type: 'no-area' }),
+
+  // Navigation history
+  goBack: () => useNavigationStore.getState().goBack(),
+  goForward: () => useNavigationStore.getState().goForward(),
+  canGoBack: () => useNavigationStore.getState().canGoBack(),
+  canGoForward: () => useNavigationStore.getState().canGoForward(),
 
   // Data access (reads from TanStack Query cache)
   getAreas: () => {

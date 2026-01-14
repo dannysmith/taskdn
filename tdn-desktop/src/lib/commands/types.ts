@@ -83,6 +83,12 @@ export interface CommandContext {
   navigateToProject: (projectId: string) => void
   navigateToNoArea: () => void
 
+  // Navigation history
+  goBack: () => void
+  goForward: () => void
+  canGoBack: () => boolean
+  canGoForward: () => boolean
+
   // Data access (for dynamic commands)
   getAreas: () => Area[]
   getProjects: () => Project[]

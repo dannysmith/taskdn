@@ -399,7 +399,10 @@ function DatePickerButton({
         >
           {icon}
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0 overflow-hidden border-0" align="end">
+        <PopoverContent
+          className="w-auto p-0 overflow-hidden border-0"
+          align="end"
+        >
           <DatePicker
             value={null}
             onCommit={handleCommit}
@@ -428,7 +431,10 @@ function DatePickerButton({
         {formatRelativeDate(date.toISOString())}
       </PopoverTrigger>
       {canEdit && (
-        <PopoverContent className="w-auto p-0 overflow-hidden border-0" align="end">
+        <PopoverContent
+          className="w-auto p-0 overflow-hidden border-0"
+          align="end"
+        >
           <DatePicker
             value={date}
             onCommit={handleCommit}

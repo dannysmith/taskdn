@@ -24,10 +24,10 @@ Navigate + focus window
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| `src/lib/deep-link.ts` | URL parsing, validation, types |
-| `src/lib/deep-link.test.ts` | Unit tests |
+| File                         | Purpose                           |
+| ---------------------------- | --------------------------------- |
+| `src/lib/deep-link.ts`       | URL parsing, validation, types    |
+| `src/lib/deep-link.test.ts`  | Unit tests                        |
 | `src/hooks/use-deep-link.ts` | Event listener + command handlers |
 
 ## Implementation Notes

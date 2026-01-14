@@ -10,13 +10,13 @@ import { useNavigationStore } from '@/store/navigation-store'
  */
 export function LeftSideBar() {
   const selection = useNavigationStore(state => state.selection)
-  const setSelection = useNavigationStore(state => state.setSelection)
+  const navigate = useNavigationStore(state => state.navigate)
 
   return (
     <SidebarProvider defaultOpen={true} className="h-full min-h-0">
       <AppSidebar
         selection={selection}
-        onSelectionChange={setSelection}
+        onSelectionChange={navigate}
         className="rounded-tr-lg"
       />
     </SidebarProvider>

@@ -31,7 +31,7 @@ export function WeekView() {
   const createTask = useCreateTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
   const commandContext = useCommandContext()
-  const setSelection = useNavigationStore(state => state.setSelection)
+  const navigate = useNavigationStore(state => state.navigate)
   const { viewMode } = useViewMode('this-week')
   const { collapsedColumns, toggleColumn } = useCollapsedColumns()
 
@@ -241,16 +241,16 @@ export function WeekView() {
 
   const handleNavigateToProject = React.useCallback(
     (projectId: string) => {
-      setSelection({ type: 'project', id: projectId })
+      navigate({ type: 'project', id: projectId })
     },
-    [setSelection]
+    [navigate]
   )
 
   const handleNavigateToArea = React.useCallback(
     (areaId: string) => {
-      setSelection({ type: 'area', id: areaId })
+      navigate({ type: 'area', id: areaId })
     },
-    [setSelection]
+    [navigate]
   )
 
   const handleCreateTask = React.useCallback(
@@ -299,10 +299,10 @@ export function WeekView() {
       const title = extractTitle(wikilink)
       const project = projects.find(p => p.title === title)
       if (project) {
-        setSelection({ type: 'project', id: project.id })
+        navigate({ type: 'project', id: project.id })
       }
     },
-    [projects, extractTitle, setSelection]
+    [projects, extractTitle, navigate]
   )
 
   // Handle clicking on area name in kanban cards - navigate to area
@@ -311,10 +311,10 @@ export function WeekView() {
       const title = extractTitle(wikilink)
       const area = areas.find(a => a.title === title)
       if (area) {
-        setSelection({ type: 'area', id: area.id })
+        navigate({ type: 'area', id: area.id })
       }
     },
-    [areas, extractTitle, setSelection]
+    [areas, extractTitle, navigate]
   )
 
   // Build ordered tasks for kanban (applying column ordering)

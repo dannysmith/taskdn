@@ -1,4 +1,6 @@
 import {
+  ArrowLeft,
+  ArrowRight,
   Settings,
   Sun,
   Calendar,
@@ -84,6 +86,44 @@ export const navigationCommands: AppCommand[] = [
 
     execute: context => {
       context.navigateToNoArea()
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Navigation History
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  {
+    id: 'go-back',
+    labelKey: 'commands.goBack.label',
+    descriptionKey: 'commands.goBack.description',
+    icon: ArrowLeft,
+    group: 'navigation',
+    shortcut: 'CmdOrCtrl+[',
+    keywords: ['back', 'previous', 'history', 'navigate'],
+    surfaces: { commandPalette: true, appMenu: 'View' },
+
+    isAvailable: context => context.canGoBack(),
+
+    execute: context => {
+      context.goBack()
+    },
+  },
+
+  {
+    id: 'go-forward',
+    labelKey: 'commands.goForward.label',
+    descriptionKey: 'commands.goForward.description',
+    icon: ArrowRight,
+    group: 'navigation',
+    shortcut: 'CmdOrCtrl+]',
+    keywords: ['forward', 'next', 'history', 'navigate'],
+    surfaces: { commandPalette: true, appMenu: 'View' },
+
+    isAvailable: context => context.canGoForward(),
+
+    execute: context => {
+      context.goForward()
     },
   },
 
