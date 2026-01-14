@@ -95,7 +95,7 @@ export function NoAreaView() {
   const createTask = useCreateTask()
   const deleteTask = useDeleteTask()
   const setOpenTaskId = useTaskDetailStore(state => state.setOpenTaskId)
-  const setSelection = useNavigationStore(state => state.setSelection)
+  const navigate = useNavigationStore(state => state.navigate)
   const { viewMode } = useViewMode('area')
   const { collapsedColumns, toggleColumn } = useAreaCollapsedColumns()
 
@@ -177,9 +177,9 @@ export function NoAreaView() {
   // Navigate to project
   const handleNavigateToProject = React.useCallback(
     (projectId: string) => {
-      setSelection({ type: 'project', id: projectId })
+      navigate({ type: 'project', id: projectId })
     },
-    [setSelection]
+    [navigate]
   )
 
   // Handler for creating orphan tasks (no project, no area)

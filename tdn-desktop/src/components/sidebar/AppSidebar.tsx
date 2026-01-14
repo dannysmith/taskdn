@@ -467,7 +467,10 @@ export function AppSidebar({
                   selection.id === 'component-reference'
                 }
                 onClick={() =>
-                  onSelectionChange({ type: 'dev-nav', id: 'component-reference' })
+                  onSelectionChange({
+                    type: 'dev-nav',
+                    id: 'component-reference',
+                  })
                 }
               >
                 <ComponentIcon className="size-4" />

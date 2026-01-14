@@ -38,6 +38,11 @@ const createMockContext = (): CommandContext => ({
   navigateToArea: vi.fn(),
   navigateToProject: vi.fn(),
   navigateToNoArea: vi.fn(),
+  // Navigation history
+  goBack: vi.fn(),
+  goForward: vi.fn(),
+  canGoBack: vi.fn(() => false),
+  canGoForward: vi.fn(() => false),
   getAreas: vi.fn(() => []),
   getProjects: vi.fn(() => []),
   collapseAllAreas: vi.fn(),

@@ -56,7 +56,10 @@ function DatePicker({
         {value ? value.toLocaleDateString() : placeholder}
         <ChevronDownIcon className="size-4" />
       </PopoverTrigger>
-      <PopoverContent className="w-auto overflow-hidden p-0 border-0" align="start">
+      <PopoverContent
+        className="w-auto overflow-hidden p-0 border-0"
+        align="start"
+      >
         <DannyDatePicker
           value={value ?? null}
           onCommit={handleCommit}

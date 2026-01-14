@@ -150,6 +150,11 @@
   "commands.navigateNoArea.label": "No Area",
   "commands.navigateNoArea.description": "Show tasks without an area",
 
+  "commands.goBack.label": "Go Back",
+  "commands.goBack.description": "Navigate to the previous view",
+  "commands.goForward.label": "Go Forward",
+  "commands.goForward.description": "Navigate to the next view",
+
   "commands.collapseAllAreas.label": "Collapse All Areas",
   "commands.collapseAllAreas.description": "Collapse all areas in the sidebar",
   "commands.expandAllAreas.label": "Expand All Areas",

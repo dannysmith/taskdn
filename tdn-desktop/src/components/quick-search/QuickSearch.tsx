@@ -64,7 +64,7 @@ export function QuickSearch() {
 
     // Determine correct view and navigate
     const selection = getSelectionForTask(task, projects, areas)
-    useNavigationStore.getState().setSelection(selection)
+    useNavigationStore.getState().navigate(selection)
 
     // Open task in detail panel
     useTaskDetailStore.getState().openTask(taskId)

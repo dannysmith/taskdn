@@ -153,10 +153,10 @@ src/components/
 
 After Phase 4 migration, naming is now consistent:
 
-| Convention     | Where Used                                                                                                                             |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Convention     | Where Used                                                                                                                                                                                     |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **PascalCase** | All component directories except ui/ (layout/, titlebar/, preferences/, command-palette/, quick-pane/, providers/, tasks/, views/, calendar/, kanban/, cards/, sidebar/, headings/, projects/) |
-| **kebab-case** | ui/ only (design system primitives)                                                                                                    |
+| **kebab-case** | ui/ only (design system primitives)                                                                                                                                                            |
 
 **Rule**: kebab-case = design system primitives in `ui/`. PascalCase = everything else.
 
