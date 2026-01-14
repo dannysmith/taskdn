@@ -14,7 +14,11 @@ import { onOpenUrl } from '@tauri-apps/plugin-deep-link'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { logger } from '@/lib/logger'
 import { queryClient } from '@/lib/query-client'
-import { vaultQueryKeys, markMutationStart, markMutationComplete } from '@/services/vault'
+import {
+  vaultQueryKeys,
+  markMutationStart,
+  markMutationComplete,
+} from '@/services/vault'
 import {
   parseDeepLinkUrl,
   type DeepLinkCommand,
@@ -32,6 +36,7 @@ import {
   type CreateTaskOptions,
 } from '@/lib/tauri-bindings'
 import type { NavId, Selection } from '@/types/navigation'
+import { getSelectionForTask } from '@/lib/task-navigation'
 
 // =============================================================================
 // Types
@@ -52,7 +57,8 @@ interface VaultData {
  */
 function getVaultData(): VaultData {
   const tasks = queryClient.getQueryData<Task[]>(vaultQueryKeys.tasks()) ?? []
-  const projects = queryClient.getQueryData<Project[]>(vaultQueryKeys.projects()) ?? []
+  const projects =
+    queryClient.getQueryData<Project[]>(vaultQueryKeys.projects()) ?? []
   const areas = queryClient.getQueryData<Area[]>(vaultQueryKeys.areas()) ?? []
   return { tasks, projects, areas }
 }
@@ -67,7 +73,11 @@ function getVaultData(): VaultData {
 function findEntityByPath(
   path: string,
   data: VaultData
-): { type: 'task'; entity: Task } | { type: 'project'; entity: Project } | { type: 'area'; entity: Area } | null {
+):
+  | { type: 'task'; entity: Task }
+  | { type: 'project'; entity: Project }
+  | { type: 'area'; entity: Area }
+  | null {
   // Check tasks first (most common case)
   const task = data.tasks.find(t => t.path === path)
   if (task) {
@@ -87,46 +97,6 @@ function findEntityByPath(
   }
 
   return null
-}
-
-/**
- * Determine which view to navigate to for a task.
- */
-function getViewForTask(
-  task: Task,
-  data: VaultData
-): Selection {
-  // Inbox tasks always go to inbox view
-  if (task.status === 'inbox') {
-    return { type: 'nav', id: 'inbox' }
-  }
-
-  // If task has a project, find the project and navigate to it
-  if (task.project) {
-    // task.project is a wikilink like "[[Project Name]]"
-    const projectTitle = task.project.replace(/^\[\[|\]\]$/g, '')
-    const project = data.projects.find(
-      p => p.title.toLowerCase() === projectTitle.toLowerCase()
-    )
-    if (project) {
-      return { type: 'project', id: project.id }
-    }
-  }
-
-  // If task has an area (but no project), navigate to area view
-  if (task.area) {
-    // task.area is a wikilink like "[[Area Name]]"
-    const areaTitle = task.area.replace(/^\[\[|\]\]$/g, '')
-    const area = data.areas.find(
-      a => a.title.toLowerCase() === areaTitle.toLowerCase()
-    )
-    if (area) {
-      return { type: 'area', id: area.id }
-    }
-  }
-
-  // No project or area - go to No Area view
-  return { type: 'no-area' }
 }
 
 /**
@@ -164,7 +134,11 @@ async function handleOpenPath(path: string): Promise<boolean> {
 
   switch (result.type) {
     case 'task': {
-      const selection = getViewForTask(result.entity, data)
+      const selection = getSelectionForTask(
+        result.entity,
+        data.projects,
+        data.areas
+      )
       setSelection(selection)
       openTask(result.entity.id)
       break
@@ -294,7 +268,9 @@ async function handleNew(options: CreateTaskFromUrlOptions): Promise<boolean> {
     const result = await commands.createTask(createOptions)
 
     if (result.status === 'error') {
-      logger.error('Failed to create task from deep link', { error: result.error })
+      logger.error('Failed to create task from deep link', {
+        error: result.error,
+      })
       markMutationComplete()
       return false
     }
@@ -324,10 +300,15 @@ async function handleNew(options: CreateTaskFromUrlOptions): Promise<boolean> {
 
       if (updateResult.status === 'ok') {
         // Update cache with body
-        queryClient.setQueryData(vaultQueryKeys.task(newTask.id), updateResult.data)
+        queryClient.setQueryData(
+          vaultQueryKeys.task(newTask.id),
+          updateResult.data
+        )
         queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
           if (!oldTasks) return oldTasks
-          return oldTasks.map(t => (t.id === newTask.id ? updateResult.data : t))
+          return oldTasks.map(t =>
+            t.id === newTask.id ? updateResult.data : t
+          )
         })
       }
     }
@@ -341,7 +322,10 @@ async function handleNew(options: CreateTaskFromUrlOptions): Promise<boolean> {
     const { openTask } = useTaskDetailStore.getState()
     openTask(newTask.id, 'title')
 
-    logger.info('Task created from deep link', { taskId: newTask.id, title: newTask.title })
+    logger.info('Task created from deep link', {
+      taskId: newTask.id,
+      title: newTask.title,
+    })
     return true
   } catch (error) {
     logger.error('Exception creating task from deep link', { error })

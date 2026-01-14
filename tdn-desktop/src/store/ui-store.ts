@@ -5,6 +5,7 @@ interface UIState {
   leftSidebarVisible: boolean
   rightSidebarVisible: boolean
   commandPaletteOpen: boolean
+  quickSearchOpen: boolean
   preferencesOpen: boolean
   lastQuickPaneEntry: string | null
   /** Set of area IDs that are collapsed in the sidebar */
@@ -16,6 +17,7 @@ interface UIState {
   setRightSidebarVisible: (visible: boolean) => void
   toggleCommandPalette: () => void
   setCommandPaletteOpen: (open: boolean) => void
+  setQuickSearchOpen: (open: boolean) => void
   togglePreferences: () => void
   setPreferencesOpen: (open: boolean) => void
   setLastQuickPaneEntry: (text: string) => void
@@ -35,6 +37,7 @@ export const useUIStore = create<UIState>()(
       leftSidebarVisible: true,
       rightSidebarVisible: true,
       commandPaletteOpen: false,
+      quickSearchOpen: false,
       preferencesOpen: false,
       lastQuickPaneEntry: null,
       collapsedAreaIds: new Set<string>(),
@@ -76,6 +79,9 @@ export const useUIStore = create<UIState>()(
 
       setCommandPaletteOpen: open =>
         set({ commandPaletteOpen: open }, undefined, 'setCommandPaletteOpen'),
+
+      setQuickSearchOpen: open =>
+        set({ quickSearchOpen: open }, undefined, 'setQuickSearchOpen'),
 
       togglePreferences: () =>
         set(

@@ -128,6 +128,8 @@
 
   "commands.toggleCommandPalette.label": "Toggle Command Palette",
   "commands.toggleCommandPalette.description": "Open or close the command palette",
+  "commands.quickSearch.label": "Quick Search",
+  "commands.quickSearch.description": "Quickly find and open a task",
   "commands.createTask.label": "Create Task",
   "commands.createTask.description": "Create a new task",
   "commands.toggleLeftSidebar.label": "Toggle Left Sidebar",
@@ -227,6 +229,11 @@
   "commandPalette.title": "Command Palette",
   "commandPalette.placeholder": "Type a command or search...",
   "commandPalette.noResults": "No results found.",
+
+  "quickSearch.title": "Quick Search",
+  "quickSearch.description": "Search for tasks",
+  "quickSearch.placeholder": "Search tasks...",
+  "quickSearch.noResults": "No tasks found.",
 
   "titlebar.default": "Tasks",
   "titlebar.showLeftSidebar": "Show Left Sidebar",
