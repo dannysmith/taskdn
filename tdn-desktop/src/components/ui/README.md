@@ -2,7 +2,7 @@
 
 This directory contains the design system primitives for the Taskdn desktop app.
 
-## shadcn/ui Components (36)
+## shadcn/ui Components (35)
 
 These components originated from [shadcn/ui](https://ui.shadcn.com/docs/components) and may have been customized:
 
@@ -16,7 +16,6 @@ These components originated from [shadcn/ui](https://ui.shadcn.com/docs/componen
 - `checkbox.tsx`
 - `collapsible.tsx`
 - `command.tsx`
-- `date-picker.tsx`
 - `dialog.tsx`
 - `dropdown-menu.tsx`
 - `field.tsx`
@@ -43,12 +42,13 @@ These components originated from [shadcn/ui](https://ui.shadcn.com/docs/componen
 - `toggle.tsx`
 - `tooltip.tsx`
 
-## Custom Components (11)
+## Custom Components (12)
 
 These components were written specifically for this app:
 
 - `collapsible-notes.tsx` - Expandable notes section with preview teaser
 - `date-button.tsx` - Compact date display with natural language date picker (scheduled/due/defer variants)
+- `date-picker.tsx` - Generic date picker with natural language input (uses @dannysmith/datepicker)
 - `empty-state.tsx` - Simple centered placeholder (alternative to Empty)
 - `lazy-markdown-editor.tsx` - Code-split wrapper with error boundary
 - `markdown-editor.tsx` - Unified editor with preview/source toggle
@@ -65,4 +65,4 @@ These components were written specifically for this app:
 - shadcn components can be customized - the goal is not to keep them pristine
 - When updating from shadcn, check https://ui.shadcn.com/docs/components for the latest component list
 - Many shadcn components export multiple sub-components (e.g., `sidebar.tsx` exports 22 components)
-- The `date-picker.tsx` and `date-button.tsx` components use `@dannysmith/datepicker` for natural language input
+- The `date-picker.tsx`, `date-button.tsx`, and `popover-date-picker.tsx` components use `@dannysmith/datepicker` for natural language input
