@@ -10,6 +10,7 @@ import {
 import { usePreferences, useSavePreferences } from '@/services/preferences'
 import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
+import { Kbd, KbdGroup } from '@/components/ui/kbd'
 
 export function QuickEntryPane() {
   const { t } = useTranslation()
@@ -90,6 +91,48 @@ export function QuickEntryPane() {
             disabled={!preferences || savePreferences.isPending}
           />
         </SettingsField>
+      </SettingsSection>
+
+      <SettingsSection title={t('preferences.quickEntry.paneShortcuts')}>
+        <div className="text-sm text-muted-foreground space-y-3">
+          <p>{t('preferences.quickEntry.paneShortcutsIntro')}</p>
+          <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 items-center">
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>Enter</Kbd>
+            </KbdGroup>
+            <span>{t('preferences.quickEntry.shortcutSave')}</span>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>⇧</Kbd>
+              <Kbd>Enter</Kbd>
+            </KbdGroup>
+            <span>{t('preferences.quickEntry.shortcutToggleNotes')}</span>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>T</Kbd>
+            </KbdGroup>
+            <span>{t('preferences.quickEntry.shortcutToday')}</span>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>D</Kbd>
+            </KbdGroup>
+            <span>{t('preferences.quickEntry.shortcutScheduled')}</span>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>⇧</Kbd>
+              <Kbd>D</Kbd>
+            </KbdGroup>
+            <span>{t('preferences.quickEntry.shortcutDue')}</span>
+            <KbdGroup>
+              <Kbd>⌘</Kbd>
+              <Kbd>S</Kbd>
+            </KbdGroup>
+            <span>{t('preferences.quickEntry.shortcutStatus')}</span>
+            <Kbd>Esc</Kbd>
+            <span>{t('preferences.quickEntry.shortcutDismiss')}</span>
+          </div>
+        </div>
       </SettingsSection>
     </div>
   )

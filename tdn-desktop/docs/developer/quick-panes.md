@@ -1,15 +1,6 @@
 # Quick Panes
 
-Quick panes are small floating windows that appear via global keyboard shortcut, even when the main application is not focused. This pattern is common for quick entry, command palettes, and similar quick-access features.
-
-## Overview
-
-The quick pane system demonstrates:
-
-- **Global shortcuts** - Trigger from any app with `Cmd+Shift+.` (macOS) or `Ctrl+Shift+.` (Windows/Linux)
-- **Multi-window architecture** - Separate React contexts for main window and pane
-- **Cross-window communication** - Tauri events for decoupled messaging
-- **Platform-specific behavior** - Native NSPanel on macOS for fullscreen overlay
+Quick panes are small floating windows that appear via global keyboard shortcut, even when the main application is not focused. The Quick Entry pane provides fast task capture from anywhere on macOS.
 
 ## Architecture
 
@@ -50,42 +41,76 @@ toggle_quick_pane(app_handle);  // Shows/hides the existing window
 
 ### Cross-Window Communication
 
-Windows communicate via Tauri events (not shared state):
+Windows communicate via Tauri events:
 
 ```typescript
-// Quick pane: emit event on submit
-await emit('quick-pane-submit', { text: text.trim() })
+// Quick pane: emit event on task creation
+await emit('task-created', taskData)
 
-// Main window: listen for events
-listen('quick-pane-submit', ({ payload }) => {
-  // Handle the submission - update Zustand, call API, etc.
-  setLastQuickPaneEntry(payload.text)
+// Main window: listen for events to update cache
+listen('task-created', ({ payload }) => {
+  queryClient.setQueryData(['tasks'], old => [...old, payload])
 })
 ```
-
-This pattern is intentionally flexible - the action can be anything:
-
-- Update Zustand store (as demonstrated)
-- Call a TanStack Query mutation
-- Invoke a Tauri command
-- Make an API request
 
 ### Theme Synchronization
 
-Since windows don't share React context, theme must be synchronized manually:
+Since windows don't share React context, theme is synchronized via shared utilities:
 
 ```typescript
-// Main window: emit when theme changes
-emit('theme-changed', { theme })
+// Shared utility in src/lib/theme.ts
+import { applyThemeToDocument } from '@/lib/theme'
 
-// Quick pane: listen and apply
-listen('theme-changed', () => applyTheme())
-
-// Also re-apply on focus gain (catches changes while hidden)
-onFocusChanged(({ payload: focused }) => {
-  if (focused) applyTheme()
-})
+// Apply on focus and listen for changes
+applyThemeToDocument()
+listen('theme-changed', () => applyThemeToDocument())
 ```
+
+## Component Structure
+
+```
+src/components/quick-pane/
+├── QuickPaneApp.tsx           # Main component: state, submission, popover coordination
+├── QuickPaneCard.tsx          # Visual container with entry/exit CSS animations
+├── QuickPaneTitle.tsx         # Title textarea with visual checkbox
+├── QuickPaneBody.tsx          # Collapsible notes section
+├── QuickPaneMetadata.tsx      # Status pill and date buttons
+├── QuickPaneFooter.tsx        # Project/area selectors, Cancel/Save buttons
+├── QuickPaneErrorBoundary.tsx # Error boundary for graceful failure
+└── useQuickPaneKeyboard.ts    # Keyboard shortcut handler hook
+```
+
+| Component         | Responsibility                                                       |
+| ----------------- | -------------------------------------------------------------------- |
+| QuickPaneApp      | Form state, submission logic, popover coordination, focus management |
+| QuickPaneCard     | Visual container, CSS animations for show/hide                       |
+| QuickPaneTitle    | Title input with auto-resize                                         |
+| QuickPaneBody     | Collapsible notes with expand/collapse animation                     |
+| QuickPaneMetadata | Status and date selection (controlled popovers)                      |
+| QuickPaneFooter   | Project/area selection, action buttons                               |
+
+### Key Patterns
+
+**Popover Coordination:** Only one popover can be open at a time. `QuickPaneApp` owns `openPopover` state and passes controlled `open`/`onOpenChange` props to children.
+
+**Focus Management:** Focus is managed by the parent component. Child components receive refs but don't manage their own focus. This ensures consistent behavior when toggling sections or closing popovers.
+
+**Animation Timing:** CSS custom properties in `quick-pane.css` define animation durations. JS constants in `QuickPaneApp.tsx` must match for coordinated exit animations.
+
+## Keyboard Shortcuts
+
+| Shortcut    | Action                                  |
+| ----------- | --------------------------------------- |
+| `Escape`    | Close popover (if open) or dismiss pane |
+| `⌘ Enter`   | Save task and dismiss                   |
+| `⌘ ⇧ Enter` | Toggle notes section                    |
+| `⌘ T`       | Set scheduled date to today             |
+| `⌘ D`       | Open scheduled date picker              |
+| `⌘ ⇧ D`     | Open due date picker                    |
+| `⌃ ⇧ ⌘ D`   | Open defer date picker                  |
+| `⌘ S`       | Open status picker                      |
+
+The `useQuickPaneKeyboard` hook handles all shortcuts using capture phase to intercept events before popovers receive them.
 
 ## Platform Behavior
 
@@ -108,23 +133,18 @@ On macOS, the quick pane uses `tauri-nspanel` for native panel behavior:
 
 ```rust
 // These settings are required for proper fullscreen behavior.
-// See src-tauri/src/commands/quick_pane.rs for the complete builder chain
-// which also includes .url(), .title(), .size(), .transparent(), .has_shadow(),
-// .with_window() configuration, and .build().
+// See src-tauri/src/commands/quick_pane.rs for the complete implementation.
 
 PanelBuilder::<_, QuickPanePanel>::new(app, label)
-    .level(PanelLevel::Status)  // High z-order for fullscreen
+    .level(PanelLevel::Status)
     .style_mask(StyleMask::empty().nonactivating_panel())  // Required!
     .collection_behavior(
         CollectionBehavior::new()
             .full_screen_auxiliary()
             .can_join_all_spaces(),
     )
-    // ... additional builder calls required ...
     .build()
 ```
-
-The `nonactivating_panel()` style mask is critical for fullscreen overlay visibility.
 
 ### Space-Switching Prevention
 
@@ -135,90 +155,11 @@ panel.resign_key_window();  // Resign BEFORE hiding
 panel.hide();
 ```
 
-## Customization
-
-### Changing the Shortcut
-
-The default shortcut is `CommandOrControl+Shift+.`. Users can customize it in Preferences > General.
-
-Programmatically:
-
-```typescript
-await commands.updateQuickPaneShortcut('CommandOrControl+Alt+Space')
-// Or reset to default
-await commands.updateQuickPaneShortcut(null)
-```
-
-### Customizing the Pane Content
-
-Edit `src/components/quick-pane/QuickPaneApp.tsx`:
-
-```typescript
-export default function QuickPaneApp() {
-  const [text, setText] = useState('')
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (text.trim()) {
-      // Emit your custom event
-      await emit('quick-pane-submit', {
-        action: 'create-task',  // Custom action type
-        payload: { text: text.trim() }
-      })
-      setText('')
-    }
-    await commands.dismissQuickPane()
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      {/* Your custom UI */}
-    </form>
-  )
-}
-```
-
-### Wiring to Different Actions
-
-In the main window, handle the event however you need:
-
-```typescript
-// Zustand (demonstrated)
-listen('quick-pane-submit', ({ payload }) => {
-  useUIStore.getState().setLastQuickPaneEntry(payload.text)
-})
-
-// TanStack Query mutation
-listen('quick-pane-submit', ({ payload }) => {
-  createTaskMutation.mutate({ title: payload.text })
-})
-
-// API call
-listen('quick-pane-submit', async ({ payload }) => {
-  await fetch('/api/tasks', {
-    method: 'POST',
-    body: JSON.stringify({ title: payload.text }),
-  })
-})
-
-// Tauri command
-listen('quick-pane-submit', async ({ payload }) => {
-  await commands.createTask(payload.text)
-})
-```
-
-### Changing Window Size
-
-Update the constants in `src-tauri/src/lib.rs`:
-
-```rust
-const QUICK_PANE_WIDTH: f64 = 500.0;
-const QUICK_PANE_HEIGHT: f64 = 72.0;
-```
-
-Also update the window creation in `init_quick_pane_macos` and `init_quick_pane_standard`.
-
 ## Implementation Notes
+
+### Transparent Window Size
+
+The quick pane window is significantly larger than the visible card. The window is transparent, and the card is centered within it. This allows dropdowns, date pickers, and other popovers to render outside the card bounds without being clipped by the window edge. The actual window dimensions are defined in `src-tauri/src/commands/quick_pane.rs`.
 
 ### Threading (macOS)
 
@@ -243,11 +184,9 @@ async fn create_panel(app: AppHandle) {
 Prevent the system alert sound on Escape by calling `preventDefault()`:
 
 ```typescript
-const handleKeyDown = async (e: KeyboardEvent) => {
-  if (e.key === 'Escape') {
-    e.preventDefault() // Prevents "boop" sound
-    await commands.dismissQuickPane()
-  }
+if (e.key === 'Escape') {
+  e.preventDefault() // Prevents "boop" sound
+  await commands.dismissQuickPane()
 }
 ```
 
@@ -272,3 +211,22 @@ tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.
 
 - **Linux Wayland**: Global shortcuts are not supported
 - **Visual blur**: Native frosted glass blur is not available due to conflicts between `window-vibrancy` and `tauri-nspanel`. The current implementation uses CSS `backdrop-blur` with semi-transparent backgrounds.
+
+## Alternative: Event-Driven Actions
+
+The Quick Entry pane calls Tauri commands directly and emits a `task-created` event for cache invalidation. Future quick panes with different requirements might instead emit events for the main window to handle. Since windows can't share React state, this decouples the pane from the action:
+
+```typescript
+// Quick pane: emit event with payload
+await emit('quick-pane-submit', { text: text.trim() })
+
+// Main window: handle however needed
+listen('quick-pane-submit', ({ payload }) => {
+  // Zustand
+  useUIStore.getState().setSomeValue(payload.text)
+  // TanStack Query
+  createTaskMutation.mutate({ title: payload.text })
+  // Tauri command
+  await commands.createTask(payload.text)
+})
+```
