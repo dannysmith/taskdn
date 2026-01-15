@@ -74,7 +74,10 @@ fn init_quick_pane_macos(app: &AppHandle) -> Result<(), String> {
     let panel = PanelBuilder::<_, QuickPanePanel>::new(app, QUICK_PANE_LABEL)
         .url(WebviewUrl::App("quick-pane.html".into()))
         .title("Quick Entry")
-        .size(Size::Logical(LogicalSize::new(QUICK_PANE_WIDTH, QUICK_PANE_HEIGHT)))
+        .size(Size::Logical(LogicalSize::new(
+            QUICK_PANE_WIDTH,
+            QUICK_PANE_HEIGHT,
+        )))
         .level(PanelLevel::Status) // Status level to appear above fullscreen apps
         .transparent(true)
         .has_shadow(false) // Disable native shadow - we use CSS shadow on the card
