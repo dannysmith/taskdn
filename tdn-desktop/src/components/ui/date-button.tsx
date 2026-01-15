@@ -42,6 +42,8 @@ export interface DateButtonProps {
   tooltip: string
   /** Visual variant affecting colors */
   variant: DateButtonVariant
+  /** Popover alignment relative to the trigger (default: 'end') */
+  align?: 'start' | 'center' | 'end'
   /** Controlled open state (optional - uses internal state if not provided) */
   open?: boolean
   /** Callback when open state changes (required if open is controlled) */
@@ -77,6 +79,7 @@ export function DateButton({
   onChange,
   tooltip,
   variant,
+  align = 'end',
   open: controlledOpen,
   onOpenChange,
 }: DateButtonProps) {
@@ -130,7 +133,7 @@ export function DateButton({
       </PopoverTrigger>
       <PopoverContent
         className="w-auto p-0 overflow-hidden border-0"
-        align="end"
+        align={align}
       >
         <DatePicker
           value={dateValue}

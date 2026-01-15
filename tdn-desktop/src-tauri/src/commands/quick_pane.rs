@@ -16,9 +16,9 @@ use crate::types::DEFAULT_QUICK_PANE_SHORTCUT;
 const QUICK_PANE_LABEL: &str = "quick-pane";
 
 /// Quick pane window dimensions
-/// Large size to accommodate metadata row and date picker popovers
-const QUICK_PANE_WIDTH: f64 = 700.0;
-const QUICK_PANE_HEIGHT: f64 = 500.0;
+/// Large size to accommodate metadata row and centered date picker popovers
+const QUICK_PANE_WIDTH: f64 = 800.0;
+const QUICK_PANE_HEIGHT: f64 = 700.0;
 
 /// Tracks the currently registered quick pane shortcut for selective unregistration.
 /// This allows us to unregister only our shortcut without affecting other shortcuts.
