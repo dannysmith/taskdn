@@ -114,12 +114,15 @@ export function SearchableSelect({
         <span className="flex items-center gap-1.5 truncate">
           {icon}
           <span
-            className={cn('truncate', !displayValue && 'text-muted-foreground')}
+            className={cn(
+              'truncate',
+              displayValue ? 'text-foreground' : 'text-muted-foreground'
+            )}
           >
             {displayValue || placeholder}
           </span>
         </span>
-        <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
+        <ChevronsUpDown className="size-3 shrink-0 text-muted-foreground" />
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0" align="start">
         <Command>
