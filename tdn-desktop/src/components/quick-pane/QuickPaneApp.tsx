@@ -299,7 +299,7 @@ export default function QuickPaneApp() {
 
   /**
    * Captures current focus if it's in title or body textarea.
-   * Called before opening a popover via keyboard shortcut or click.
+   * Called before opening a popover via keyboard shortcut.
    */
   const captureCurrentFocus = React.useCallback(() => {
     if (document.activeElement === titleRef.current) {
@@ -307,24 +307,7 @@ export default function QuickPaneApp() {
     } else if (document.activeElement === bodyRef.current) {
       setRestoreFocusTo('body')
     }
-    // If neither, don't change - preserves any existing value
   }, [])
-
-  // Capture focus when clicking on popover triggers (before focus moves)
-  React.useEffect(() => {
-    const handlePointerDown = (e: PointerEvent) => {
-      const trigger = (e.target as Element).closest(
-        '[data-slot="popover-trigger"], [data-slot="dropdown-menu-trigger"]'
-      )
-      if (trigger) {
-        captureCurrentFocus()
-      }
-    }
-
-    // Capture phase runs before focus changes
-    document.addEventListener('pointerdown', handlePointerDown, true)
-    return () => document.removeEventListener('pointerdown', handlePointerDown, true)
-  }, [captureCurrentFocus])
 
   // Restore focus when popover closes
   React.useEffect(() => {
