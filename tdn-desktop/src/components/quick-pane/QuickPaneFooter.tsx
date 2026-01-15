@@ -15,6 +15,11 @@ interface QuickPaneFooterProps {
   onAreaChange: (areaId: string | undefined) => void
   projects: Project[]
   areas: Area[]
+  // Controlled popover state
+  projectOpen: boolean
+  onProjectOpenChange: (open: boolean) => void
+  areaOpen: boolean
+  onAreaOpenChange: (open: boolean) => void
 }
 
 /**
@@ -37,6 +42,10 @@ export function QuickPaneFooter({
   onAreaChange,
   projects,
   areas,
+  projectOpen,
+  onProjectOpenChange,
+  areaOpen,
+  onAreaOpenChange,
 }: QuickPaneFooterProps) {
   // Filter to active projects/areas
   const activeProjects = projects.filter(p => p.status !== 'done')
@@ -72,6 +81,8 @@ export function QuickPaneFooter({
           onChange={onProjectChange}
           emptyText="No projects"
           className="border-0 bg-transparent shadow-none min-w-36"
+          open={projectOpen}
+          onOpenChange={onProjectOpenChange}
         />
 
         <SearchableSelect
@@ -83,6 +94,8 @@ export function QuickPaneFooter({
           onChange={onAreaChange}
           emptyText="No areas"
           className="border-0 bg-transparent shadow-none min-w-32"
+          open={areaOpen}
+          onOpenChange={onAreaOpenChange}
         />
       </div>
 

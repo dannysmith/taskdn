@@ -43,6 +43,10 @@ export interface SearchableSelectProps {
   emptyText: string
   /** Additional classes for the trigger button */
   className?: string
+  /** Controlled open state (optional - uses internal state if not provided) */
+  open?: boolean
+  /** Callback when open state changes (required if open is controlled) */
+  onOpenChange?: (open: boolean) => void
 }
 
 // -----------------------------------------------------------------------------
@@ -78,8 +82,21 @@ export function SearchableSelect({
   onChange,
   emptyText,
   className,
+  open: controlledOpen,
+  onOpenChange,
 }: SearchableSelectProps) {
-  const [open, setOpen] = React.useState(false)
+  const [internalOpen, setInternalOpen] = React.useState(false)
+
+  // Use controlled state if provided, otherwise use internal state
+  const isControlled = controlledOpen !== undefined
+  const open = isControlled ? controlledOpen : internalOpen
+  const setOpen = (value: boolean) => {
+    if (isControlled && onOpenChange) {
+      onOpenChange(value)
+    } else {
+      setInternalOpen(value)
+    }
+  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

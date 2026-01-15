@@ -16,6 +16,16 @@ interface QuickPaneMetadataProps {
   onDueChange: (date: string | undefined) => void
   deferUntil: string | null
   onDeferUntilChange: (date: string | undefined) => void
+
+  // Controlled popover state
+  statusOpen: boolean
+  onStatusOpenChange: (open: boolean) => void
+  scheduledOpen: boolean
+  onScheduledOpenChange: (open: boolean) => void
+  dueOpen: boolean
+  onDueOpenChange: (open: boolean) => void
+  deferOpen: boolean
+  onDeferOpenChange: (open: boolean) => void
 }
 
 /**
@@ -32,12 +42,25 @@ export function QuickPaneMetadata({
   onDueChange,
   deferUntil,
   onDeferUntilChange,
+  statusOpen,
+  onStatusOpenChange,
+  scheduledOpen,
+  onScheduledOpenChange,
+  dueOpen,
+  onDueOpenChange,
+  deferOpen,
+  onDeferOpenChange,
 }: QuickPaneMetadataProps) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-3">
       {/* Status + Date buttons */}
       <div className="flex items-center gap-1.5">
-        <TaskStatusPill status={status} onStatusChange={onStatusChange} />
+        <TaskStatusPill
+          status={status}
+          onStatusChange={onStatusChange}
+          open={statusOpen}
+          onOpenChange={onStatusOpenChange}
+        />
 
         <DateButton
           icon={<Calendar className="size-3" />}
@@ -46,6 +69,8 @@ export function QuickPaneMetadata({
           tooltip="Scheduled"
           variant="scheduled"
           align="center"
+          open={scheduledOpen}
+          onOpenChange={onScheduledOpenChange}
         />
         <DateButton
           icon={<Flag className="size-3" />}
@@ -54,6 +79,8 @@ export function QuickPaneMetadata({
           tooltip="Due"
           variant="due"
           align="center"
+          open={dueOpen}
+          onOpenChange={onDueOpenChange}
         />
         <DateButton
           icon={<Snowflake className="size-3" />}
@@ -62,6 +89,8 @@ export function QuickPaneMetadata({
           tooltip="Defer"
           variant="defer"
           align="center"
+          open={deferOpen}
+          onOpenChange={onDeferOpenChange}
         />
       </div>
     </div>
