@@ -31,8 +31,8 @@ export function QuickPaneTitle({
 
   return (
     <div className="flex items-start gap-3 px-5 py-4">
-      {/* Visual checkbox - always unchecked, refined style */}
-      <div className="mt-1 size-5 shrink-0 rounded-full border-[1.5px] border-muted-foreground/30" />
+      {/* Visual checkbox - vertically centered with first line of text-lg textarea */}
+      <div className="mt-2.5 size-4 shrink-0 rounded-[4px] border-2 border-muted-foreground/40" />
 
       <Textarea
         ref={inputRef}

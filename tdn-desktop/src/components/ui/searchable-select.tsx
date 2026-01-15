@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { ChevronsUpDown, Check } from 'lucide-react'
+import { ChevronsUpDown } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -16,26 +16,6 @@ import {
   CommandItem,
   CommandList,
 } from '@/components/ui/command'
-
-/**
- * SearchableSelect - Combobox-style dropdown with search filtering.
- *
- * Used in TaskDetailPanel for selecting project and area. Shows a trigger
- * button with icon + label, opens a searchable dropdown powered by cmdk.
- *
- * Features:
- * - Type to filter options
- * - Checkmark on selected option
- * - "Clear selection" option when a value is selected
- * - Customizable empty state text
- */
-
-// -----------------------------------------------------------------------------
-// Constants
-// -----------------------------------------------------------------------------
-
-/** Sentinel value for the "clear selection" option - namespaced to avoid collision */
-const CLEAR_SELECTION_VALUE = '__searchable_select_clear_8f4a2b__'
 
 // -----------------------------------------------------------------------------
 // Types
@@ -64,9 +44,29 @@ export interface SearchableSelectProps {
 }
 
 // -----------------------------------------------------------------------------
+// Constants
+// -----------------------------------------------------------------------------
+
+/** Sentinel value for the "clear selection" option */
+const CLEAR_SELECTION_VALUE = '__searchable_select_clear__'
+
+// -----------------------------------------------------------------------------
 // Component
 // -----------------------------------------------------------------------------
 
+/**
+ * SearchableSelect - Combobox-style dropdown with search filtering.
+ *
+ * Follows the standard shadcn combobox pattern using Popover + Command.
+ * cmdk handles keyboard navigation natively (Arrow keys, Enter, Escape).
+ *
+ * Features:
+ * - Type to filter options (cmdk handles filtering)
+ * - Keyboard navigation (cmdk handles this)
+ * - Checkmark on selected option (via data-checked attribute)
+ * - "Clear selection" option when a value is selected
+ * - Customizable empty state text
+ */
 export function SearchableSelect({
   value,
   options,
@@ -85,6 +85,8 @@ export function SearchableSelect({
           <Button
             variant="outline"
             size="sm"
+            role="combobox"
+            aria-expanded={open}
             className="h-8 min-w-0 flex-1 justify-between"
           />
         }
@@ -100,8 +102,8 @@ export function SearchableSelect({
         <ChevronsUpDown className="size-3 shrink-0 opacity-50" />
       </PopoverTrigger>
       <PopoverContent className="w-[200px] p-0" align="start">
-        <Command loop>
-          <CommandInput placeholder="Search..." autoFocus />
+        <Command>
+          <CommandInput placeholder="Search..." />
           <CommandList>
             <CommandEmpty>{emptyText}</CommandEmpty>
             <CommandGroup>
@@ -121,16 +123,20 @@ export function SearchableSelect({
                   key={option.value}
                   value={option.label}
                   data-checked={value === option.value}
-                  onSelect={() => {
-                    onChange(option.value)
+                  onSelect={selectedLabel => {
+                    // cmdk passes the value prop (label) to onSelect
+                    // Find the option by label to get the actual value
+                    const selected = options.find(
+                      o => o.label === selectedLabel
+                    )
+                    if (selected) {
+                      onChange(selected.value)
+                    }
                     setOpen(false)
                   }}
                 >
                   {icon}
                   {option.label}
-                  {value === option.value && (
-                    <Check className="ms-auto size-4" />
-                  )}
                 </CommandItem>
               ))}
             </CommandGroup>
