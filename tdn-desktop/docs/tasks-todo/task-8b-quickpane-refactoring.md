@@ -119,208 +119,42 @@ This returns the user's local date, which is correct for "schedule for today."
 
 ---
 
-## Phase 3: Interface Refactoring and Utilities
+## Phase 3: Interface Refactoring and Utilities ✅ COMPLETE
 
-Larger refactoring to improve prop organization and extract shared utilities.
+Improved prop organization and extracted shared utilities.
 
-### 3.1 Extract theme utility to shared module
+### 3.1 Extract theme utility to shared module ✅
 
-The `applyTheme()` function in `QuickPaneApp.tsx` duplicates logic from `ThemeProvider.tsx`.
+Created `src/lib/theme.ts` with shared theme utilities:
 
-**Create:** `src/lib/theme.ts`
+- `THEME_STORAGE_KEY` constant
+- `applyThemeToDocument()` function for standalone windows
+- `getStoredTheme()` helper
 
-```typescript
-import type { Theme } from '@/lib/theme-context'
+Updated `ThemeProvider.tsx` to import `THEME_STORAGE_KEY` instead of hardcoding.
+Updated `QuickPaneApp.tsx` to use `applyThemeToDocument()` from the shared module.
 
-/** Default storage key for theme preference. Must match ThemeProvider default. */
-export const THEME_STORAGE_KEY = 'ui-theme'
+### 3.2 Group related props in QuickPaneMetadata ✅
 
-/**
- * Applies the current theme to the document root.
- * Used by standalone windows (quick pane) that don't have ThemeProvider.
- */
-export function applyThemeToDocument(): void {
-  const theme = localStorage.getItem(THEME_STORAGE_KEY) || 'system'
-  const root = document.documentElement
+Refactored from 14 flat props to 4 grouped prop objects using `ControlledFieldState<T>` interface:
 
-  root.classList.remove('light', 'dark')
+- `status: ControlledFieldState<TaskStatus>`
+- `scheduled: ControlledFieldState<string | undefined>`
+- `due: ControlledFieldState<string | undefined>`
+- `defer: ControlledFieldState<string | undefined>`
 
-  if (theme === 'system') {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-      .matches
-      ? 'dark'
-      : 'light'
-    root.classList.add(systemTheme)
-  } else {
-    root.classList.add(theme)
-  }
-}
+### 3.3 Group related props in QuickPaneFooter ✅
 
-export function getStoredTheme(): Theme {
-  const stored = localStorage.getItem(THEME_STORAGE_KEY)
-  if (stored === 'dark' || stored === 'light' || stored === 'system') {
-    return stored
-  }
-  return 'system'
-}
-```
+Refactored from 12 flat props to grouped objects:
 
-**Update:** `QuickPaneApp.tsx` to import and use this utility.
+- `project: { value, onChange, options, open, onOpenChange }`
+- `area: { value, onChange, options, open, onOpenChange }`
 
-**Update:** `ThemeProvider.tsx` to import `THEME_STORAGE_KEY` instead of using a hardcoded default:
+### 3.4 Add error boundary to quick-pane-main ✅
 
-```typescript
-import { THEME_STORAGE_KEY } from '@/lib/theme'
+Created `src/components/quick-pane/QuickPaneErrorBoundary.tsx` - a minimal error boundary that shows a simple error message. User can press Escape to dismiss.
 
-// ...
-storageKey = THEME_STORAGE_KEY,
-```
-
-### 3.2 Group related props in QuickPaneMetadata
-
-**File:** `QuickPaneMetadata.tsx`
-
-The current interface has 14 props. Refactor to use grouped prop objects:
-
-```typescript
-interface ControlledFieldState<T> {
-  value: T
-  onChange: (value: T) => void
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-interface QuickPaneMetadataProps {
-  status: ControlledFieldState<TaskStatus>
-  scheduled: ControlledFieldState<string | undefined>
-  due: ControlledFieldState<string | undefined>
-  defer: ControlledFieldState<string | undefined>
-}
-```
-
-**IMPORTANT:** Use `string | undefined` (not `string | null`) to match the `DateButton` component's `onChange` signature which uses `undefined` to mean "clear the date."
-
-**Update:** `QuickPaneApp.tsx` call site to pass grouped objects. The conversion from internal `null` state to `undefined` props happens at the call site:
-
-```typescript
-<QuickPaneMetadata
-  status={{
-    value: status,
-    onChange: setStatus,
-    open: openPopover === 'status',
-    onOpenChange: open => setOpenPopover(open ? 'status' : null),
-  }}
-  scheduled={{
-    value: scheduled ?? undefined,
-    onChange: d => setScheduled(d ?? null),
-    open: openPopover === 'scheduled',
-    onOpenChange: open => setOpenPopover(open ? 'scheduled' : null),
-  }}
-  // ... etc
-/>
-```
-
-### 3.3 Group related props in QuickPaneFooter
-
-**File:** `QuickPaneFooter.tsx`
-
-Similar refactoring for the 12-prop interface:
-
-```typescript
-interface QuickPaneFooterProps {
-  onCancel: () => void
-  onSave: () => void
-  saveDisabled: boolean
-  project: {
-    value: string | undefined
-    onChange: (id: string | undefined) => void
-    options: Project[]
-    open: boolean
-    onOpenChange: (open: boolean) => void
-  }
-  area: {
-    value: string | undefined
-    onChange: (id: string | undefined) => void
-    options: Area[]
-    open: boolean
-    onOpenChange: (open: boolean) => void
-  }
-}
-```
-
-**Note:** The filtering logic for active projects/areas stays in `QuickPaneFooter` - React Compiler handles memoization automatically per project patterns.
-
-### 3.4 Add error boundary to quick-pane-main
-
-**Create:** `src/components/quick-pane/QuickPaneErrorBoundary.tsx`
-
-A minimal error boundary for the quick pane. Unlike the main app's `ErrorBoundary`, this doesn't need crash recovery - just a simple message since the user can dismiss and reopen.
-
-```typescript
-import { Component, type ErrorInfo, type ReactNode } from 'react'
-
-interface Props {
-  children: ReactNode
-}
-
-interface State {
-  hasError: boolean
-}
-
-/**
- * Minimal error boundary for quick pane.
- * Shows a simple error message - user can press Escape to dismiss.
- */
-export class QuickPaneErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props)
-    this.state = { hasError: false }
-  }
-
-  static getDerivedStateFromError(): State {
-    return { hasError: true }
-  }
-
-  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log to console in dev for debugging
-    if (import.meta.env.DEV) {
-      console.error('Quick pane error:', error, errorInfo)
-    }
-  }
-
-  override render() {
-    if (this.state.hasError) {
-      return (
-        <div className="flex h-screen items-center justify-center p-4">
-          <div className="text-center">
-            <p className="text-destructive font-medium">Something went wrong</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Press Escape to close
-            </p>
-          </div>
-        </div>
-      )
-    }
-
-    return this.props.children
-  }
-}
-```
-
-**Update:** `quick-pane-main.tsx`:
-
-```typescript
-import ReactDOM from 'react-dom/client'
-import QuickPaneApp from './components/quick-pane/QuickPaneApp'
-import { QuickPaneErrorBoundary } from './components/quick-pane/QuickPaneErrorBoundary'
-import './quick-pane.css'
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <QuickPaneErrorBoundary>
-    <QuickPaneApp />
-  </QuickPaneErrorBoundary>
-)
-```
+Updated `quick-pane-main.tsx` to wrap `QuickPaneApp` with the error boundary.
 
 ---
 
@@ -639,7 +473,7 @@ This ensures:
 | ----- | ------------------------- | -------------------------------------------------------------------------------------- |
 | 1 ✅  | Quick Cleanup             | Removed unused state, consolidated focus handling, moved types, fixed dark mode colors |
 | 2 ✅  | Constants and Consistency | Timing constants, CSS custom properties, timezone bug fix                              |
-| 3     | Interface Refactoring     | Grouped props, theme utility, error boundary                                           |
+| 3 ✅  | Interface Refactoring     | Grouped props, theme utility, error boundary                                           |
 | 4     | Extract Keyboard Hook     | New hook with explicit dependencies                                                    |
 | 5     | Documentation Updates     | Component docs, preferences help, translations                                         |
 

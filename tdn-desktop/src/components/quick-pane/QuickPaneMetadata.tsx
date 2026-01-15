@@ -4,28 +4,19 @@ import type { TaskStatus } from '@/lib/tauri-bindings'
 import { DateButton } from '@/components/ui/date-button'
 import { TaskStatusPill } from '@/components/tasks/TaskStatusPill'
 
+/** Controlled field state for popover-based inputs */
+interface ControlledFieldState<T> {
+  value: T
+  onChange: (value: T) => void
+  open: boolean
+  onOpenChange: (open: boolean) => void
+}
+
 interface QuickPaneMetadataProps {
-  // Status
-  status: TaskStatus
-  onStatusChange: (status: TaskStatus) => void
-
-  // Dates
-  scheduled: string | null
-  onScheduledChange: (date: string | undefined) => void
-  due: string | null
-  onDueChange: (date: string | undefined) => void
-  deferUntil: string | null
-  onDeferUntilChange: (date: string | undefined) => void
-
-  // Controlled popover state
-  statusOpen: boolean
-  onStatusOpenChange: (open: boolean) => void
-  scheduledOpen: boolean
-  onScheduledOpenChange: (open: boolean) => void
-  dueOpen: boolean
-  onDueOpenChange: (open: boolean) => void
-  deferOpen: boolean
-  onDeferOpenChange: (open: boolean) => void
+  status: ControlledFieldState<TaskStatus>
+  scheduled: ControlledFieldState<string | undefined>
+  due: ControlledFieldState<string | undefined>
+  defer: ControlledFieldState<string | undefined>
 }
 
 /**
@@ -35,62 +26,50 @@ interface QuickPaneMetadataProps {
  */
 export function QuickPaneMetadata({
   status,
-  onStatusChange,
   scheduled,
-  onScheduledChange,
   due,
-  onDueChange,
-  deferUntil,
-  onDeferUntilChange,
-  statusOpen,
-  onStatusOpenChange,
-  scheduledOpen,
-  onScheduledOpenChange,
-  dueOpen,
-  onDueOpenChange,
-  deferOpen,
-  onDeferOpenChange,
+  defer,
 }: QuickPaneMetadataProps) {
   return (
     <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-3">
       {/* Status + Date buttons */}
       <div className="flex items-center gap-1.5">
         <TaskStatusPill
-          status={status}
-          onStatusChange={onStatusChange}
-          open={statusOpen}
-          onOpenChange={onStatusOpenChange}
+          status={status.value}
+          onStatusChange={status.onChange}
+          open={status.open}
+          onOpenChange={status.onOpenChange}
         />
 
         <DateButton
           icon={<Calendar className="size-3" />}
-          value={scheduled ?? undefined}
-          onChange={onScheduledChange}
+          value={scheduled.value}
+          onChange={scheduled.onChange}
           tooltip="Scheduled"
           variant="scheduled"
           align="center"
-          open={scheduledOpen}
-          onOpenChange={onScheduledOpenChange}
+          open={scheduled.open}
+          onOpenChange={scheduled.onOpenChange}
         />
         <DateButton
           icon={<Flag className="size-3" />}
-          value={due ?? undefined}
-          onChange={onDueChange}
+          value={due.value}
+          onChange={due.onChange}
           tooltip="Due"
           variant="due"
           align="center"
-          open={dueOpen}
-          onOpenChange={onDueOpenChange}
+          open={due.open}
+          onOpenChange={due.onOpenChange}
         />
         <DateButton
           icon={<Snowflake className="size-3" />}
-          value={deferUntil ?? undefined}
-          onChange={onDeferUntilChange}
+          value={defer.value}
+          onChange={defer.onChange}
           tooltip="Defer"
           variant="defer"
           align="center"
-          open={deferOpen}
-          onOpenChange={onDeferOpenChange}
+          open={defer.open}
+          onOpenChange={defer.onOpenChange}
         />
       </div>
     </div>

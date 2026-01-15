@@ -8,18 +8,20 @@ interface QuickPaneFooterProps {
   onCancel: () => void
   onSave: () => void
   saveDisabled: boolean
-  // Project/Area
-  projectId: string | null
-  onProjectChange: (projectId: string | undefined) => void
-  areaId: string | null
-  onAreaChange: (areaId: string | undefined) => void
-  projects: Project[]
-  areas: Area[]
-  // Controlled popover state
-  projectOpen: boolean
-  onProjectOpenChange: (open: boolean) => void
-  areaOpen: boolean
-  onAreaOpenChange: (open: boolean) => void
+  project: {
+    value: string | undefined
+    onChange: (id: string | undefined) => void
+    options: Project[]
+    open: boolean
+    onOpenChange: (open: boolean) => void
+  }
+  area: {
+    value: string | undefined
+    onChange: (id: string | undefined) => void
+    options: Area[]
+    open: boolean
+    onOpenChange: (open: boolean) => void
+  }
 }
 
 /**
@@ -36,26 +38,20 @@ export function QuickPaneFooter({
   onCancel,
   onSave,
   saveDisabled,
-  projectId,
-  onProjectChange,
-  areaId,
-  onAreaChange,
-  projects,
-  areas,
-  projectOpen,
-  onProjectOpenChange,
-  areaOpen,
-  onAreaOpenChange,
+  project,
+  area,
 }: QuickPaneFooterProps) {
   // Filter to active projects/areas
-  const activeProjects = projects.filter(p => p.status !== 'done')
-  const activeAreas = areas.filter(a => a.status === 'active')
+  const activeProjects = project.options.filter(p => p.status !== 'done')
+  const activeAreas = area.options.filter(a => a.status === 'active')
 
   // Find current selections
-  const currentProject = projectId
-    ? projects.find(p => p.id === projectId)
+  const currentProject = project.value
+    ? project.options.find(p => p.id === project.value)
     : null
-  const currentArea = areaId ? areas.find(a => a.id === areaId) : null
+  const currentArea = area.value
+    ? area.options.find(a => a.id === area.value)
+    : null
 
   // Include current selection even if not active
   const projectOptions =
@@ -78,11 +74,11 @@ export function QuickPaneFooter({
           placeholder="Project"
           displayValue={currentProject?.title}
           icon={<CircleDot className="size-3 text-entity-project" />}
-          onChange={onProjectChange}
+          onChange={project.onChange}
           emptyText="No projects"
           className="border-0 bg-transparent shadow-none min-w-36"
-          open={projectOpen}
-          onOpenChange={onProjectOpenChange}
+          open={project.open}
+          onOpenChange={project.onOpenChange}
         />
 
         <SearchableSelect
@@ -91,11 +87,11 @@ export function QuickPaneFooter({
           placeholder="Area"
           displayValue={currentArea?.title}
           icon={<FolderOpen className="size-3 text-entity-area" />}
-          onChange={onAreaChange}
+          onChange={area.onChange}
           emptyText="No areas"
           className="border-0 bg-transparent shadow-none min-w-32"
-          open={areaOpen}
-          onOpenChange={onAreaOpenChange}
+          open={area.open}
+          onOpenChange={area.onOpenChange}
         />
       </div>
 

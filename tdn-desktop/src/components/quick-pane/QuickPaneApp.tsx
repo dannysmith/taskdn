@@ -7,6 +7,7 @@ import { commands } from '@/lib/tauri-bindings'
 import type { TaskStatus, Area, Project, Task } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
 import { parseShortcut, matchesKeyboardEvent } from '@/lib/shortcuts'
+import { applyThemeToDocument } from '@/lib/theme'
 
 import { QuickPaneCard } from './QuickPaneCard'
 import { QuickPaneTitle } from './QuickPaneTitle'
@@ -60,27 +61,6 @@ type FocusTarget = 'title' | 'body' | null
  */
 function getTodayISO(): string {
   return format(new Date(), 'yyyy-MM-dd')
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Theme Management
-// ─────────────────────────────────────────────────────────────────────────────
-
-function applyTheme() {
-  const theme = localStorage.getItem('ui-theme') || 'system'
-  const root = document.documentElement
-
-  root.classList.remove('light', 'dark')
-
-  if (theme === 'system') {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
-      .matches
-      ? 'dark'
-      : 'light'
-    root.classList.add(systemTheme)
-  } else {
-    root.classList.add(theme)
-  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -258,10 +238,10 @@ export default function QuickPaneApp() {
   // ─────────────────────────────────────────────────────────────────────────
 
   React.useEffect(() => {
-    applyTheme()
+    applyThemeToDocument()
 
     const unlisten = listen('theme-changed', () => {
-      applyTheme()
+      applyThemeToDocument()
     })
 
     return () => {
@@ -279,7 +259,7 @@ export default function QuickPaneApp() {
       async ({ payload: focused }) => {
         if (focused) {
           // Re-apply theme in case it changed while hidden
-          applyTheme()
+          applyThemeToDocument()
 
           // Reset form on focus (fresh start)
           resetForm()
@@ -464,40 +444,50 @@ export default function QuickPaneApp() {
       />
 
       <QuickPaneMetadata
-        status={status}
-        onStatusChange={setStatus}
-        scheduled={scheduled}
-        onScheduledChange={d => setScheduled(d ?? null)}
-        due={due}
-        onDueChange={d => setDue(d ?? null)}
-        deferUntil={deferUntil}
-        onDeferUntilChange={d => setDeferUntil(d ?? null)}
-        statusOpen={openPopover === 'status'}
-        onStatusOpenChange={open => setOpenPopover(open ? 'status' : null)}
-        scheduledOpen={openPopover === 'scheduled'}
-        onScheduledOpenChange={open =>
-          setOpenPopover(open ? 'scheduled' : null)
-        }
-        dueOpen={openPopover === 'due'}
-        onDueOpenChange={open => setOpenPopover(open ? 'due' : null)}
-        deferOpen={openPopover === 'defer'}
-        onDeferOpenChange={open => setOpenPopover(open ? 'defer' : null)}
+        status={{
+          value: status,
+          onChange: setStatus,
+          open: openPopover === 'status',
+          onOpenChange: open => setOpenPopover(open ? 'status' : null),
+        }}
+        scheduled={{
+          value: scheduled ?? undefined,
+          onChange: d => setScheduled(d ?? null),
+          open: openPopover === 'scheduled',
+          onOpenChange: open => setOpenPopover(open ? 'scheduled' : null),
+        }}
+        due={{
+          value: due ?? undefined,
+          onChange: d => setDue(d ?? null),
+          open: openPopover === 'due',
+          onOpenChange: open => setOpenPopover(open ? 'due' : null),
+        }}
+        defer={{
+          value: deferUntil ?? undefined,
+          onChange: d => setDeferUntil(d ?? null),
+          open: openPopover === 'defer',
+          onOpenChange: open => setOpenPopover(open ? 'defer' : null),
+        }}
       />
 
       <QuickPaneFooter
         onCancel={handleDismiss}
         onSave={handleSubmit}
         saveDisabled={!canSave}
-        projectId={projectId}
-        onProjectChange={id => setProjectId(id ?? null)}
-        areaId={areaId}
-        onAreaChange={id => setAreaId(id ?? null)}
-        projects={projects}
-        areas={areas}
-        projectOpen={openPopover === 'project'}
-        onProjectOpenChange={open => setOpenPopover(open ? 'project' : null)}
-        areaOpen={openPopover === 'area'}
-        onAreaOpenChange={open => setOpenPopover(open ? 'area' : null)}
+        project={{
+          value: projectId ?? undefined,
+          onChange: id => setProjectId(id ?? null),
+          options: projects,
+          open: openPopover === 'project',
+          onOpenChange: open => setOpenPopover(open ? 'project' : null),
+        }}
+        area={{
+          value: areaId ?? undefined,
+          onChange: id => setAreaId(id ?? null),
+          options: areas,
+          open: openPopover === 'area',
+          onOpenChange: open => setOpenPopover(open ? 'area' : null),
+        }}
       />
     </QuickPaneCard>
   )
