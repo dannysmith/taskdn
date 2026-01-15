@@ -86,6 +86,17 @@ export default function QuickPaneApp() {
   const [exiting, setExiting] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
+  // Track which popover is open (only one at a time)
+  type PopoverType =
+    | 'status'
+    | 'project'
+    | 'area'
+    | 'scheduled'
+    | 'due'
+    | 'defer'
+    | null
+  const [openPopover, setOpenPopover] = React.useState<PopoverType>(null)
+
   // ─────────────────────────────────────────────────────────────────────────
   // Refs
   // ─────────────────────────────────────────────────────────────────────────
@@ -107,6 +118,7 @@ export default function QuickPaneApp() {
     setScheduled(null)
     setDue(null)
     setDeferUntil(null)
+    setOpenPopover(null)
   }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -258,10 +270,18 @@ export default function QuickPaneApp() {
 
   React.useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
-      // Escape - dismiss
+      // Escape - close popover or dismiss pane
       if (e.key === 'Escape') {
         e.preventDefault()
-        await handleDismiss()
+        e.stopPropagation()
+
+        if (openPopover) {
+          // Close the open popover
+          setOpenPopover(null)
+        } else {
+          // No popover open, dismiss the pane
+          await handleDismiss()
+        }
         return
       }
 
@@ -280,9 +300,10 @@ export default function QuickPaneApp() {
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [handleDismiss, handleSubmit])
+    // Capture phase to handle before any popover gets the event
+    window.addEventListener('keydown', handleKeyDown, true)
+    return () => window.removeEventListener('keydown', handleKeyDown, true)
+  }, [handleDismiss, handleSubmit, openPopover])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Title KeyDown Handler
@@ -330,6 +351,14 @@ export default function QuickPaneApp() {
         onDueChange={d => setDue(d ?? null)}
         deferUntil={deferUntil}
         onDeferUntilChange={d => setDeferUntil(d ?? null)}
+        statusOpen={openPopover === 'status'}
+        onStatusOpenChange={open => setOpenPopover(open ? 'status' : null)}
+        scheduledOpen={openPopover === 'scheduled'}
+        onScheduledOpenChange={open => setOpenPopover(open ? 'scheduled' : null)}
+        dueOpen={openPopover === 'due'}
+        onDueOpenChange={open => setOpenPopover(open ? 'due' : null)}
+        deferOpen={openPopover === 'defer'}
+        onDeferOpenChange={open => setOpenPopover(open ? 'defer' : null)}
       />
 
       <QuickPaneFooter
@@ -342,6 +371,10 @@ export default function QuickPaneApp() {
         onAreaChange={id => setAreaId(id ?? null)}
         projects={projects}
         areas={areas}
+        projectOpen={openPopover === 'project'}
+        onProjectOpenChange={open => setOpenPopover(open ? 'project' : null)}
+        areaOpen={openPopover === 'area'}
+        onAreaOpenChange={open => setOpenPopover(open ? 'area' : null)}
       />
     </QuickPaneCard>
   )
