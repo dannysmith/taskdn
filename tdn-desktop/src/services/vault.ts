@@ -21,7 +21,10 @@ import {
   type TaskUpdate,
   type ProjectUpdate,
   type VaultError,
+  type AppPreferences,
 } from '@/lib/tauri-bindings'
+import { useNavigationStore } from '@/store/navigation-store'
+import { useTaskDetailStore } from '@/store/task-detail-store'
 
 // =============================================================================
 // Query Keys
@@ -655,6 +658,70 @@ export async function initializeVault(
   }
 
   logger.info('Vault initialized successfully')
+}
+
+/**
+ * Reinitialize the vault with new configuration.
+ * Clears all stale state and reloads data.
+ *
+ * Call this when vault directory settings change in preferences.
+ */
+export async function reinitializeVault(
+  tasksDir: string,
+  projectsDir: string,
+  areasDir: string,
+  ignore: string[] | null
+): Promise<void> {
+  logger.info('Reinitializing vault with new configuration', {
+    tasksDir,
+    projectsDir,
+    areasDir,
+  })
+
+  // 1. Initialize vault in Rust (rescans directories, creates new file watchers)
+  const result = await commands.initVault(
+    tasksDir,
+    projectsDir,
+    areasDir,
+    ignore
+  )
+
+  if (result.status === 'error') {
+    throw new Error(formatVaultError(result.error))
+  }
+
+  // 2. Clear TanStack Query cache for all vault data
+  // Active components will automatically refetch when they see empty cache
+  queryClient.removeQueries({ queryKey: vaultQueryKeys.all })
+
+  // 3. Reset Zustand stores that hold entity references
+  useTaskDetailStore.getState().closeTask()
+  useNavigationStore.getState().resetNavigation()
+
+  // Note: display-order-store is NOT cleared - this is intentional!
+  // Stale IDs are filtered out by hooks, and ordering is preserved if
+  // the user switches back to a previous vault (useful for dev/prod switching)
+
+  // Note: ui-store.collapsedAreaIds - stale IDs are harmlessly ignored
+
+  logger.info('Vault reinitialized successfully')
+}
+
+/**
+ * Check if vault-related preferences have changed.
+ */
+export function vaultConfigChanged(
+  oldPrefs: AppPreferences | undefined,
+  newPrefs: AppPreferences
+): boolean {
+  if (!oldPrefs) return true
+
+  return (
+    oldPrefs.tasks_dir !== newPrefs.tasks_dir ||
+    oldPrefs.areas_dir !== newPrefs.areas_dir ||
+    oldPrefs.projects_dir !== newPrefs.projects_dir ||
+    JSON.stringify(oldPrefs.ignore) !== JSON.stringify(newPrefs.ignore)
+  )
 }
 
 /**

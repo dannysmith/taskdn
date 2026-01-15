@@ -13,21 +13,25 @@ Two related improvements to the preferences system:
 ### Current Architecture
 
 **Preferences Storage:**
+
 - Single file: `~/Library/Application Support/com.myapp.app/preferences.json`
 - Controlled by `get_preferences_path()` in `src-tauri/src/commands/preferences.rs`
 - Contains vault paths: `tasks_dir`, `areas_dir`, `projects_dir`, `ignore`
 
 **Dev Mode Detection:**
+
 - `isDevMode()` command returns `cfg!(debug_assertions)` - true for debug builds
 - Already used in `VaultPane.tsx` to show "Use Dummy Vault" button
 
 **Vault Initialization Flow:**
+
 1. App startup: `lib.rs` calls `load_vault_dirs()` then `vault_manager.initialize()`
 2. `VaultManager::initialize()` scans directories, builds index, sets up file watchers
 3. File watcher emits `vault-changed` events on external changes
 4. Frontend `useVaultInitialization()` listens and invalidates TanStack Query caches
 
 **Current Problem - Settings Change:**
+
 1. User changes vault path in VaultPane
 2. `savePreferences.mutate()` saves to disk
 3. TanStack Query cache updated with new preferences
@@ -35,14 +39,14 @@ Two related improvements to the preferences system:
 
 ### State That Could Become Stale
 
-| Store | Data | Stale Risk | Self-Cleans? |
-|-------|------|-----------|--------------|
-| **Rust VaultManager** | VaultIndex with tasks/projects/areas | High | No |
-| **TanStack Query** | `['vault', 'tasks']`, `['vault', 'projects']`, `['vault', 'areas']` | High | No |
-| `navigation-store` | Selection + history with area/project IDs | Medium | Partially |
-| `display-order-store` | Ordering keyed by entity IDs | Low | Yes (hooks filter) |
-| `task-detail-store` | `openTaskId` | Medium | No |
-| `ui-store` | `collapsedAreaIds` | Low | Effectively yes |
+| Store                 | Data                                                                | Stale Risk | Self-Cleans?       |
+| --------------------- | ------------------------------------------------------------------- | ---------- | ------------------ |
+| **Rust VaultManager** | VaultIndex with tasks/projects/areas                                | High       | No                 |
+| **TanStack Query**    | `['vault', 'tasks']`, `['vault', 'projects']`, `['vault', 'areas']` | High       | No                 |
+| `navigation-store`    | Selection + history with area/project IDs                           | Medium     | Partially          |
+| `display-order-store` | Ordering keyed by entity IDs                                        | Low        | Yes (hooks filter) |
+| `task-detail-store`   | `openTaskId`                                                        | Medium     | No                 |
+| `ui-store`            | `collapsedAreaIds`                                                  | Low        | Effectively yes    |
 
 ## Implementation Plan
 
@@ -79,6 +83,7 @@ fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
 ```
 
 This automatically affects:
+
 - `load_preferences()` - loads from correct file
 - `save_preferences()` - saves to correct file
 - `load_preferences_sync()` - used at startup
@@ -96,17 +101,19 @@ Add new section after "File Locations":
 
 The app uses separate preferences files based on build mode:
 
-| Build Mode | Preferences File |
-|------------|------------------|
+| Build Mode                        | Preferences File               |
+| --------------------------------- | ------------------------------ |
 | Development (`bun run tauri:dev`) | `preferences.development.json` |
-| Production (release builds) | `preferences.json` |
+| Production (release builds)       | `preferences.json`             |
 
 This allows developers to:
+
 - Point development builds at test vaults (dummy-demo-vault)
 - Keep production settings pointing at their real vault
 - Test different configurations without affecting production
 
 **First-time development setup:**
+
 1. Run `bun run tauri:dev`
 2. Open Preferences > Vault
 3. Click "Use Dummy Vault" to configure test directories
@@ -156,7 +163,7 @@ export const useNavigationStore = create<NavigationState>()(
           undefined,
           'resetNavigation'
         ),
-    }),
+    })
     // ...
   )
 )
@@ -192,7 +199,12 @@ export async function reinitializeVault(
   })
 
   // 1. Initialize vault in Rust (rescans directories, creates new file watchers)
-  const result = await commands.initVault(tasksDir, projectsDir, areasDir, ignore)
+  const result = await commands.initVault(
+    tasksDir,
+    projectsDir,
+    areasDir,
+    ignore
+  )
 
   if (result.status === 'error') {
     throw new Error(formatVaultError(result.error))
@@ -256,6 +268,7 @@ export {
 **File:** `src/components/preferences/panes/VaultPane.tsx`
 
 **New imports needed:**
+
 ```typescript
 import { useState } from 'react'
 import { type AppPreferences } from '@/lib/tauri-bindings'
@@ -264,6 +277,7 @@ import { logger } from '@/lib/logger'
 ```
 
 **Updated component:**
+
 ```typescript
 export function VaultPane() {
   const { t } = useTranslation()
@@ -475,12 +489,14 @@ describe('resetNavigation', () => {
 #### Manual Testing Checklist
 
 **Phase 1 - Dev/Prod Separation:**
+
 - [ ] Fresh dev start: No preferences loaded, prompts for configuration
 - [ ] Configure in dev: Creates `preferences.development.json`
 - [ ] Run production build: Uses separate `preferences.json`
 - [ ] Changes in dev don't affect prod, and vice versa
 
 **Phase 2/3 - Vault Reinitialization:**
+
 - [ ] Change tasks directory: Vault rescans, new tasks appear
 - [ ] Change to empty directory: Shows no tasks
 - [ ] Change back: Original tasks reappear
@@ -496,20 +512,20 @@ describe('resetNavigation', () => {
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src-tauri/src/commands/preferences.rs` | Modify `get_preferences_path()` for dev/prod separation |
-| `src/store/navigation-store.ts` | Add `resetNavigation()` function + update interface |
-| `src/services/vault.ts` | Add imports (`useNavigationStore`, `useTaskDetailStore`, `AppPreferences`), add `reinitializeVault()` and `vaultConfigChanged()` |
-| `src/components/preferences/panes/VaultPane.tsx` | Add imports (`useState`, `AppPreferences`, `reinitializeVault`, `vaultConfigChanged`, `logger`), refactor handlers |
-| `locales/en.json` | Add 1 toast error string (`vaultReinitialize`) |
-| `docs/developer/data-persistence.md` | Document dev/prod preferences |
+| File                                             | Changes                                                                                                                          |
+| ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `src-tauri/src/commands/preferences.rs`          | Modify `get_preferences_path()` for dev/prod separation                                                                          |
+| `src/store/navigation-store.ts`                  | Add `resetNavigation()` function + update interface                                                                              |
+| `src/services/vault.ts`                          | Add imports (`useNavigationStore`, `useTaskDetailStore`, `AppPreferences`), add `reinitializeVault()` and `vaultConfigChanged()` |
+| `src/components/preferences/panes/VaultPane.tsx` | Add imports (`useState`, `AppPreferences`, `reinitializeVault`, `vaultConfigChanged`, `logger`), refactor handlers               |
+| `locales/en.json`                                | Add 1 toast error string (`vaultReinitialize`)                                                                                   |
+| `docs/developer/data-persistence.md`             | Document dev/prod preferences                                                                                                    |
 
 ## Files to Create/Extend
 
-| File | Changes |
-|------|---------|
-| `src/services/vault.test.ts` | **New file** - Tests for `vaultConfigChanged()` |
+| File                                 | Changes                                                |
+| ------------------------------------ | ------------------------------------------------------ |
+| `src/services/vault.test.ts`         | **New file** - Tests for `vaultConfigChanged()`        |
 | `src/store/navigation-store.test.ts` | **Extend existing** - Add test for `resetNavigation()` |
 
 ## Dependencies
@@ -520,23 +536,27 @@ describe('resetNavigation', () => {
 ## Considerations
 
 ### Race Conditions
+
 - The `saveAndReinitialize` function uses `mutateAsync` to ensure preferences are saved before reinitialization
 - During reinitialization, UI is disabled to prevent concurrent changes
 - FolderPicker's `onChange` is synchronous - handlers use `void` to fire-and-forget with internal error handling
 
 ### Error Handling
+
 - If `initVault` fails (e.g., directory doesn't exist), error is shown via toast
 - Preferences are still saved even if vault init fails
 - User can correct the path and try again
 - Both save and reinitialize errors are handled with appropriate toasts
 
 ### Performance
+
 - Full vault rescan happens on every path change
 - For most users (< 1000 files), this is instant (~100ms total)
 - User may see brief loading state while components refetch
 - Consider debouncing if users report issues
 
 ### localStorage Persistence (display-order-store)
+
 - `display-order-store` persists ordering to localStorage with entity IDs
 - When switching vaults, these IDs become "stale" but are NOT cleared
 - **This is intentional and desirable:**
@@ -546,16 +566,19 @@ describe('resetNavigation', () => {
 - No cleanup needed - the self-cleaning hooks handle stale IDs gracefully
 
 ### Known Limitation: Clearing Vault Paths
+
 - If user clears a vault path (sets to null), preferences save but vault stays initialized
 - The old data remains visible until all three paths are set again
 - This is acceptable for MVP - users can set invalid paths to "clear" data if needed
 - Future: Could add explicit "Disconnect Vault" action
 
 ### UX During Reinitialization
+
 - After vault reinit, user is navigated to Today view (safe default)
 - Task detail panel is closed (avoids showing deleted task)
 - Brief loading state possible while components refetch (~100ms)
 
 ### Future Enhancement
+
 - Could add a "Vault" indicator in status bar showing current vault path
 - Could show confirmation dialog when switching vaults: "This will reload all data. Continue?"
