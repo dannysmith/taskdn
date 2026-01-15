@@ -6,7 +6,7 @@ import { format } from 'date-fns'
 import { commands } from '@/lib/tauri-bindings'
 import type { TaskStatus, Area, Project, Task } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
-import { parseShortcut, matchesKeyboardEvent } from '@/lib/shortcuts'
+import { parseShortcut } from '@/lib/shortcuts'
 import { applyThemeToDocument } from '@/lib/theme'
 
 import { QuickPaneCard } from './QuickPaneCard'
@@ -14,6 +14,7 @@ import { QuickPaneTitle } from './QuickPaneTitle'
 import { QuickPaneBody } from './QuickPaneBody'
 import { QuickPaneMetadata } from './QuickPaneMetadata'
 import { QuickPaneFooter } from './QuickPaneFooter'
+import { useQuickPaneKeyboard } from './useQuickPaneKeyboard'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Animation Timing (must match quick-pane.css custom properties)
@@ -39,7 +40,7 @@ const SHORTCUTS = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Tracks which popover is currently open (only one at a time) */
-type PopoverType =
+export type PopoverType =
   | 'status'
   | 'project'
   | 'area'
@@ -322,89 +323,27 @@ export default function QuickPaneApp() {
   // Global Keyboard Shortcuts
   // ─────────────────────────────────────────────────────────────────────────
 
-  React.useEffect(() => {
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      // Escape - close popover or dismiss pane
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        e.stopPropagation()
-
-        if (openPopover) {
-          // Close the open popover
-          setOpenPopover(null)
-        } else {
-          // No popover open, dismiss the pane
-          await handleDismiss()
-        }
-        return
-      }
-
-      // Cmd+T - set scheduled to today
-      if (matchesKeyboardEvent(SHORTCUTS.setScheduledToday, e)) {
-        e.preventDefault()
-        setScheduled(getTodayISO())
-        return
-      }
-
-      // Cmd+D - open scheduled date picker
-      if (matchesKeyboardEvent(SHORTCUTS.openScheduled, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        setOpenPopover('scheduled')
-        return
-      }
-
-      // Cmd+Shift+D - open due date picker
-      if (matchesKeyboardEvent(SHORTCUTS.openDue, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        setOpenPopover('due')
-        return
-      }
-
-      // Ctrl+Shift+Cmd+D - open defer date picker
-      if (matchesKeyboardEvent(SHORTCUTS.openDefer, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        setOpenPopover('defer')
-        return
-      }
-
-      // Cmd+S - open status picker
-      if (matchesKeyboardEvent(SHORTCUTS.openStatus, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        setOpenPopover('status')
-        return
-      }
-
-      // Cmd+Shift+Enter - toggle body
-      if (e.key === 'Enter' && e.metaKey && e.shiftKey) {
-        e.preventDefault()
-        if (!showBody) {
-          // Showing body - focus it after render
-          setShowBody(true)
-          setTimeout(() => bodyRef.current?.focus(), FOCUS_DELAY_MS)
-        } else {
-          // Hiding body - focus title
-          setShowBody(false)
-          setTimeout(() => titleRef.current?.focus(), FOCUS_DELAY_MS)
-        }
-        return
-      }
-
-      // Cmd+Enter - submit
-      if (e.key === 'Enter' && e.metaKey && !e.shiftKey) {
-        e.preventDefault()
-        await handleSubmit()
-        return
-      }
-    }
-
-    // Capture phase to handle before any popover gets the event
-    window.addEventListener('keydown', handleKeyDown, true)
-    return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [handleDismiss, handleSubmit, openPopover, captureCurrentFocus, showBody])
+  useQuickPaneKeyboard({
+    onDismiss: handleDismiss,
+    onSubmit: handleSubmit,
+    onToggleBody: show => {
+      setShowBody(show)
+      setTimeout(
+        () => (show ? bodyRef : titleRef).current?.focus(),
+        FOCUS_DELAY_MS
+      )
+    },
+    onSetScheduledToday: () => setScheduled(getTodayISO()),
+    onOpenPopover: popover => {
+      captureCurrentFocus()
+      setOpenPopover(popover)
+    },
+    onClosePopover: () => setOpenPopover(null),
+    captureCurrentFocus,
+    openPopover,
+    showBody,
+    shortcuts: SHORTCUTS,
+  })
 
   // ─────────────────────────────────────────────────────────────────────────
   // Title KeyDown Handler

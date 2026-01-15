@@ -158,195 +158,24 @@ Updated `quick-pane-main.tsx` to wrap `QuickPaneApp` with the error boundary.
 
 ---
 
-## Phase 4: Extract Keyboard Hook
+## Phase 4: Extract Keyboard Hook ✅ COMPLETE
 
-The keyboard handling logic in `QuickPaneApp.tsx` is 80+ lines. Extract to a custom hook for better organization and testability.
+Extracted keyboard handling logic to a custom hook for better organization.
 
-### 4.1 Create useQuickPaneKeyboard hook
+### 4.1 Create useQuickPaneKeyboard hook ✅
 
-**Create:** `src/components/quick-pane/useQuickPaneKeyboard.ts`
+Created `src/components/quick-pane/useQuickPaneKeyboard.ts` with:
 
-```typescript
-import * as React from 'react'
-import { matchesKeyboardEvent } from '@/lib/shortcuts'
+- Explicit options interface with JSDoc comments
+- Handles all keyboard shortcuts: Escape, Cmd+T, Cmd+D, Cmd+Shift+D, Cmd+S, Cmd+Shift+Enter, Cmd+Enter
+- Uses capture phase to intercept events before popovers
+- Full dependency array for the useEffect
 
-// Import or define shortcuts and PopoverType
-import type { PopoverType } from './QuickPaneApp'
+### 4.2 Update QuickPaneApp to use the hook ✅
 
-interface UseQuickPaneKeyboardOptions {
-  /** Called when Escape pressed with no popover open */
-  onDismiss: () => Promise<void>
-  /** Called when Cmd+Enter pressed */
-  onSubmit: () => Promise<void>
-  /** Called when Cmd+Shift+Enter pressed */
-  onToggleBody: (show: boolean) => void
-  /** Called when Cmd+T pressed */
-  onSetScheduledToday: () => void
-  /** Called when a popover shortcut is pressed */
-  onOpenPopover: (popover: PopoverType) => void
-  /** Called when Escape pressed with a popover open */
-  onClosePopover: () => void
-  /** Called before opening a popover to capture current focus */
-  captureCurrentFocus: () => void
-  /** Current open popover (null if none) */
-  openPopover: PopoverType
-  /** Whether body section is currently visible */
-  showBody: boolean
-  /** Parsed shortcut definitions */
-  shortcuts: {
-    setScheduledToday: ReturnType<
-      typeof import('@/lib/shortcuts').parseShortcut
-    >
-    openScheduled: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
-    openDue: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
-    openDefer: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
-    openStatus: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
-  }
-}
-
-/**
- * Handles all keyboard shortcuts for the quick pane.
- * Uses capture phase to intercept events before popovers.
- */
-export function useQuickPaneKeyboard({
-  onDismiss,
-  onSubmit,
-  onToggleBody,
-  onSetScheduledToday,
-  onOpenPopover,
-  onClosePopover,
-  captureCurrentFocus,
-  openPopover,
-  showBody,
-  shortcuts,
-}: UseQuickPaneKeyboardOptions): void {
-  React.useEffect(() => {
-    const handleKeyDown = async (e: KeyboardEvent) => {
-      // Escape - close popover or dismiss pane
-      if (e.key === 'Escape') {
-        e.preventDefault()
-        e.stopPropagation()
-
-        if (openPopover) {
-          onClosePopover()
-        } else {
-          await onDismiss()
-        }
-        return
-      }
-
-      // Cmd+T - set scheduled to today
-      if (matchesKeyboardEvent(shortcuts.setScheduledToday, e)) {
-        e.preventDefault()
-        onSetScheduledToday()
-        return
-      }
-
-      // Cmd+D - open scheduled date picker
-      if (matchesKeyboardEvent(shortcuts.openScheduled, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        onOpenPopover('scheduled')
-        return
-      }
-
-      // Cmd+Shift+D - open due date picker
-      if (matchesKeyboardEvent(shortcuts.openDue, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        onOpenPopover('due')
-        return
-      }
-
-      // Ctrl+Shift+Cmd+D - open defer date picker
-      if (matchesKeyboardEvent(shortcuts.openDefer, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        onOpenPopover('defer')
-        return
-      }
-
-      // Cmd+S - open status picker
-      if (matchesKeyboardEvent(shortcuts.openStatus, e)) {
-        e.preventDefault()
-        captureCurrentFocus()
-        onOpenPopover('status')
-        return
-      }
-
-      // Cmd+Shift+Enter - toggle body
-      if (e.key === 'Enter' && e.metaKey && e.shiftKey) {
-        e.preventDefault()
-        onToggleBody(!showBody)
-        return
-      }
-
-      // Cmd+Enter - submit
-      if (e.key === 'Enter' && e.metaKey && !e.shiftKey) {
-        e.preventDefault()
-        await onSubmit()
-        return
-      }
-    }
-
-    // Capture phase to handle before any popover gets the event
-    window.addEventListener('keydown', handleKeyDown, true)
-    return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [
-    onDismiss,
-    onSubmit,
-    onToggleBody,
-    onSetScheduledToday,
-    onOpenPopover,
-    onClosePopover,
-    captureCurrentFocus,
-    openPopover,
-    showBody,
-    shortcuts,
-  ])
-}
-```
-
-### 4.2 Update QuickPaneApp to use the hook
-
-**File:** `QuickPaneApp.tsx`
-
-Export `PopoverType` for use by the hook, then replace the inline useEffect:
-
-```typescript
-// Export for use by useQuickPaneKeyboard
-export type PopoverType =
-  | 'status'
-  | 'project'
-  | 'area'
-  | 'scheduled'
-  | 'due'
-  | 'defer'
-  | null
-
-// ... in component:
-
-useQuickPaneKeyboard({
-  onDismiss: handleDismiss,
-  onSubmit: handleSubmit,
-  onToggleBody: show => {
-    setShowBody(show)
-    setTimeout(() => {
-      ;(show ? bodyRef : titleRef).current?.focus()
-    }, FOCUS_DELAY_MS)
-  },
-  onSetScheduledToday: () => setScheduled(getTodayISO()),
-  onOpenPopover: popover => {
-    captureCurrentFocus()
-    setOpenPopover(popover)
-  },
-  onClosePopover: () => setOpenPopover(null),
-  captureCurrentFocus,
-  openPopover,
-  showBody,
-  shortcuts: SHORTCUTS,
-})
-```
+- Exported `PopoverType` for use by the hook
+- Replaced 80+ line inline useEffect with `useQuickPaneKeyboard()` call
+- Removed unused `matchesKeyboardEvent` import
 
 ---
 
@@ -474,7 +303,7 @@ This ensures:
 | 1 ✅  | Quick Cleanup             | Removed unused state, consolidated focus handling, moved types, fixed dark mode colors |
 | 2 ✅  | Constants and Consistency | Timing constants, CSS custom properties, timezone bug fix                              |
 | 3 ✅  | Interface Refactoring     | Grouped props, theme utility, error boundary                                           |
-| 4     | Extract Keyboard Hook     | New hook with explicit dependencies                                                    |
+| 4 ✅  | Extract Keyboard Hook     | New hook with explicit dependencies                                                    |
 | 5     | Documentation Updates     | Component docs, preferences help, translations                                         |
 
 ---
