@@ -12,8 +12,7 @@ import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
+  DropdownMenuItem,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 
@@ -66,6 +65,12 @@ export function TaskStatusPill({
     )
   }
 
+  // Handle selecting a status - update value and close menu
+  const handleSelect = (newStatus: TaskStatus) => {
+    onStatusChange(newStatus)
+    onOpenChange?.(false)
+  }
+
   return (
     <DropdownMenu open={controlledOpen} onOpenChange={onOpenChange}>
       <DropdownMenuTrigger
@@ -80,46 +85,47 @@ export function TaskStatusPill({
         <ChevronDown className="size-2.5 @6xs:size-3 opacity-60" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
-        <DropdownMenuRadioGroup
-          value={status}
-          onValueChange={value => onStatusChange(value as TaskStatus)}
-        >
-          {taskPrimaryStatuses.map(s => (
-            <DropdownMenuRadioItem
-              key={s}
-              value={s}
-              onClick={e => e.stopPropagation()}
-              className="cursor-pointer"
+        {taskPrimaryStatuses.map(s => (
+          <DropdownMenuItem
+            key={s}
+            onClick={e => {
+              e.stopPropagation()
+              handleSelect(s)
+            }}
+            className="cursor-pointer"
+          >
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded text-xs font-medium',
+                taskStatusConfig[s].color,
+                status === s && 'ring-2 ring-foreground/20'
+              )}
             >
-              <span
-                className={cn(
-                  'px-1.5 py-0.5 rounded text-xs font-medium',
-                  taskStatusConfig[s].color
-                )}
-              >
-                {taskStatusConfig[s].label}
-              </span>
-            </DropdownMenuRadioItem>
-          ))}
-          <DropdownMenuSeparator />
-          {taskSecondaryStatuses.map(s => (
-            <DropdownMenuRadioItem
-              key={s}
-              value={s}
-              onClick={e => e.stopPropagation()}
-              className="cursor-pointer"
+              {taskStatusConfig[s].label}
+            </span>
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        {taskSecondaryStatuses.map(s => (
+          <DropdownMenuItem
+            key={s}
+            onClick={e => {
+              e.stopPropagation()
+              handleSelect(s)
+            }}
+            className="cursor-pointer"
+          >
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded text-xs font-medium',
+                taskStatusConfig[s].color,
+                status === s && 'ring-2 ring-foreground/20'
+              )}
             >
-              <span
-                className={cn(
-                  'px-1.5 py-0.5 rounded text-xs font-medium',
-                  taskStatusConfig[s].color
-                )}
-              >
-                {taskStatusConfig[s].label}
-              </span>
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
+              {taskStatusConfig[s].label}
+            </span>
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   )
