@@ -39,7 +39,7 @@ export function QuickPaneTitle({
         value={value}
         onChange={handleChange}
         onKeyDown={onKeyDown}
-        className="flex-1 text-lg md:text-lg font-medium border-none shadow-none p-1 min-h-0 h-auto resize-none overflow-hidden focus-visible:ring-0 rounded-sm bg-transparent placeholder:text-muted-foreground/50"
+        className="flex-1 text-lg md:text-lg font-medium border-none shadow-none p-1 min-h-0 h-auto resize-none overflow-hidden focus-visible:ring-0 rounded-sm bg-transparent dark:bg-transparent text-foreground placeholder:text-muted-foreground/50"
         placeholder="New task..."
         rows={1}
         autoComplete="off"

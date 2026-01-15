@@ -70,7 +70,7 @@ export function QuickPaneBody({
         ref={inputRef}
         value={value}
         onChange={e => onChange(e.target.value)}
-        className="min-h-[80px] border-none shadow-none resize-none focus-visible:ring-0 bg-transparent px-4 py-3"
+        className="min-h-[80px] border-none shadow-none resize-none focus-visible:ring-0 bg-transparent dark:bg-transparent text-foreground px-4 py-3"
         placeholder="Notes..."
         autoComplete="off"
         autoCorrect="off"
