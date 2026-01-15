@@ -155,11 +155,13 @@ export default function QuickPaneApp() {
   // ─────────────────────────────────────────────────────────────────────────
 
   const handleDismiss = React.useCallback(async () => {
+    // Close any open popover immediately to prevent flash on next open
+    setOpenPopover(null)
     setExiting(true)
     // Wait for exit animation
     await new Promise(resolve => setTimeout(resolve, 100))
     await dismissQuickPane()
-    // Reset form after dismiss
+    // Reset remaining form state after dismiss
     resetForm()
     setExiting(false)
   }, [resetForm])
