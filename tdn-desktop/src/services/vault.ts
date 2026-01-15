@@ -38,6 +38,27 @@ export const vaultQueryKeys = {
 }
 
 // =============================================================================
+// Cache Utilities (for use outside React hooks)
+// =============================================================================
+
+import { queryClient } from '@/lib/query-client'
+
+/**
+ * Add a task to the query cache.
+ * Used by quick pane to add tasks without going through React hooks.
+ */
+export function addTaskToCache(task: Task): void {
+  // Add to tasks list
+  queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks =>
+    oldTasks ? [...oldTasks, task] : [task]
+  )
+  // Set individual task cache
+  queryClient.setQueryData(vaultQueryKeys.task(task.id), task)
+
+  logger.debug('Added task to cache', { taskId: task.id })
+}
+
+// =============================================================================
 // Error Handling
 // =============================================================================
 

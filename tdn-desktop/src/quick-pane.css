@@ -22,8 +22,73 @@ body {
 }
 
 /* Allow text input */
-input {
+input,
+textarea {
   user-select: text !important;
   -webkit-user-select: text !important;
   cursor: text !important;
+}
+
+/* Card show/hide animations */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes card-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+.quick-pane-card {
+  animation: card-enter 150ms ease-out forwards;
+}
+
+.quick-pane-card.exiting {
+  animation: card-exit 100ms ease-in forwards;
+}
+
+/* Body expand/collapse animation */
+@keyframes body-expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+  }
+}
+
+@keyframes body-collapse {
+  from {
+    opacity: 1;
+    max-height: 200px;
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+  }
+}
+
+.quick-pane-body-enter {
+  animation: body-expand 150ms ease-out forwards;
+  overflow: hidden;
+}
+
+.quick-pane-body-exit {
+  animation: body-collapse 100ms ease-in forwards;
+  overflow: hidden;
 }
