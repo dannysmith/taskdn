@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useState, useRef } from 'react'
 import { emit } from '@tauri-apps/api/event'
 import { ThemeProviderContext, type Theme } from '@/lib/theme-context'
+import { THEME_STORAGE_KEY } from '@/lib/theme'
 import { usePreferences } from '@/services/preferences'
 
 interface ThemeProviderProps {
@@ -15,7 +16,7 @@ const isValidTheme = (value: string | null): value is Theme =>
 export function ThemeProvider({
   children,
   defaultTheme = 'system',
-  storageKey = 'ui-theme',
+  storageKey = THEME_STORAGE_KEY,
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
