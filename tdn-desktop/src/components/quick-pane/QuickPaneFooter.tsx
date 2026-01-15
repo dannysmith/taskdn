@@ -1,13 +1,27 @@
+import { CircleDot, FolderOpen } from 'lucide-react'
+
+import type { Area, Project } from '@/lib/tauri-bindings'
 import { Button } from '@/components/ui/button'
+import { SearchableSelect } from '@/components/ui/searchable-select'
 
 interface QuickPaneFooterProps {
   onCancel: () => void
   onSave: () => void
   saveDisabled: boolean
+  // Project/Area
+  projectId: string | null
+  onProjectChange: (projectId: string | undefined) => void
+  areaId: string | null
+  onAreaChange: (areaId: string | undefined) => void
+  projects: Project[]
+  areas: Area[]
 }
 
 /**
- * QuickPaneFooter - Cancel and Save buttons.
+ * QuickPaneFooter - Project/Area selectors and Cancel/Save buttons.
+ *
+ * Left side: Project and area selectors (borderless)
+ * Right side: Cancel and Save buttons
  *
  * Save is disabled when title is empty.
  * Cancel dismisses without creating a task.
@@ -17,25 +31,80 @@ export function QuickPaneFooter({
   onCancel,
   onSave,
   saveDisabled,
+  projectId,
+  onProjectChange,
+  areaId,
+  onAreaChange,
+  projects,
+  areas,
 }: QuickPaneFooterProps) {
+  // Filter to active projects/areas
+  const activeProjects = projects.filter(p => p.status !== 'done')
+  const activeAreas = areas.filter(a => a.status === 'active')
+
+  // Find current selections
+  const currentProject = projectId
+    ? projects.find(p => p.id === projectId)
+    : null
+  const currentArea = areaId ? areas.find(a => a.id === areaId) : null
+
+  // Include current selection even if not active
+  const projectOptions =
+    currentProject && !activeProjects.find(p => p.id === currentProject.id)
+      ? [currentProject, ...activeProjects]
+      : activeProjects
+
+  const areaOptions =
+    currentArea && !activeAreas.find(a => a.id === currentArea.id)
+      ? [currentArea, ...activeAreas]
+      : activeAreas
+
   return (
-    <div className="flex items-center justify-end gap-2 rounded-b-2xl bg-muted/30 px-5 py-3">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onCancel}
-        className="font-medium"
-      >
-        Cancel
-      </Button>
-      <Button
-        size="sm"
-        onClick={onSave}
-        disabled={saveDisabled}
-        className="font-medium"
-      >
-        Save
-      </Button>
+    <div className="flex items-center justify-between gap-2 rounded-b-2xl bg-muted/30 px-5 py-3">
+      {/* Left side: Project + Area selectors */}
+      <div className="flex items-center gap-2">
+        <SearchableSelect
+          value={currentProject?.id}
+          options={projectOptions.map(p => ({ value: p.id, label: p.title }))}
+          placeholder="Project"
+          displayValue={currentProject?.title}
+          icon={<CircleDot className="size-3 text-entity-project" />}
+          onChange={onProjectChange}
+          emptyText="No projects"
+          className="border-0 bg-transparent shadow-none min-w-36"
+        />
+
+        <SearchableSelect
+          value={currentArea?.id}
+          options={areaOptions.map(a => ({ value: a.id, label: a.title }))}
+          placeholder="Area"
+          displayValue={currentArea?.title}
+          icon={<FolderOpen className="size-3 text-entity-area" />}
+          onChange={onAreaChange}
+          emptyText="No areas"
+          className="border-0 bg-transparent shadow-none min-w-32"
+        />
+      </div>
+
+      {/* Right side: Cancel + Save buttons */}
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onCancel}
+          className="font-medium"
+        >
+          Cancel
+        </Button>
+        <Button
+          size="sm"
+          onClick={onSave}
+          disabled={saveDisabled}
+          className="font-medium"
+        >
+          Save
+        </Button>
+      </div>
     </div>
   )
 }

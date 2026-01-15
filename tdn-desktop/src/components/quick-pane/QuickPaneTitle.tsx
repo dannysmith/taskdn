@@ -31,15 +31,15 @@ export function QuickPaneTitle({
 
   return (
     <div className="flex items-start gap-3 px-5 py-4">
-      {/* Visual checkbox - vertically centered with first line of text-lg textarea */}
-      <div className="mt-2.5 size-4 shrink-0 rounded-[4px] border-2 border-muted-foreground/40" />
+      {/* Visual checkbox - vertically centered with first line of text-xl textarea */}
+      <div className="mt-[10px] size-4 shrink-0 rounded-[4px] border-2 border-muted-foreground/40" />
 
       <Textarea
         ref={inputRef}
         value={value}
         onChange={handleChange}
         onKeyDown={onKeyDown}
-        className="flex-1 text-lg font-medium border-none shadow-none p-1 min-h-0 h-auto resize-none overflow-hidden focus-visible:ring-0 rounded-sm bg-transparent placeholder:text-muted-foreground/50"
+        className="flex-1 text-lg md:text-lg font-medium border-none shadow-none p-1 min-h-0 h-auto resize-none overflow-hidden focus-visible:ring-0 rounded-sm bg-transparent placeholder:text-muted-foreground/50"
         placeholder="New task..."
         rows={1}
         autoComplete="off"

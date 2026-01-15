@@ -324,12 +324,6 @@ export default function QuickPaneApp() {
       <QuickPaneMetadata
         status={status}
         onStatusChange={setStatus}
-        projectId={projectId}
-        onProjectChange={id => setProjectId(id ?? null)}
-        areaId={areaId}
-        onAreaChange={id => setAreaId(id ?? null)}
-        projects={projects}
-        areas={areas}
         scheduled={scheduled}
         onScheduledChange={d => setScheduled(d ?? null)}
         due={due}
@@ -342,6 +336,12 @@ export default function QuickPaneApp() {
         onCancel={handleDismiss}
         onSave={handleSubmit}
         saveDisabled={!canSave}
+        projectId={projectId}
+        onProjectChange={id => setProjectId(id ?? null)}
+        areaId={areaId}
+        onAreaChange={id => setAreaId(id ?? null)}
+        projects={projects}
+        areas={areas}
       />
     </QuickPaneCard>
   )

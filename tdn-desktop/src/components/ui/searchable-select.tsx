@@ -41,6 +41,8 @@ export interface SearchableSelectProps {
   onChange: (value: string | undefined) => void
   /** Text shown when no options match the search */
   emptyText: string
+  /** Additional classes for the trigger button */
+  className?: string
 }
 
 // -----------------------------------------------------------------------------
@@ -75,6 +77,7 @@ export function SearchableSelect({
   icon,
   onChange,
   emptyText,
+  className,
 }: SearchableSelectProps) {
   const [open, setOpen] = React.useState(false)
 
@@ -87,7 +90,7 @@ export function SearchableSelect({
             size="sm"
             role="combobox"
             aria-expanded={open}
-            className="h-8 min-w-0 flex-1 justify-between"
+            className={cn('h-8 min-w-0 flex-1 justify-between', className)}
           />
         }
       >
