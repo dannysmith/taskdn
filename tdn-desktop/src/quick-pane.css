@@ -6,6 +6,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Animation timing (JS constants in QuickPaneApp.tsx must match) */
+:root {
+  --quick-pane-enter-duration: 150ms;
+  --quick-pane-exit-duration: 100ms;
+}
+
 /* Quick pane needs transparent background for rounded corners to show */
 html,
 body,
@@ -56,11 +62,11 @@ textarea {
 }
 
 .quick-pane-card {
-  animation: card-enter 150ms ease-out forwards;
+  animation: card-enter var(--quick-pane-enter-duration) ease-out forwards;
 }
 
 .quick-pane-card.exiting {
-  animation: card-exit 100ms ease-in forwards;
+  animation: card-exit var(--quick-pane-exit-duration) ease-in forwards;
 }
 
 /* Body expand/collapse animation */
@@ -87,11 +93,11 @@ textarea {
 }
 
 .quick-pane-body-enter {
-  animation: body-expand 150ms ease-out forwards;
+  animation: body-expand var(--quick-pane-enter-duration) ease-out forwards;
   overflow: hidden;
 }
 
 .quick-pane-body-exit {
-  animation: body-collapse 100ms ease-in forwards;
+  animation: body-collapse var(--quick-pane-exit-duration) ease-in forwards;
   overflow: hidden;
 }
