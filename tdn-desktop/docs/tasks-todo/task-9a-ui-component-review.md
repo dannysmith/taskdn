@@ -1,0 +1,5 @@
+# Task: Reviews
+
+## UI Component Review
+
+Let's carefully review all the custom UI components we have in `ui/`. Are they fully reusable in all sorts of contexts? Where appropriate, will they work in popovers and when embedded. Do they support keyboard navigation correctly internally where appropriate? Do they expose sensible props with consistent prop naming and consistent return values? Are they resilient to being used in a variety of containers (ie where appropriate do they fill their containers width etc? And for some components obviously they may not want to do this, but we may also want to provide a boolean prop which allows this to happen (eg shrink-to-content or fill-container)). Where appropriate do we provide sensible ways of handling errors which occur inside these. Do we follow standard React best practices when it comes to the external API and the way that these work internally for reusable UI components. And only where appropriate are we following similar ish patterns to the shadcn components that make up the rest of our core UI primitives. 
