@@ -21,41 +21,20 @@ export function QuickPaneBody({
   visible,
   inputRef,
 }: QuickPaneBodyProps) {
-  const [animating, setAnimating] = React.useState(false)
   const [shouldRender, setShouldRender] = React.useState(visible)
 
   // Handle visibility changes with animation
   React.useEffect(() => {
     if (visible) {
       setShouldRender(true)
-      setAnimating(true)
     } else if (shouldRender) {
-      setAnimating(true)
-      // Wait for exit animation to complete
+      // Wait for exit animation to complete before unmounting
       const timer = setTimeout(() => {
         setShouldRender(false)
-        setAnimating(false)
       }, 100)
       return () => clearTimeout(timer)
     }
   }, [visible, shouldRender])
-
-  // Clear animating state after enter animation
-  React.useEffect(() => {
-    if (visible && animating) {
-      const timer = setTimeout(() => setAnimating(false), 150)
-      return () => clearTimeout(timer)
-    }
-  }, [visible, animating])
-
-  // Focus textarea when it becomes visible
-  React.useEffect(() => {
-    if (visible && inputRef?.current) {
-      // Small delay to let animation start
-      const timer = setTimeout(() => inputRef.current?.focus(), 50)
-      return () => clearTimeout(timer)
-    }
-  }, [visible, inputRef])
 
   if (!shouldRender) return null
 

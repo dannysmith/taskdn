@@ -25,75 +25,44 @@ Following completion of the Quick Entry Pane feature (Task 8), this task covers 
 
 ---
 
-## Phase 1: Quick Cleanup
+## Phase 1: Quick Cleanup ✅ COMPLETE
 
-Small, isolated fixes that don't change architecture. Safe to commit together.
+Small, isolated fixes that don't change architecture.
 
-### 1.1 Remove unused `animating` state in QuickPaneBody
+### 1.1 Remove unused `animating` state in QuickPaneBody ✅
 
-The `animating` state is set but never read for any purpose.
+The `animating` state was set but never read for any purpose.
 
 **File:** `QuickPaneBody.tsx`
 
 **Changes:**
 
-- Remove `const [animating, setAnimating] = React.useState(false)`
-- Remove all `setAnimating()` calls
-- Simplify the useEffect to only manage `shouldRender`
+- Removed `const [animating, setAnimating] = React.useState(false)`
+- Removed all `setAnimating()` calls
+- Simplified the useEffect to only manage `shouldRender`
 
-### 1.2 Fix redundant Tailwind class in QuickPaneTitle
+### 1.2 Remove duplicate focus handling ✅
 
-**File:** `QuickPaneTitle.tsx` (line 42)
+Focus for the body textarea was handled in two places. Removed the useEffect from `QuickPaneBody.tsx` - focus is now managed solely by the parent (`QuickPaneApp.tsx`).
 
-**Change:** `text-lg md:text-lg` → `text-lg`
+**Rationale:** Parent components should own focus management for consistent behavior. The body component is now a controlled, presentational component.
 
-The breakpoint variant is identical to the base class.
-
-### 1.3 Remove duplicate focus handling
-
-Focus for the body textarea is handled in two places:
-
-1. `QuickPaneBody.tsx` lines 52-58 (useEffect on `visible`)
-2. `QuickPaneApp.tsx` lines 388-389 (keyboard handler)
-
-**Decision:** Keep the logic in `QuickPaneApp.tsx` (the parent) since it's already handling focus there. Remove the useEffect from `QuickPaneBody.tsx`.
-
-**Rationale:** Parent components should own focus management for consistent behavior. The body component should be a controlled, presentational component.
-
-**Note:** This creates a coupling assumption - if a new way to show the body is added later, focus handling must be added there too. Document this in the component JSDoc.
-
-### 1.4 Move type definitions to file top
+### 1.3 Move type definitions to file top ✅
 
 **File:** `QuickPaneApp.tsx`
 
-Move `PopoverType` and `FocusTarget` type definitions from inside the component (lines 114-126) to the top of the file after imports.
+Moved `PopoverType` and `FocusTarget` type definitions from inside the component to the top of the file with JSDoc comments.
 
-### 1.5 Test and simplify textarea auto-resize
+### 1.4 Fix dark mode colors in SearchableSelect ✅
 
-**File:** `QuickPaneTitle.tsx`
+**File:** `src/components/ui/searchable-select.tsx`
 
-The Textarea component uses the `field-sizing-content` CSS class. Test whether the manual JavaScript resize logic (lines 26-29) is necessary.
+Fixed pre-existing bug where selected values and chevron icons were black in dark mode due to missing explicit color classes.
 
-**IMPORTANT:** Before testing, add the `field-sizing-content` utility to `quick-pane.css` since it's currently only defined in `App.css`:
+**Changes:**
 
-```css
-@utility field-sizing-content {
-  field-sizing: content;
-}
-```
-
-**Testing checklist:**
-
-1. Add the utility to `quick-pane.css`
-2. Remove the manual resize code from `QuickPaneTitle.tsx`
-3. Test on macOS (WebKit) - `field-sizing: content` requires Safari 17.4+
-4. Test on Windows (WebView2/Chromium) if available
-5. Test multiline titles expand correctly
-6. Test that height shrinks when deleting text
-
-**If CSS alone works:** Remove the manual resize code and simplify `handleChange` to just call `onChange(e.target.value)`.
-
-**If CSS doesn't work on any platform:** Keep the JS approach but add a comment explaining why, and still add the CSS utility as a progressive enhancement.
+- Added `text-foreground` class when a value is selected
+- Changed chevron from `opacity-50` to `text-muted-foreground`
 
 ---
 
@@ -197,7 +166,8 @@ export function applyThemeToDocument(): void {
   root.classList.remove('light', 'dark')
 
   if (theme === 'system') {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+      .matches
       ? 'dark'
       : 'light'
     root.classList.add(systemTheme)
@@ -410,7 +380,9 @@ interface UseQuickPaneKeyboardOptions {
   showBody: boolean
   /** Parsed shortcut definitions */
   shortcuts: {
-    setScheduledToday: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
+    setScheduledToday: ReturnType<
+      typeof import('@/lib/shortcuts').parseShortcut
+    >
     openScheduled: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
     openDue: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
     openDefer: ReturnType<typeof import('@/lib/shortcuts').parseShortcut>
@@ -546,7 +518,7 @@ useQuickPaneKeyboard({
   onToggleBody: show => {
     setShowBody(show)
     setTimeout(() => {
-      (show ? bodyRef : titleRef).current?.focus()
+      ;(show ? bodyRef : titleRef).current?.focus()
     }, FOCUS_DELAY_MS)
   },
   onSetScheduledToday: () => setScheduled(getTodayISO()),
@@ -576,14 +548,15 @@ The existing documentation covers architecture well but needs updates for the ac
 ## Component Structure
 
 The quick pane UI is split into focused, single-responsibility components:
-
 ```
-QuickPaneApp.tsx          - Main component, state management, keyboard handling
-├── QuickPaneCard.tsx     - Card container with entry/exit animations
-├── QuickPaneTitle.tsx    - Title input with visual checkbox
-├── QuickPaneBody.tsx     - Collapsible notes textarea
+
+QuickPaneApp.tsx - Main component, state management, keyboard handling
+├── QuickPaneCard.tsx - Card container with entry/exit animations
+├── QuickPaneTitle.tsx - Title input with visual checkbox
+├── QuickPaneBody.tsx - Collapsible notes textarea
 ├── QuickPaneMetadata.tsx - Status pill and date buttons
-└── QuickPaneFooter.tsx   - Project/area selectors and action buttons
+└── QuickPaneFooter.tsx - Project/area selectors and action buttons
+
 ```
 
 ### Component Responsibilities
@@ -682,13 +655,13 @@ This ensures:
 
 ## Summary
 
-| Phase | Description | Key Changes |
-|-------|-------------|-------------|
-| 1 | Quick Cleanup | 5 small fixes, add CSS utility to quick-pane.css |
-| 2 | Constants and Consistency | Timing constants, **timezone bug fix** |
-| 3 | Interface Refactoring | Grouped props, theme utility, error boundary |
-| 4 | Extract Keyboard Hook | New hook with explicit dependencies |
-| 5 | Documentation Updates | Component docs, preferences help, translations |
+| Phase | Description               | Key Changes                                                                            |
+| ----- | ------------------------- | -------------------------------------------------------------------------------------- |
+| 1 ✅  | Quick Cleanup             | Removed unused state, consolidated focus handling, moved types, fixed dark mode colors |
+| 2     | Constants and Consistency | Timing constants, **timezone bug fix**                                                 |
+| 3     | Interface Refactoring     | Grouped props, theme utility, error boundary                                           |
+| 4     | Extract Keyboard Hook     | New hook with explicit dependencies                                                    |
+| 5     | Documentation Updates     | Component docs, preferences help, translations                                         |
 
 ---
 
@@ -700,6 +673,5 @@ This plan was reviewed for potential issues. Key changes from the original:
 2. **Reframed date-fns change as bug fix** - The original `toISOString()` approach returns UTC date, not local date
 3. **Fixed type mismatch** - Use `string | undefined` (not `string | null`) to match `DateButton` signature
 4. **Custom error boundary** - Simple implementation instead of external package dependency
-5. **Added CSS utility note** - `field-sizing-content` must be added to `quick-pane.css`
-6. **Shared theme storage key** - Export from `theme.ts` to prevent drift between files
-7. **Explicit hook dependencies** - Full dependency array documented for the keyboard hook
+5. **Shared theme storage key** - Export from `theme.ts` to prevent drift between files
+6. **Explicit hook dependencies** - Full dependency array documented for the keyboard hook

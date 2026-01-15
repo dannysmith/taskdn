@@ -26,6 +26,23 @@ const SHORTCUTS = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Types
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Tracks which popover is currently open (only one at a time) */
+type PopoverType =
+  | 'status'
+  | 'project'
+  | 'area'
+  | 'scheduled'
+  | 'due'
+  | 'defer'
+  | null
+
+/** Tracks which textarea to restore focus to after popover closes */
+type FocusTarget = 'title' | 'body' | null
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -47,7 +64,8 @@ function applyTheme() {
   root.classList.remove('light', 'dark')
 
   if (theme === 'system') {
-    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+      .matches
       ? 'dark'
       : 'light'
     root.classList.add(systemTheme)
@@ -109,20 +127,7 @@ export default function QuickPaneApp() {
 
   const [exiting, setExiting] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
-
-  // Track which popover is open (only one at a time)
-  type PopoverType =
-    | 'status'
-    | 'project'
-    | 'area'
-    | 'scheduled'
-    | 'due'
-    | 'defer'
-    | null
   const [openPopover, setOpenPopover] = React.useState<PopoverType>(null)
-
-  // Track which textarea to restore focus to after popover closes
-  type FocusTarget = 'title' | 'body' | null
   const [restoreFocusTo, setRestoreFocusTo] = React.useState<FocusTarget>(null)
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -208,7 +213,9 @@ export default function QuickPaneApp() {
         })
 
         if (updateResult.status === 'error') {
-          logger.warn('Failed to add body to task', { error: updateResult.error })
+          logger.warn('Failed to add body to task', {
+            error: updateResult.error,
+          })
         }
       }
 
@@ -259,36 +266,38 @@ export default function QuickPaneApp() {
 
   React.useEffect(() => {
     const currentWindow = getCurrentWindow()
-    const unlisten = currentWindow.onFocusChanged(async ({ payload: focused }) => {
-      if (focused) {
-        // Re-apply theme in case it changed while hidden
-        applyTheme()
+    const unlisten = currentWindow.onFocusChanged(
+      async ({ payload: focused }) => {
+        if (focused) {
+          // Re-apply theme in case it changed while hidden
+          applyTheme()
 
-        // Reset form on focus (fresh start)
-        resetForm()
+          // Reset form on focus (fresh start)
+          resetForm()
 
-        // Load areas and projects
-        const [areasResult, projectsResult] = await Promise.all([
-          commands.listAreas(),
-          commands.listProjects(),
-        ])
+          // Load areas and projects
+          const [areasResult, projectsResult] = await Promise.all([
+            commands.listAreas(),
+            commands.listProjects(),
+          ])
 
-        if (areasResult.status === 'ok') {
-          setAreas(areasResult.data)
-        }
-        if (projectsResult.status === 'ok') {
-          setProjects(projectsResult.data)
-        }
+          if (areasResult.status === 'ok') {
+            setAreas(areasResult.data)
+          }
+          if (projectsResult.status === 'ok') {
+            setProjects(projectsResult.data)
+          }
 
-        // Focus title input
-        setTimeout(() => titleRef.current?.focus(), 50)
-      } else {
-        // Dismiss on blur (unless we're already exiting)
-        if (!exiting) {
-          await handleDismiss()
+          // Focus title input
+          setTimeout(() => titleRef.current?.focus(), 50)
+        } else {
+          // Dismiss on blur (unless we're already exiting)
+          if (!exiting) {
+            await handleDismiss()
+          }
         }
       }
-    })
+    )
 
     return () => {
       unlisten.then(fn => fn())
@@ -457,7 +466,9 @@ export default function QuickPaneApp() {
         statusOpen={openPopover === 'status'}
         onStatusOpenChange={open => setOpenPopover(open ? 'status' : null)}
         scheduledOpen={openPopover === 'scheduled'}
-        onScheduledOpenChange={open => setOpenPopover(open ? 'scheduled' : null)}
+        onScheduledOpenChange={open =>
+          setOpenPopover(open ? 'scheduled' : null)
+        }
         dueOpen={openPopover === 'due'}
         onDueOpenChange={open => setOpenPopover(open ? 'due' : null)}
         deferOpen={openPopover === 'defer'}
