@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { emit, listen } from '@tauri-apps/api/event'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { format } from 'date-fns'
 
 import { commands } from '@/lib/tauri-bindings'
 import type { TaskStatus, Area, Project, Task } from '@/lib/tauri-bindings'
@@ -12,6 +13,13 @@ import { QuickPaneTitle } from './QuickPaneTitle'
 import { QuickPaneBody } from './QuickPaneBody'
 import { QuickPaneMetadata } from './QuickPaneMetadata'
 import { QuickPaneFooter } from './QuickPaneFooter'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Animation Timing (must match quick-pane.css custom properties)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FOCUS_DELAY_MS = 50
+const EXIT_ANIMATION_MS = 100
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Keyboard Shortcuts
@@ -47,10 +55,11 @@ type FocusTarget = 'title' | 'body' | null
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Gets today's date in ISO format (YYYY-MM-DD).
+ * Gets today's date in ISO format (YYYY-MM-DD) using local timezone.
+ * Uses date-fns to avoid UTC conversion issues with toISOString().
  */
 function getTodayISO(): string {
-  return new Date().toISOString().slice(0, 10)
+  return format(new Date(), 'yyyy-MM-dd')
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -164,7 +173,7 @@ export default function QuickPaneApp() {
     setOpenPopover(null)
     setExiting(true)
     // Wait for exit animation
-    await new Promise(resolve => setTimeout(resolve, 100))
+    await new Promise(resolve => setTimeout(resolve, EXIT_ANIMATION_MS))
     await dismissQuickPane()
     // Reset remaining form state after dismiss
     resetForm()
@@ -289,7 +298,7 @@ export default function QuickPaneApp() {
           }
 
           // Focus title input
-          setTimeout(() => titleRef.current?.focus(), 50)
+          setTimeout(() => titleRef.current?.focus(), FOCUS_DELAY_MS)
         } else {
           // Dismiss on blur (unless we're already exiting)
           if (!exiting) {
@@ -395,11 +404,11 @@ export default function QuickPaneApp() {
         if (!showBody) {
           // Showing body - focus it after render
           setShowBody(true)
-          setTimeout(() => bodyRef.current?.focus(), 50)
+          setTimeout(() => bodyRef.current?.focus(), FOCUS_DELAY_MS)
         } else {
           // Hiding body - focus title
           setShowBody(false)
-          setTimeout(() => titleRef.current?.focus(), 50)
+          setTimeout(() => titleRef.current?.focus(), FOCUS_DELAY_MS)
         }
         return
       }

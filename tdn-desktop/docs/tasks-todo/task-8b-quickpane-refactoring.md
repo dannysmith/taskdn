@@ -66,66 +66,46 @@ Fixed pre-existing bug where selected values and chevron icons were black in dar
 
 ---
 
-## Phase 2: Constants and Consistency
+## Phase 2: Constants and Consistency ✅ COMPLETE
 
-Extract magic numbers to named constants and ensure consistency across JS and CSS.
+Extracted magic numbers to named constants and added CSS custom properties.
 
-### 2.1 Add timing constants to QuickPaneApp
+### 2.1 Add timing constants to QuickPaneApp ✅
 
 **File:** `QuickPaneApp.tsx`
 
-Add constants at the top of the file:
+Added constants at the top of the file:
 
 ```typescript
-// Animation and focus timing (must match quick-pane.css)
+// Animation timing (must match quick-pane.css custom properties)
 const FOCUS_DELAY_MS = 50
 const EXIT_ANIMATION_MS = 100
-const ENTER_ANIMATION_MS = 150
 ```
 
-Replace all magic number timeouts with these constants.
+Replaced all magic number timeouts with these constants.
 
-### 2.2 Add CSS custom properties for animation durations
+### 2.2 Add CSS custom properties for animation durations ✅
 
 **File:** `quick-pane.css`
 
-Add CSS variables and update keyframe references:
+Added CSS variables and updated animation references:
 
 ```css
 :root {
   --quick-pane-enter-duration: 150ms;
   --quick-pane-exit-duration: 100ms;
 }
-
-.quick-pane-card {
-  animation: card-enter var(--quick-pane-enter-duration) ease-out forwards;
-}
-
-.quick-pane-card.exiting {
-  animation: card-exit var(--quick-pane-exit-duration) ease-in forwards;
-}
-
-/* Same for body animations */
 ```
 
-**Note:** The JS and CSS values must be kept in sync manually. The constants in Phase 2.1 include comments referencing the CSS file.
+Updated `.quick-pane-card`, `.quick-pane-card.exiting`, `.quick-pane-body-enter`, and `.quick-pane-body-exit` to use variables.
 
-### 2.3 Fix timezone bug in date formatting (BUG FIX)
+Added comment in `QuickPaneBody.tsx` referencing the CSS timing.
+
+### 2.3 Fix timezone bug in date formatting ✅
 
 **File:** `QuickPaneApp.tsx`
 
-The current implementation has a timezone bug:
-
-```typescript
-// CURRENT (BUGGY): Returns UTC date
-function getTodayISO(): string {
-  return new Date().toISOString().slice(0, 10)
-}
-```
-
-`toISOString()` returns UTC time. For a user at UTC-5 at 11:00 PM local time, this returns **tomorrow's date** because it's 4:00 AM UTC.
-
-**Fix:** Use date-fns to get the local date:
+Fixed bug where `toISOString().slice(0, 10)` returned UTC date instead of local date. Now uses date-fns:
 
 ```typescript
 import { format } from 'date-fns'
@@ -135,7 +115,7 @@ function getTodayISO(): string {
 }
 ```
 
-This returns the user's local date, which is the correct behavior for "schedule for today."
+This returns the user's local date, which is correct for "schedule for today."
 
 ---
 
@@ -658,7 +638,7 @@ This ensures:
 | Phase | Description               | Key Changes                                                                            |
 | ----- | ------------------------- | -------------------------------------------------------------------------------------- |
 | 1 ✅  | Quick Cleanup             | Removed unused state, consolidated focus handling, moved types, fixed dark mode colors |
-| 2     | Constants and Consistency | Timing constants, **timezone bug fix**                                                 |
+| 2 ✅  | Constants and Consistency | Timing constants, CSS custom properties, timezone bug fix                              |
 | 3     | Interface Refactoring     | Grouped props, theme utility, error boundary                                           |
 | 4     | Extract Keyboard Hook     | New hook with explicit dependencies                                                    |
 | 5     | Documentation Updates     | Component docs, preferences help, translations                                         |

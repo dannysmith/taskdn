@@ -24,11 +24,12 @@ export function QuickPaneBody({
   const [shouldRender, setShouldRender] = React.useState(visible)
 
   // Handle visibility changes with animation
+  // Exit delay must match --quick-pane-exit-duration in quick-pane.css
   React.useEffect(() => {
     if (visible) {
       setShouldRender(true)
     } else if (shouldRender) {
-      // Wait for exit animation to complete before unmounting
+      // Wait for exit animation to complete before unmounting (100ms)
       const timer = setTimeout(() => {
         setShouldRender(false)
       }, 100)
