@@ -381,7 +381,15 @@ export default function QuickPaneApp() {
       // Cmd+Shift+Enter - toggle body
       if (e.key === 'Enter' && e.metaKey && e.shiftKey) {
         e.preventDefault()
-        setShowBody(prev => !prev)
+        if (!showBody) {
+          // Showing body - focus it after render
+          setShowBody(true)
+          setTimeout(() => bodyRef.current?.focus(), 50)
+        } else {
+          // Hiding body - focus title
+          setShowBody(false)
+          setTimeout(() => titleRef.current?.focus(), 50)
+        }
         return
       }
 
@@ -396,7 +404,7 @@ export default function QuickPaneApp() {
     // Capture phase to handle before any popover gets the event
     window.addEventListener('keydown', handleKeyDown, true)
     return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [handleDismiss, handleSubmit, openPopover, captureCurrentFocus])
+  }, [handleDismiss, handleSubmit, openPopover, captureCurrentFocus, showBody])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Title KeyDown Handler
