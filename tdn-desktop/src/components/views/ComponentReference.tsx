@@ -140,14 +140,23 @@ import { HeadingListItem } from '@/components/headings/HeadingListItem'
 import type { Task, Project, Area } from '@/lib/tauri-bindings'
 
 // -----------------------------------------------------------------------------
+// Helpers
+// -----------------------------------------------------------------------------
+
+/** No-op function for demo component callbacks */
+const noop = () => {
+  // Intentionally empty - demo placeholder callback
+}
+
+// -----------------------------------------------------------------------------
 // Fake Data
 // -----------------------------------------------------------------------------
 
-const todayStr = new Date().toISOString().split('T')[0]!
-const yesterdayStr = new Date(Date.now() - 86400000)
-  .toISOString()
-  .split('T')[0]!
-const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0]!
+const todayStr = new Date().toISOString().split('T')[0] ?? ''
+const yesterdayStr =
+  new Date(Date.now() - 86400000).toISOString().split('T')[0] ?? ''
+const tomorrowStr =
+  new Date(Date.now() + 86400000).toISOString().split('T')[0] ?? ''
 
 const FAKE_TASKS: Task[] = [
   {
@@ -342,8 +351,8 @@ export function ComponentReference() {
                     onSelect={() => setSelectedTaskId(task.id)}
                     onStartEdit={() => setEditingTaskId(task.id)}
                     onEndEdit={() => setEditingTaskId(null)}
-                    onTitleChange={() => {}}
-                    onStatusToggle={() => {}}
+                    onTitleChange={noop}
+                    onStatusToggle={noop}
                     contextName="Authentication System"
                   />
                 ))}
@@ -357,10 +366,11 @@ export function ComponentReference() {
               </p>
               <div className="grid gap-3 max-w-xs">
                 <TaskCard
+                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
                   task={FAKE_TASKS[0]!}
                   projectName="Authentication System"
-                  onStatusChange={() => {}}
-                  onTitleChange={() => {}}
+                  onStatusChange={noop}
+                  onTitleChange={noop}
                 />
               </div>
             </ComponentGroup>
@@ -370,7 +380,9 @@ export function ComponentReference() {
                 Compact card for month calendar cells. Just checkbox + title.
               </p>
               <div className="grid gap-2 max-w-[200px]">
+                {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
                 <TaskCard task={FAKE_TASKS[0]!} size="compact" />
+                {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
                 <TaskCard task={FAKE_TASKS[3]!} size="compact" variant="done" />
               </div>
             </ComponentGroup>
@@ -380,12 +392,14 @@ export function ComponentReference() {
                 Visual states: default, overdue (red), deferred (muted/dashed),
                 done (green).
               </p>
+              {/* eslint-disable @typescript-eslint/no-non-null-assertion */}
               <div className="grid gap-3 max-w-xs">
                 <TaskCard task={FAKE_TASKS[0]!} variant="default" />
                 <TaskCard task={FAKE_TASKS[1]!} variant="overdue" />
                 <TaskCard task={FAKE_TASKS[2]!} variant="deferred" />
                 <TaskCard task={FAKE_TASKS[3]!} variant="done" />
               </div>
+              {/* eslint-enable @typescript-eslint/no-non-null-assertion */}
             </ComponentGroup>
 
             <ComponentGroup title="TaskStatusCheckbox">
@@ -394,30 +408,27 @@ export function ComponentReference() {
               </p>
               <div className="flex items-center gap-4">
                 <div className="flex flex-col items-center gap-1">
-                  <TaskStatusCheckbox status="ready" onToggle={() => {}} />
+                  <TaskStatusCheckbox status="ready" onToggle={noop} />
                   <span className="text-2xs text-muted-foreground">ready</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <TaskStatusCheckbox
-                    status="in-progress"
-                    onToggle={() => {}}
-                  />
+                  <TaskStatusCheckbox status="in-progress" onToggle={noop} />
                   <span className="text-2xs text-muted-foreground">
                     in-progress
                   </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <TaskStatusCheckbox status="blocked" onToggle={() => {}} />
+                  <TaskStatusCheckbox status="blocked" onToggle={noop} />
                   <span className="text-2xs text-muted-foreground">
                     blocked
                   </span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <TaskStatusCheckbox status="done" onToggle={() => {}} />
+                  <TaskStatusCheckbox status="done" onToggle={noop} />
                   <span className="text-2xs text-muted-foreground">done</span>
                 </div>
                 <div className="flex flex-col items-center gap-1">
-                  <TaskStatusCheckbox status="dropped" onToggle={() => {}} />
+                  <TaskStatusCheckbox status="dropped" onToggle={noop} />
                   <span className="text-2xs text-muted-foreground">
                     dropped
                   </span>
@@ -430,14 +441,11 @@ export function ComponentReference() {
                 Dropdown to change task status. Click to open menu.
               </p>
               <div className="flex flex-wrap gap-2">
-                <TaskStatusPill status="inbox" onStatusChange={() => {}} />
-                <TaskStatusPill status="ready" onStatusChange={() => {}} />
-                <TaskStatusPill
-                  status="in-progress"
-                  onStatusChange={() => {}}
-                />
-                <TaskStatusPill status="blocked" onStatusChange={() => {}} />
-                <TaskStatusPill status="done" onStatusChange={() => {}} />
+                <TaskStatusPill status="inbox" onStatusChange={noop} />
+                <TaskStatusPill status="ready" onStatusChange={noop} />
+                <TaskStatusPill status="in-progress" onStatusChange={noop} />
+                <TaskStatusPill status="blocked" onStatusChange={noop} />
+                <TaskStatusPill status="done" onStatusChange={noop} />
               </div>
             </ComponentGroup>
           </Section>
@@ -454,25 +462,19 @@ export function ComponentReference() {
                   taskCount={12}
                   completedTaskCount={5}
                   areaName="Work"
-                  onClick={() => {}}
+                  onClick={noop}
                 />
               </div>
             </ComponentGroup>
 
             <ComponentGroup title="ProjectStatusPill">
               <div className="flex flex-wrap gap-2">
-                <ProjectStatusPill
-                  status="planning"
-                  onStatusChange={() => {}}
-                />
-                <ProjectStatusPill status="ready" onStatusChange={() => {}} />
-                <ProjectStatusPill
-                  status="in-progress"
-                  onStatusChange={() => {}}
-                />
-                <ProjectStatusPill status="blocked" onStatusChange={() => {}} />
-                <ProjectStatusPill status="paused" onStatusChange={() => {}} />
-                <ProjectStatusPill status="done" onStatusChange={() => {}} />
+                <ProjectStatusPill status="planning" onStatusChange={noop} />
+                <ProjectStatusPill status="ready" onStatusChange={noop} />
+                <ProjectStatusPill status="in-progress" onStatusChange={noop} />
+                <ProjectStatusPill status="blocked" onStatusChange={noop} />
+                <ProjectStatusPill status="paused" onStatusChange={noop} />
+                <ProjectStatusPill status="done" onStatusChange={noop} />
               </div>
             </ComponentGroup>
 
@@ -543,7 +545,7 @@ export function ComponentReference() {
                   area={FAKE_AREA}
                   projectCount={4}
                   activeProjectCount={2}
-                  onClick={() => {}}
+                  onClick={noop}
                 />
               </div>
             </ComponentGroup>
@@ -564,8 +566,8 @@ export function ComponentReference() {
                   taskCount={5}
                   isExpanded={sectionExpanded}
                   onToggleExpand={() => setSectionExpanded(!sectionExpanded)}
-                  onAddTask={() => {}}
-                  onAddHeading={() => {}}
+                  onAddTask={noop}
+                  onAddHeading={noop}
                 />
                 {sectionExpanded && (
                   <div className="p-2 text-sm text-muted-foreground">
@@ -594,11 +596,6 @@ export function ComponentReference() {
               <div className="border rounded-lg overflow-hidden bg-background mt-3">
                 <ViewHeader
                   title="Work"
-                  children={
-                    <ProjectStatusBadges
-                      counts={{ 'in-progress': 3, ready: 2 }}
-                    />
-                  }
                   actions={
                     <ViewToggle
                       value={viewMode}
@@ -606,7 +603,11 @@ export function ComponentReference() {
                       availableModes={['list', 'kanban']}
                     />
                   }
-                />
+                >
+                  <ProjectStatusBadges
+                    counts={{ 'in-progress': 3, ready: 2 }}
+                  />
+                </ViewHeader>
               </div>
             </ComponentGroup>
 
@@ -619,12 +620,12 @@ export function ComponentReference() {
                   heading={{ id: 'h1', title: 'Morning Tasks', color: 'blue' }}
                   isSelected={false}
                   isEditing={false}
-                  onSelect={() => {}}
-                  onStartEdit={() => {}}
-                  onEndEdit={() => {}}
-                  onTitleChange={() => {}}
-                  onColorChange={() => {}}
-                  onDelete={() => {}}
+                  onSelect={noop}
+                  onStartEdit={noop}
+                  onEndEdit={noop}
+                  onTitleChange={noop}
+                  onColorChange={noop}
+                  onDelete={noop}
                   dragId="heading-h1"
                   containerId="demo"
                 />
@@ -636,12 +637,12 @@ export function ComponentReference() {
                   }}
                   isSelected={false}
                   isEditing={false}
-                  onSelect={() => {}}
-                  onStartEdit={() => {}}
-                  onEndEdit={() => {}}
-                  onTitleChange={() => {}}
-                  onColorChange={() => {}}
-                  onDelete={() => {}}
+                  onSelect={noop}
+                  onStartEdit={noop}
+                  onEndEdit={noop}
+                  onTitleChange={noop}
+                  onColorChange={noop}
+                  onDelete={noop}
                   dragId="heading-h2"
                   containerId="demo"
                 />
@@ -748,7 +749,7 @@ export function ComponentReference() {
                     { value: 'area-2', label: 'Personal' },
                   ]}
                   value={undefined}
-                  onChange={() => {}}
+                  onChange={noop}
                   placeholder="Area..."
                   icon={<FolderOpen className="size-3 text-entity-area" />}
                   emptyText="No areas found"

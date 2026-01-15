@@ -33,13 +33,13 @@ Quick Pane                           Main Window
 
 ### Window Configuration
 
-| Property | Value | Notes |
-|----------|-------|-------|
-| Width | 700px (logical) | Accommodates metadata row |
-| Height | 500px (logical) | Space for date picker popovers |
-| Visible card | ~620×180px | Expandable with body textarea |
-| Transparency | Yes | Rounded corners + popover overflow |
-| Position | Centered on cursor's monitor | Same as current implementation |
+| Property     | Value                        | Notes                              |
+| ------------ | ---------------------------- | ---------------------------------- |
+| Width        | 700px (logical)              | Accommodates metadata row          |
+| Height       | 500px (logical)              | Space for date picker popovers     |
+| Visible card | ~620×180px                   | Expandable with body textarea      |
+| Transparency | Yes                          | Rounded corners + popover overflow |
+| Position     | Centered on cursor's monitor | Same as current implementation     |
 
 The large transparent padding (40px sides, 160px bottom) allows popovers to render without clipping.
 
@@ -85,15 +85,15 @@ The large transparent padding (40px sides, 160px bottom) allows popovers to rend
 
 ## Keyboard Navigation
 
-| Key | Action |
-|-----|--------|
-| (Global shortcut) | Open pane, focus title |
-| `Tab` | Navigate: Title → Status → Project → Area → Scheduled → Due → Defer → Cancel → Save |
-| `Shift+Tab` | Navigate backwards |
-| `Cmd+Enter` | Submit (if title non-empty) |
-| `Cmd+Shift+Enter` | Toggle body textarea visibility |
-| `Escape` | Dismiss without saving |
-| `Enter` (in title) | Prevent newline, move to next field |
+| Key                | Action                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| (Global shortcut)  | Open pane, focus title                                                              |
+| `Tab`              | Navigate: Title → Status → Project → Area → Scheduled → Due → Defer → Cancel → Save |
+| `Shift+Tab`        | Navigate backwards                                                                  |
+| `Cmd+Enter`        | Submit (if title non-empty)                                                         |
+| `Cmd+Shift+Enter`  | Toggle body textarea visibility                                                     |
+| `Escape`           | Dismiss without saving                                                              |
+| `Enter` (in title) | Prevent newline, move to next field                                                 |
 
 When body is visible, Tab order inserts Body after Title.
 
@@ -118,12 +118,12 @@ interface QuickPaneState {
   title: string
   body: string
   showBody: boolean
-  status: TaskStatus          // default: 'inbox'
+  status: TaskStatus // default: 'inbox'
   projectId: string | null
   areaId: string | null
-  scheduled: string | null    // ISO date
-  due: string | null          // ISO date
-  deferUntil: string | null   // ISO date
+  scheduled: string | null // ISO date
+  due: string | null // ISO date
+  deferUntil: string | null // ISO date
 }
 ```
 
@@ -136,17 +136,21 @@ const [areas, setAreas] = useState<Area[]>([])
 const [projects, setProjects] = useState<Project[]>([])
 
 useEffect(() => {
-  const unlisten = getCurrentWindow().onFocusChanged(async ({ payload: focused }) => {
-    if (focused) {
-      const [areasResult, projectsResult] = await Promise.all([
-        commands.listAreas(),
-        commands.listProjects(),
-      ])
-      if (areasResult.status === 'ok') setAreas(areasResult.data)
-      if (projectsResult.status === 'ok') setProjects(projectsResult.data)
+  const unlisten = getCurrentWindow().onFocusChanged(
+    async ({ payload: focused }) => {
+      if (focused) {
+        const [areasResult, projectsResult] = await Promise.all([
+          commands.listAreas(),
+          commands.listProjects(),
+        ])
+        if (areasResult.status === 'ok') setAreas(areasResult.data)
+        if (projectsResult.status === 'ok') setProjects(projectsResult.data)
+      }
     }
-  })
-  return () => { unlisten.then(fn => fn()) }
+  )
+  return () => {
+    unlisten.then(fn => fn())
+  }
 }, [])
 ```
 
@@ -225,12 +229,15 @@ Filter to active areas/projects for display.
 ## Files to Modify
 
 **Rust**:
+
 - `src-tauri/src/commands/quick_pane.rs` - Window dimensions
 
 **CSS**:
+
 - `src/quick-pane.css` - Animation classes
 
 **Components** (create/rewrite):
+
 - `src/components/quick-pane/QuickPaneApp.tsx`
 - `src/components/quick-pane/QuickPaneCard.tsx`
 - `src/components/quick-pane/QuickPaneTitle.tsx`
@@ -239,11 +246,13 @@ Filter to active areas/projects for display.
 - `src/components/quick-pane/QuickPaneFooter.tsx`
 
 **Main window**:
+
 - `src/hooks/use-main-window-event-listeners.ts` - Add `task-created` listener
 
 ## Dependencies
 
 All required packages already installed:
+
 - `@dannysmith/datepicker` - Natural language date input
 - `date-fns` - Date formatting
 - Existing UI components from `src/components/ui/`
