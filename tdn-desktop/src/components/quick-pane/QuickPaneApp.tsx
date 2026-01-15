@@ -5,12 +5,36 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { commands } from '@/lib/tauri-bindings'
 import type { TaskStatus, Area, Project, Task } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
+import { parseShortcut, matchesKeyboardEvent } from '@/lib/shortcuts'
 
 import { QuickPaneCard } from './QuickPaneCard'
 import { QuickPaneTitle } from './QuickPaneTitle'
 import { QuickPaneBody } from './QuickPaneBody'
 import { QuickPaneMetadata } from './QuickPaneMetadata'
 import { QuickPaneFooter } from './QuickPaneFooter'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Keyboard Shortcuts
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SHORTCUTS = {
+  setScheduledToday: parseShortcut('CmdOrCtrl+T'),
+  openScheduled: parseShortcut('CmdOrCtrl+D'),
+  openDue: parseShortcut('Shift+CmdOrCtrl+D'),
+  openDefer: parseShortcut('Ctrl+Shift+CmdOrCtrl+D'),
+  openStatus: parseShortcut('CmdOrCtrl+S'),
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Gets today's date in ISO format (YYYY-MM-DD).
+ */
+function getTodayISO(): string {
+  return new Date().toISOString().slice(0, 10)
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Theme Management
@@ -97,6 +121,10 @@ export default function QuickPaneApp() {
     | null
   const [openPopover, setOpenPopover] = React.useState<PopoverType>(null)
 
+  // Track which textarea to restore focus to after popover closes
+  type FocusTarget = 'title' | 'body' | null
+  const [restoreFocusTo, setRestoreFocusTo] = React.useState<FocusTarget>(null)
+
   // ─────────────────────────────────────────────────────────────────────────
   // Refs
   // ─────────────────────────────────────────────────────────────────────────
@@ -119,6 +147,7 @@ export default function QuickPaneApp() {
     setDue(null)
     setDeferUntil(null)
     setOpenPopover(null)
+    setRestoreFocusTo(null)
   }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -265,6 +294,48 @@ export default function QuickPaneApp() {
   }, [exiting, handleDismiss, resetForm])
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Focus Management
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Captures current focus if it's in title or body textarea.
+   * Called before opening a popover via keyboard shortcut or click.
+   */
+  const captureCurrentFocus = React.useCallback(() => {
+    if (document.activeElement === titleRef.current) {
+      setRestoreFocusTo('title')
+    } else if (document.activeElement === bodyRef.current) {
+      setRestoreFocusTo('body')
+    }
+    // If neither, don't change - preserves any existing value
+  }, [])
+
+  // Capture focus when clicking on popover triggers (before focus moves)
+  React.useEffect(() => {
+    const handlePointerDown = (e: PointerEvent) => {
+      const trigger = (e.target as Element).closest(
+        '[data-slot="popover-trigger"], [data-slot="dropdown-menu-trigger"]'
+      )
+      if (trigger) {
+        captureCurrentFocus()
+      }
+    }
+
+    // Capture phase runs before focus changes
+    document.addEventListener('pointerdown', handlePointerDown, true)
+    return () => document.removeEventListener('pointerdown', handlePointerDown, true)
+  }, [captureCurrentFocus])
+
+  // Restore focus when popover closes
+  React.useEffect(() => {
+    if (openPopover === null && restoreFocusTo) {
+      const ref = restoreFocusTo === 'title' ? titleRef : bodyRef
+      ref.current?.focus()
+      setRestoreFocusTo(null)
+    }
+  }, [openPopover, restoreFocusTo])
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Global Keyboard Shortcuts
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -282,6 +353,45 @@ export default function QuickPaneApp() {
           // No popover open, dismiss the pane
           await handleDismiss()
         }
+        return
+      }
+
+      // Cmd+T - set scheduled to today
+      if (matchesKeyboardEvent(SHORTCUTS.setScheduledToday, e)) {
+        e.preventDefault()
+        setScheduled(getTodayISO())
+        return
+      }
+
+      // Cmd+D - open scheduled date picker
+      if (matchesKeyboardEvent(SHORTCUTS.openScheduled, e)) {
+        e.preventDefault()
+        captureCurrentFocus()
+        setOpenPopover('scheduled')
+        return
+      }
+
+      // Cmd+Shift+D - open due date picker
+      if (matchesKeyboardEvent(SHORTCUTS.openDue, e)) {
+        e.preventDefault()
+        captureCurrentFocus()
+        setOpenPopover('due')
+        return
+      }
+
+      // Ctrl+Shift+Cmd+D - open defer date picker
+      if (matchesKeyboardEvent(SHORTCUTS.openDefer, e)) {
+        e.preventDefault()
+        captureCurrentFocus()
+        setOpenPopover('defer')
+        return
+      }
+
+      // Cmd+S - open status picker
+      if (matchesKeyboardEvent(SHORTCUTS.openStatus, e)) {
+        e.preventDefault()
+        captureCurrentFocus()
+        setOpenPopover('status')
         return
       }
 
@@ -303,7 +413,7 @@ export default function QuickPaneApp() {
     // Capture phase to handle before any popover gets the event
     window.addEventListener('keydown', handleKeyDown, true)
     return () => window.removeEventListener('keydown', handleKeyDown, true)
-  }, [handleDismiss, handleSubmit, openPopover])
+  }, [handleDismiss, handleSubmit, openPopover, captureCurrentFocus])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Title KeyDown Handler
