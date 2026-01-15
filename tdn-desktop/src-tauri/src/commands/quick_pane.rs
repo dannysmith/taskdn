@@ -77,7 +77,7 @@ fn init_quick_pane_macos(app: &AppHandle) -> Result<(), String> {
         .size(Size::Logical(LogicalSize::new(QUICK_PANE_WIDTH, QUICK_PANE_HEIGHT)))
         .level(PanelLevel::Status) // Status level to appear above fullscreen apps
         .transparent(true)
-        .has_shadow(true)
+        .has_shadow(false) // Disable native shadow - we use CSS shadow on the card
         .collection_behavior(
             CollectionBehavior::new()
                 .full_screen_auxiliary()
