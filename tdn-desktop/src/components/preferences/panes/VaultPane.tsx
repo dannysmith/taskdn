@@ -53,8 +53,8 @@ export function VaultPane() {
         try {
           await reinitializeVault(
             newPreferences.tasks_dir,
-            newPreferences.areas_dir,
             newPreferences.projects_dir,
+            newPreferences.areas_dir,
             newPreferences.ignore ?? null
           )
         } catch (error) {

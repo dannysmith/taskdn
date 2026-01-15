@@ -25,6 +25,7 @@ import {
 } from '@/lib/tauri-bindings'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useDisplayOrderStore } from '@/store/display-order-store'
 
 // =============================================================================
 // Query Keys
@@ -662,7 +663,7 @@ export async function initializeVault(
 
 /**
  * Reinitialize the vault with new configuration.
- * Clears all stale state and reloads data.
+ * Clears all session state and reloads data - equivalent to a fresh app start.
  *
  * Call this when vault directory settings change in preferences.
  */
@@ -678,7 +679,14 @@ export async function reinitializeVault(
     areasDir,
   })
 
-  // 1. Initialize vault in Rust (rescans directories, creates new file watchers)
+  // 1. Clear ALL session state - equivalent to fresh app start
+  // This prevents any stale IDs or cached data from causing issues
+  useDisplayOrderStore.getState().resetAllOrder()
+  useTaskDetailStore.getState().closeTask()
+  useNavigationStore.getState().resetNavigation()
+  queryClient.clear()
+
+  // 2. Initialize vault in Rust (rescans directories, creates new file watchers)
   const result = await commands.initVault(
     tasksDir,
     projectsDir,
@@ -690,19 +698,7 @@ export async function reinitializeVault(
     throw new Error(formatVaultError(result.error))
   }
 
-  // 2. Clear TanStack Query cache for all vault data
-  // Active components will automatically refetch when they see empty cache
-  queryClient.removeQueries({ queryKey: vaultQueryKeys.all })
-
-  // 3. Reset Zustand stores that hold entity references
-  useTaskDetailStore.getState().closeTask()
-  useNavigationStore.getState().resetNavigation()
-
-  // Note: display-order-store is NOT cleared - this is intentional!
-  // Stale IDs are filtered out by hooks, and ordering is preserved if
-  // the user switches back to a previous vault (useful for dev/prod switching)
-
-  // Note: ui-store.collapsedAreaIds - stale IDs are harmlessly ignored
+  // Components will refetch data naturally when they render
 
   logger.info('Vault reinitialized successfully')
 }
