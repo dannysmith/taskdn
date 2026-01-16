@@ -25,7 +25,7 @@ pub static FILENAME_PATTERN: LazyLock<Regex> = LazyLock::new(|| {
 /// Application preferences that persist to disk.
 /// Only contains settings that should be saved between sessions.
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
-#[serde(default)]
+#[serde(default, rename_all = "camelCase")]
 pub struct AppPreferences {
     pub theme: String,
     /// Global shortcut for quick pane (e.g., "CommandOrControl+Shift+.")
@@ -185,6 +185,7 @@ impl std::fmt::Display for CliConfigError {
 
 /// Paths to dummy vault for development testing
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
 pub struct DummyVaultPaths {
     pub tasks_dir: String,
     pub areas_dir: String,

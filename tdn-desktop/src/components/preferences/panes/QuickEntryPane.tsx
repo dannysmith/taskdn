@@ -34,7 +34,7 @@ export function QuickEntryPane() {
   const handleShortcutChange = async (newShortcut: string | null) => {
     if (!preferences) return
 
-    const oldShortcut = preferences.quick_pane_shortcut
+    const oldShortcut = preferences.quickPaneShortcut
 
     logger.info('Updating quick pane shortcut', { oldShortcut, newShortcut })
 
@@ -51,7 +51,7 @@ export function QuickEntryPane() {
     try {
       await savePreferences.mutateAsync({
         ...preferences,
-        quick_pane_shortcut: newShortcut,
+        quickPaneShortcut: newShortcut,
       })
     } catch {
       logger.warn('Save failed, rolling back shortcut registration', {
@@ -89,7 +89,7 @@ export function QuickEntryPane() {
           description={t('preferences.quickEntry.quickPaneShortcutDescription')}
         >
           <ShortcutPicker
-            value={preferences?.quick_pane_shortcut ?? null}
+            value={preferences?.quickPaneShortcut ?? null}
             defaultValue={defaultShortcut ?? 'CommandOrControl+Shift+.'}
             onChange={handleShortcutChange}
             disabled={!preferences || savePreferences.isPending}

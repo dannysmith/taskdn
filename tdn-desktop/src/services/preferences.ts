@@ -26,14 +26,14 @@ export function usePreferences() {
         })
         return {
           theme: 'system',
-          quick_pane_shortcut: null,
+          quickPaneShortcut: null,
           language: null,
-          tasks_dir: null,
-          areas_dir: null,
-          projects_dir: null,
+          tasksDir: null,
+          areasDir: null,
+          projectsDir: null,
           ignore: null,
-          show_obsidian_features: null,
-          permanent_delete_tasks: null,
+          showObsidianFeatures: null,
+          permanentDeleteTasks: null,
         }
       }
 

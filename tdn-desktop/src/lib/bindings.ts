@@ -375,7 +375,7 @@ export type AppPreferences = { theme: string;
  * Global shortcut for quick pane (e.g., "CommandOrControl+Shift+.")
  * If None, uses the default shortcut
  */
-quick_pane_shortcut: string | null; 
+quickPaneShortcut: string | null; 
 /**
  * User's preferred language (e.g., "en", "es", "de")
  * If None, uses system locale detection
@@ -384,15 +384,15 @@ language: string | null;
 /**
  * Directory containing task files
  */
-tasks_dir: string | null; 
+tasksDir: string | null; 
 /**
  * Directory containing area files
  */
-areas_dir: string | null; 
+areasDir: string | null; 
 /**
  * Directory containing project files
  */
-projects_dir: string | null; 
+projectsDir: string | null; 
 /**
  * Filenames to ignore when scanning directories
  */
@@ -401,13 +401,13 @@ ignore: string[] | null;
  * Whether to show Obsidian-related features (Open in Obsidian menu item, etc.)
  * Indicates user's vault directories are inside an Obsidian vault
  */
-show_obsidian_features: boolean | null; 
+showObsidianFeatures: boolean | null; 
 /**
  * Whether to permanently delete tasks instead of moving them to trash.
  * If None or false, tasks are moved to the OS trash/recycle bin (default).
  * If true, tasks are permanently deleted with no recovery option.
  */
-permanent_delete_tasks: boolean | null }
+permanentDeleteTasks: boolean | null }
 /**
  * Public area struct exposed to TypeScript via tauri-specta.
  */
@@ -481,7 +481,7 @@ export type CreateTaskOptions = { title: string | null; status: TaskStatus | nul
 /**
  * Paths to dummy vault for development testing
  */
-export type DummyVaultPaths = { tasks_dir: string; areas_dir: string; projects_dir: string }
+export type DummyVaultPaths = { tasksDir: string; areasDir: string; projectsDir: string }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * Public project struct exposed to TypeScript via tauri-specta.

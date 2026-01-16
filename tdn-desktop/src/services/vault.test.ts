@@ -647,28 +647,28 @@ describe('vault service', () => {
   describe('vaultConfigChanged', () => {
     const basePrefs: AppPreferences = {
       theme: 'system',
-      quick_pane_shortcut: null,
+      quickPaneShortcut: null,
       language: null,
-      tasks_dir: '/path/to/tasks',
-      areas_dir: '/path/to/areas',
-      projects_dir: '/path/to/projects',
+      tasksDir: '/path/to/tasks',
+      areasDir: '/path/to/areas',
+      projectsDir: '/path/to/projects',
       ignore: null,
-      show_obsidian_features: null,
-      permanent_delete_tasks: null,
+      showObsidianFeatures: null,
+      permanentDeleteTasks: null,
     }
 
-    it('returns true when tasks_dir changes', () => {
-      const newPrefs = { ...basePrefs, tasks_dir: '/new/path' }
+    it('returns true when tasksDir changes', () => {
+      const newPrefs = { ...basePrefs, tasksDir: '/new/path' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
     })
 
-    it('returns true when areas_dir changes', () => {
-      const newPrefs = { ...basePrefs, areas_dir: '/new/path' }
+    it('returns true when areasDir changes', () => {
+      const newPrefs = { ...basePrefs, areasDir: '/new/path' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
     })
 
-    it('returns true when projects_dir changes', () => {
-      const newPrefs = { ...basePrefs, projects_dir: '/new/path' }
+    it('returns true when projectsDir changes', () => {
+      const newPrefs = { ...basePrefs, projectsDir: '/new/path' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
     })
 
@@ -682,8 +682,8 @@ describe('vault service', () => {
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
     })
 
-    it('returns false when quick_pane_shortcut changes', () => {
-      const newPrefs = { ...basePrefs, quick_pane_shortcut: 'Ctrl+Shift+T' }
+    it('returns false when quickPaneShortcut changes', () => {
+      const newPrefs = { ...basePrefs, quickPaneShortcut: 'Ctrl+Shift+T' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
     })
 

@@ -27,7 +27,7 @@ export const commandContext: CommandContext = {
     const prefs = queryClient.getQueryData<AppPreferences>(
       preferencesQueryKeys.preferences()
     )
-    return prefs?.show_obsidian_features === true
+    return prefs?.showObsidianFeatures === true
   },
 
   // Notifications
@@ -136,7 +136,7 @@ export const commandContext: CommandContext = {
     const prefs = queryClient.getQueryData<AppPreferences>(
       preferencesQueryKeys.preferences()
     )
-    return prefs?.permanent_delete_tasks === true
+    return prefs?.permanentDeleteTasks === true
   },
 
   // Context menu target management

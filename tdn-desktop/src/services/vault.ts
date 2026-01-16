@@ -713,9 +713,9 @@ export function vaultConfigChanged(
   if (!oldPrefs) return true
 
   return (
-    oldPrefs.tasks_dir !== newPrefs.tasks_dir ||
-    oldPrefs.areas_dir !== newPrefs.areas_dir ||
-    oldPrefs.projects_dir !== newPrefs.projects_dir ||
+    oldPrefs.tasksDir !== newPrefs.tasksDir ||
+    oldPrefs.areasDir !== newPrefs.areasDir ||
+    oldPrefs.projectsDir !== newPrefs.projectsDir ||
     JSON.stringify(oldPrefs.ignore) !== JSON.stringify(newPrefs.ignore)
   )
 }
