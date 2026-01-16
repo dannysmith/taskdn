@@ -594,8 +594,8 @@ bun run check:all
 
 ## Phase 8: lib.rs Refactoring
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
@@ -603,10 +603,31 @@ The `run()` function in `lib.rs` (~215 lines) handles plugin registration, app s
 
 ### Tasks
 
-- [ ] Extract `configure_plugins(builder: Builder) -> Builder`
-- [ ] Extract `setup_app(app: &App) -> Result<(), Box<dyn Error>>`
-- [ ] Extract `handle_run_event` if not already separate
-- [ ] Simplify `run()` to be a high-level orchestrator
+- [x] Extract `configure_plugins(builder: Builder) -> Builder`
+- [x] Extract `setup_app(app: &App) -> Result<(), Box<dyn Error>>`
+- [x] Extract `handle_run_event` if not already separate
+- [x] Simplify `run()` to be a high-level orchestrator
+
+### Implementation Notes
+
+Refactored the 236-line lib.rs into focused functions:
+
+- `export_bindings_if_dev()` - Handles debug-only TypeScript binding export
+- `configure_plugins()` - Registers all Tauri plugins in correct order
+- `configure_log_plugin()` - Configures the logging plugin with levels and targets
+- `setup_app()` - Orchestrates application initialization
+- `setup_global_shortcuts()` - Registers global shortcut plugin and quick pane shortcut
+- `setup_quick_pane()` - Creates the quick pane window
+- `setup_vault()` - Initializes vault from saved preferences
+- `handle_run_event()` - Routes run events to handlers
+- `handle_main_window_close()` - Orchestrates cleanup on window close
+- `save_window_state()` - Saves window state before closing
+- `hide_quick_pane()` - Hides quick pane panel (macOS)
+- `unregister_global_shortcuts()` - Unregisters all global shortcuts
+
+The `run()` function is now a clean 12-line orchestrator that clearly shows the application flow.
+
+Conditional compilation (`#[cfg(...)]`) is handled with paired stub functions for non-applicable platforms to keep the main code clean.
 
 ### Verification
 
@@ -820,7 +841,7 @@ bun run check:all
 - [x] Phase 5: Order Hook Consolidation
 - [x] Phase 6: Vault.ts Splitting
 - [x] Phase 7: use-deep-link.ts Splitting
-- [ ] Phase 8: lib.rs Refactoring
+- [x] Phase 8: lib.rs Refactoring
 - [ ] Phase 9: Calendar DnD Extraction
 - [ ] Phase 10: Minor Improvements
   - [ ] 10a. Date strings i18n
