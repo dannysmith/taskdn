@@ -276,5 +276,29 @@
   "section.addTask": "Add task",
   "section.task": "Task",
 
-  "collapsibleNotes.defaultTitle": "About this project"
+  "collapsibleNotes.defaultTitle": "About this project",
+
+  "dates.today": "Today",
+  "dates.tomorrow": "Tomorrow",
+  "dates.yesterday": "Yesterday",
+  "dates.lastDay": "Last {{day}}",
+  "dates.days.sun": "Sun",
+  "dates.days.mon": "Mon",
+  "dates.days.tue": "Tue",
+  "dates.days.wed": "Wed",
+  "dates.days.thu": "Thu",
+  "dates.days.fri": "Fri",
+  "dates.days.sat": "Sat",
+  "dates.months.jan": "Jan",
+  "dates.months.feb": "Feb",
+  "dates.months.mar": "Mar",
+  "dates.months.apr": "Apr",
+  "dates.months.may": "May",
+  "dates.months.jun": "Jun",
+  "dates.months.jul": "Jul",
+  "dates.months.aug": "Aug",
+  "dates.months.sep": "Sep",
+  "dates.months.oct": "Oct",
+  "dates.months.nov": "Nov",
+  "dates.months.dec": "Dec"
 }

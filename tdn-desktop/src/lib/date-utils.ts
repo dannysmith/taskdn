@@ -2,12 +2,47 @@
  * Date utility functions for formatting and comparing dates.
  */
 
+import i18n from '@/i18n/config'
+
+const t = i18n.t.bind(i18n)
+
 /**
  * Check if a date is valid
  */
 function isValidDate(date: Date): boolean {
   return !isNaN(date.getTime())
 }
+
+/**
+ * Day name keys in order from Sunday (0) to Saturday (6)
+ */
+const dayKeys = [
+  'dates.days.sun',
+  'dates.days.mon',
+  'dates.days.tue',
+  'dates.days.wed',
+  'dates.days.thu',
+  'dates.days.fri',
+  'dates.days.sat',
+] as const
+
+/**
+ * Month name keys in order from January (0) to December (11)
+ */
+const monthKeys = [
+  'dates.months.jan',
+  'dates.months.feb',
+  'dates.months.mar',
+  'dates.months.apr',
+  'dates.months.may',
+  'dates.months.jun',
+  'dates.months.jul',
+  'dates.months.aug',
+  'dates.months.sep',
+  'dates.months.oct',
+  'dates.months.nov',
+  'dates.months.dec',
+] as const
 
 /**
  * Format a date string as relative natural language.
@@ -33,17 +68,16 @@ export function formatRelativeDate(dateString: string): string {
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24))
 
   // Today, yesterday, tomorrow
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return 'Tomorrow'
-  if (diffDays === -1) return 'Yesterday'
+  if (diffDays === 0) return t('dates.today')
+  if (diffDays === 1) return t('dates.tomorrow')
+  if (diffDays === -1) return t('dates.yesterday')
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
   const dayIndex = date.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6
-  const dayName = dayNames[dayIndex]
+  const dayName = t(dayKeys[dayIndex])
 
   // Within the past week
   if (diffDays < 0 && diffDays >= -6) {
-    return `Last ${dayName}`
+    return t('dates.lastDay', { day: dayName })
   }
 
   // Within the next week
@@ -52,21 +86,21 @@ export function formatRelativeDate(dateString: string): string {
   }
 
   // Further out - use short month format
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ] as const
-  return `${months[date.getMonth()]} ${date.getDate()}`
+  const monthIndex = date.getMonth() as
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+  const monthName = t(monthKeys[monthIndex])
+  return `${monthName} ${date.getDate()}`
 }
 
 /**

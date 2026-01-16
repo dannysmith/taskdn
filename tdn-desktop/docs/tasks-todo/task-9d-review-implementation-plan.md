@@ -655,12 +655,14 @@ bun run check:all
 ### Implementation Notes
 
 Audit revealed that the DnD handler logic was nearly identical between both calendars:
+
 - **DragState interface** - Identical
 - **Sensors configuration** - Identical (PointerSensor with distance: 8)
 - **Drop animation** - Identical (defaultDropAnimationSideEffects with opacity 0.5)
 - **handleDragStart, handleDragOver, handleDragEnd, handleDragCancel** - Identical logic
 
 Created `src/components/calendar/use-calendar-dnd.ts` hook that:
+
 1. Manages `dragState` internally
 2. Configures sensors and drop animation
 3. Provides all four handler functions
@@ -669,6 +671,7 @@ Created `src/components/calendar/use-calendar-dnd.ts` hook that:
 Both WeekCalendar.tsx (~485 → ~320 lines) and MonthCalendar.tsx (~449 → ~285 lines) were refactored to use the new hook, removing ~120 lines of duplicated DnD code from each.
 
 Added 18 comprehensive tests for the hook covering:
+
 - Initial state
 - handleDragStart (valid data, missing task, wrong type)
 - handleDragOver (day targets, task targets, null targets)
@@ -709,11 +712,13 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10a. Internationalize Date Strings
 
+**Status:** [x] Complete
+
 **Location:** `src/lib/date-utils.ts:36-48`
 
-- [ ] Add i18n keys for "Today", "Tomorrow", "Yesterday", "Last {day}"
-- [ ] Add keys to `locales/en.json`
-- [ ] Update `formatRelativeDate` to use i18n
+- [x] Add i18n keys for "Today", "Tomorrow", "Yesterday", "Last {day}"
+- [x] Add keys to `locales/en.json`
+- [x] Update `formatRelativeDate` to use i18n
 
 ### 10c. Extract CSS Custom Properties for Magic Numbers
 
