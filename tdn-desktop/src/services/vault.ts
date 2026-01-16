@@ -21,7 +21,11 @@ import {
   type TaskUpdate,
   type ProjectUpdate,
   type VaultError,
+  type AppPreferences,
 } from '@/lib/tauri-bindings'
+import { useNavigationStore } from '@/store/navigation-store'
+import { useTaskDetailStore } from '@/store/task-detail-store'
+import { useDisplayOrderStore } from '@/store/display-order-store'
 
 // =============================================================================
 // Query Keys
@@ -655,6 +659,65 @@ export async function initializeVault(
   }
 
   logger.info('Vault initialized successfully')
+}
+
+/**
+ * Reinitialize the vault with new configuration.
+ * Clears all session state and reloads data - equivalent to a fresh app start.
+ *
+ * Call this when vault directory settings change in preferences.
+ */
+export async function reinitializeVault(
+  tasksDir: string,
+  projectsDir: string,
+  areasDir: string,
+  ignore: string[] | null
+): Promise<void> {
+  logger.info('Reinitializing vault with new configuration', {
+    tasksDir,
+    projectsDir,
+    areasDir,
+  })
+
+  // 1. Clear ALL session state - equivalent to fresh app start
+  // This prevents any stale IDs or cached data from causing issues
+  useDisplayOrderStore.getState().resetAllOrder()
+  useTaskDetailStore.getState().closeTask()
+  useNavigationStore.getState().resetNavigation()
+  queryClient.clear()
+
+  // 2. Initialize vault in Rust (rescans directories, creates new file watchers)
+  const result = await commands.initVault(
+    tasksDir,
+    projectsDir,
+    areasDir,
+    ignore
+  )
+
+  if (result.status === 'error') {
+    throw new Error(formatVaultError(result.error))
+  }
+
+  // Components will refetch data naturally when they render
+
+  logger.info('Vault reinitialized successfully')
+}
+
+/**
+ * Check if vault-related preferences have changed.
+ */
+export function vaultConfigChanged(
+  oldPrefs: AppPreferences | undefined,
+  newPrefs: AppPreferences
+): boolean {
+  if (!oldPrefs) return true
+
+  return (
+    oldPrefs.tasks_dir !== newPrefs.tasks_dir ||
+    oldPrefs.areas_dir !== newPrefs.areas_dir ||
+    oldPrefs.projects_dir !== newPrefs.projects_dir ||
+    JSON.stringify(oldPrefs.ignore) !== JSON.stringify(newPrefs.ignore)
+  )
 }
 
 /**

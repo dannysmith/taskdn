@@ -84,6 +84,9 @@ interface NavigationState {
 
   /** Whether forward navigation is available */
   canGoForward: () => boolean
+
+  /** Reset navigation to default state (used when vault changes) */
+  resetNavigation: () => void
 }
 
 export const useNavigationStore = create<NavigationState>()(
@@ -202,6 +205,17 @@ export const useNavigationStore = create<NavigationState>()(
       canGoBack: () => get().history.length > 0,
 
       canGoForward: () => get().future.length > 0,
+
+      resetNavigation: () =>
+        set(
+          {
+            selection: { type: 'nav', id: 'today' },
+            history: [],
+            future: [],
+          },
+          undefined,
+          'resetNavigation'
+        ),
     }),
     {
       name: 'navigation-store',

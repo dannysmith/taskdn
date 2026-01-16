@@ -110,10 +110,34 @@ export function useCreateTask() {
 
 ```
 ~/Library/Application Support/com.myapp.app/  (macOS)
-├── preferences.json                          # App preferences
+├── preferences.json                          # App preferences (production)
+├── preferences.development.json              # App preferences (development)
 └── recovery/                                 # Emergency data
     └── *.json
 ```
+
+## Development vs Production Preferences
+
+The app uses separate preferences files based on build mode:
+
+| Build Mode                        | Preferences File               |
+| --------------------------------- | ------------------------------ |
+| Development (`bun run tauri:dev`) | `preferences.development.json` |
+| Production (release builds)       | `preferences.json`             |
+
+This allows developers to:
+
+- Point development builds at test vaults (dummy-demo-vault)
+- Keep production settings pointing at their real vault
+- Test different configurations without affecting production
+
+**First-time development setup:**
+
+1. Run `bun run tauri:dev`
+2. Open Preferences > Vault
+3. Click "Use Dummy Vault" to configure test directories
+
+The development preferences file will be created automatically on first save.
 
 ## Atomic Write Pattern (Critical)
 

@@ -8,6 +8,7 @@ use tauri::{AppHandle, Manager};
 use crate::types::{validate_string_input, validate_theme, AppPreferences};
 
 /// Gets the path to the preferences file.
+/// Uses a separate file in development mode to allow testing with different vaults.
 fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
     let app_data_dir = app
         .path()
@@ -18,7 +19,14 @@ fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
     std::fs::create_dir_all(&app_data_dir)
         .map_err(|e| format!("Failed to create app data directory: {e}"))?;
 
-    Ok(app_data_dir.join("preferences.json"))
+    // Use separate preferences file in development mode
+    let filename = if cfg!(debug_assertions) {
+        "preferences.development.json"
+    } else {
+        "preferences.json"
+    };
+
+    Ok(app_data_dir.join(filename))
 }
 
 /// Load the saved quick pane shortcut from preferences, returning None on any failure.
