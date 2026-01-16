@@ -1,0 +1,43 @@
+# GitHub Labels Configuration
+# Edit this file and push to sync labels across the repository
+# Workflow: .github/workflows/sync-labels.yml
+
+- name: "bug 🐛"
+  color: "d93f0b"
+  description: "Something isn't working"
+
+- name: "duplicate"
+  color: "cfd3d7"
+  description: "This issue or pull request already exists"
+
+- name: "feature"
+  color: "a2eeef"
+  description: "New feature or request"
+
+- name: "EPIC"
+  color: "5319e7"
+  description: "Overview Task for managing smaller tasks"
+
+- name: "Icebox 🧊"
+  color: "c5def5"
+  description: "Currently deprioritised"
+
+- name: "product/spec"
+  color: "bfd4f2"
+  description: ""
+
+- name: "product/cli"
+  color: "bfd4f2"
+  description: ""
+
+- name: "product/desktop"
+  color: "bfd4f2"
+  description: ""
+
+- name: "product/claude-plugin"
+  color: "bfd4f2"
+  description: ""
+
+- name: "Idea 💡"
+  color: "fef2c0"
+  description: ""

@@ -18,7 +18,7 @@ export const myFeatureCommands: AppCommand[] = [
     descriptionKey: 'commands.myAction.description',
     icon: SomeIcon,
     group: 'my-feature',
-    shortcut: '⌘+M',
+    shortcut: 'CmdOrCtrl+M', // Tauri accelerator format
     keywords: ['my', 'action', 'feature'],
 
     execute: context => {
@@ -55,7 +55,7 @@ interface AppCommand {
   icon?: LucideIcon
   group?: string // Grouping for command palette
   keywords?: string[] // Additional search terms
-  shortcut?: string // Display shortcut (e.g., '⌘+1')
+  shortcut?: string // Tauri accelerator format (e.g., 'CmdOrCtrl+1')
   execute: (context: CommandContext) => void | Promise<void>
   isAvailable?: (context: CommandContext) => boolean
 }
@@ -70,6 +70,20 @@ interface CommandContext {
   openPreferences: () => void
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void
 }
+```
+
+The context is available as:
+
+- **Hook**: `useCommandContext()` for React components
+- **Singleton**: `commandContext` for non-React code (e.g., menu handlers)
+
+```typescript
+// In React components
+const context = useCommandContext()
+
+// In non-React code (menu.ts, etc.)
+import { commandContext } from '@/lib/commands'
+executeCommand('my-action', commandContext)
 ```
 
 ### Registry Pattern
@@ -92,8 +106,7 @@ const result = await executeCommand(commandId, context)
 ```typescript
 // ✅ Good: Direct store access in execute
 execute: () => {
-  const { leftSidebarVisible, setLeftSidebarVisible } = useUIStore.getState()
-  setLeftSidebarVisible(!leftSidebarVisible)
+  useUIStore.getState().toggleLeftSidebar()
 }
 
 // ❌ Bad: Hook usage (would cause re-renders)
@@ -101,7 +114,69 @@ const { leftSidebarVisible } = useUIStore()
 execute: () => setLeftSidebarVisible(!leftSidebarVisible)
 ```
 
+## Shortcut Format
+
+Commands use **Tauri's accelerator format** for shortcuts:
+
+```typescript
+shortcut: 'CmdOrCtrl+1' // Cross-platform primary modifier
+shortcut: 'CmdOrCtrl+,' // Special characters
+shortcut: 'F11' // Function keys (no modifier)
+shortcut: 'CmdOrCtrl+Shift+Z' // With shift
+shortcut: 'CmdOrCtrl+Alt+P' // With alt
+```
+
+**Why this format?**
+
+- Cross-platform: `CmdOrCtrl` = Cmd on Mac, Ctrl elsewhere
+- Same format used by Tauri menu accelerators
+- Parseable for keyboard event matching
+- Convertible to display strings
+
+### Display Format
+
+Convert shortcuts for UI display using the shortcuts utility:
+
+```typescript
+import { formatForDisplay } from '@/lib/shortcuts'
+
+formatForDisplay('CmdOrCtrl+1') // '⌘1' (Mac) or 'Ctrl+1' (Windows)
+formatForDisplay('CmdOrCtrl+Shift+Z') // '⌘⇧Z' (Mac) or 'Ctrl+Shift+Z' (Windows)
+```
+
 ## Integration Points
+
+### Keyboard Shortcuts
+
+The global keyboard handler (`use-global-shortcuts.ts`) automatically handles all command shortcuts:
+
+```typescript
+// src/hooks/use-global-shortcuts.ts
+export function useGlobalShortcuts(context: CommandContext) {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented) return
+      if (isEditableElement(document.activeElement)) return
+
+      const commands = getAllCommands(context)
+      const match = commands.find(cmd => {
+        if (!cmd.shortcut) return false
+        return matchesKeyboardEvent(parseShortcut(cmd.shortcut), e)
+      })
+
+      if (match) {
+        e.preventDefault()
+        executeCommand(match.id, context)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [context])
+}
+```
+
+**No extra setup needed**: Add a `shortcut` to your command and it works automatically.
 
 ### Command Palette
 
@@ -111,42 +186,31 @@ The command palette (`Cmd+K`) displays all available commands with translated la
 const { t } = useTranslation()
 const commands = getAllCommands(commandContext, search, t)
 
-// Render command with translated text
+// Render command with translated text and shortcut
 <CommandItem onSelect={() => handleCommandSelect(command.id)}>
   {command.icon && <command.icon />}
   <span>{t(command.labelKey)}</span>
+  {command.shortcut && <kbd>{formatForDisplay(command.shortcut)}</kbd>}
 </CommandItem>
-```
-
-### Keyboard Shortcuts
-
-Link shortcuts to commands via the command context:
-
-```typescript
-// src/hooks/use-keyboard-shortcuts.ts
-const handleKeyDown = (e: KeyboardEvent) => {
-  if (e.metaKey || e.ctrlKey) {
-    switch (e.key) {
-      case ',': {
-        e.preventDefault()
-        commandContext.openPreferences()
-        break
-      }
-    }
-  }
-}
 ```
 
 ### Native Menus
 
-Menu events trigger commands through Tauri events:
+Menu handlers route through the command system:
 
 ```typescript
-// React side - in useMainWindowEventListeners
-listen('menu-preferences', () => {
-  commandContext.openPreferences()
+// src/lib/menu.ts
+import { executeCommand, commandContext } from '@/lib/commands'
+
+await MenuItem.new({
+  id: 'toggle-left-sidebar',
+  text: t('menu.toggleLeftSidebar'),
+  accelerator: 'CmdOrCtrl+1', // Display only (doesn't intercept keyboard)
+  action: () => executeCommand('toggle-left-sidebar', commandContext),
 })
 ```
+
+**Note**: Menu accelerators are display-only in Tauri. They show the shortcut in the menu but don't handle keyboard events. The keyboard handler (`use-global-shortcuts.ts`) handles all shortcuts.
 
 ## Adding New Commands
 
@@ -164,7 +228,7 @@ listen('menu-preferences', () => {
 }
 ```
 
-### Step 2: Create Command File
+### Step 2: Create Command Definition
 
 ```typescript
 // src/lib/commands/my-feature-commands.ts
@@ -174,6 +238,7 @@ export const myFeatureCommands: AppCommand[] = [
     labelKey: 'commands.myAction.label',
     descriptionKey: 'commands.myAction.description',
     group: 'my-feature',
+    shortcut: 'CmdOrCtrl+3', // Optional: add keyboard shortcut
 
     execute: context => {
       // Your logic here
@@ -198,18 +263,15 @@ export function initializeCommandSystem(): void {
 
 ### Step 4: Extend Context (if needed)
 
+If your command needs new context actions:
+
 ```typescript
 // src/hooks/use-command-context.ts
-export function useCommandContext(): CommandContext {
-  return useMemo(
-    () => ({
-      // ... existing actions
-      myNewAction: () => {
-        /* implementation */
-      },
-    }),
-    []
-  )
+export const commandContext: CommandContext = {
+  // ... existing actions
+  myNewAction: () => {
+    /* implementation */
+  },
 }
 
 // Update CommandContext type in types.ts
@@ -219,8 +281,10 @@ export function useCommandContext(): CommandContext {
 
 Organize commands into logical groups (used in command palette headings):
 
+- **app**: Application-wide actions (command palette, etc.)
 - **navigation**: Sidebar toggles, view switching
 - **settings**: Preferences, configuration
+- **tasks**: Task-related actions
 - **notifications**: Notification actions
 - **window**: Window management (minimize, close, etc.)
 
@@ -232,6 +296,14 @@ Group labels are translated via `commands.group.{groupName}` keys.
 | -------------------------------------------------- | --------------------------------- |
 | Use `labelKey` with translation keys               | Hardcode label strings            |
 | Use `getState()` in execute functions              | Use hooks in commands             |
+| Use Tauri accelerator format for shortcuts         | Use display format (`⌘1`)         |
 | Check `isAvailable` for context-dependent commands | Show unavailable commands         |
 | Provide `keywords` for better searchability        | Rely only on label matching       |
 | Use `context.showToast()` for feedback             | Silently execute without feedback |
+| Route menu actions through `executeCommand()`      | Call store directly from menus    |
+
+## Related Documentation
+
+- [Command Registry](./command-registry.md) - Complete list of all commands and their properties
+- [Keyboard Shortcuts](./keyboard-shortcuts.md) - Shortcut-specific patterns
+- [Menus](./menus.md) - Native menu integration

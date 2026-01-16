@@ -7,7 +7,7 @@ export const windowCommands: AppCommand[] = [
     id: 'window-close',
     labelKey: 'commands.windowClose.label',
     descriptionKey: 'commands.windowClose.description',
-    shortcut: '⌘+W',
+    shortcut: 'CmdOrCtrl+W',
 
     execute: async context => {
       try {
@@ -27,7 +27,7 @@ export const windowCommands: AppCommand[] = [
     id: 'window-minimize',
     labelKey: 'commands.windowMinimize.label',
     descriptionKey: 'commands.windowMinimize.description',
-    shortcut: '⌘+M',
+    shortcut: 'CmdOrCtrl+M',
 
     execute: async context => {
       try {
@@ -86,7 +86,8 @@ export const windowCommands: AppCommand[] = [
     id: 'window-exit-fullscreen',
     labelKey: 'commands.windowExitFullscreen.label',
     descriptionKey: 'commands.windowExitFullscreen.description',
-    shortcut: 'Escape',
+    // No shortcut - let OS/Tauri handle fullscreen exit natively.
+    // F11 toggle already works for keyboard access.
 
     execute: async context => {
       try {

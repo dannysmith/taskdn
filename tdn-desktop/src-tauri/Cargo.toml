@@ -36,10 +36,23 @@ log = "0.4"
 regex = "1"
 dirs = "6"
 
+# Vault management dependencies
+gray_matter = "0.2"                          # Frontmatter parsing
+serde_norway = "0.9"                         # YAML with better formatting control
+chrono = { version = "0.4", features = ["serde"] }  # DateTime handling
+rayon = "1"                                  # Parallel file scanning
+globset = "0.4"                              # Ignore patterns
+uuid = { version = "1", features = ["v4"] }  # Unique ID generation
+xxhash-rust = { version = "0.8", features = ["xxh64"] }  # Stable cross-version hashing
+notify-debouncer-full = "0.5"                # File watching with debouncing
+parking_lot = "0.12"                         # Better RwLock implementation
+trash = "5"                                  # Cross-platform trash/recycle bin
+
 # Type-safe Tauri command bindings
 specta = { version = "=2.0.0-rc.22", features = ["derive", "serde_json"] }
 tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript"] }
 specta-typescript = "=0.0.9"
+tauri-plugin-deep-link = "2"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-single-instance = "2"
@@ -49,6 +62,9 @@ tauri-plugin-window-state = "2"
 # macOS-only: NSPanel for native panel behavior (fullscreen overlay, click-outside dismiss)
 [target.'cfg(target_os = "macos")'.dependencies]
 tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.1" }
+
+[dev-dependencies]
+tempfile = "3"
 
 # Optimize for smaller binary size in release builds
 [profile.release]

@@ -1,16 +1,19 @@
 import { cn } from '@/lib/utils'
+import { TaskDetailPanel } from '@/components/tasks/TaskDetailPanel'
 
 interface RightSideBarProps {
-  children?: React.ReactNode
   className?: string
 }
 
-export function RightSideBar({ children, className }: RightSideBarProps) {
+export function RightSideBar({ className }: RightSideBarProps) {
   return (
     <div
-      className={cn('flex h-full flex-col border-l bg-background', className)}
+      className={cn(
+        'flex h-full flex-col bg-sidebar rounded-ts-lg overflow-hidden',
+        className
+      )}
     >
-      {children}
+      <TaskDetailPanel />
     </div>
   )
 }

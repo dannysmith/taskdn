@@ -1,0 +1,510 @@
+import * as React from 'react'
+import { useState, useCallback } from 'react'
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  KeyboardSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+  useDroppable,
+  defaultDropAnimationSideEffects,
+  type DragStartEvent,
+  type DragEndEvent,
+  type DragOverEvent,
+  type DropAnimation,
+} from '@dnd-kit/core'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  CalendarIcon,
+  CalendarDaysIcon,
+  ChevronRight,
+  ComponentIcon,
+  FolderIcon,
+  InboxIcon,
+  SunIcon,
+} from 'lucide-react'
+
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarSeparator,
+} from '@/components/ui/sidebar'
+import { cn } from '@/lib/utils'
+import { useSidebarOrder } from '@/hooks/use-sidebar-order'
+import { useVaultHelpers } from '@/services/vault'
+import { useCommandContext } from '@/hooks/use-command-context'
+import { showProjectContextMenu, showAreaContextMenu } from '@/lib/context-menu'
+import { DraggableArea } from './DraggableArea'
+import {
+  DraggableProject,
+  ProjectStatusIndicator,
+  getProjectTitleClass,
+} from './DraggableProject'
+import type { Selection, NavId } from '@/types/navigation'
+import { getDragId, ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
+import type { DragItem } from '@/types/sidebar-order'
+
+/**
+ * AppSidebar - Main navigation sidebar for the app.
+ *
+ * The left sidebar contains:
+ * 1. App branding + collapse toggle button
+ * 2. Fixed navigation items: Today, This Week, Inbox, Calendar
+ * 3. Draggable Area sections (collapsible, contain projects)
+ * 4. "No Area" section for orphan projects
+ *
+ * Supports drag-and-drop for:
+ * - Reordering areas relative to each other
+ * - Reordering projects within an area
+ * - Moving projects between areas (cross-container)
+ * - Moving projects to/from "No Area"
+ *
+ * Display order is managed by useSidebarOrder hook, persisted separately
+ * from entity data.
+ */
+
+// -----------------------------------------------------------------------------
+// Nav Items
+// -----------------------------------------------------------------------------
+
+const navItems: {
+  id: NavId
+  name: string
+  icon: typeof SunIcon
+  iconClass: string
+}[] = [
+  { id: 'today', name: 'Today', icon: SunIcon, iconClass: 'text-icon-today' },
+  {
+    id: 'this-week',
+    name: 'This Week',
+    icon: CalendarDaysIcon,
+    iconClass: 'text-icon-week',
+  },
+  { id: 'inbox', name: 'Inbox', icon: InboxIcon, iconClass: 'text-icon-inbox' },
+  {
+    id: 'calendar',
+    name: 'Calendar',
+    icon: CalendarIcon,
+    iconClass: 'text-icon-calendar',
+  },
+]
+
+// -----------------------------------------------------------------------------
+// App Sidebar
+// -----------------------------------------------------------------------------
+
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  selection: Selection | null
+  onSelectionChange: (selection: Selection) => void
+}
+
+export function AppSidebar({
+  selection,
+  onSelectionChange,
+  className,
+  ...props
+}: AppSidebarProps) {
+  const { getProjectCompletion, getAreaById, getProjectById } =
+    useVaultHelpers()
+  const commandContext = useCommandContext()
+  const {
+    orderedAreas,
+    orderedOrphanProjects,
+    getOrderedProjects,
+    reorderAreas,
+    reorderProjectsInArea,
+    moveProjectToArea,
+  } = useSidebarOrder()
+
+  // Track active drag item
+  const [activeItem, setActiveItem] = useState<DragItem | null>(null)
+
+  // Sensors with activation constraint (8px to distinguish click from drag)
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // Drop animation config
+  const dropAnimation: DropAnimation = {
+    sideEffects: defaultDropAnimationSideEffects({
+      styles: { active: { opacity: '0.5' } },
+    }),
+  }
+
+  // Drag handlers
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const data = event.active.data.current as DragItem | undefined
+    if (data) {
+      setActiveItem(data)
+    }
+  }, [])
+
+  const handleDragOver = useCallback(
+    (event: DragOverEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      const activeData = active.data.current as DragItem | undefined
+      const overData = over.data.current as DragItem | undefined
+
+      if (!activeData) return
+
+      // Handle area reordering during drag (for immediate visual feedback)
+      if (activeData.type === 'area' && overData?.type === 'area') {
+        reorderAreas(activeData.id, overData.id)
+        return
+      }
+
+      // Handle project cross-container moves
+      if (activeData.type === 'project') {
+        let overContainerId: string | null = null
+
+        if (overData?.type === 'project') {
+          overContainerId = overData.containerId
+        } else if (overData?.type === 'area') {
+          // Dropping on an area header - use that area as container
+          overContainerId = overData.id
+        } else {
+          // Might be dropping on the orphan container itself
+          const overId = over.id.toString()
+          if (overId === ORPHAN_CONTAINER_ID) {
+            overContainerId = ORPHAN_CONTAINER_ID
+          }
+        }
+
+        if (overContainerId === null) return
+
+        const activeContainerId = activeData.containerId ?? ORPHAN_CONTAINER_ID
+
+        // Cross-container move
+        if (activeContainerId !== overContainerId) {
+          moveProjectToArea(activeData.id, activeContainerId, overContainerId)
+        }
+      }
+    },
+    [moveProjectToArea, reorderAreas]
+  )
+
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      setActiveItem(null)
+
+      if (!over || active.id === over.id) return
+
+      const activeData = active.data.current as DragItem | undefined
+      const overData = over.data.current as DragItem | undefined
+
+      if (!activeData || !overData) return
+
+      // Reorder projects within same container (areas handled in dragOver)
+      if (
+        activeData.type === 'project' &&
+        overData.type === 'project' &&
+        activeData.containerId === overData.containerId
+      ) {
+        const containerId = activeData.containerId ?? ORPHAN_CONTAINER_ID
+        reorderProjectsInArea(containerId, activeData.id, overData.id)
+      }
+    },
+    [reorderProjectsInArea]
+  )
+
+  // Get drag item IDs for SortableContext
+  const areaIds = orderedAreas.map(a => getDragId('area', a.id))
+
+  // Drag preview component
+  const renderDragPreview = () => {
+    if (!activeItem) return null
+
+    if (activeItem.type === 'area') {
+      const area = getAreaById(activeItem.id)
+      if (!area) return null
+
+      return (
+        <div className="bg-sidebar rounded-md shadow-lg border border-border">
+          <SidebarGroupLabel className="gap-2 text-sm font-semibold">
+            <FolderIcon className="text-icon-folder" />
+            <span className="truncate">{area.title}</span>
+            <ChevronRight className="ms-auto" />
+          </SidebarGroupLabel>
+        </div>
+      )
+    }
+
+    if (activeItem.type === 'project') {
+      const project = getProjectById(activeItem.id)
+      if (!project) return null
+
+      const completion = getProjectCompletion(project.id)
+
+      return (
+        <div className="bg-sidebar rounded-md shadow-lg border border-border">
+          <SidebarMenuButton className="ps-7">
+            <ProjectStatusIndicator
+              status={project.status}
+              completion={completion}
+            />
+            <span
+              className={cn('truncate', getProjectTitleClass(project.status))}
+            >
+              {project.title}
+            </span>
+          </SidebarMenuButton>
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  return (
+    <Sidebar
+      collapsible="none"
+      className={cn('h-full w-full', className)}
+      {...props}
+    >
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToVerticalAxis]}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragEnd={handleDragEnd}
+      >
+        <SidebarContent className="gap-0 py-2 overflow-x-hidden">
+          {/* Navigation Items */}
+          <SidebarGroup className="py-0">
+            <SidebarMenu>
+              {navItems.map(item => (
+                <SidebarMenuItem key={item.id}>
+                  <SidebarMenuButton
+                    className="font-semibold"
+                    tooltip={item.name}
+                    isActive={
+                      selection?.type === 'nav' && selection.id === item.id
+                    }
+                    onClick={() =>
+                      onSelectionChange({ type: 'nav', id: item.id })
+                    }
+                  >
+                    <item.icon className={item.iconClass} />
+                    <span>{item.name}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroup>
+
+          <SidebarSeparator className="my-2" />
+
+          {/* Sortable Areas */}
+          <SortableContext
+            items={areaIds}
+            strategy={verticalListSortingStrategy}
+          >
+            {orderedAreas.map(area => {
+              const projects = getOrderedProjects(area.id)
+              const projectIds = projects.map(p => getDragId('project', p.id))
+
+              return (
+                <DraggableArea
+                  key={area.id}
+                  area={area}
+                  isSelected={
+                    selection?.type === 'area' && selection.id === area.id
+                  }
+                  onSelect={() =>
+                    onSelectionChange({ type: 'area', id: area.id })
+                  }
+                  onContextMenu={() =>
+                    showAreaContextMenu(area, commandContext)
+                  }
+                >
+                  <SidebarMenu>
+                    <SortableContext
+                      items={projectIds}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      {projects.map(project => (
+                        <DraggableProject
+                          key={project.id}
+                          project={project}
+                          containerId={area.id}
+                          isSelected={
+                            selection?.type === 'project' &&
+                            selection.id === project.id
+                          }
+                          onSelect={() =>
+                            onSelectionChange({
+                              type: 'project',
+                              id: project.id,
+                            })
+                          }
+                          completion={getProjectCompletion(project.id)}
+                          onContextMenu={() =>
+                            showProjectContextMenu(project, commandContext)
+                          }
+                        />
+                      ))}
+                    </SortableContext>
+                  </SidebarMenu>
+                </DraggableArea>
+              )
+            })}
+          </SortableContext>
+
+          {/* No Area Section (always visible for drop target) */}
+          <Collapsible defaultOpen className="group/collapsible">
+            <SidebarGroup className="py-0">
+              <SidebarGroupLabel
+                className={cn(
+                  'group/label gap-2 text-sm font-semibold cursor-pointer',
+                  selection?.type === 'no-area'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                    : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                )}
+              >
+                <button
+                  type="button"
+                  className="flex items-center gap-2 flex-1 min-w-0"
+                  onClick={() => onSelectionChange({ type: 'no-area' })}
+                >
+                  <FolderIcon className="size-4 text-icon-folder-none shrink-0" />
+                  <span className="truncate">No Area</span>
+                </button>
+                <CollapsibleTrigger
+                  className="p-0.5 rounded hover:bg-sidebar-accent-foreground/10"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <ChevronRight className="size-4 transition-transform duration-200 group-data-open/collapsible:rotate-90" />
+                </CollapsibleTrigger>
+              </SidebarGroupLabel>
+              <CollapsibleContent>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {orderedOrphanProjects.length === 0 ? (
+                      <EmptyDropZone id={ORPHAN_CONTAINER_ID} />
+                    ) : (
+                      <SortableContext
+                        items={orderedOrphanProjects.map(p =>
+                          getDragId('project', p.id)
+                        )}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {orderedOrphanProjects.map(project => (
+                          <DraggableProject
+                            key={project.id}
+                            project={project}
+                            containerId={ORPHAN_CONTAINER_ID}
+                            isSelected={
+                              selection?.type === 'project' &&
+                              selection.id === project.id
+                            }
+                            onSelect={() =>
+                              onSelectionChange({
+                                type: 'project',
+                                id: project.id,
+                              })
+                            }
+                            completion={getProjectCompletion(project.id)}
+                            onContextMenu={() =>
+                              showProjectContextMenu(project, commandContext)
+                            }
+                          />
+                        ))}
+                      </SortableContext>
+                    )}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </CollapsibleContent>
+            </SidebarGroup>
+          </Collapsible>
+        </SidebarContent>
+
+        {/* Drag Overlay */}
+        <DragOverlay dropAnimation={dropAnimation}>
+          {renderDragPreview()}
+        </DragOverlay>
+      </DndContext>
+
+      {/* Dev-only: Component Reference link */}
+      {import.meta.env.DEV && (
+        <SidebarFooter className="border-t border-border">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                className="text-muted-foreground"
+                tooltip="Component Reference"
+                isActive={
+                  selection?.type === 'dev-nav' &&
+                  selection.id === 'component-reference'
+                }
+                onClick={() =>
+                  onSelectionChange({
+                    type: 'dev-nav',
+                    id: 'component-reference',
+                  })
+                }
+              >
+                <ComponentIcon className="size-4" />
+                <span>Components</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      )}
+    </Sidebar>
+  )
+}
+
+// -----------------------------------------------------------------------------
+// Empty Drop Zone
+// -----------------------------------------------------------------------------
+
+function EmptyDropZone({ id }: { id: string }) {
+  const { isOver, setNodeRef } = useDroppable({ id })
+
+  return (
+    <SidebarMenuItem ref={setNodeRef}>
+      <div
+        className={cn(
+          'h-8 mx-2 my-1 border-2 border-dashed rounded flex items-center justify-center transition-colors',
+          isOver
+            ? 'border-primary/50 bg-primary/5'
+            : 'border-muted-foreground/25'
+        )}
+      >
+        <span className="text-xs text-muted-foreground">
+          {isOver ? 'Drop to add' : 'Drop here'}
+        </span>
+      </div>
+    </SidebarMenuItem>
+  )
+}

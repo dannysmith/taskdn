@@ -5,8 +5,11 @@ import type { CommandContext, AppCommand } from './types'
 const mockUIStore = {
   getState: vi.fn(() => ({
     leftSidebarVisible: true,
+    rightSidebarVisible: true,
     commandPaletteOpen: false,
-    setLeftSidebarVisible: vi.fn(),
+    toggleLeftSidebar: vi.fn(),
+    toggleRightSidebar: vi.fn(),
+    toggleCommandPalette: vi.fn(),
   })),
 }
 
@@ -14,26 +17,60 @@ vi.mock('@/store/ui-store', () => ({
   useUIStore: mockUIStore,
 }))
 
+vi.mock('@/store/task-creation-store', () => ({
+  useTaskCreationStore: {
+    getState: vi.fn(() => ({
+      triggerCreate: vi.fn(),
+    })),
+  },
+}))
+
 const { registerCommands, getAllCommands, executeCommand } =
   await import('./registry')
 const { navigationCommands } = await import('./navigation-commands')
+const { appCommands } = await import('./app-commands')
 
 const createMockContext = (): CommandContext => ({
   openPreferences: vi.fn(),
+  isObsidianEnabled: vi.fn(() => false),
   showToast: vi.fn(),
+  navigateToView: vi.fn(),
+  navigateToArea: vi.fn(),
+  navigateToProject: vi.fn(),
+  navigateToNoArea: vi.fn(),
+  // Navigation history
+  goBack: vi.fn(),
+  goForward: vi.fn(),
+  canGoBack: vi.fn(() => false),
+  canGoForward: vi.fn(() => false),
+  getAreas: vi.fn(() => []),
+  getProjects: vi.fn(() => []),
+  collapseAllAreas: vi.fn(),
+  expandAllAreas: vi.fn(),
+  openExternalUrl: vi.fn(),
+  // Task-specific context
+  selectedTaskId: null,
+  getSelectedTask: vi.fn(() => null),
+  openTask: vi.fn(),
+  focusField: vi.fn(),
+  // Cache update methods
+  updateTaskInCache: vi.fn(),
+  addTaskToCache: vi.fn(),
+  deleteTaskFromCache: vi.fn(),
+  // Preferences
+  isPermanentDeleteEnabled: vi.fn(() => false),
+  // Context menu target
+  getContextMenuTarget: vi.fn(() => null),
+  setContextMenuTarget: vi.fn(),
 })
 
 // Mock translation function for testing
 const mockT = ((key: string): string => {
   const translations: Record<string, string> = {
-    'commands.showLeftSidebar.label': 'Show Left Sidebar',
-    'commands.showLeftSidebar.description': 'Show the left sidebar',
-    'commands.hideLeftSidebar.label': 'Hide Left Sidebar',
-    'commands.hideLeftSidebar.description': 'Hide the left sidebar',
-    'commands.showRightSidebar.label': 'Show Right Sidebar',
-    'commands.showRightSidebar.description': 'Show the right sidebar',
-    'commands.hideRightSidebar.label': 'Hide Right Sidebar',
-    'commands.hideRightSidebar.description': 'Hide the right sidebar',
+    'commands.toggleLeftSidebar.label': 'Toggle Left Sidebar',
+    'commands.toggleLeftSidebar.description': 'Show or hide the left sidebar',
+    'commands.toggleRightSidebar.label': 'Toggle Right Sidebar',
+    'commands.toggleRightSidebar.description': 'Show or hide the right sidebar',
     'commands.openPreferences.label': 'Open Preferences',
     'commands.openPreferences.description': 'Open the application preferences',
   }
@@ -46,6 +83,7 @@ describe('Simplified Command System', () => {
   beforeEach(() => {
     mockContext = createMockContext()
     registerCommands(navigationCommands)
+    registerCommands(appCommands)
   })
 
   afterEach(() => {
@@ -58,29 +96,10 @@ describe('Simplified Command System', () => {
       expect(commands.length).toBeGreaterThan(0)
 
       const sidebarCommand = commands.find(
-        cmd => cmd.id === 'show-left-sidebar' || cmd.id === 'hide-left-sidebar'
+        cmd => cmd.id === 'toggle-left-sidebar'
       )
       expect(sidebarCommand).toBeDefined()
       expect(mockT(sidebarCommand?.labelKey ?? '')).toContain('Sidebar')
-    })
-
-    it('filters commands by availability', () => {
-      mockUIStore.getState.mockReturnValue({
-        leftSidebarVisible: false,
-        commandPaletteOpen: false,
-        setLeftSidebarVisible: vi.fn(),
-      })
-
-      const availableCommands = getAllCommands(mockContext)
-      const showSidebarCommand = availableCommands.find(
-        cmd => cmd.id === 'show-left-sidebar'
-      )
-      const hideSidebarCommand = availableCommands.find(
-        cmd => cmd.id === 'hide-left-sidebar'
-      )
-
-      expect(showSidebarCommand).toBeDefined()
-      expect(hideSidebarCommand).toBeUndefined()
     })
 
     it('filters commands by search term using translations', () => {
@@ -92,8 +111,11 @@ describe('Simplified Command System', () => {
         const description = cmd.descriptionKey
           ? mockT(cmd.descriptionKey).toLowerCase()
           : ''
+        const keywords = cmd.keywords?.join(' ').toLowerCase() ?? ''
         const matchesSearch =
-          label.includes('sidebar') || description.includes('sidebar')
+          label.includes('sidebar') ||
+          description.includes('sidebar') ||
+          keywords.includes('sidebar')
 
         expect(matchesSearch).toBe(true)
       })
@@ -101,29 +123,16 @@ describe('Simplified Command System', () => {
   })
 
   describe('Command Execution', () => {
-    it('executes show-left-sidebar command correctly', async () => {
-      mockUIStore.getState.mockReturnValue({
-        leftSidebarVisible: false,
-        commandPaletteOpen: false,
-        setLeftSidebarVisible: vi.fn(),
-      })
-
-      const result = await executeCommand('show-left-sidebar', mockContext)
+    it('executes toggle-left-sidebar command correctly', async () => {
+      const result = await executeCommand('toggle-left-sidebar', mockContext)
 
       expect(result.success).toBe(true)
     })
 
-    it('fails to execute unavailable command', async () => {
-      mockUIStore.getState.mockReturnValue({
-        leftSidebarVisible: true,
-        commandPaletteOpen: false,
-        setLeftSidebarVisible: vi.fn(),
-      })
+    it('executes toggle-right-sidebar command correctly', async () => {
+      const result = await executeCommand('toggle-right-sidebar', mockContext)
 
-      const result = await executeCommand('show-left-sidebar', mockContext)
-
-      expect(result.success).toBe(false)
-      expect(result.error).toContain('not available')
+      expect(result.success).toBe(true)
     })
 
     it('handles non-existent command', async () => {
@@ -148,6 +157,41 @@ describe('Simplified Command System', () => {
 
       expect(result.success).toBe(false)
       expect(result.error).toContain('Test error')
+    })
+
+    it('executes dynamic area navigation commands', async () => {
+      // Create context with mock areas
+      const contextWithAreas = createMockContext()
+      vi.mocked(contextWithAreas.getAreas).mockReturnValue([
+        { id: 'area-123', title: 'Work', status: 'active' },
+        { id: 'area-456', title: 'Personal', status: 'active' },
+      ] as never)
+
+      // Dynamic commands aren't in static registry - they're generated at runtime
+      const result = await executeCommand(
+        'navigate-area-area-123',
+        contextWithAreas
+      )
+
+      expect(result.success).toBe(true)
+      expect(contextWithAreas.navigateToArea).toHaveBeenCalledWith('area-123')
+    })
+
+    it('executes dynamic project navigation commands', async () => {
+      const contextWithProjects = createMockContext()
+      vi.mocked(contextWithProjects.getProjects).mockReturnValue([
+        { id: 'proj-789', title: 'Website Redesign', status: 'active' },
+      ] as never)
+
+      const result = await executeCommand(
+        'navigate-project-proj-789',
+        contextWithProjects
+      )
+
+      expect(result.success).toBe(true)
+      expect(contextWithProjects.navigateToProject).toHaveBeenCalledWith(
+        'proj-789'
+      )
     })
   })
 })

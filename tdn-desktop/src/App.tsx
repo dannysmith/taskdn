@@ -2,17 +2,34 @@ import { useEffect } from 'react'
 import { check } from '@tauri-apps/plugin-updater'
 import { relaunch } from '@tauri-apps/plugin-process'
 import { initializeCommandSystem } from './lib/commands'
-import { buildAppMenu, setupMenuLanguageListener } from './lib/menu'
+import { usePreventEscapeExitsFullscreen } from './hooks/use-prevent-escape-exits-fullscreen'
+import { useDeepLink } from './hooks/use-deep-link'
+import {
+  buildAppMenu,
+  setupMenuLanguageListener,
+  setupMenuSelectionListener,
+  setupMenuDataListener,
+} from './lib/menu'
 import { initializeLanguage } from './i18n/language-init'
 import { logger } from './lib/logger'
 import { cleanupOldFiles } from './lib/recovery'
 import { commands } from './lib/tauri-bindings'
+import { useVaultInitialization } from './services/vault'
 import './App.css'
 import { MainWindow } from './components/layout/MainWindow'
-import { ThemeProvider } from './components/ThemeProvider'
-import { ErrorBoundary } from './components/ErrorBoundary'
+import { ThemeProvider } from './components/providers/ThemeProvider'
+import { ErrorBoundary } from './components/providers/ErrorBoundary'
 
 function App() {
+  // Prevent Escape from exiting macOS fullscreen (must be before other hooks)
+  usePreventEscapeExitsFullscreen()
+
+  // Set up vault file watcher event listener
+  useVaultInitialization()
+
+  // Set up deep link listener for taskdn:// URLs
+  useDeepLink()
+
   // Initialize command system and cleanup on app startup
   useEffect(() => {
     logger.info('🚀 Frontend application starting up')
@@ -33,7 +50,11 @@ function App() {
         // Build the application menu with the initialized language
         await buildAppMenu()
         logger.debug('Application menu built')
+
+        // Set up listeners to rebuild menu when needed
         setupMenuLanguageListener()
+        setupMenuSelectionListener()
+        setupMenuDataListener()
       } catch (error) {
         logger.warn('Failed to initialize language or menu', { error })
       }

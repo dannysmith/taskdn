@@ -6,4 +6,3 @@
   - `product-overviews/cli` - The CLI Tool (includes embedded Rust core)
   - `product-overviews/desktop` - The Tauri Desktop App
 - `developer` - Developer-facing documentation common to all products.
-- `archive` - Old documents which may be useful to reference in the future.

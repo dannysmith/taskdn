@@ -15,7 +15,17 @@ src-tauri/src/
 │   ├── preferences.rs
 │   ├── notifications.rs
 │   ├── quick_pane.rs
-│   └── recovery.rs
+│   ├── recovery.rs
+│   ├── config.rs    # App config, paths, dev mode detection
+│   └── vault.rs     # Vault CRUD operations (tasks, projects, areas)
+├── vault/           # Core vault parsing and management
+│   ├── mod.rs       # Module exports
+│   ├── entities.rs  # Task, Project, Area domain types
+│   ├── scanner.rs   # Markdown file scanning and parsing
+│   ├── writer.rs    # Markdown file writing
+│   ├── manager.rs   # VaultManager (cache, refresh, CRUD)
+│   ├── wikilink.rs  # Wikilink parsing utilities
+│   └── error.rs     # Vault-specific error types
 └── utils/           # Utility modules
     ├── mod.rs
     └── platform.rs  # Platform-specific helpers
@@ -168,5 +178,8 @@ When adding new features:
 
 1. **New command domain?** Create new file in `commands/`
 2. **New shared types?** Add to `types.rs`
-3. **Platform-specific utils?** Add to `utils/platform.rs`
-4. **New plugin?** Register in `lib.rs` setup
+3. **Complex domain logic?** Create a new module directory (like `vault/`)
+4. **Platform-specific utils?** Add to `utils/platform.rs`
+5. **New plugin?** Register in `lib.rs` setup
+
+The `vault/` module demonstrates the pattern for complex domains: separate `entities.rs` for types, `scanner.rs` for reading, `writer.rs` for writing, and `manager.rs` for coordination.

@@ -1,7 +1,16 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
 @import './theme-variables.css';
+@import '@dannysmith/datepicker/styles.css';
 
 @custom-variant dark (&:is(.dark *));
+
+/* Animation timing (JS constants in QuickPaneApp.tsx must match) */
+:root {
+  --quick-pane-enter-duration: 150ms;
+  --quick-pane-exit-duration: 100ms;
+}
 
 /* Quick pane needs transparent background for rounded corners to show */
 html,
@@ -22,8 +31,73 @@ body {
 }
 
 /* Allow text input */
-input {
+input,
+textarea {
   user-select: text !important;
   -webkit-user-select: text !important;
   cursor: text !important;
+}
+
+/* Card show/hide animations */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes card-exit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+.quick-pane-card {
+  animation: card-enter var(--quick-pane-enter-duration) ease-out forwards;
+}
+
+.quick-pane-card.exiting {
+  animation: card-exit var(--quick-pane-exit-duration) ease-in forwards;
+}
+
+/* Body expand/collapse animation */
+@keyframes body-expand {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 200px;
+  }
+}
+
+@keyframes body-collapse {
+  from {
+    opacity: 1;
+    max-height: 200px;
+  }
+  to {
+    opacity: 0;
+    max-height: 0;
+  }
+}
+
+.quick-pane-body-enter {
+  animation: body-expand var(--quick-pane-enter-duration) ease-out forwards;
+  overflow: hidden;
+}
+
+.quick-pane-body-exit {
+  animation: body-collapse var(--quick-pane-exit-duration) ease-in forwards;
+  overflow: hidden;
 }
