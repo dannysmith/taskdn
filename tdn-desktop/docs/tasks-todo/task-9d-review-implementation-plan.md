@@ -745,10 +745,11 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10e. ThreadPool Error Handling
 
+**Status:** [x] Complete
+
 **Location:** `src-tauri/src/vault/scanner.rs:192-195`
 
-- [ ] Replace `.unwrap()` with `.expect("descriptive message")`
-- [ ] Or handle gracefully with warning log
+- [x] Handle gracefully with error log and return empty Vec
 
 ### 10f. Document QueryClient Pattern
 
