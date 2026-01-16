@@ -753,11 +753,13 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10f. Document QueryClient Pattern
 
+**Status:** [x] Complete
+
 **Location:** `docs/developer/architecture-guide.md`
 
-- [ ] Add section explaining when to use direct import vs `useQueryClient()` hook
-- [ ] Direct import: non-React contexts (utilities, event handlers)
-- [ ] Hook: React components and hooks
+- [x] Add section explaining when to use direct import vs `useQueryClient()` hook
+- [x] Direct import: non-React contexts (utilities, event handlers)
+- [x] Hook: React components and hooks
 
 ### 10g. get_entity_raw_content Lock Pattern
 

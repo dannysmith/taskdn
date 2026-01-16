@@ -247,6 +247,61 @@ const prefs = await invoke<AppPreferences>('load_preferences')
 
 See [tauri-commands.md](./tauri-commands.md) for adding new commands.
 
+## QueryClient Access Pattern
+
+TanStack Query's `QueryClient` can be accessed two ways depending on context:
+
+### In React Components and Hooks
+
+Use the `useQueryClient()` hook - this follows React's rules and ensures proper integration with the React lifecycle:
+
+```typescript
+import { useQueryClient } from '@tanstack/react-query'
+
+function MyComponent() {
+  const queryClient = useQueryClient()
+
+  const handleClick = () => {
+    queryClient.invalidateQueries({ queryKey: ['tasks'] })
+  }
+
+  return <button onClick={handleClick}>Refresh</button>
+}
+```
+
+### In Non-React Contexts
+
+Import the singleton directly for event handlers, utilities, and other non-React code:
+
+```typescript
+import { queryClient } from '@/lib/query-client'
+
+// Event listener (outside React)
+listen('vault-changed', () => {
+  queryClient.invalidateQueries({ queryKey: ['tasks'] })
+})
+
+// Utility function
+function getTaskFromCache(taskId: string): Task | undefined {
+  const tasks = queryClient.getQueryData<Task[]>(['tasks'])
+  return tasks?.find(t => t.id === taskId)
+}
+```
+
+**Decision Tree:**
+
+```
+Are you inside a React component or custom hook?
+├─ Yes → Use useQueryClient() hook
+└─ No → Import queryClient from @/lib/query-client
+```
+
+**Why this pattern exists:**
+
+- The `useQueryClient()` hook ensures proper React context integration
+- Direct import works outside React but bypasses React's lifecycle
+- Both access the same singleton instance, so cache state is shared
+
 ## Quality Gates
 
 Before any changes are committed:
