@@ -18,31 +18,32 @@ This plan addresses all issues identified in the clean code review, organized in
 
 ## Phase Overview
 
-| Phase | Focus | Severity | Est. Files | Risk |
-|-------|-------|----------|------------|------|
-| 1 | WikiLink Utilities | Critical | 5 TS | Low |
-| 2 | AppPreferences camelCase | Critical | 3 RS + TS | Low* |
-| 3 | Rust Status Methods | Moderate | 2 RS | Low |
-| 4 | Temporary Types Removal | Moderate | ~10 TS | Low |
-| 5 | Order Hook Consolidation | Moderate | 4 TS | Medium |
-| 6 | Vault.ts Splitting | Moderate | 5 TS | Medium |
-| 7 | use-deep-link.ts Splitting | Moderate | 3 TS | Low |
-| 8 | lib.rs Refactoring | Moderate | 1 RS | Low |
-| 9 | Calendar DnD Extraction | Moderate | 3 TSX | Medium |
-| 10 | Minor Improvements | Minor | Various | Low |
+| Phase | Focus                      | Severity | Est. Files | Risk   |
+| ----- | -------------------------- | -------- | ---------- | ------ |
+| 1     | WikiLink Utilities         | Critical | 5 TS       | Low    |
+| 2     | AppPreferences camelCase   | Critical | 3 RS + TS  | Low\*  |
+| 3     | Rust Status Methods        | Moderate | 2 RS       | Low    |
+| 4     | Temporary Types Removal    | Moderate | ~10 TS     | Low    |
+| 5     | Order Hook Consolidation   | Moderate | 4 TS       | Medium |
+| 6     | Vault.ts Splitting         | Moderate | 5 TS       | Medium |
+| 7     | use-deep-link.ts Splitting | Moderate | 3 TS       | Low    |
+| 8     | lib.rs Refactoring         | Moderate | 1 RS       | Low    |
+| 9     | Calendar DnD Extraction    | Moderate | 3 TSX      | Medium |
+| 10    | Minor Improvements         | Minor    | Various    | Low    |
 
-*Low risk because only one user currently
+\*Low risk because only one user currently
 
 ---
 
 ## Phase 1: WikiLink Utilities Consolidation
 
-**Status:** [ ] Not Started
-**Completion Date:** ___
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
 Four separate implementations of wikilink extraction exist in TypeScript:
+
 - `src/lib/commands/task-commands.ts:274` - `extractIdFromWikilink` (misleadingly named)
 - `src/components/views/ProjectView.tsx:101` - `extractTitle`
 - `src/components/views/WeekView.tsx:101` - `extractTitle`
@@ -134,6 +135,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Open a task with a project assigned → Verify project name displays correctly
 - Open a task with an area assigned → Verify area name displays correctly
 - Open Project view → Verify area grouping works
@@ -144,7 +146,7 @@ bun run check:all
 ## Phase 2: AppPreferences camelCase Migration
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -179,7 +181,8 @@ bun run check:all
 ```
 
 **Manual Testing:**
-- Delete `~/Library/Application Support/is.danny.taskdn-desktop/preferences.json` and  `~/Library/Application Support/is.danny.taskdn-desktop/preferences.development.json`
+
+- Delete `~/Library/Application Support/is.danny.taskdn-desktop/preferences.json` and `~/Library/Application Support/is.danny.taskdn-desktop/preferences.development.json`
 - Launch app → Verify it starts with default preferences
 - Change theme → Verify preference saves and persists
 - Set quick pane shortcut → Verify it saves and works
@@ -190,11 +193,12 @@ bun run check:all
 ## Phase 3: Rust Status Methods
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
 Status-to-string conversion is duplicated in 4 locations in `writer.rs`:
+
 - `create_task_file` (TaskStatus)
 - `update_task` (TaskStatus)
 - `create_project_file` (ProjectStatus)
@@ -249,6 +253,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Create a new task → Verify status is written correctly to file
 - Change task status → Verify file updates correctly
 - Create a new project → Verify status is written correctly
@@ -259,7 +264,7 @@ bun run check:all
 ## Phase 4: Temporary Types Removal
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -276,14 +281,14 @@ bun run check:all
 
 ### Field Mapping Reference
 
-| data.ts | tauri-bindings | Notes |
-|---------|----------------|-------|
-| `Task.areaId` | `Task.area` | WikiLink format `[[Name]]` |
+| data.ts          | tauri-bindings | Notes                      |
+| ---------------- | -------------- | -------------------------- |
+| `Task.areaId`    | `Task.area`    | WikiLink format `[[Name]]` |
 | `Task.projectId` | `Task.project` | WikiLink format `[[Name]]` |
-| `Task.notes` | `Task.body` | Markdown content |
+| `Task.notes`     | `Task.body`    | Markdown content           |
 | `Project.areaId` | `Project.area` | WikiLink format `[[Name]]` |
-| `Project.notes` | `Project.body` | Markdown content |
-| `Area.notes` | `Area.body` | Markdown content |
+| `Project.notes`  | `Project.body` | Markdown content           |
+| `Area.notes`     | `Area.body`    | Markdown content           |
 
 ### Verification
 
@@ -292,6 +297,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Open any view that displays tasks → Verify all fields render correctly
 - Open task detail panel → Verify all metadata displays
 - Edit a task → Verify changes save correctly
@@ -301,7 +307,7 @@ bun run check:all
 ## Phase 5: Order Hook Consolidation
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -320,6 +326,7 @@ useProjectOrder(projectId: string, tasks: Task[]) // Keyed by projectId
 ```
 
 **Options:**
+
 1. Create two factories: `createTaskOrderHook` (inbox) and `createKeyedTaskOrderHook` (area/project)
 2. Make one flexible factory that accepts an optional key parameter
 3. Use a higher-order function that returns a hook with the key baked in
@@ -351,7 +358,9 @@ import { useDisplayOrderStore } from '@/store/display-order-store'
 
 interface TaskOrderConfig {
   /** Selector to get stored order from display order store */
-  getStoredOrder: (state: ReturnType<typeof useDisplayOrderStore.getState>) => string[] | null
+  getStoredOrder: (
+    state: ReturnType<typeof useDisplayOrderStore.getState>
+  ) => string[] | null
   /** Function to set order in display order store */
   setStoredOrder: (ids: string[]) => void
 }
@@ -439,6 +448,7 @@ bun run test -- --filter="order"
 ```
 
 **Manual Testing:**
+
 - Open Inbox view → Drag tasks to reorder → Verify order persists
 - Open a Project view → Drag tasks to reorder → Verify order persists
 - Open an Area view → Drag tasks to reorder → Verify order persists
@@ -449,7 +459,7 @@ bun run test -- --filter="order"
 ## Phase 6: Vault.ts Splitting
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -500,6 +510,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Full app walkthrough - tasks, projects, areas CRUD
 - Verify vault change events trigger refreshes
 - Verify error toasts appear on failures
@@ -509,7 +520,7 @@ bun run check:all
 ## Phase 7: use-deep-link.ts Splitting
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -529,6 +540,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Test deep link: `taskdn://task/create` → Should create new task
 - Test deep link: `taskdn://task/{id}` → Should open task detail
 - Test deep link: `taskdn://navigate/inbox` → Should navigate to inbox
@@ -538,7 +550,7 @@ bun run check:all
 ## Phase 8: lib.rs Refactoring
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -558,6 +570,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Launch app → Verify it starts correctly
 - Test quick pane → Verify it works
 - Test file watching → Verify vault changes are detected
@@ -567,7 +580,7 @@ bun run check:all
 ## Phase 9: Calendar DnD Extraction
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 ### Problem
 
@@ -610,6 +623,7 @@ bun run check:all
 ```
 
 **Manual Testing:**
+
 - Open Week view → Drag task to different day → Verify it moves and scheduled date updates
 - Open Month view → Drag task to different day → Verify it moves and scheduled date updates
 - Drag within same day → Verify reordering works
@@ -620,7 +634,7 @@ bun run check:all
 ## Phase 10: Minor Improvements
 
 **Status:** [ ] Not Started
-**Completion Date:** ___
+**Completion Date:** \_\_\_
 
 This phase collects all minor issues. Each can be done independently.
 
@@ -705,6 +719,7 @@ bun run check:all
 ## Appendix: Files Changed Summary
 
 ### Rust Files
+
 - `src-tauri/src/types.rs`
 - `src-tauri/src/vault/entities.rs`
 - `src-tauri/src/vault/writer.rs`
@@ -714,6 +729,7 @@ bun run check:all
 - `src-tauri/src/lib.rs`
 
 ### TypeScript Files (New)
+
 - `src/lib/wikilink.ts`
 - `src/lib/wikilink.test.ts`
 - `src/hooks/use-task-order.ts`
@@ -728,6 +744,7 @@ bun run check:all
 - `src/lib/deep-link-handler.ts`
 
 ### TypeScript Files (Modified)
+
 - `src/lib/commands/task-commands.ts`
 - `src/components/views/ProjectView.tsx`
 - `src/components/views/WeekView.tsx`
@@ -743,6 +760,7 @@ bun run check:all
 - `src/lib/menu.ts`
 
 ### TypeScript Files (Deleted)
+
 - `src/types/data.ts`
 - `src/services/vault.ts` (replaced by vault/ directory)
 
@@ -750,7 +768,7 @@ bun run check:all
 
 ## Completion Checklist
 
-- [ ] Phase 1: WikiLink Utilities
+- [x] Phase 1: WikiLink Utilities
 - [ ] Phase 2: AppPreferences camelCase
 - [ ] Phase 3: Rust Status Methods
 - [ ] Phase 4: Temporary Types Removal

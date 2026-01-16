@@ -2,6 +2,7 @@ import * as React from 'react'
 import { startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns'
 
 import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
+import { stripWikilink } from '@/lib/wikilink'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useCommandContext } from '@/hooks/use-command-context'
@@ -97,32 +98,24 @@ export function WeekView() {
     [tasks]
   )
 
-  // Helper: extract title from WikiLink format [[Title]]
-  const extractTitle = React.useCallback((wikilink: string): string => {
-    if (wikilink.startsWith('[[') && wikilink.endsWith(']]')) {
-      return wikilink.slice(2, -2)
-    }
-    return wikilink
-  }, [])
-
   // Helper: get project name from WikiLink
   const getProjectName = React.useCallback(
     (wikilink: string): string | undefined => {
-      const title = extractTitle(wikilink)
+      const title = stripWikilink(wikilink)
       const project = projects.find(p => p.title === title)
       return project?.title
     },
-    [projects, extractTitle]
+    [projects]
   )
 
   // Helper: get area name from WikiLink
   const getAreaName = React.useCallback(
     (wikilink: string): string | undefined => {
-      const title = extractTitle(wikilink)
+      const title = stripWikilink(wikilink)
       const area = areas.find(a => a.title === title)
       return area?.title
     },
-    [areas, extractTitle]
+    [areas]
   )
 
   // Get context (project/area names and IDs) for a task
@@ -296,25 +289,25 @@ export function WeekView() {
   // The WikiLink format is passed directly, need to find the project by title
   const handleKanbanProjectClick = React.useCallback(
     (wikilink: string) => {
-      const title = extractTitle(wikilink)
+      const title = stripWikilink(wikilink)
       const project = projects.find(p => p.title === title)
       if (project) {
         navigate({ type: 'project', id: project.id })
       }
     },
-    [projects, extractTitle, navigate]
+    [projects, navigate]
   )
 
   // Handle clicking on area name in kanban cards - navigate to area
   const handleKanbanAreaClick = React.useCallback(
     (wikilink: string) => {
-      const title = extractTitle(wikilink)
+      const title = stripWikilink(wikilink)
       const area = areas.find(a => a.title === title)
       if (area) {
         navigate({ type: 'area', id: area.id })
       }
     },
-    [areas, extractTitle, navigate]
+    [areas, navigate]
   )
 
   // Build ordered tasks for kanban (applying column ordering)

@@ -14,12 +14,14 @@ The codebase demonstrates strong foundational patterns with consistent documenta
 ### 1. Duplicated WikiLink Extraction Logic Across TypeScript
 
 **Locations:**
+
 - `src/lib/commands/task-commands.ts:274` - `extractIdFromWikilink`
 - `src/components/views/ProjectView.tsx:101` - `extractTitle`
 - `src/components/views/WeekView.tsx:101` - `extractTitle`
 - `src/components/tasks/TaskDetailPanel.tsx:98` - `extractFromWikilink`
 
 **Issue:** Four separate implementations of wikilink extraction exist in TypeScript, with:
+
 - **Inconsistent naming**: `extractIdFromWikilink` (misleading - extracts title, not ID), `extractTitle`, `extractFromWikilink`
 - **Different implementations**: Some use string slice (`wikilink.slice(2, -2)`), others use regex (`/^\[\[(.+)\]\]$/`)
 - **Missing features**: None handle advanced wikilink syntax (aliases `|`, headings `#`) that the Rust implementation (`src-tauri/src/vault/wikilink.rs`) fully supports
@@ -28,6 +30,7 @@ The codebase demonstrates strong foundational patterns with consistent documenta
 **Impact:** High - Inconsistent behavior, maintenance burden, and potential bugs when wikilinks with aliases or headings are encountered
 
 **Suggestion:** Create a single `src/lib/wikilink.ts` utility module:
+
 ```typescript
 /**
  * WikiLink parsing utilities matching Rust behavior.
@@ -60,6 +63,7 @@ Then replace all 4 implementations with imports from this module.
 ### 2. Naming Convention Inconsistency: AppPreferences vs Entities
 
 **Locations:**
+
 - `src-tauri/src/types.rs:27-52` - AppPreferences (no serde rename)
 - `src-tauri/src/vault/entities.rs:58-87` - Task, Project, Area (camelCase rename)
 - Generated `src/lib/bindings.ts:373-410` - AppPreferences has snake_case fields
@@ -67,13 +71,14 @@ Then replace all 4 implementations with imports from this module.
 **Issue:** Entity types (Task, Project, Area) use `#[serde(rename_all = "camelCase")]`, generating proper TypeScript-style field names. However, `AppPreferences` lacks this attribute, resulting in snake_case TypeScript fields like `quick_pane_shortcut`, `tasks_dir`, etc.
 
 This creates inconsistency where:
+
 ```typescript
 // Entity fields - correct TypeScript style
-task.createdAt  // ✓
+task.createdAt // ✓
 task.deferUntil // ✓
 
 // Preferences fields - Rust style in TypeScript
-preferences.quick_pane_shortcut   // ✗
+preferences.quick_pane_shortcut // ✗
 preferences.permanent_delete_tasks // ✗
 ```
 
@@ -91,9 +96,11 @@ preferences.permanent_delete_tasks // ✗
 **Location:** `src/types/data.ts`
 
 **Issue:** The file header explicitly states:
+
 > "NOTE: These types are TEMPORARY. Once the Rust backend is integrated, they will be replaced by types generated via tauri-specta from Rust structs."
 
 However, the Rust backend is now integrated and tauri-specta generates types in `src/lib/bindings.ts`. The temporary types have subtle differences:
+
 - `areaId` vs `area` (wikilink format)
 - `projectId` vs `project` (wikilink format)
 - `notes` vs `body` (markdown content)
@@ -103,6 +110,7 @@ However, the Rust backend is now integrated and tauri-specta generates types in 
 **Impact:** Medium - potential confusion about which types to use, risk of using wrong types
 
 **Suggestion:**
+
 1. Audit all imports of `src/types/data.ts`
 2. Migrate all usages to `@/lib/tauri-bindings` types
 3. Remove or archive `src/types/data.ts`
@@ -113,18 +121,19 @@ However, the Rust backend is now integrated and tauri-specta generates types in 
 
 Analysis across all phases reveals a pattern of similar code being copy-pasted rather than abstracted:
 
-| Pattern | Locations | Lines Duplicated |
-|---------|-----------|------------------|
-| WikiLink extraction | 4 TS files | ~20 lines × 4 |
-| Order hook logic | 7 hook files | ~50 lines × 7 |
-| Status-to-string conversion | 4 Rust locations | ~10 lines × 4 |
-| Calendar DnD handlers | 2 calendar components | ~100 lines × 2 |
-| Swimlane rendering | 2 swimlane components | ~80 lines × 2 |
-| Availability check logic | 2 command files | ~20 lines × 2 |
+| Pattern                     | Locations             | Lines Duplicated |
+| --------------------------- | --------------------- | ---------------- |
+| WikiLink extraction         | 4 TS files            | ~20 lines × 4    |
+| Order hook logic            | 7 hook files          | ~50 lines × 7    |
+| Status-to-string conversion | 4 Rust locations      | ~10 lines × 4    |
+| Calendar DnD handlers       | 2 calendar components | ~100 lines × 2   |
+| Swimlane rendering          | 2 swimlane components | ~80 lines × 2    |
+| Availability check logic    | 2 command files       | ~20 lines × 2    |
 
 **Estimated total duplicate lines:** ~700-800 lines
 
 **Priority order for consolidation:**
+
 1. WikiLink utilities (cross-cutting, high impact)
 2. Order hook factory (most duplicated, same pattern)
 3. Calendar DnD hook (significant size)
@@ -137,6 +146,7 @@ Analysis across all phases reveals a pattern of similar code being copy-pasted r
 **Location:** `src/services/vault.ts`
 
 **Issue:** Some places import `queryClient` directly while others use `useQueryClient()`:
+
 - Direct import: `addTaskToCache` (line 44)
 - Hook: Inside mutations
 
@@ -144,6 +154,7 @@ Analysis across all phases reveals a pattern of similar code being copy-pasted r
 **Impact:** Low - both work, but inconsistent
 
 **Suggestion:** Document the pattern:
+
 - Direct import: For non-React contexts (utilities, event handlers)
 - `useQueryClient()`: For React components and hooks
 
@@ -158,6 +169,7 @@ Analysis across all phases reveals a pattern of similar code being copy-pasted r
 **Issue:** User-facing date strings ("Today", "Tomorrow", "Yesterday", "Last Mon") are hardcoded in English rather than using i18n translation keys.
 
 **Suggestion:** Use i18n:
+
 ```typescript
 import i18n from '@/i18n/config'
 const t = i18n.t.bind(i18n)
@@ -171,6 +183,7 @@ if (diffDays === 1) return t('dates.tomorrow')
 ### 7. Module-Level Mutable State
 
 **Locations:**
+
 - `src/services/vault.ts:573` - `lastMutationTime`
 - `src/hooks/use-command-context.ts` - `contextMenuTarget`
 - `src/lib/context-menu.ts:21-22` - mutex variables
@@ -218,6 +231,7 @@ if (diffDays === 1) return t('dates.tomorrow')
 ## File Organization Assessment
 
 ### Rust (`src-tauri/src/`)
+
 ```
 ✓ Clear module separation (commands/, vault/, utils/)
 ✓ Internal vs public types well-separated in entities.rs
@@ -225,6 +239,7 @@ if (diffDays === 1) return t('dates.tomorrow')
 ```
 
 ### TypeScript (`src/`)
+
 ```
 ✓ Good component organization by feature (calendar/, kanban/, tasks/)
 ✓ Clear hooks/ vs services/ vs store/ separation
@@ -275,15 +290,15 @@ if (diffDays === 1) return t('dates.tomorrow')
 
 ## Metrics Summary
 
-| Metric | Value |
-|--------|-------|
-| Critical Issues | 2 |
-| Moderate Issues | 4 |
-| Minor Issues | 3 |
-| Estimated Duplicate Lines | ~700-800 |
-| Test Coverage | Good (unit tests present) |
-| Documentation Coverage | Excellent (>95%) |
-| Technical Debt Markers | 0 |
+| Metric                    | Value                     |
+| ------------------------- | ------------------------- |
+| Critical Issues           | 2                         |
+| Moderate Issues           | 4                         |
+| Minor Issues              | 3                         |
+| Estimated Duplicate Lines | ~700-800                  |
+| Test Coverage             | Good (unit tests present) |
+| Documentation Coverage    | Excellent (>95%)          |
+| Technical Debt Markers    | 0                         |
 
 ---
 

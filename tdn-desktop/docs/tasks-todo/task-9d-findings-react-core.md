@@ -17,6 +17,7 @@ The React core infrastructure is generally well-organized with clear patterns an
 **Issue:** This hook handles URL parsing, entity lookup, navigation, task creation, and window management - all within a single file. The file has 5 distinct sections marked with comments (Types, Data Access, Entity Lookup, Command Handlers, Hook).
 **Principle:** Single Responsibility Principle - a module should have one reason to change
 **Suggestion:** Split into:
+
 - `src/lib/deep-link.ts` - URL parsing (already partially exists)
 - `src/lib/deep-link-handler.ts` - Entity lookup and command execution logic
 - `src/hooks/use-deep-link.ts` - Just the hook registration and event wiring
@@ -36,11 +37,12 @@ The React core infrastructure is generally well-organized with clear patterns an
 
 **Location:** `src/hooks/use-area-order.ts`, `use-inbox-order.ts`, `use-project-order.ts`, `use-today-order.ts`, `use-sidebar-order.ts`, `use-kanban-order.ts` (7+ files)
 **Issue:** All order hooks follow nearly identical patterns for:
+
 - Syncing local order state with external data
 - Handling drag-and-drop reordering
 - Persisting order to display-order-store
-**Principle:** DRY (Don't Repeat Yourself)
-**Suggestion:** Extract a generic `useOrderedItems<T>` hook or factory function that accepts configuration for the specific order key, filter function, and item type. Each hook could then be a thin wrapper.
+  **Principle:** DRY (Don't Repeat Yourself)
+  **Suggestion:** Extract a generic `useOrderedItems<T>` hook or factory function that accepts configuration for the specific order key, filter function, and item type. Each hook could then be a thin wrapper.
 
 ### 4. Large Service File: vault.ts
 
@@ -48,6 +50,7 @@ The React core infrastructure is generally well-organized with clear patterns an
 **Issue:** This file handles query keys, cache utilities, error handling, query hooks, mutation hooks, vault initialization, event handling, and utility hooks.
 **Principle:** Single Responsibility - this file has many reasons to change
 **Suggestion:** Consider splitting into:
+
 - `vault-queries.ts` - Query hooks (useTasks, useProjects, useAreas)
 - `vault-mutations.ts` - Mutation hooks (useUpdateTask, useCreateTask, etc.)
 - `vault-utils.ts` - Cache utilities, query keys, error handling
@@ -56,6 +59,7 @@ The React core infrastructure is generally well-organized with clear patterns an
 ### 5. Module-Level Mutable State
 
 **Locations:**
+
 - `src/services/vault.ts:573` - `lastMutationTime`
 - `src/hooks/use-command-context.ts` - `contextMenuTarget` getter/setter
 - `src/lib/context-menu.ts:21-22` - `contextMenuInProgress`, `contextMenuAbortController`
@@ -63,6 +67,7 @@ The React core infrastructure is generally well-organized with clear patterns an
 **Issue:** Module-level mutable state makes testing difficult (state persists between tests) and can cause subtle bugs with concurrent operations.
 **Principle:** Testability and predictability
 **Suggestion:**
+
 - Move `lastMutationTime` into a singleton class or use Zustand with `getState()`
 - For `contextMenuTarget`, consider using a dedicated small Zustand store
 - For context menu mutex, document why module-level state is necessary or move to a class pattern
@@ -80,6 +85,7 @@ The React core infrastructure is generally well-organized with clear patterns an
 **Issue:** User-facing strings like "Today", "Tomorrow", "Yesterday", "Last Mon" are hardcoded in English rather than using i18n keys.
 **Principle:** Internationalization - user-facing text should be translatable
 **Suggestion:** Use i18n translation keys:
+
 ```typescript
 if (diffDays === 0) return t('dates.today')
 if (diffDays === 1) return t('dates.tomorrow')
@@ -99,11 +105,13 @@ if (diffDays === 1) return t('dates.tomorrow')
 ### 9. Duplicate Availability Check Logic
 
 **Location:**
+
 - `src/lib/commands/types.ts:141-163` - `isTaskCommandAvailable`
 - `src/lib/commands/entity-commands.ts:68-88` - `isEntityCommandAvailable`
 
 **Issue:** Both functions have nearly identical logic for checking if focus is in an editable element.
 **Suggestion:** Extract shared logic to a utility:
+
 ```typescript
 function isNotInEditableElement(): boolean {
   const activeEl = document.activeElement
@@ -128,6 +136,7 @@ function isNotInEditableElement(): boolean {
 **Location:** `src/lib/commands/registry.ts:27`, `entity-commands.ts:112`
 **Issue:** Uses `_dynamic:` string prefix to mark dynamic labels. This is a stringly-typed pattern that could be confusing.
 **Suggestion:** Consider a more explicit type:
+
 ```typescript
 labelKey: string | { dynamic: string }
 ```
@@ -169,6 +178,7 @@ labelKey: string | { dynamic: string }
 ## Files Reviewed
 
 ### Hooks
+
 - [x] `use-platform.ts` - Clean, good caching pattern
 - [x] `use-mobile.ts` - Simple, potential initial state issue
 - [x] `use-theme.ts` - Clean context consumer
@@ -186,10 +196,12 @@ labelKey: string | { dynamic: string }
 - [x] `use-command-context.ts` - Module-level state concern
 
 ### Services
+
 - [x] `vault.ts` - **Large, multiple responsibilities**
 - [x] `preferences.ts` - Clean, focused
 
 ### Stores
+
 - [x] `ui-store.ts` - Clean, well-organized
 - [x] `display-order-store.ts` - Clean, good documentation
 - [x] `navigation-store.ts` - Good, uses queryClient directly
@@ -198,6 +210,7 @@ labelKey: string | { dynamic: string }
 - [x] `view-mode-store.ts` - Clean, simple
 
 ### Lib/Commands
+
 - [x] `index.ts` - Clean exports
 - [x] `types.ts` - Good type definitions
 - [x] `registry.ts` - Well-designed
@@ -208,6 +221,7 @@ labelKey: string | { dynamic: string }
 - [x] `task-commands.ts` - **Misleading function name**
 
 ### Lib/Other
+
 - [x] `utils.ts` - Minimal, just cn()
 - [x] `logger.ts` - Clean singleton pattern
 - [x] `date-utils.ts` - **Hardcoded English strings**
@@ -226,12 +240,14 @@ labelKey: string | { dynamic: string }
 - [x] `bindings.ts` - Auto-generated, not reviewed
 
 ### Lib/Shortcuts
+
 - [x] `index.ts` - Clean exports
 - [x] `types.ts` - Good types
 - [x] `parser.ts` - Clean parsing
 - [x] `matcher.ts` - Good event matching
 
 ### Types
+
 - [x] `index.ts` - Clean exports
 - [x] `data.ts` - **Marked temporary but still exists**
 - [x] `navigation.ts` - Clean
@@ -240,11 +256,13 @@ labelKey: string | { dynamic: string }
 - [x] `sidebar-order.ts` - Clean
 
 ### Config
+
 - [x] `index.ts` - Clean exports
 - [x] `heading-colors.ts` - Clean config
 - [x] `status.ts` - Clean config
 
 ### i18n
+
 - [x] `index.ts` - Clean exports
 - [x] `config.ts` - Clean setup
 - [x] `language-init.ts` - Good initialization logic

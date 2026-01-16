@@ -9,7 +9,7 @@ The Rust codebase is generally well-structured with good documentation, comprehe
 
 ## Critical Findings
 
-*None identified.* The codebase demonstrates sound engineering practices with no critical issues affecting correctness, security, or maintainability.
+_None identified._ The codebase demonstrates sound engineering practices with no critical issues affecting correctness, security, or maintainability.
 
 ## Moderate Findings
 
@@ -44,6 +44,7 @@ pub fn run() {
 **Issue:** The `cleanup_old_recovery_files()` function has a deeply nested loop with multiple `match` statements and uses a magic number `7` for the day count.
 **Principle:** Avoid deep nesting; replace magic numbers with named constants
 **Suggestion:**
+
 1. Extract the constant: `const RECOVERY_FILE_RETENTION_DAYS: u64 = 7;`
 2. Extract the age-checking logic into a helper function:
 
@@ -88,6 +89,7 @@ Or better, return an empty Vec with a warning log if pool creation fails.
 ### 4. Duplicated Status-to-String Conversion Logic
 
 **Location:**
+
 - `src-tauri/src/vault/writer.rs:229-237` (TaskStatus in `create_task_file`)
 - `src-tauri/src/vault/writer.rs:482-490` (TaskStatus in `update_task`)
 - `src-tauri/src/vault/writer.rs:323-330` (ProjectStatus in `create_project_file`)
@@ -170,6 +172,7 @@ pub fn get_entity_raw_content(&self, entity_type: &str, id: &str) -> Result<Stri
 ### 3. Long Functions in `writer.rs`
 
 **Location:**
+
 - `create_task_file`: lines 208-300 (~92 lines)
 - `update_task`: lines 471-562 (~91 lines)
 - `update_project`: lines 565-648 (~83 lines)
