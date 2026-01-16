@@ -28,8 +28,12 @@ import {
   type TaskStatus,
   type CreateTaskOptions,
 } from '@/lib/tauri-bindings'
-import type { NavId, Selection } from '@/types/navigation'
+import type { NavId, DevNavId, Selection } from '@/types/navigation'
 import { getSelectionForTask } from '@/lib/task-navigation'
+
+// Valid NavId values for runtime validation
+const validNavIds = new Set<string>(['today', 'this-week', 'inbox', 'calendar'])
+const validDevNavIds = new Set<string>(['component-reference'])
 
 // =============================================================================
 // Types
@@ -202,11 +206,23 @@ async function handleOpenView(view: string): Promise<boolean> {
 
   if (view === 'no-area') {
     navigate({ type: 'no-area' })
-  } else {
-    navigate({ type: 'nav', id: view as NavId })
+    return true
   }
 
-  return true
+  // Validate against known NavIds
+  if (validNavIds.has(view)) {
+    navigate({ type: 'nav', id: view as NavId })
+    return true
+  }
+
+  // Dev-only nav IDs
+  if (import.meta.env.DEV && validDevNavIds.has(view)) {
+    navigate({ type: 'dev-nav', id: view as DevNavId })
+    return true
+  }
+
+  logger.warn('Deep link: unknown view', { view })
+  return false
 }
 
 /**
@@ -279,30 +295,35 @@ async function handleNew(options: CreateTaskFromUrlOptions): Promise<boolean> {
 
     // If body was provided, update it separately
     if (options.body) {
-      const updateResult = await commands.updateTask({
-        id: newTask.id,
-        title: null,
-        status: null,
-        project: null,
-        area: null,
-        scheduled: null,
-        due: null,
-        deferUntil: null,
-        body: options.body,
-      })
-
-      if (updateResult.status === 'ok') {
-        // Update cache with body
-        queryClient.setQueryData(
-          vaultQueryKeys.task(newTask.id),
-          updateResult.data
-        )
-        queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
-          if (!oldTasks) return oldTasks
-          return oldTasks.map(t =>
-            t.id === newTask.id ? updateResult.data : t
-          )
+      markMutationStart()
+      try {
+        const updateResult = await commands.updateTask({
+          id: newTask.id,
+          title: null,
+          status: null,
+          project: null,
+          area: null,
+          scheduled: null,
+          due: null,
+          deferUntil: null,
+          body: options.body,
         })
+
+        if (updateResult.status === 'ok') {
+          // Update cache with body
+          queryClient.setQueryData(
+            vaultQueryKeys.task(newTask.id),
+            updateResult.data
+          )
+          queryClient.setQueryData<Task[]>(vaultQueryKeys.tasks(), oldTasks => {
+            if (!oldTasks) return oldTasks
+            return oldTasks.map(t =>
+              t.id === newTask.id ? updateResult.data : t
+            )
+          })
+        }
+      } finally {
+        markMutationComplete()
       }
     }
 

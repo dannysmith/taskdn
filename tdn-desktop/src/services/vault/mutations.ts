@@ -56,6 +56,10 @@ export function useCreateTask() {
       return result.data
     },
 
+    onMutate: () => {
+      markMutationStart()
+    },
+
     onSuccess: newTask => {
       markMutationComplete()
 
@@ -242,6 +246,11 @@ export function useCreateProject() {
       })
       return result.data
     },
+
+    onMutate: () => {
+      markMutationStart()
+    },
+
     onSuccess: newProject => {
       markMutationComplete()
 

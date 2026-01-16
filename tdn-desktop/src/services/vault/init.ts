@@ -13,7 +13,6 @@ import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import { vaultQueryKeys } from './keys'
 import {
-  formatVaultError,
   handleVaultError,
   isRecentMutation,
   getTimeSinceLastMutation,
@@ -42,7 +41,11 @@ export function useVaultInitialization() {
             timeSinceMutation: getTimeSinceLastMutation(),
           })
           // Still refresh the Rust index, but don't invalidate React Query cache
-          commands.refreshVault()
+          commands.refreshVault().catch(err => {
+            logger.error('Failed to refresh vault after recent mutation', {
+              error: err,
+            })
+          })
           return
         }
 
@@ -134,7 +137,7 @@ export async function reinitializeVault(
   )
 
   if (result.status === 'error') {
-    throw new Error(formatVaultError(result.error))
+    throw new Error(handleVaultError(result.error, 'Reinitializing vault'))
   }
 
   // Components will refetch data naturally when they render
