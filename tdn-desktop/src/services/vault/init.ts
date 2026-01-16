@@ -41,11 +41,20 @@ export function useVaultInitialization() {
             timeSinceMutation: getTimeSinceLastMutation(),
           })
           // Still refresh the Rust index, but don't invalidate React Query cache
-          commands.refreshVault().catch(err => {
-            logger.error('Failed to refresh vault after recent mutation', {
-              error: err,
+          commands
+            .refreshVault()
+            .then(result => {
+              if (result.status === 'error') {
+                logger.error('Failed to refresh vault after recent mutation', {
+                  error: result.error,
+                })
+              }
             })
-          })
+            .catch(err => {
+              logger.error('Failed to refresh vault after recent mutation', {
+                error: err,
+              })
+            })
           return
         }
 
@@ -53,22 +62,22 @@ export function useVaultInitialization() {
           'Vault changed event received (external), refreshing queries'
         )
 
-        // Refresh the vault data from disk
+        // Refresh the vault data from disk, then invalidate queries
         commands
           .refreshVault()
           .then(result => {
             if (result.status === 'error') {
               logger.error('Failed to refresh vault', { error: result.error })
+              return
             }
+            // Only invalidate after successful refresh to avoid stale data
+            queryClient.invalidateQueries({ queryKey: vaultQueryKeys.all })
           })
           .catch(err => {
             logger.error('Failed to refresh vault after external change', {
               error: err,
             })
           })
-
-        // Invalidate all vault queries to trigger refetches
-        queryClient.invalidateQueries({ queryKey: vaultQueryKeys.all })
       })
     }
 
@@ -157,6 +166,21 @@ export async function reinitializeVault(
 // =============================================================================
 
 /**
+ * Compare two ignore arrays for equality, independent of order.
+ */
+function ignoreArraysEqual(
+  a: string[] | null | undefined,
+  b: string[] | null | undefined
+): boolean {
+  if (a == null && b == null) return true
+  if (a == null || b == null) return false
+  if (a.length !== b.length) return false
+  const sortedA = [...a].sort()
+  const sortedB = [...b].sort()
+  return sortedA.every((val, i) => val === sortedB[i])
+}
+
+/**
  * Check if vault-related preferences have changed.
  */
 export function vaultConfigChanged(
@@ -169,7 +193,7 @@ export function vaultConfigChanged(
     oldPrefs.tasksDir !== newPrefs.tasksDir ||
     oldPrefs.areasDir !== newPrefs.areasDir ||
     oldPrefs.projectsDir !== newPrefs.projectsDir ||
-    JSON.stringify(oldPrefs.ignore) !== JSON.stringify(newPrefs.ignore)
+    !ignoreArraysEqual(oldPrefs.ignore, newPrefs.ignore)
   )
 }
 

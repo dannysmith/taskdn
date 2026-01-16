@@ -702,11 +702,11 @@ describe('vault service', () => {
       expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(false)
     })
 
-    it('returns true when ignore patterns differ in order', () => {
-      // JSON.stringify preserves order, so different order = different
+    it('returns false when ignore patterns differ only in order', () => {
+      // Order doesn't matter for ignore patterns - same patterns = no change
       const prefsWithIgnore = { ...basePrefs, ignore: ['*.tmp', '*.bak'] }
       const newPrefs = { ...basePrefs, ignore: ['*.bak', '*.tmp'] }
-      expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(true)
+      expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(false)
     })
   })
 })
