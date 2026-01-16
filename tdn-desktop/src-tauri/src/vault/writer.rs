@@ -12,7 +12,7 @@ use std::path::Path;
 use crate::vault::wikilink::ensure_wikilink;
 use crate::vault::{
     parse_project_file, parse_task_file, CreateProjectOptions, CreateTaskOptions, Project,
-    ProjectStatus, ProjectUpdate, Task, TaskStatus, TaskUpdate, VaultError,
+    ProjectUpdate, Task, TaskStatus, TaskUpdate, VaultError,
 };
 use chrono::Utc;
 use gray_matter::{engine::YAML, Matter};
@@ -226,19 +226,10 @@ pub fn create_task_file(tasks_dir: &str, options: CreateTaskOptions) -> Result<T
 
     // Status (default to inbox)
     let status = options.status.unwrap_or(TaskStatus::Inbox);
-    let status_str = match status {
-        TaskStatus::Inbox => "inbox",
-        TaskStatus::Icebox => "icebox",
-        TaskStatus::Ready => "ready",
-        TaskStatus::InProgress => "in-progress",
-        TaskStatus::Blocked => "blocked",
-        TaskStatus::Dropped => "dropped",
-        TaskStatus::Done => "done",
-    };
     set_yaml_field(
         &mut mapping,
         "status",
-        serde_norway::Value::String(status_str.to_string()),
+        serde_norway::Value::String(status.as_kebab_str().to_string()),
     );
 
     // Timestamps
@@ -320,18 +311,10 @@ pub fn create_project_file(
     );
 
     if let Some(status) = &options.status {
-        let status_str = match status {
-            ProjectStatus::Planning => "planning",
-            ProjectStatus::Ready => "ready",
-            ProjectStatus::Blocked => "blocked",
-            ProjectStatus::InProgress => "in-progress",
-            ProjectStatus::Paused => "paused",
-            ProjectStatus::Done => "done",
-        };
         set_yaml_field(
             &mut mapping,
             "status",
-            serde_norway::Value::String(status_str.to_string()),
+            serde_norway::Value::String(status.as_kebab_str().to_string()),
         );
     }
 
@@ -479,18 +462,9 @@ pub fn update_task(task: &Task, update: TaskUpdate) -> Result<Task, VaultError> 
     }
 
     if let Some(status) = update.status {
-        let status_str = match status {
-            TaskStatus::Inbox => "inbox",
-            TaskStatus::Icebox => "icebox",
-            TaskStatus::Ready => "ready",
-            TaskStatus::InProgress => "in-progress",
-            TaskStatus::Blocked => "blocked",
-            TaskStatus::Dropped => "dropped",
-            TaskStatus::Done => "done",
-        };
         updates.push(FieldUpdate {
             field: "status".to_string(),
-            value: Some(status_str.to_string()),
+            value: Some(status.as_kebab_str().to_string()),
         });
     }
 
@@ -573,17 +547,9 @@ pub fn update_project(project: &Project, update: ProjectUpdate) -> Result<Projec
     }
 
     if let Some(status) = update.status {
-        let status_str = match status {
-            ProjectStatus::Planning => "planning",
-            ProjectStatus::Ready => "ready",
-            ProjectStatus::Blocked => "blocked",
-            ProjectStatus::InProgress => "in-progress",
-            ProjectStatus::Paused => "paused",
-            ProjectStatus::Done => "done",
-        };
         updates.push(FieldUpdate {
             field: "status".to_string(),
-            value: Some(status_str.to_string()),
+            value: Some(status.as_kebab_str().to_string()),
         });
     }
 
