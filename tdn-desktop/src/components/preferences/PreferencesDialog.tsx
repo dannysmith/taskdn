@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Settings, Palette, Zap } from 'lucide-react'
+import { Settings, FolderOpen, Command, Zap } from 'lucide-react'
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -27,10 +27,11 @@ import {
 } from '@/components/ui/sidebar'
 import { useUIStore } from '@/store/ui-store'
 import { GeneralPane } from './panes/GeneralPane'
-import { AppearancePane } from './panes/AppearancePane'
+import { VaultPane } from './panes/VaultPane'
+import { QuickEntryPane } from './panes/QuickEntryPane'
 import { AdvancedPane } from './panes/AdvancedPane'
 
-type PreferencePane = 'general' | 'appearance' | 'advanced'
+type PreferencePane = 'general' | 'vault' | 'quickEntry' | 'advanced'
 
 const navigationItems = [
   {
@@ -39,9 +40,14 @@ const navigationItems = [
     icon: Settings,
   },
   {
-    id: 'appearance' as const,
-    labelKey: 'preferences.appearance',
-    icon: Palette,
+    id: 'vault' as const,
+    labelKey: 'preferences.vault',
+    icon: FolderOpen,
+  },
+  {
+    id: 'quickEntry' as const,
+    labelKey: 'preferences.quickEntry',
+    icon: Command,
   },
   {
     id: 'advanced' as const,
@@ -119,7 +125,8 @@ export function PreferencesDialog() {
 
             <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0 max-h-[calc(600px-4rem)]">
               {activePane === 'general' && <GeneralPane />}
-              {activePane === 'appearance' && <AppearancePane />}
+              {activePane === 'vault' && <VaultPane />}
+              {activePane === 'quickEntry' && <QuickEntryPane />}
               {activePane === 'advanced' && <AdvancedPane />}
             </div>
           </main>

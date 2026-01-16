@@ -2,6 +2,8 @@
 
 Patterns for calling external HTTP APIs from Tauri applications.
 
+> **Status:** This app does not currently make external API calls. This document describes patterns to follow if/when external API integration is needed.
+
 > **Note:** HTTP client dependencies are not installed in this app. Install `reqwest` (Rust) and optionally `tauri-plugin-keyring` (for token storage) when your app needs external API calls.
 
 ## Rust vs Frontend: When to Use Which

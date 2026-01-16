@@ -8,11 +8,12 @@ import { LeftSideBar } from './LeftSideBar'
 import { RightSideBar } from './RightSideBar'
 import { MainWindowContent } from './MainWindowContent'
 import { CommandPalette } from '@/components/command-palette/CommandPalette'
+import { QuickSearch } from '@/components/quick-search/QuickSearch'
 import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/hooks/use-theme'
 import { useUIStore } from '@/store/ui-store'
-import { useMainWindowEventListeners } from '@/hooks/useMainWindowEventListeners'
+import { useMainWindowEventListeners } from '@/hooks/use-main-window-event-listeners'
 import { cn } from '@/lib/utils'
 
 /**
@@ -53,7 +54,9 @@ export function MainWindow() {
             <LeftSideBar />
           </ResizablePanel>
 
-          <ResizableHandle className={cn(!leftSidebarVisible && 'hidden')} />
+          <ResizableHandle
+            className={cn('bg-transparent', !leftSidebarVisible && 'hidden')}
+          />
 
           <ResizablePanel
             defaultSize={MAIN_CONTENT_DEFAULT}
@@ -62,7 +65,9 @@ export function MainWindow() {
             <MainWindowContent />
           </ResizablePanel>
 
-          <ResizableHandle className={cn(!rightSidebarVisible && 'hidden')} />
+          <ResizableHandle
+            className={cn('bg-transparent', !rightSidebarVisible && 'hidden')}
+          />
 
           <ResizablePanel
             defaultSize={LAYOUT.rightSidebar.default}
@@ -77,6 +82,7 @@ export function MainWindow() {
 
       {/* Global UI Components (hidden until triggered) */}
       <CommandPalette />
+      <QuickSearch />
       <PreferencesDialog />
       <Toaster
         position="bottom-right"

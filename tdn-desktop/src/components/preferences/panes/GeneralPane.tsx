@@ -1,209 +1,190 @@
 import { useTranslation } from 'react-i18next'
-import { useQuery } from '@tanstack/react-query'
+import { locale } from '@tauri-apps/plugin-os'
 import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { ShortcutPicker } from '../ShortcutPicker'
-import { SettingsField, SettingsSection } from '../shared/SettingsComponents'
-import { FolderPicker } from '../shared/FolderPicker'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { useTheme } from '@/hooks/use-theme'
+import {
+  PaneInfo,
+  SettingsField,
+  SettingsFieldInline,
+  SettingsSection,
+} from '../shared/SettingsComponents'
 import { usePreferences, useSavePreferences } from '@/services/preferences'
-import { commands } from '@/lib/tauri-bindings'
+import { availableLanguages } from '@/i18n'
 import { logger } from '@/lib/logger'
 
-export function GeneralPane() {
-  const { t } = useTranslation()
+// Language display names (native names)
+const languageNames: Record<string, string> = {
+  en: 'English',
+}
 
-  // Load preferences for keyboard shortcuts and vault directories
+export function GeneralPane() {
+  const { t, i18n } = useTranslation()
+  const { theme, setTheme } = useTheme()
   const { data: preferences } = usePreferences()
   const savePreferences = useSavePreferences()
 
-  // Get the default shortcut from the backend
-  const { data: defaultShortcut } = useQuery({
-    queryKey: ['default-quick-pane-shortcut'],
-    queryFn: async () => {
-      return await commands.getDefaultQuickPaneShortcut()
-    },
-    staleTime: Infinity,
-  })
+  // Appearance handlers
+  const handleThemeChange = (value: 'light' | 'dark' | 'system' | null) => {
+    if (!value) return
+    // Update the theme provider immediately for instant UI feedback
+    setTheme(value)
 
-  // Check if running in dev mode
-  const { data: isDevMode } = useQuery({
-    queryKey: ['is-dev-mode'],
-    queryFn: () => commands.isDevMode(),
-    staleTime: Infinity,
-  })
-
-  const handleShortcutChange = async (newShortcut: string | null) => {
-    if (!preferences) return
-
-    const oldShortcut = preferences.quick_pane_shortcut
-
-    logger.info('Updating quick pane shortcut', { oldShortcut, newShortcut })
-
-    const result = await commands.updateQuickPaneShortcut(newShortcut)
-
-    if (result.status === 'error') {
-      logger.error('Failed to register shortcut', { error: result.error })
-      toast.error(t('toast.error.shortcutFailed'), {
-        description: result.error,
-      })
-      return
+    // Persist the theme preference to disk, preserving other preferences
+    if (preferences) {
+      savePreferences.mutate({ ...preferences, theme: value })
     }
+  }
+
+  const handleLanguageChange = async (value: string | null) => {
+    if (!value) return
+    const language = value === 'system' ? null : value
 
     try {
-      await savePreferences.mutateAsync({
-        ...preferences,
-        quick_pane_shortcut: newShortcut,
-      })
-    } catch {
-      logger.warn('Save failed, rolling back shortcut registration', {
-        oldShortcut,
-        newShortcut,
-      })
-
-      const rollbackResult = await commands.updateQuickPaneShortcut(oldShortcut)
-
-      if (rollbackResult.status === 'error') {
-        logger.error(
-          'Rollback failed - backend and preferences are out of sync',
-          {
-            error: rollbackResult.error,
-            attemptedShortcut: newShortcut,
-            originalShortcut: oldShortcut,
-          }
-        )
-        toast.error(t('toast.error.shortcutRestoreFailed'), {
-          description: t('toast.error.shortcutRestoreDescription'),
-        })
+      // Change the language immediately for instant UI feedback
+      if (language) {
+        await i18n.changeLanguage(language)
       } else {
-        logger.info('Successfully rolled back shortcut registration')
+        // System language selected - detect and apply system locale
+        const systemLocale = await locale()
+        const langCode = systemLocale?.split('-')[0]?.toLowerCase() ?? 'en'
+        const targetLang = availableLanguages.includes(langCode)
+          ? langCode
+          : 'en'
+        await i18n.changeLanguage(targetLang)
       }
-    }
-  }
-
-  // Directory path handler factory
-  const createDirChangeHandler =
-    (field: 'tasks_dir' | 'areas_dir' | 'projects_dir') =>
-    (path: string | null) => {
-      if (!preferences) return
-      savePreferences.mutate(
-        { ...preferences, [field]: path },
-        { onError: () => toast.error(t('toast.error.generic')) }
-      )
-    }
-
-  // Read from CLI config
-  const handleReadFromCli = async () => {
-    if (!preferences) return
-
-    const result = await commands.readCliConfig()
-
-    if (result.status === 'error') {
-      if (result.error.type === 'FileNotFound') {
-        toast.info(t('preferences.general.cliNotConfigured'))
-      } else {
-        toast.error(t('toast.error.cliConfigRead'), {
-          description:
-            'message' in result.error ? result.error.message : undefined,
-        })
-      }
+    } catch (error) {
+      logger.error('Failed to change language', { error })
+      toast.error(t('toast.error.generic'))
       return
     }
 
-    const cliConfig = result.data
-    savePreferences.mutate({
-      ...preferences,
-      tasks_dir: cliConfig.tasksDir ?? preferences.tasks_dir,
-      areas_dir: cliConfig.areasDir ?? preferences.areas_dir,
-      projects_dir: cliConfig.projectsDir ?? preferences.projects_dir,
-      ignore: cliConfig.ignore ?? preferences.ignore,
-    })
-
-    toast.success(t('toast.success.pathsImported'))
+    // Persist the language preference to disk
+    if (preferences) {
+      savePreferences.mutate({ ...preferences, language })
+    }
   }
 
-  // Use dummy vault (dev only)
-  const handleUseDummyVault = async () => {
+  // Feature settings handlers
+  const handleObsidianToggle = (checked: boolean) => {
     if (!preferences) return
+    savePreferences.mutate(
+      { ...preferences, show_obsidian_features: checked ? true : null },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
+  }
 
-    const result = await commands.getDummyVaultPaths()
-    savePreferences.mutate({
-      ...preferences,
-      tasks_dir: result.tasks_dir,
-      areas_dir: result.areas_dir,
-      projects_dir: result.projects_dir,
-    })
+  const handlePermanentDeleteToggle = (checked: boolean) => {
+    if (!preferences) return
+    savePreferences.mutate(
+      { ...preferences, permanent_delete_tasks: checked ? true : null },
+      { onError: () => toast.error(t('toast.error.generic')) }
+    )
+  }
 
-    toast.success(t('toast.success.dummyVaultSet'))
+  // Determine the current language value for the select
+  const currentLanguageValue = preferences?.language ?? 'system'
+
+  // Get display labels for selected values
+  const getLanguageLabel = (value: string) => {
+    if (value === 'system') return t('preferences.appearance.language.system')
+    return languageNames[value] ?? value
+  }
+
+  const getThemeLabel = (value: string) => {
+    if (value === 'light') return t('preferences.appearance.theme.light')
+    if (value === 'dark') return t('preferences.appearance.theme.dark')
+    return t('preferences.appearance.theme.system')
   }
 
   return (
     <div className="space-y-6">
-      <SettingsSection title={t('preferences.general.keyboardShortcuts')}>
+      <PaneInfo>{t('preferences.general.info')}</PaneInfo>
+
+      <SettingsSection title={t('preferences.general.appearance')}>
         <SettingsField
-          label={t('preferences.general.quickPaneShortcut')}
-          description={t('preferences.general.quickPaneShortcutDescription')}
+          label={t('preferences.appearance.language')}
+          description={t('preferences.appearance.languageDescription')}
         >
-          <ShortcutPicker
-            value={preferences?.quick_pane_shortcut ?? null}
-            defaultValue={defaultShortcut ?? 'CommandOrControl+Shift+.'}
-            onChange={handleShortcutChange}
-            disabled={!preferences || savePreferences.isPending}
-          />
+          <Select
+            value={currentLanguageValue}
+            onValueChange={handleLanguageChange}
+            disabled={savePreferences.isPending}
+          >
+            <SelectTrigger>
+              <SelectValue>
+                {getLanguageLabel(currentLanguageValue)}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="system">
+                {t('preferences.appearance.language.system')}
+              </SelectItem>
+              {availableLanguages.map(lang => (
+                <SelectItem key={lang} value={lang}>
+                  {languageNames[lang] ?? lang}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </SettingsField>
+
+        <SettingsField
+          label={t('preferences.appearance.colorTheme')}
+          description={t('preferences.appearance.colorThemeDescription')}
+        >
+          <Select
+            value={theme}
+            onValueChange={handleThemeChange}
+            disabled={savePreferences.isPending}
+          >
+            <SelectTrigger>
+              <SelectValue>{getThemeLabel(theme)}</SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="light">
+                {t('preferences.appearance.theme.light')}
+              </SelectItem>
+              <SelectItem value="dark">
+                {t('preferences.appearance.theme.dark')}
+              </SelectItem>
+              <SelectItem value="system">
+                {t('preferences.appearance.theme.system')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </SettingsField>
       </SettingsSection>
 
-      <SettingsSection title={t('preferences.general.vaultDirectories')}>
-        <SettingsField
-          label={t('preferences.general.tasksDir')}
-          description={t('preferences.general.tasksDirDescription')}
+      <SettingsSection title={t('preferences.general.featureSettings')}>
+        <SettingsFieldInline
+          label={t('preferences.general.showObsidianFeatures')}
+          description={t('preferences.general.showObsidianFeaturesDescription')}
         >
-          <FolderPicker
-            value={preferences?.tasks_dir ?? null}
-            onChange={createDirChangeHandler('tasks_dir')}
+          <Switch
+            checked={preferences?.show_obsidian_features === true}
+            onCheckedChange={handleObsidianToggle}
             disabled={!preferences || savePreferences.isPending}
           />
-        </SettingsField>
+        </SettingsFieldInline>
 
-        <SettingsField
-          label={t('preferences.general.areasDir')}
-          description={t('preferences.general.areasDirDescription')}
+        <SettingsFieldInline
+          label={t('preferences.general.permanentDelete')}
+          description={t('preferences.general.permanentDeleteDescription')}
         >
-          <FolderPicker
-            value={preferences?.areas_dir ?? null}
-            onChange={createDirChangeHandler('areas_dir')}
+          <Switch
+            checked={preferences?.permanent_delete_tasks === true}
+            onCheckedChange={handlePermanentDeleteToggle}
             disabled={!preferences || savePreferences.isPending}
           />
-        </SettingsField>
-
-        <SettingsField
-          label={t('preferences.general.projectsDir')}
-          description={t('preferences.general.projectsDirDescription')}
-        >
-          <FolderPicker
-            value={preferences?.projects_dir ?? null}
-            onChange={createDirChangeHandler('projects_dir')}
-            disabled={!preferences || savePreferences.isPending}
-          />
-        </SettingsField>
-
-        <div className="flex gap-2 pt-2">
-          <Button
-            variant="outline"
-            onClick={handleReadFromCli}
-            disabled={!preferences || savePreferences.isPending}
-          >
-            {t('preferences.general.readFromCli')}
-          </Button>
-          {isDevMode && (
-            <Button
-              variant="outline"
-              onClick={handleUseDummyVault}
-              disabled={!preferences || savePreferences.isPending}
-            >
-              {t('preferences.general.useDummyVault')}
-            </Button>
-          )}
-        </div>
+        </SettingsFieldInline>
       </SettingsSection>
     </div>
   )

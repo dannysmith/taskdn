@@ -17,7 +17,16 @@
     "core:webview:allow-create-webview-window",
     "core:event:default",
     "opener:default",
+    {
+      "identifier": "opener:allow-open-path",
+      "allow": [{ "path": "**" }]
+    },
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "obsidian://*" }]
+    },
     "clipboard-manager:default",
+    "clipboard-manager:allow-write-text",
     "dialog:default",
     "fs:default",
     "log:default",

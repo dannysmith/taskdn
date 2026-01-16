@@ -8,8 +8,10 @@ mod bindings;
 mod commands;
 mod types;
 mod utils;
+pub mod vault;
 
-use tauri::Manager;
+use tauri::{Manager, RunEvent, WindowEvent};
+use vault::VaultManager;
 
 // Re-export only what's needed externally
 pub use types::DEFAULT_QUICK_PANE_SHORTCUT;
@@ -19,9 +21,20 @@ pub use types::DEFAULT_QUICK_PANE_SHORTCUT;
 pub fn run() {
     let builder = bindings::generate_bindings();
 
-    // Export TypeScript bindings in debug builds
+    // Export TypeScript bindings in debug builds, but only when not bundled
+    // (bundled apps run from a different directory and can't write to source)
     #[cfg(debug_assertions)]
-    bindings::export_ts_bindings();
+    if std::env::var("TAURI_ENV").ok().as_deref() != Some("production") {
+        // Only try to export if we can find the target file path
+        // This will fail gracefully in bundled debug builds
+        if let Ok(cwd) = std::env::current_dir() {
+            if cwd.join("../src/lib/bindings.ts").exists()
+                || cwd.join("src/lib/bindings.ts").exists()
+            {
+                bindings::export_ts_bindings();
+            }
+        }
+    }
 
     // Build with common plugins
     let mut app_builder = tauri::Builder::default();
@@ -38,13 +51,21 @@ pub fn run() {
         }));
     }
 
+    // Deep link plugin for taskdn:// URL scheme
+    #[cfg(desktop)]
+    {
+        app_builder = app_builder.plugin(tauri_plugin_deep_link::init());
+    }
+
     // Window state plugin - saves/restores window position and size
-    // Note: Only applies to windows listed in capabilities (main window only, not quick-pane)
+    // Note: quick-pane is denylisted because it's an NSPanel and calling is_maximized() on it crashes
+    // See: https://github.com/tauri-apps/plugins-workspace/issues/1546
     #[cfg(desktop)]
     {
         app_builder = app_builder.plugin(
             tauri_plugin_window_state::Builder::new()
                 .with_state_flags(tauri_plugin_window_state::StateFlags::all())
+                .with_denylist(&["quick-pane"])
                 .build(),
         );
     }
@@ -66,6 +87,9 @@ pub fn run() {
                 } else {
                     log::LevelFilter::Info
                 })
+                // Prevent log files from growing indefinitely
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
+                .max_file_size(5_000_000) // 5MB max before rotation
                 .targets([
                     // Always log to stdout for development
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
@@ -93,6 +117,7 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
+        .manage(VaultManager::new())
         .setup(|app| {
             log::info!("Application starting up");
             log::debug!(
@@ -129,12 +154,83 @@ pub fn run() {
                 // Non-fatal: app can still run without quick pane
             }
 
+            // Initialize vault from saved preferences
+            if let Some(vault_dirs) = commands::preferences::load_vault_dirs(app.handle()) {
+                log::info!(
+                    "Initializing vault from preferences: tasks={}, projects={}, areas={}",
+                    vault_dirs.tasks_dir,
+                    vault_dirs.projects_dir,
+                    vault_dirs.areas_dir
+                );
+                let vault_manager = app.state::<VaultManager>();
+                let config = vault::VaultConfig::from_dirs(
+                    vault_dirs.tasks_dir,
+                    vault_dirs.projects_dir,
+                    vault_dirs.areas_dir,
+                    vault_dirs.ignore,
+                );
+                if let Err(e) = vault_manager.initialize(config, app.handle().clone()) {
+                    log::error!("Failed to initialize vault: {e:?}");
+                    // Non-fatal: user can configure paths in preferences
+                }
+            } else {
+                log::info!(
+                    "Vault not configured - user needs to set directory paths in preferences"
+                );
+            }
+
             // NOTE: Application menu is built from JavaScript for i18n support
             // See src/lib/menu.ts for the menu implementation
 
             Ok(())
         })
         .invoke_handler(builder.invoke_handler())
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            if let RunEvent::WindowEvent {
+                label,
+                event: WindowEvent::CloseRequested { .. },
+                ..
+            } = &event
+            {
+                if label == "main" {
+                    log::info!("Main window close requested - performing cleanup");
+
+                    // Save window state before closing
+                    #[cfg(desktop)]
+                    {
+                        use tauri_plugin_window_state::{AppHandleExt, StateFlags};
+                        if let Err(e) = app_handle.save_window_state(StateFlags::all()) {
+                            log::warn!("Failed to save window state: {e}");
+                        } else {
+                            log::info!("Window state saved successfully");
+                        }
+                    }
+
+                    // Hide the quick-pane panel before main window closes
+                    #[cfg(target_os = "macos")]
+                    {
+                        use tauri_nspanel::ManagerExt;
+                        if let Ok(panel) = app_handle.get_webview_panel("quick-pane") {
+                            log::debug!("Hiding quick-pane panel before close");
+                            panel.hide();
+                        }
+                    }
+
+                    // Unregister global shortcuts
+                    #[cfg(desktop)]
+                    {
+                        use tauri_plugin_global_shortcut::GlobalShortcutExt;
+                        if let Err(e) = app_handle.global_shortcut().unregister_all() {
+                            log::warn!("Failed to unregister global shortcuts: {e}");
+                        } else {
+                            log::debug!("Global shortcuts unregistered");
+                        }
+                    }
+
+                    log::info!("Cleanup complete, allowing close to proceed");
+                }
+            }
+        });
 }

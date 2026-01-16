@@ -22,7 +22,25 @@
  */
 
 export { commands, type Result } from './bindings'
-export type { AppPreferences, JsonValue, RecoveryError } from './bindings'
+export type {
+  AppPreferences,
+  Area,
+  AreaStatus,
+  CliConfig,
+  CliConfigError,
+  CreateProjectOptions,
+  CreateTaskOptions,
+  DummyVaultPaths,
+  JsonValue,
+  Project,
+  ProjectStatus,
+  ProjectUpdate,
+  RecoveryError,
+  Task,
+  TaskStatus,
+  TaskUpdate,
+  VaultError,
+} from './bindings'
 
 /**
  * Helper to unwrap a Result type, throwing on error

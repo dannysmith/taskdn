@@ -13,9 +13,10 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Taskdn Desktop",
-        "width": 1000,
-        "height": 700,
+        "width": 1800,
+        "height": 1200,
         "minWidth": 1000,
         "minHeight": 700,
         "resizable": true,
@@ -60,6 +61,11 @@
     }
   },
   "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["taskdn"]
+      }
+    },
     "updater": {
       "active": true,
       "endpoints": [

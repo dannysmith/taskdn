@@ -124,22 +124,110 @@ test('component with query', () => {
 
 ### Testing Zustand Stores
 
+**Important:** Zustand stores persist state between tests. Always reset in `beforeEach`:
+
 ```typescript
-import { renderHook, act } from '@testing-library/react'
 import { useUIStore } from '@/store/ui-store'
 
-test('toggles sidebar visibility', () => {
-  const { result } = renderHook(() => useUIStore())
-
-  expect(result.current.leftSidebarVisible).toBe(true)
-
-  act(() => {
-    result.current.setLeftSidebarVisible(false)
+beforeEach(() => {
+  // Reset to initial state before each test
+  useUIStore.setState({
+    leftSidebarVisible: true,
+    commandPaletteOpen: false,
+    // ... other initial values
   })
+})
 
-  expect(result.current.leftSidebarVisible).toBe(false)
+test('toggles sidebar visibility', () => {
+  // Use getState() for direct state access (preferred pattern)
+  const { toggleLeftSidebar } = useUIStore.getState()
+
+  toggleLeftSidebar()
+
+  expect(useUIStore.getState().leftSidebarVisible).toBe(false)
 })
 ```
+
+### Test Data Factories
+
+Use factory functions from `src/test/helpers/vault.ts`:
+
+```typescript
+import {
+  createTestTask,
+  createTestProject,
+  createTestArea,
+  createTestVault,
+  resetFactoryCounters,
+} from '@/test/helpers/vault'
+
+beforeEach(() => {
+  resetFactoryCounters() // Ensures deterministic IDs (task-1, task-2, etc.)
+})
+
+test('task with custom status', () => {
+  const task = createTestTask({ status: 'done', title: 'Completed task' })
+  expect(task.status).toBe('done')
+})
+
+// Bulk data generation
+const { tasks, projects, areas } = createTestVault({
+  taskCount: 10,
+  projectCount: 3,
+  areaCount: 2,
+})
+```
+
+**Factory features**:
+
+- Deterministic IDs (`task-1`, `project-1`, etc.) reset between tests
+- Fixed date `2025-01-15` for reproducible tests
+- All entity properties can be overridden
+
+### Test Fixtures
+
+Static fixtures in `src/test/fixtures/vault/` provide real markdown files for integration tests:
+
+```
+src/test/fixtures/vault/
+├── tasks/
+│   ├── inbox-task.md, icebox-task.md, ready-task.md, ...
+│   ├── task-with-dates.md, task-with-project.md, ...
+│   └── archive/
+├── projects/
+│   ├── planning-project.md, in-progress-project.md, ...
+│   └── archive/
+└── areas/
+    ├── active-area.md, empty-area.md
+    └── archive/
+```
+
+**Coverage**: All 7 task statuses, all 6 project statuses, edge cases (unicode, long notes, cross-links).
+
+### Temporary Vault Helpers
+
+Use `withTempVault()` for tests that write files:
+
+```typescript
+import { withTempVault, withTempVaultFromFixtures } from '@/test/helpers/vault'
+
+// Empty temp vault
+test('creates task file', async () => {
+  await withTempVault(async vaultPath => {
+    // vaultPath has empty tasks/, projects/, areas/ subdirectories
+    // Temp dir cleaned up automatically after test
+  })
+})
+
+// Temp vault pre-populated from fixtures
+test('modifies existing task', async () => {
+  await withTempVaultFromFixtures(async vaultPath => {
+    // vaultPath contains copies of all fixture files
+  })
+})
+```
+
+**Note**: There is no demo vault for manual testing. The fixtures vault is designed for automated tests only.
 
 ## Rust Testing
 

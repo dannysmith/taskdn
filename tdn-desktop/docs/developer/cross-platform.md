@@ -334,6 +334,20 @@ For opacity transitions on Windows title bars, use `transform-gpu` to fix WebKit
 <div className="transform-gpu transition-opacity" />
 ```
 
+## File Deletion (Trash)
+
+The `trash` crate handles moving files to trash. On macOS, it defaults to AppleScript/Finder which requires permissions. We explicitly use `NsFileManager` instead:
+
+```rust
+#[cfg(target_os = "macos")]
+{
+    use trash::macos::{DeleteMethod, TrashContextExtMacos};
+    let mut ctx = trash::TrashContext::new();
+    ctx.set_delete_method(DeleteMethod::NsFileManager);
+    ctx.delete(&path)?;
+}
+```
+
 ## Best Practices
 
 1. **Test with `forcePlatform`** - Verify layouts for all platforms during development

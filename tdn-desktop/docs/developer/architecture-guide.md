@@ -87,6 +87,7 @@ Event-Driven Bridge
 
 | System               | Documentation                                    |
 | -------------------- | ------------------------------------------------ |
+| Command Registry     | [command-registry.md](./command-registry.md)     |
 | Command System       | [command-system.md](./command-system.md)         |
 | Keyboard Shortcuts   | [keyboard-shortcuts.md](./keyboard-shortcuts.md) |
 | Native Menus         | [menus.md](./menus.md)                           |

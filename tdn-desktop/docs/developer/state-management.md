@@ -148,28 +148,37 @@ This app uses React Compiler which automatically handles memoization. You do **n
 
 ## Store Boundaries
 
-**UIStore** - Use for:
+The app uses multiple focused stores rather than one monolithic store. Each has a specific responsibility:
 
-- Panel visibility
-- Layout state
-- Command palette state
-- UI modes and navigation
+| Store                  | Purpose                                                 | Location                           |
+| ---------------------- | ------------------------------------------------------- | ---------------------------------- |
+| `useUIStore`           | Panel visibility, command palette, preferences dialog   | `src/store/ui-store.ts`            |
+| `useNavigationStore`   | Sidebar selection and view routing                      | `src/store/navigation-store.ts`    |
+| `useTaskCreationStore` | Cmd+N task creation with two-layer handler system       | `src/store/task-creation-store.ts` |
+| `useViewModeStore`     | List/kanban/calendar mode per view type                 | `src/store/view-mode-store.ts`     |
+| `useDisplayOrderStore` | Drag-and-drop ordering (sidebar, inbox, kanban columns) | `src/store/display-order-store.ts` |
+| `useTaskDetailStore`   | Right sidebar detail panel state                        | `src/store/task-detail-store.ts`   |
 
-**Feature-specific stores** - Use for:
+### When to create a new store
 
-- Domain-specific state (e.g., `useDocumentStore`)
-- Feature flags and configuration
-- Temporary workflow state
+Create a separate store when:
+
+- State is unrelated to existing stores
+- State would bloat an existing store
+- Multiple components need this state but it's not persistent data
+
+Keep stores focused - a store with 5-10 state properties is typical.
 
 ## Adding a New Store
 
 1. Create store file in `src/store/`
 2. Follow the pattern with `devtools` middleware
-3. Add no-destructure rule to `.ast-grep/rules/zustand/no-destructure.yml`
+3. Update the ast-grep rule in `.ast-grep/rules/zustand/no-destructure.yml` to include the new store
 
 ```yaml
 rule:
   any:
     - pattern: const { $$$PROPS } = useUIStore($$$ARGS)
+    - pattern: const { $$$PROPS } = useNavigationStore($$$ARGS)
     - pattern: const { $$$PROPS } = useNewStore($$$ARGS) # Add new store
 ```
