@@ -705,8 +705,8 @@ bun run check:all
 
 ## Phase 10: Minor Improvements
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 This phase collects all minor issues. Each can be done independently.
 
@@ -794,10 +794,13 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10j. Dynamic Label Convention
 
+**Status:** [x] Complete (documented)
+
 **Location:** `src/lib/commands/registry.ts:27`, `entity-commands.ts:112`
 
-- [ ] Consider changing `_dynamic:` prefix to explicit type
-- [ ] Or document the convention in architecture guide
+- [x] Documented the `_dynamic:` prefix convention in `docs/developer/command-system.md`
+- [x] Explains when to use it (entity titles, platform-specific strings)
+- [x] Shows how it's processed by `getCommandLabel()` and `filterCommands()`
 
 ### Verification (after each sub-task)
 
@@ -869,13 +872,13 @@ bun run check:all
 - [x] Phase 7: use-deep-link.ts Splitting
 - [x] Phase 8: lib.rs Refactoring
 - [x] Phase 9: Calendar DnD Extraction
-- [ ] Phase 10: Minor Improvements
-  - [ ] 10a. Date strings i18n
-  - [ ] 10c. CSS custom properties
-  - [ ] 10d. Recovery cleanup refactoring
-  - [ ] 10e. ThreadPool error handling
-  - [ ] 10f. QueryClient pattern docs
-  - [ ] 10g. get_entity_raw_content lock pattern
-  - [ ] 10h. VaultDirs location (optional)
-  - [ ] 10i. Unused parameter
-  - [ ] 10j. Dynamic label convention
+- [x] Phase 10: Minor Improvements
+  - [x] 10a. Date strings i18n
+  - [x] 10c. CSS custom properties
+  - [x] 10d. Recovery cleanup refactoring
+  - [x] 10e. ThreadPool error handling
+  - [x] 10f. QueryClient pattern docs
+  - [x] 10g. get_entity_raw_content lock pattern
+  - [x] 10h. VaultDirs location (reviewed, kept current)
+  - [x] 10i. Unused parameter
+  - [x] 10j. Dynamic label convention
