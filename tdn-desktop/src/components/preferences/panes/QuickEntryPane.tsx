@@ -7,7 +7,11 @@ import {
   SettingsField,
   SettingsSection,
 } from '../shared/SettingsComponents'
-import { usePreferences, useSavePreferences } from '@/services/preferences'
+import {
+  preferencesQueryKeys,
+  usePreferences,
+  useSavePreferences,
+} from '@/services/preferences'
 import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
 import { Kbd, KbdGroup } from '@/components/ui/kbd'
@@ -20,7 +24,7 @@ export function QuickEntryPane() {
 
   // Get the default shortcut from the backend
   const { data: defaultShortcut } = useQuery({
-    queryKey: ['default-quick-pane-shortcut'],
+    queryKey: preferencesQueryKeys.defaultQuickPaneShortcut(),
     queryFn: async () => {
       return await commands.getDefaultQuickPaneShortcut()
     },

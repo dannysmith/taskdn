@@ -9,7 +9,11 @@ import {
   SettingsSection,
 } from '../shared/SettingsComponents'
 import { FolderPicker } from '../shared/FolderPicker'
-import { usePreferences, useSavePreferences } from '@/services/preferences'
+import {
+  preferencesQueryKeys,
+  usePreferences,
+  useSavePreferences,
+} from '@/services/preferences'
 import { commands } from '@/lib/tauri-bindings'
 
 export function VaultPane() {
@@ -20,7 +24,7 @@ export function VaultPane() {
 
   // Check if running in dev mode
   const { data: isDevMode } = useQuery({
-    queryKey: ['is-dev-mode'],
+    queryKey: preferencesQueryKeys.devMode(),
     queryFn: () => commands.isDevMode(),
     staleTime: Infinity,
   })

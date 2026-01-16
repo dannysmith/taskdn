@@ -7,6 +7,8 @@ import { commands, type AppPreferences } from '@/lib/tauri-bindings'
 export const preferencesQueryKeys = {
   all: ['preferences'] as const,
   preferences: () => [...preferencesQueryKeys.all] as const,
+  devMode: () => ['is-dev-mode'] as const,
+  defaultQuickPaneShortcut: () => ['default-quick-pane-shortcut'] as const,
 }
 
 // TanStack Query hooks following the architectural patterns

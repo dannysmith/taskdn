@@ -333,7 +333,6 @@ export function SortableKanbanCard({
         onTitleChange={onTitleChange}
         onScheduledChange={onScheduledChange}
         onDueChange={onDueChange}
-        onEditClick={onEditClick}
         onProjectClick={onProjectClick}
         onAreaClick={onAreaClick}
         onContextMenu={onContextMenu}
