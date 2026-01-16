@@ -312,8 +312,8 @@ bun run check:all
 
 ## Phase 5: Order Hook Consolidation
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
@@ -341,12 +341,20 @@ The code sample below shows the non-keyed pattern. Adjust during implementation.
 
 ### Tasks
 
-- [ ] Create `src/hooks/use-task-order.ts` with a factory function
-- [ ] Create `src/hooks/use-task-order.test.ts` with comprehensive tests
-- [ ] Refactor `useInboxOrder` to use the factory
-- [ ] Refactor `useAreaOrder` to use the factory
-- [ ] Refactor `useProjectOrder` to use the factory
-- [ ] Verify existing tests still pass
+- [x] Create `src/hooks/use-task-order.ts` with a factory function
+- [x] Create `src/hooks/use-task-order.test.ts` with comprehensive tests
+- [x] Refactor `useInboxOrder` to use the factory
+- [x] Refactor `useAreaOrder` to use the factory
+- [x] Refactor `useProjectOrder` to use the factory
+- [x] Verify existing tests still pass
+
+### Implementation Notes
+
+Created two factory functions to handle the different patterns:
+- `createTaskOrderHook` - For non-keyed hooks (inbox) with direct state access
+- `createKeyedTaskOrderHook` - For keyed hooks (area, project) with state accessed by key
+
+Each original hook was reduced from ~72-80 lines to ~25 lines while maintaining the same public API. All 45 tests pass (16 factory tests + 13 inbox + 8 area + 8 project).
 
 ### New File: `src/hooks/use-task-order.ts`
 
@@ -736,10 +744,10 @@ bun run check:all
 
 ### TypeScript Files (New)
 
-- `src/lib/wikilink.ts`
-- `src/lib/wikilink.test.ts`
-- `src/hooks/use-task-order.ts`
-- `src/hooks/use-task-order.test.ts`
+- `src/lib/wikilink.ts` (Phase 1)
+- `src/lib/wikilink.test.ts` (Phase 1)
+- `src/hooks/use-task-order.ts` (Phase 5 - factory functions)
+- `src/hooks/use-task-order.test.ts` (Phase 5)
 - `src/components/calendar/use-calendar-dnd.ts`
 - `src/services/vault/index.ts`
 - `src/services/vault/keys.ts`
@@ -755,9 +763,9 @@ bun run check:all
 - `src/components/views/ProjectView.tsx`
 - `src/components/views/WeekView.tsx`
 - `src/components/tasks/TaskDetailPanel.tsx`
-- `src/hooks/use-inbox-order.ts`
-- `src/hooks/use-area-order.ts`
-- `src/hooks/use-project-order.ts`
+- `src/hooks/use-inbox-order.ts` (Phase 5 - refactored to use factory)
+- `src/hooks/use-area-order.ts` (Phase 5 - refactored to use factory)
+- `src/hooks/use-project-order.ts` (Phase 5 - refactored to use factory)
 - `src/hooks/use-deep-link.ts`
 - `src/components/calendar/WeekCalendar.tsx`
 - `src/components/calendar/MonthCalendar.tsx`
@@ -778,7 +786,7 @@ bun run check:all
 - [x] Phase 2: AppPreferences camelCase
 - [x] Phase 3: Rust Status Methods
 - [x] Phase 4: Temporary Types Removal
-- [ ] Phase 5: Order Hook Consolidation
+- [x] Phase 5: Order Hook Consolidation
 - [ ] Phase 6: Vault.ts Splitting
 - [ ] Phase 7: use-deep-link.ts Splitting
 - [ ] Phase 8: lib.rs Refactoring
