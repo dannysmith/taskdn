@@ -220,7 +220,9 @@ These plugins aren't included by default but are commonly needed:
 
 3. **Add capability permissions** if needed (check plugin docs)
 
-4. **Create frontend utilities** in `src/lib/` if the plugin needs a wrapper
+4. **Add test mocks** in `src/test/setup.ts` for any frontend APIs. See [testing.md](./testing.md#mocking-tauri-apis-critical)
+
+5. **Create frontend utilities** in `src/lib/` if the plugin needs a wrapper
 
 ## Plugin Registration Order
 

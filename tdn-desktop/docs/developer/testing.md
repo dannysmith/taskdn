@@ -26,7 +26,17 @@ src/components/ui/Button.test.tsx
 
 ### Mocking Tauri APIs (Critical)
 
-Tauri commands must be mocked since tests run outside the Tauri environment. Mocks are configured in `src/test/setup.ts`:
+Tauri commands and plugins must be mocked since tests run outside the Tauri environment. Mocks are configured in `src/test/setup.ts`.
+
+**What's mocked globally:**
+
+- Typed commands (`@/lib/tauri-bindings`) - your app's Rust commands
+- Core APIs (`@tauri-apps/api/event`, `@tauri-apps/api/window`, `@tauri-apps/api/menu`)
+- Plugins (`plugin-os`, `plugin-updater`, `plugin-process`, `plugin-deep-link`)
+
+**When adding new Tauri plugins**, add corresponding mocks to `setup.ts`. See [tauri-plugins.md](./tauri-plugins.md).
+
+Example command mock:
 
 ```typescript
 // src/test/setup.ts
@@ -145,6 +155,23 @@ test('toggles sidebar visibility', () => {
   toggleLeftSidebar()
 
   expect(useUIStore.getState().leftSidebarVisible).toBe(false)
+})
+```
+
+### Resetting Module Caches
+
+Some modules cache values (e.g., platform detection). Export a reset function and call it in `afterEach` in `setup.ts`:
+
+```typescript
+// In the module (e.g., use-platform.ts)
+export function __resetPlatformCache() {
+  cachedPlatform = undefined
+}
+
+// In src/test/setup.ts
+afterEach(async () => {
+  const { __resetPlatformCache } = await import('@/hooks/use-platform')
+  __resetPlatformCache()
 })
 ```
 
