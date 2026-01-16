@@ -82,6 +82,13 @@ describe('wikilink', () => {
       expect(isWikilink('Work]]')).toBe(false)
     })
 
+    it('returns false for empty or invalid wikilinks', () => {
+      expect(isWikilink('[[]]')).toBe(false)
+      expect(isWikilink('[[   ]]')).toBe(false)
+      expect(isWikilink('[[#Heading]]')).toBe(false)
+      expect(isWikilink('[[|Alias]]')).toBe(false)
+    })
+
     it('handles whitespace correctly', () => {
       expect(isWikilink('  [[Work]]  ')).toBe(true)
     })

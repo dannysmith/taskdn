@@ -41,11 +41,10 @@ export function extractWikilinkTitle(reference: string): string | null {
 }
 
 /**
- * Check if a string is a wikilink.
+ * Check if a string is a valid wikilink with a non-empty title.
  */
 export function isWikilink(value: string): boolean {
-  const trimmed = value.trim()
-  return trimmed.startsWith('[[') && trimmed.endsWith(']]')
+  return extractWikilinkTitle(value) !== null
 }
 
 /**
