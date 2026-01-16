@@ -351,6 +351,7 @@ The code sample below shows the non-keyed pattern. Adjust during implementation.
 ### Implementation Notes
 
 Created two factory functions to handle the different patterns:
+
 - `createTaskOrderHook` - For non-keyed hooks (inbox) with direct state access
 - `createKeyedTaskOrderHook` - For keyed hooks (area, project) with state accessed by key
 
@@ -497,6 +498,7 @@ When splitting a large file, circular imports can occur. Before implementing:
 ### Implementation Notes
 
 Split the 829-line vault.ts into 6 focused files:
+
 - `keys.ts` (~15 lines) - Query key definitions
 - `utils.ts` (~90 lines) - Error handling, cache utils, mutation timing
 - `queries.ts` (~210 lines) - Query hooks + useVaultData/useVaultHelpers
@@ -547,8 +549,8 @@ bun run check:all
 
 ## Phase 7: use-deep-link.ts Splitting
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
@@ -556,10 +558,25 @@ bun run check:all
 
 ### Tasks
 
-- [ ] Expand `src/lib/deep-link.ts` with entity lookup and command execution logic
-- [ ] Create `src/lib/deep-link-handler.ts` for command handlers
-- [ ] Slim down `src/hooks/use-deep-link.ts` to just hook registration and event wiring
-- [ ] Update imports as needed
+- [x] Create `src/lib/deep-link-handler.ts` for command handlers
+- [x] Slim down `src/hooks/use-deep-link.ts` to just hook registration and event wiring
+- [x] Update imports as needed
+
+### Implementation Notes
+
+Split the 414-line use-deep-link.ts into focused modules:
+
+- `src/lib/deep-link.ts` (~200 lines) - URL parsing and types (unchanged)
+- `src/lib/deep-link-handler.ts` (~290 lines) - Command handlers, entity lookup, data access, window management
+- `src/hooks/use-deep-link.ts` (~52 lines) - Just the hook with event listener setup
+
+The handler module contains:
+
+- `VaultData` type and `getVaultData()` for cache access
+- Entity lookup functions (`findEntityByPath`, `findProjectByTitle`, `findAreaByTitle`)
+- Selection helpers (`getSelectionForProject`, `getSelectionForArea`, `getViewForNewTask`)
+- Command handlers (`handleOpenPath`, `handleOpenView`, `handleNew`)
+- Main dispatcher `processDeepLink()` and `bringWindowToFront()`
 
 ### Verification
 
@@ -569,9 +586,9 @@ bun run check:all
 
 **Manual Testing:**
 
-- Test deep link: `taskdn://task/create` → Should create new task
-- Test deep link: `taskdn://task/{id}` → Should open task detail
-- Test deep link: `taskdn://navigate/inbox` → Should navigate to inbox
+- Test deep link: `taskdn://new?title=Test` → Should create new task
+- Test deep link: `taskdn://open?path=/path/to/task.md` → Should open task detail
+- Test deep link: `taskdn://open?view=inbox` → Should navigate to inbox
 
 ---
 
@@ -802,7 +819,7 @@ bun run check:all
 - [x] Phase 4: Temporary Types Removal
 - [x] Phase 5: Order Hook Consolidation
 - [x] Phase 6: Vault.ts Splitting
-- [ ] Phase 7: use-deep-link.ts Splitting
+- [x] Phase 7: use-deep-link.ts Splitting
 - [ ] Phase 8: lib.rs Refactoring
 - [ ] Phase 9: Calendar DnD Extraction
 - [ ] Phase 10: Minor Improvements
