@@ -773,16 +773,24 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10h. VaultDirs Struct Location (Optional)
 
-**Location:** `src-tauri/src/commands/preferences.rs:33-38`
+**Status:** [x] Complete (kept current location)
 
-- [ ] Consider moving to `types.rs` for consistency
-- [ ] Or document why current location is acceptable
+**Location:** `src-tauri/src/commands/preferences.rs:41-46`
+
+- [x] Reviewed: Current location is appropriate because:
+  - `VaultDirs` is only used within `preferences.rs` (by `load_vault_dirs()`)
+  - It's an internal helper struct, not a domain type exposed via Tauri commands
+  - Keeping it near its usage follows the principle of locality
+  - `types.rs` is for shared types used across multiple modules
 
 ### 10i. Unused Parameter in task-creation-store
 
+**Status:** [x] Complete
+
 **Location:** `src/store/task-creation-store.ts:183`
 
-- [ ] Remove unused `_index` parameter or use it
+- [x] Removed unused `index` parameter from `updateActiveListSelection`
+- [x] Updated type definition, implementation, and test calls
 
 ### 10j. Dynamic Label Convention
 
