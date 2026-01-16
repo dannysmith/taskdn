@@ -260,6 +260,7 @@
   "toast.success.pathsImported": "Settings imported from CLI config",
   "toast.success.dummyVaultSet": "Paths set to dummy vault",
   "toast.error.generic": "Something went wrong",
+  "toast.error.vaultReinitialize": "Failed to reload vault",
   "toast.error.cliConfigRead": "Failed to read CLI config",
   "toast.error.shortcutFailed": "Failed to register shortcut",
   "toast.error.shortcutRestoreFailed": "Failed to restore previous shortcut",
