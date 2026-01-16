@@ -763,11 +763,13 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10g. get_entity_raw_content Lock Pattern
 
+**Status:** [x] Complete
+
 **Location:** `src-tauri/src/vault/manager.rs:382-418`
 
-- [ ] Refactor to acquire lock once
-- [ ] Use match to extract path
-- [ ] Release lock before file I/O
+- [x] Refactor to acquire lock once
+- [x] Use match to extract path
+- [x] Release lock before file I/O
 
 ### 10h. VaultDirs Struct Location (Optional)
 

@@ -386,16 +386,11 @@ impl VaultManager {
     ) -> Result<String, VaultError> {
         self.ensure_configured()?;
 
-        // Get the entity's path based on type
-        let path = match entity_type {
-            "task" => self.inner.read().index.get_task(id).map(|t| t.path.clone()),
-            "project" => self
-                .inner
-                .read()
-                .index
-                .get_project(id)
-                .map(|p| p.path.clone()),
-            "area" => self.inner.read().index.get_area(id).map(|a| a.path.clone()),
+        // Capitalize entity type for error messages
+        let entity_type_display = match entity_type {
+            "task" => "Task",
+            "project" => "Project",
+            "area" => "Area",
             _ => {
                 return Err(VaultError::validation_error(
                     "entity_type",
@@ -404,16 +399,20 @@ impl VaultManager {
             }
         };
 
-        // Capitalize entity type for error message
-        let entity_type_display = match entity_type {
-            "task" => "Task",
-            "project" => "Project",
-            "area" => "Area",
-            _ => entity_type,
+        // Acquire lock once, extract path, then release before file I/O
+        let path = {
+            let inner = self.inner.read();
+            match entity_type {
+                "task" => inner.index.get_task(id).map(|t| t.path.clone()),
+                "project" => inner.index.get_project(id).map(|p| p.path.clone()),
+                "area" => inner.index.get_area(id).map(|a| a.path.clone()),
+                _ => unreachable!(), // Already validated above
+            }
         };
+
         let path = path.ok_or_else(|| VaultError::entity_not_found(entity_type_display, id))?;
 
-        // Read the raw file content
+        // Read the raw file content (lock released)
         std::fs::read_to_string(&path).map_err(|e| VaultError::read_error(&path, e.to_string()))
     }
 
