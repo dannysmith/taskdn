@@ -722,14 +722,16 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10c. Extract CSS Custom Properties for Magic Numbers
 
+**Status:** [x] Complete
+
 **Locations:** Various component files
 
-- [ ] Add CSS variables for:
+- [x] Add CSS variables for:
   - `--kanban-column-min-height: 200px`
   - `--kanban-column-width: 288px` (w-72)
   - `--month-day-min-height: 100px`
-  - `--day-column-min-height: 300px`
-- [ ] Update components to use variables
+  - `--week-day-min-height: 300px`
+- [x] Update components to use variables
 
 ### 10d. Recovery Cleanup Refactoring
 

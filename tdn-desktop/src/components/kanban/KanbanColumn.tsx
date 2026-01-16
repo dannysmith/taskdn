@@ -139,7 +139,7 @@ export function KanbanColumn({
   return (
     <div
       className={cn(
-        '@container flex flex-col w-72 shrink-0 rounded-lg border bg-muted/30',
+        '@container flex flex-col w-(--kanban-column-width) shrink-0 rounded-lg border bg-muted/30',
         isDragTarget && 'ring-2 ring-primary/30',
         className
       )}
@@ -168,7 +168,7 @@ export function KanbanColumn({
       <div
         ref={setDroppableRef}
         className={cn(
-          'flex-1 p-2 space-y-2 overflow-y-auto min-h-[200px] flex flex-col',
+          'flex-1 p-2 space-y-2 overflow-y-auto min-h-(--kanban-column-min-height) flex flex-col',
           isOver && tasks.length === 0 && 'bg-primary/5'
         )}
       >
