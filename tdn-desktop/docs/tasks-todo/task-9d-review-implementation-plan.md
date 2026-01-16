@@ -645,42 +645,45 @@ bun run check:all
 
 ## Phase 9: Calendar DnD Extraction
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
 `WeekCalendar.tsx` and `MonthCalendar.tsx` share ~200 lines of nearly identical DnD handler logic.
 
-### ⚠️ Pre-Implementation: Audit Both Components First
+### Implementation Notes
 
-Before designing the hook, audit both calendars to identify:
+Audit revealed that the DnD handler logic was nearly identical between both calendars:
+- **DragState interface** - Identical
+- **Sensors configuration** - Identical (PointerSensor with distance: 8)
+- **Drop animation** - Identical (defaultDropAnimationSideEffects with opacity 0.5)
+- **handleDragStart, handleDragOver, handleDragEnd, handleDragCancel** - Identical logic
 
-1. **Shared logic** (likely candidates for extraction):
-   - Sensor configuration
-   - `handleDragStart`, `handleDragEnd`, `handleDragCancel` structure
-   - `DragState` interface
-   - Overlay rendering pattern
+Created `src/components/calendar/use-calendar-dnd.ts` hook that:
+1. Manages `dragState` internally
+2. Configures sensors and drop animation
+3. Provides all four handler functions
+4. Takes dependencies from useCalendarOrder and props as parameters
 
-2. **Potentially different logic** (may need parameterization):
-   - Drop zone calculations (week has columns, month has cells)
-   - Date determination from drop coordinates
-   - Overlay positioning math
-   - How "same day" vs "different day" drops are detected
+Both WeekCalendar.tsx (~485 → ~320 lines) and MonthCalendar.tsx (~449 → ~285 lines) were refactored to use the new hook, removing ~120 lines of duplicated DnD code from each.
 
-3. **Hook API design** - only after understanding shared vs unique logic
-
-If differences are significant, consider whether extraction still provides value or adds complexity.
+Added 18 comprehensive tests for the hook covering:
+- Initial state
+- handleDragStart (valid data, missing task, wrong type)
+- handleDragOver (day targets, task targets, null targets)
+- handleDragEnd (cross-day moves, same-day drops, within-day reorder, drop on self)
+- handleDragCancel
 
 ### Tasks
 
-- [ ] Audit WeekCalendar.tsx and MonthCalendar.tsx DnD logic for shared vs unique patterns
-- [ ] Design hook API based on audit findings
-- [ ] Create `src/components/calendar/use-calendar-dnd.ts` hook
-- [ ] Extract common DnD logic (sensors, handlers, state)
-- [ ] Refactor `WeekCalendar.tsx` to use the hook
-- [ ] Refactor `MonthCalendar.tsx` to use the hook
-- [ ] Add tests for the new hook
+- [x] Audit WeekCalendar.tsx and MonthCalendar.tsx DnD logic for shared vs unique patterns
+- [x] Design hook API based on audit findings
+- [x] Create `src/components/calendar/use-calendar-dnd.ts` hook
+- [x] Extract common DnD logic (sensors, handlers, state)
+- [x] Refactor `WeekCalendar.tsx` to use the hook
+- [x] Refactor `MonthCalendar.tsx` to use the hook
+- [x] Add tests for the new hook
 
 ### Verification
 
@@ -801,6 +804,7 @@ bun run check:all
 - `src/hooks/use-task-order.ts` (Phase 5 - factory functions)
 - `src/hooks/use-task-order.test.ts` (Phase 5)
 - `src/components/calendar/use-calendar-dnd.ts`
+- `src/components/calendar/use-calendar-dnd.test.ts`
 - `src/services/vault/index.ts`
 - `src/services/vault/keys.ts`
 - `src/services/vault/queries.ts`
@@ -842,7 +846,7 @@ bun run check:all
 - [x] Phase 6: Vault.ts Splitting
 - [x] Phase 7: use-deep-link.ts Splitting
 - [x] Phase 8: lib.rs Refactoring
-- [ ] Phase 9: Calendar DnD Extraction
+- [x] Phase 9: Calendar DnD Extraction
 - [ ] Phase 10: Minor Improvements
   - [ ] 10a. Date strings i18n
   - [ ] 10c. CSS custom properties
