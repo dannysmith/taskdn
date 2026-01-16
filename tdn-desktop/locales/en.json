@@ -1,5 +1,5 @@
 {
-  "app.name": "Tauri Template",
+  "app.name": "Taskdn Desktop",
 
   "menu.about": "About {{appName}}",
   "menu.checkForUpdates": "Check for Updates...",

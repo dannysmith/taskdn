@@ -98,12 +98,12 @@ execute: context => {
 
 ### Minimal Context
 
-Context only provides essential actions, no state subscriptions:
+Context provides actions that access stores via `getState()` pattern:
 
 ```typescript
-// Only essential actions - no state values
 export function useCommandContext(): CommandContext {
-  const { toggleSidebar } = useUIStore()
+  // Actions use getState() internally to avoid subscription cascades
+  const toggleSidebar = () => useUIStore.getState().toggleSidebar()
   return { toggleSidebar /* other actions */ }
 }
 ```

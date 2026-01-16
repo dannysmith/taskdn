@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use log::{debug, error, info, warn};
 use notify_debouncer_full::{
@@ -155,7 +155,6 @@ impl VaultIndex {
 struct VaultManagerInner {
     config: Option<VaultConfig>,
     index: VaultIndex,
-    last_write: Instant,
     writing_flag: Arc<AtomicBool>,
 }
 
@@ -173,7 +172,6 @@ impl VaultManager {
             inner: RwLock::new(VaultManagerInner {
                 config: None,
                 index: VaultIndex::default(),
-                last_write: Instant::now(),
                 writing_flag: Arc::new(AtomicBool::new(false)),
             }),
             watcher: RwLock::new(None),
@@ -582,11 +580,8 @@ impl VaultManager {
 
     fn set_writing(&self, writing: bool) {
         debug!("Write flag: {writing}");
-        let mut inner = self.inner.write();
+        let inner = self.inner.read();
         inner.writing_flag.store(writing, Ordering::SeqCst);
-        if !writing {
-            inner.last_write = Instant::now();
-        }
     }
 }
 
