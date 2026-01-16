@@ -8,8 +8,9 @@ import {
   useVaultData,
   markMutationStart,
   markMutationComplete,
+  vaultConfigChanged,
 } from './vault'
-import type { Task, Project, Area } from '@/lib/tauri-bindings'
+import type { Task, Project, Area, AppPreferences } from '@/lib/tauri-bindings'
 import {
   createTestTask,
   createTestProject,
@@ -640,6 +641,72 @@ describe('vault service', () => {
 
       // isLoading should be true initially when no data is cached
       expect(typeof result.current.isLoading).toBe('boolean')
+    })
+  })
+
+  describe('vaultConfigChanged', () => {
+    const basePrefs: AppPreferences = {
+      theme: 'system',
+      quick_pane_shortcut: null,
+      language: null,
+      tasks_dir: '/path/to/tasks',
+      areas_dir: '/path/to/areas',
+      projects_dir: '/path/to/projects',
+      ignore: null,
+      show_obsidian_features: null,
+      permanent_delete_tasks: null,
+    }
+
+    it('returns true when tasks_dir changes', () => {
+      const newPrefs = { ...basePrefs, tasks_dir: '/new/path' }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
+    })
+
+    it('returns true when areas_dir changes', () => {
+      const newPrefs = { ...basePrefs, areas_dir: '/new/path' }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
+    })
+
+    it('returns true when projects_dir changes', () => {
+      const newPrefs = { ...basePrefs, projects_dir: '/new/path' }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
+    })
+
+    it('returns true when ignore patterns change', () => {
+      const newPrefs = { ...basePrefs, ignore: ['*.tmp'] }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
+    })
+
+    it('returns false when non-vault settings change', () => {
+      const newPrefs = { ...basePrefs, theme: 'dark' }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
+    })
+
+    it('returns false when quick_pane_shortcut changes', () => {
+      const newPrefs = { ...basePrefs, quick_pane_shortcut: 'Ctrl+Shift+T' }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
+    })
+
+    it('returns false when language changes', () => {
+      const newPrefs = { ...basePrefs, language: 'es' }
+      expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
+    })
+
+    it('returns true when oldPrefs is undefined', () => {
+      expect(vaultConfigChanged(undefined, basePrefs)).toBe(true)
+    })
+
+    it('returns false when ignore patterns are identical', () => {
+      const prefsWithIgnore = { ...basePrefs, ignore: ['*.tmp', '*.bak'] }
+      const newPrefs = { ...basePrefs, ignore: ['*.tmp', '*.bak'] }
+      expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(false)
+    })
+
+    it('returns true when ignore patterns differ in order', () => {
+      // JSON.stringify preserves order, so different order = different
+      const prefsWithIgnore = { ...basePrefs, ignore: ['*.tmp', '*.bak'] }
+      const newPrefs = { ...basePrefs, ignore: ['*.bak', '*.tmp'] }
+      expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(true)
     })
   })
 })

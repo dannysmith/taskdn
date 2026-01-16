@@ -629,4 +629,60 @@ describe('navigation-store', () => {
       })
     })
   })
+
+  describe('resetNavigation', () => {
+    it('resets to default state', () => {
+      const { resetNavigation, navigate } = useNavigationStore.getState()
+
+      // Build up some state
+      navigate({ type: 'area', id: 'area-1' })
+      navigate({ type: 'project', id: 'project-1' })
+
+      // Reset
+      resetNavigation()
+
+      const state = useNavigationStore.getState()
+      expect(state.selection).toEqual({ type: 'nav', id: 'today' })
+      expect(state.history).toEqual([])
+      expect(state.future).toEqual([])
+    })
+
+    it('clears history and future stacks', () => {
+      const { resetNavigation, navigate, goBack } =
+        useNavigationStore.getState()
+
+      // Build up history
+      navigate({ type: 'nav', id: 'inbox' })
+      navigate({ type: 'area', id: 'area-1' })
+
+      // Create future by going back
+      goBack()
+
+      // Verify we have both history and future
+      expect(useNavigationStore.getState().history.length).toBeGreaterThan(0)
+      expect(useNavigationStore.getState().future.length).toBeGreaterThan(0)
+
+      // Reset
+      resetNavigation()
+
+      const state = useNavigationStore.getState()
+      expect(state.history).toEqual([])
+      expect(state.future).toEqual([])
+    })
+
+    it('reports canGoBack and canGoForward as false after reset', () => {
+      const { resetNavigation, navigate, goBack } =
+        useNavigationStore.getState()
+
+      // Build up state
+      navigate({ type: 'nav', id: 'inbox' })
+      goBack()
+
+      // Reset
+      resetNavigation()
+
+      expect(useNavigationStore.getState().canGoBack()).toBe(false)
+      expect(useNavigationStore.getState().canGoForward()).toBe(false)
+    })
+  })
 })

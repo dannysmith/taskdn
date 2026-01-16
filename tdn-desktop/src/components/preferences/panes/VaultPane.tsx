@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -14,13 +15,18 @@ import {
   usePreferences,
   useSavePreferences,
 } from '@/services/preferences'
-import { commands } from '@/lib/tauri-bindings'
+import { commands, type AppPreferences } from '@/lib/tauri-bindings'
+import { reinitializeVault, vaultConfigChanged } from '@/services/vault'
+import { logger } from '@/lib/logger'
 
 export function VaultPane() {
   const { t } = useTranslation()
 
   const { data: preferences } = usePreferences()
   const savePreferences = useSavePreferences()
+
+  // Track whether we need to reinitialize after save
+  const [isReinitializing, setIsReinitializing] = useState(false)
 
   // Check if running in dev mode
   const { data: isDevMode } = useQuery({
@@ -29,15 +35,56 @@ export function VaultPane() {
     staleTime: Infinity,
   })
 
-  // Directory path handler factory
+  // Handler that saves preferences and reinitializes vault if paths changed
+  // Returns true if successful, false if error (for callers to handle toasts)
+  const saveAndReinitialize = async (
+    newPreferences: AppPreferences
+  ): Promise<boolean> => {
+    const configChanged = vaultConfigChanged(preferences, newPreferences)
+
+    try {
+      // Save preferences first
+      await savePreferences.mutateAsync(newPreferences)
+
+      // If vault config changed and all paths are configured, reinitialize
+      if (
+        configChanged &&
+        newPreferences.tasks_dir &&
+        newPreferences.areas_dir &&
+        newPreferences.projects_dir
+      ) {
+        setIsReinitializing(true)
+        try {
+          await reinitializeVault(
+            newPreferences.tasks_dir,
+            newPreferences.projects_dir,
+            newPreferences.areas_dir,
+            newPreferences.ignore ?? null
+          )
+        } catch (error) {
+          logger.error('Failed to reinitialize vault', { error })
+          toast.error(t('toast.error.vaultReinitialize'))
+          return false
+        } finally {
+          setIsReinitializing(false)
+        }
+      }
+      return true
+    } catch (error) {
+      // Save preferences failed - error already shown by useSavePreferences
+      logger.error('Failed to save preferences', { error })
+      return false
+    }
+  }
+
+  // Directory path handlers - fire-and-forget with internal error handling
+  // FolderPicker's onChange is synchronous, so we don't await
   const createDirChangeHandler =
     (field: 'tasks_dir' | 'areas_dir' | 'projects_dir') =>
     (path: string | null) => {
       if (!preferences) return
-      savePreferences.mutate(
-        { ...preferences, [field]: path },
-        { onError: () => toast.error(t('toast.error.generic')) }
-      )
+      // Don't await - saveAndReinitialize handles its own errors
+      void saveAndReinitialize({ ...preferences, [field]: path })
     }
 
   // Read from CLI config
@@ -59,15 +106,16 @@ export function VaultPane() {
     }
 
     const cliConfig = result.data
-    savePreferences.mutate({
+    const success = await saveAndReinitialize({
       ...preferences,
       tasks_dir: cliConfig.tasksDir ?? preferences.tasks_dir,
       areas_dir: cliConfig.areasDir ?? preferences.areas_dir,
       projects_dir: cliConfig.projectsDir ?? preferences.projects_dir,
       ignore: cliConfig.ignore ?? preferences.ignore,
     })
-
-    toast.success(t('toast.success.pathsImported'))
+    if (success) {
+      toast.success(t('toast.success.pathsImported'))
+    }
   }
 
   // Use dummy vault (dev only)
@@ -75,14 +123,15 @@ export function VaultPane() {
     if (!preferences) return
 
     const result = await commands.getDummyVaultPaths()
-    savePreferences.mutate({
+    const success = await saveAndReinitialize({
       ...preferences,
       tasks_dir: result.tasks_dir,
       areas_dir: result.areas_dir,
       projects_dir: result.projects_dir,
     })
-
-    toast.success(t('toast.success.dummyVaultSet'))
+    if (success) {
+      toast.success(t('toast.success.dummyVaultSet'))
+    }
   }
 
   // Handle ignore patterns change
@@ -96,14 +145,15 @@ export function VaultPane() {
       ),
     ]
 
-    savePreferences.mutate(
-      {
-        ...preferences,
-        ignore: normalized.length > 0 ? normalized : null,
-      },
-      { onError: () => toast.error(t('toast.error.generic')) }
-    )
+    void saveAndReinitialize({
+      ...preferences,
+      ignore: normalized.length > 0 ? normalized : null,
+    })
   }
+
+  // Disable inputs while reinitializing
+  const isDisabled =
+    !preferences || savePreferences.isPending || isReinitializing
 
   return (
     <div className="space-y-6">
@@ -117,7 +167,7 @@ export function VaultPane() {
           <FolderPicker
             value={preferences?.tasks_dir ?? null}
             onChange={createDirChangeHandler('tasks_dir')}
-            disabled={!preferences || savePreferences.isPending}
+            disabled={isDisabled}
           />
         </SettingsField>
 
@@ -128,7 +178,7 @@ export function VaultPane() {
           <FolderPicker
             value={preferences?.areas_dir ?? null}
             onChange={createDirChangeHandler('areas_dir')}
-            disabled={!preferences || savePreferences.isPending}
+            disabled={isDisabled}
           />
         </SettingsField>
 
@@ -139,7 +189,7 @@ export function VaultPane() {
           <FolderPicker
             value={preferences?.projects_dir ?? null}
             onChange={createDirChangeHandler('projects_dir')}
-            disabled={!preferences || savePreferences.isPending}
+            disabled={isDisabled}
           />
         </SettingsField>
 
@@ -147,7 +197,7 @@ export function VaultPane() {
           <Button
             variant="outline"
             onClick={handleReadFromCli}
-            disabled={!preferences || savePreferences.isPending}
+            disabled={isDisabled}
           >
             {t('preferences.vault.readFromCli')}
           </Button>
@@ -155,7 +205,7 @@ export function VaultPane() {
             <Button
               variant="outline"
               onClick={handleUseDummyVault}
-              disabled={!preferences || savePreferences.isPending}
+              disabled={isDisabled}
             >
               {t('preferences.vault.useDummyVault')}
             </Button>
@@ -174,7 +224,7 @@ export function VaultPane() {
           }))}
           onTagsChange={handleIgnoreChange}
           placeholder={t('preferences.vault.ignorePatternsPlaceholder')}
-          disabled={!preferences || savePreferences.isPending}
+          disabled={isDisabled}
           allowDuplicates={false}
         />
       </SettingsField>
