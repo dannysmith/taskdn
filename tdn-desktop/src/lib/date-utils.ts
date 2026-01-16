@@ -45,10 +45,44 @@ const monthKeys = [
 ] as const
 
 /**
+ * Format a date as "d MMM" (UK format), adding year suffix if not current year.
+ * Examples: "4 Jan", "31 Dec 25"
+ */
+export function formatShortDate(dateString: string): string {
+  const date = new Date(dateString)
+  if (!isValidDate(date)) return dateString
+
+  const today = new Date()
+  const monthIndex = date.getMonth() as
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 9
+    | 10
+    | 11
+  const monthName = t(monthKeys[monthIndex])
+  const day = date.getDate()
+
+  // Add year suffix if not current year (e.g., "4 Jan 25")
+  if (date.getFullYear() !== today.getFullYear()) {
+    const yearSuffix = String(date.getFullYear()).slice(-2)
+    return `${day} ${monthName} ${yearSuffix}`
+  }
+
+  return `${day} ${monthName}`
+}
+
+/**
  * Format a date string as relative natural language.
  * - "Today", "Yesterday", "Tomorrow"
  * - "Last Monday", "Next Friday" (within ~7 days)
- * - "Dec 31" (further out)
+ * - "4 Jan" or "4 Jan 25" (further out, UK format with year if not current)
  */
 export function formatRelativeDate(dateString: string): string {
   const date = new Date(dateString)
@@ -85,22 +119,8 @@ export function formatRelativeDate(dateString: string): string {
     return dayName
   }
 
-  // Further out - use short month format
-  const monthIndex = date.getMonth() as
-    | 0
-    | 1
-    | 2
-    | 3
-    | 4
-    | 5
-    | 6
-    | 7
-    | 8
-    | 9
-    | 10
-    | 11
-  const monthName = t(monthKeys[monthIndex])
-  return `${monthName} ${date.getDate()}`
+  // Further out - use UK short date format
+  return formatShortDate(dateString)
 }
 
 /**

@@ -1,6 +1,7 @@
 import * as React from 'react'
-import { format } from 'date-fns'
 import { Calendar, Flag, Snowflake, FolderOpen, CircleDot } from 'lucide-react'
+
+import { formatShortDate } from '@/lib/date-utils'
 
 import { useVaultData, useVaultHelpers, useUpdateTask } from '@/services/vault'
 import { stripWikilink } from '@/lib/wikilink'
@@ -387,16 +388,4 @@ export function TaskDetailPanel() {
       </div>
     </div>
   )
-}
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
-
-function formatShortDate(isoString: string): string {
-  try {
-    return format(new Date(isoString), 'MMM d')
-  } catch {
-    return isoString
-  }
 }
