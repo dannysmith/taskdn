@@ -54,11 +54,18 @@ export function useVaultInitialization() {
         )
 
         // Refresh the vault data from disk
-        commands.refreshVault().then(result => {
-          if (result.status === 'error') {
-            logger.error('Failed to refresh vault', { error: result.error })
-          }
-        })
+        commands
+          .refreshVault()
+          .then(result => {
+            if (result.status === 'error') {
+              logger.error('Failed to refresh vault', { error: result.error })
+            }
+          })
+          .catch(err => {
+            logger.error('Failed to refresh vault after external change', {
+              error: err,
+            })
+          })
 
         // Invalidate all vault queries to trigger refetches
         queryClient.invalidateQueries({ queryKey: vaultQueryKeys.all })

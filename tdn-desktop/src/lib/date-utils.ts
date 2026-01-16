@@ -14,6 +14,28 @@ function isValidDate(date: Date): boolean {
 }
 
 /**
+ * Parse a date string as a local date.
+ *
+ * For date-only strings (YYYY-MM-DD), creates a local midnight date.
+ * This avoids the timezone bug where `new Date("2025-06-15")` is parsed
+ * as UTC midnight, causing incorrect day extraction in non-UTC timezones.
+ *
+ * For datetime strings with time components, uses standard Date parsing.
+ */
+function parseLocalDate(dateString: string): Date {
+  // Match date-only format: YYYY-MM-DD
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateString)
+  if (match && match[1] && match[2] && match[3]) {
+    const year = parseInt(match[1], 10)
+    const month = parseInt(match[2], 10) - 1 // JS months are 0-indexed
+    const day = parseInt(match[3], 10)
+    return new Date(year, month, day)
+  }
+  // Fall back to standard parsing for datetime strings
+  return new Date(dateString)
+}
+
+/**
  * Day name keys in order from Sunday (0) to Saturday (6)
  */
 const dayKeys = [
@@ -49,7 +71,7 @@ const monthKeys = [
  * Examples: "4 Jan", "31 Dec 25"
  */
 export function formatShortDate(dateString: string): string {
-  const date = new Date(dateString)
+  const date = parseLocalDate(dateString)
   if (!isValidDate(date)) return dateString
 
   const today = new Date()
@@ -85,7 +107,7 @@ export function formatShortDate(dateString: string): string {
  * - "4 Jan" or "4 Jan 25" (further out, UK format with year if not current)
  */
 export function formatRelativeDate(dateString: string): string {
-  const date = new Date(dateString)
+  const date = parseLocalDate(dateString)
   if (!isValidDate(date)) return dateString
 
   const today = new Date()
@@ -127,7 +149,7 @@ export function formatRelativeDate(dateString: string): string {
  * Check if a date is overdue (before today)
  */
 export function isOverdue(dateString: string): boolean {
-  const date = new Date(dateString)
+  const date = parseLocalDate(dateString)
   if (!isValidDate(date)) return false
 
   const today = new Date()
@@ -146,7 +168,7 @@ export function isOverdue(dateString: string): boolean {
  * Check if a date is today
  */
 export function isToday(dateString: string): boolean {
-  const date = new Date(dateString)
+  const date = parseLocalDate(dateString)
   if (!isValidDate(date)) return false
 
   const today = new Date()
