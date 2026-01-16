@@ -4,11 +4,14 @@
 //! or session persistence.
 
 use serde_json::Value;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Manager};
 
 use crate::types::{validate_filename, RecoveryError, MAX_RECOVERY_DATA_BYTES};
+
+/// Number of days to retain recovery files before cleanup.
+const RECOVERY_FILE_RETENTION_DAYS: u64 = 7;
 
 /// Gets the path to the recovery directory, creating it if necessary.
 fn get_recovery_dir(app: &AppHandle) -> Result<PathBuf, String> {
@@ -119,7 +122,20 @@ pub async fn load_emergency_data(app: AppHandle, filename: String) -> Result<Val
     Ok(data)
 }
 
-/// Removes recovery files older than 7 days.
+/// Checks if a file is older than the specified number of days.
+/// Returns `None` if the file age cannot be determined (e.g., metadata error).
+fn is_file_older_than_days(path: &Path, days: u64) -> Option<bool> {
+    let metadata = std::fs::metadata(path).ok()?;
+    let modified = metadata.modified().ok()?;
+    let modified_secs = modified.duration_since(UNIX_EPOCH).ok()?.as_secs();
+
+    let now_secs = SystemTime::now().duration_since(UNIX_EPOCH).ok()?.as_secs();
+    let cutoff_secs = now_secs.saturating_sub(days * 24 * 60 * 60);
+
+    Some(modified_secs < cutoff_secs)
+}
+
+/// Removes recovery files older than the retention period.
 /// Returns the count of removed files.
 #[tauri::command]
 #[specta::specta]
@@ -127,18 +143,7 @@ pub async fn cleanup_old_recovery_files(app: AppHandle) -> Result<u32, RecoveryE
     log::info!("Cleaning up old recovery files");
 
     let recovery_dir = get_recovery_dir(&app).map_err(|e| RecoveryError::IoError { message: e })?;
-    let mut removed_count = 0;
 
-    // Calculate cutoff time (7 days ago)
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|e| RecoveryError::IoError {
-            message: e.to_string(),
-        })?
-        .as_secs();
-    let seven_days_ago = now - (7 * 24 * 60 * 60);
-
-    // Read directory and check each file
     let entries = std::fs::read_dir(&recovery_dir).map_err(|e| {
         log::error!("Failed to read recovery directory: {e}");
         RecoveryError::IoError {
@@ -146,15 +151,9 @@ pub async fn cleanup_old_recovery_files(app: AppHandle) -> Result<u32, RecoveryE
         }
     })?;
 
-    for entry in entries {
-        let entry = match entry {
-            Ok(e) => e,
-            Err(e) => {
-                log::warn!("Failed to read directory entry: {e}");
-                continue;
-            }
-        };
+    let mut removed_count = 0;
 
+    for entry in entries.flatten() {
         let path = entry.path();
 
         // Only process JSON files
@@ -162,33 +161,8 @@ pub async fn cleanup_old_recovery_files(app: AppHandle) -> Result<u32, RecoveryE
             continue;
         }
 
-        // Check file modification time
-        let metadata = match std::fs::metadata(&path) {
-            Ok(m) => m,
-            Err(e) => {
-                log::warn!("Failed to get file metadata: {e}");
-                continue;
-            }
-        };
-
-        let modified = match metadata.modified() {
-            Ok(m) => m,
-            Err(e) => {
-                log::warn!("Failed to get file modification time: {e}");
-                continue;
-            }
-        };
-
-        let modified_secs = match modified.duration_since(UNIX_EPOCH) {
-            Ok(d) => d.as_secs(),
-            Err(e) => {
-                log::warn!("Failed to convert modification time: {e}");
-                continue;
-            }
-        };
-
-        // Remove if older than 7 days
-        if modified_secs < seven_days_ago {
+        // Check if file is older than retention period
+        if is_file_older_than_days(&path, RECOVERY_FILE_RETENTION_DAYS) == Some(true) {
             match std::fs::remove_file(&path) {
                 Ok(_) => {
                     log::info!("Removed old recovery file: {path:?}");

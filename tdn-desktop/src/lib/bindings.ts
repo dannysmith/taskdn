@@ -80,7 +80,7 @@ async loadEmergencyData(filename: string) : Promise<Result<JsonValue, RecoveryEr
 }
 },
 /**
- * Removes recovery files older than 7 days.
+ * Removes recovery files older than the retention period.
  * Returns the count of removed files.
  */
 async cleanupOldRecoveryFiles() : Promise<Result<number, RecoveryError>> {

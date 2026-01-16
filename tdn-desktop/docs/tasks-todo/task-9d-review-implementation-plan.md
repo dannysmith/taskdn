@@ -735,11 +735,13 @@ This phase collects all minor issues. Each can be done independently.
 
 ### 10d. Recovery Cleanup Refactoring
 
+**Status:** [x] Complete
+
 **Location:** `src-tauri/src/commands/recovery.rs:126-206`
 
-- [ ] Add constant: `const RECOVERY_FILE_RETENTION_DAYS: u64 = 7`
-- [ ] Extract helper: `is_file_older_than_days(path: &Path, days: u64) -> Option<bool>`
-- [ ] Simplify main loop in `cleanup_old_recovery_files`
+- [x] Add constant: `const RECOVERY_FILE_RETENTION_DAYS: u64 = 7`
+- [x] Extract helper: `is_file_older_than_days(path: &Path, days: u64) -> Option<bool>`
+- [x] Simplify main loop in `cleanup_old_recovery_files`
 
 ### 10e. ThreadPool Error Handling
 
