@@ -263,8 +263,8 @@ bun run check:all
 
 ## Phase 4: Temporary Types Removal
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
@@ -272,12 +272,18 @@ bun run check:all
 
 ### Tasks
 
-- [ ] Search for all imports of `src/types/data.ts` or `@/types/data`
-- [ ] For each import, determine if it can use `@/lib/tauri-bindings` types instead
-- [ ] Migrate each file to use tauri-bindings types
-- [ ] Handle field name differences (`areaId` → `area`, `projectId` → `project`, `notes` → `body`)
-- [ ] Delete `src/types/data.ts`
-- [ ] Update `src/types/index.ts` if it re-exports from data.ts
+- [x] Search for all imports of `src/types/data.ts` or `@/types/data`
+- [x] For each import, determine if it can use `@/lib/tauri-bindings` types instead
+- [x] Migrate each file to use tauri-bindings types
+- [x] Handle field name differences (`areaId` → `area`, `projectId` → `project`, `notes` → `body`)
+- [x] Delete `src/types/data.ts`
+- [x] Update `src/types/index.ts` if it re-exports from data.ts
+
+### Implementation Notes
+
+The migration to `@/lib/tauri-bindings` types had already been completed in previous work.
+All 62 files using entity types were already importing from tauri-bindings.
+This phase only required deleting the unused `data.ts` file and updating the barrel export.
 
 ### Field Mapping Reference
 
@@ -771,7 +777,7 @@ bun run check:all
 - [x] Phase 1: WikiLink Utilities
 - [x] Phase 2: AppPreferences camelCase
 - [x] Phase 3: Rust Status Methods
-- [ ] Phase 4: Temporary Types Removal
+- [x] Phase 4: Temporary Types Removal
 - [ ] Phase 5: Order Hook Consolidation
 - [ ] Phase 6: Vault.ts Splitting
 - [ ] Phase 7: use-deep-link.ts Splitting
