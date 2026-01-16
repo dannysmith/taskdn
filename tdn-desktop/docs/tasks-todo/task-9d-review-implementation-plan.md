@@ -472,12 +472,12 @@ bun run test -- --filter="order"
 
 ## Phase 6: Vault.ts Splitting
 
-**Status:** [ ] Not Started
-**Completion Date:** \_\_\_
+**Status:** [x] Complete
+**Completion Date:** 2026-01-16
 
 ### Problem
 
-`src/services/vault.ts` (766 lines) handles too many responsibilities: query keys, cache utilities, error handling, query hooks, mutation hooks, initialization, and event handling.
+`src/services/vault.ts` (829 lines) handles too many responsibilities: query keys, cache utilities, error handling, query hooks, mutation hooks, initialization, and event handling.
 
 ### ⚠️ Risk: Circular Dependencies
 
@@ -489,21 +489,35 @@ When splitting a large file, circular imports can occur. Before implementing:
    - `utils.ts` - depends on keys.ts
    - `queries.ts` - depends on keys.ts, utils.ts
    - `mutations.ts` - depends on keys.ts, utils.ts
-   - `init.ts` - depends on queries.ts (for invalidation)
+   - `init.ts` - depends on keys.ts, utils.ts
    - `index.ts` - re-exports all
 
 3. **If circular deps occur**, extract shared types/constants to a separate `types.ts` file
 
+### Implementation Notes
+
+Split the 829-line vault.ts into 6 focused files:
+- `keys.ts` (~15 lines) - Query key definitions
+- `utils.ts` (~90 lines) - Error handling, cache utils, mutation timing
+- `queries.ts` (~210 lines) - Query hooks + useVaultData/useVaultHelpers
+- `mutations.ts` (~300 lines) - Mutation hooks with optimistic updates
+- `init.ts` (~150 lines) - Initialization, event setup, config utils
+- `index.ts` (~45 lines) - Re-exports
+
+Added `isRecentMutation()` and `getTimeSinceLastMutation()` helpers in utils.ts to cleanly share mutation timing state between mutations.ts and init.ts without exposing module-level variables.
+
+No import changes required throughout codebase - `@/services/vault` now resolves to the directory's index.ts.
+
 ### Tasks
 
-- [ ] Create `src/services/vault/index.ts` (re-exports)
-- [ ] Create `src/services/vault/keys.ts` (query keys)
-- [ ] Create `src/services/vault/queries.ts` (query hooks)
-- [ ] Create `src/services/vault/mutations.ts` (mutation hooks)
-- [ ] Create `src/services/vault/utils.ts` (cache utilities, error handling)
-- [ ] Create `src/services/vault/init.ts` (initialization, event setup)
-- [ ] Update imports throughout codebase
-- [ ] Delete original `vault.ts`
+- [x] Create `src/services/vault/index.ts` (re-exports)
+- [x] Create `src/services/vault/keys.ts` (query keys)
+- [x] Create `src/services/vault/queries.ts` (query hooks)
+- [x] Create `src/services/vault/mutations.ts` (mutation hooks)
+- [x] Create `src/services/vault/utils.ts` (cache utilities, error handling)
+- [x] Create `src/services/vault/init.ts` (initialization, event setup)
+- [x] Update imports throughout codebase
+- [x] Delete original `vault.ts`
 
 ### File Structure
 
@@ -511,10 +525,10 @@ When splitting a large file, circular imports can occur. Before implementing:
 src/services/vault/
 ├── index.ts          # Re-exports all public API
 ├── keys.ts           # vaultQueryKeys object
-├── queries.ts        # useTasks, useProjects, useAreas, useTask, etc.
+├── queries.ts        # useTasks, useProjects, useAreas, useTask, etc. + useVaultData, useVaultHelpers
 ├── mutations.ts      # useUpdateTask, useCreateTask, useDeleteTask, etc.
-├── utils.ts          # addTaskToCache, formatVaultError, handleVaultError
-└── init.ts           # useVaultEvents, useVaultInitialization
+├── utils.ts          # addTaskToCache, formatVaultError, handleVaultError, mutation timing
+└── init.ts           # useVaultInitialization, initializeVault, reinitializeVault, vaultConfigChanged
 ```
 
 ### Verification
@@ -787,7 +801,7 @@ bun run check:all
 - [x] Phase 3: Rust Status Methods
 - [x] Phase 4: Temporary Types Removal
 - [x] Phase 5: Order Hook Consolidation
-- [ ] Phase 6: Vault.ts Splitting
+- [x] Phase 6: Vault.ts Splitting
 - [ ] Phase 7: use-deep-link.ts Splitting
 - [ ] Phase 8: lib.rs Refactoring
 - [ ] Phase 9: Calendar DnD Extraction
