@@ -14,6 +14,7 @@ This task configures the complete release infrastructure for Taskdn Desktop:
 ## Current State
 
 The template provides:
+
 - `/.github/workflows/release-desktop.yml` - Basic workflow structure (needs Apple signing steps)
 - `/scripts/prepare-release.js` - Version bumping script (needs URL updates)
 - `/src-tauri/tauri.conf.json` - Bundle config with `createUpdaterArtifacts: true` (needs pubkey, dialog fix)
@@ -31,9 +32,11 @@ The auto-updater requires cryptographic signing to verify updates are authentic.
 **Steps:**
 
 1. Generate a new signing keypair:
+
    ```bash
    bunx @tauri-apps/cli signer generate -w ~/.tauri/taskdn-desktop.key
    ```
+
    - Enter a password when prompted (save this - needed for GitHub secret)
    - This outputs a public key (base64 string) - **copy it immediately**
    - Private key saved to `~/.tauri/taskdn-desktop.key`
@@ -52,23 +55,23 @@ Add secrets to the **dannysmith/taskdn** repository (Settings → Secrets and Va
 
 #### Tauri Auto-Updater Signing (New - App Specific)
 
-| Secret | Description | How to get |
-|--------|-------------|------------|
-| `TAURI_PRIVATE_KEY` | Private key file contents | `cat ~/.tauri/taskdn-desktop.key \| pbcopy` (already base64 - do NOT double-encode) |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Password from Phase 1 | The password you entered when generating |
+| Secret                               | Description               | How to get                                                                          |
+| ------------------------------------ | ------------------------- | ----------------------------------------------------------------------------------- |
+| `TAURI_PRIVATE_KEY`                  | Private key file contents | `cat ~/.tauri/taskdn-desktop.key \| pbcopy` (already base64 - do NOT double-encode) |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Password from Phase 1     | The password you entered when generating                                            |
 
 #### Apple Code Signing (Reuse from astro-editor)
 
 These secrets are the same for all apps signed with your Developer ID. Copy from wherever you have them stored (1Password, etc.) or from an existing repo's secrets if you have access.
 
-| Secret | Description | Value |
-|--------|-------------|-------|
-| `APPLE_CERTIFICATE` | Base64 of .p12 file | Same as astro-editor |
-| `APPLE_CERTIFICATE_PASSWORD` | Password for .p12 | Same as astro-editor |
-| `APPLE_API_KEY` | API Key ID | Same as astro-editor |
-| `APPLE_API_ISSUER` | Issuer ID | Same as astro-editor |
-| `APPLE_API_KEY_PATH` | Contents of .p8 file | Same as astro-editor |
-| `APPLE_TEAM_ID` | Team ID (`XT349SJG9U`) | Same as astro-editor |
+| Secret                       | Description            | Value                |
+| ---------------------------- | ---------------------- | -------------------- |
+| `APPLE_CERTIFICATE`          | Base64 of .p12 file    | Same as astro-editor |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for .p12      | Same as astro-editor |
+| `APPLE_API_KEY`              | API Key ID             | Same as astro-editor |
+| `APPLE_API_ISSUER`           | Issuer ID              | Same as astro-editor |
+| `APPLE_API_KEY_PATH`         | Contents of .p8 file   | Same as astro-editor |
+| `APPLE_TEAM_ID`              | Team ID (`XT349SJG9U`) | Same as astro-editor |
 
 **Note**: If you need to recreate any Apple credentials, see the appendix at the end of this document.
 
@@ -123,8 +126,8 @@ Update `/.github/workflows/release-desktop.yml` with these specific changes:
 ```yaml
 matrix:
   include:
-    - platform: 'macos-14'  # Changed from macos-latest
-      args: '--target universal-apple-darwin --bundles app,dmg'  # Added universal target
+    - platform: 'macos-14' # Changed from macos-latest
+      args: '--target universal-apple-darwin --bundles app,dmg' # Added universal target
     - platform: 'windows-latest'
       args: '--bundles msi'
     - platform: 'ubuntu-22.04'
@@ -167,7 +170,7 @@ matrix:
 
 ```yaml
 - name: Build and release
-  uses: tauri-apps/tauri-action@v0.5.22  # Pin to specific version
+  uses: tauri-apps/tauri-action@v0.5.22 # Pin to specific version
   env:
     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     CI: true
@@ -199,7 +202,7 @@ matrix:
     releaseDraft: true
     prerelease: false
     includeUpdaterJson: true
-    updaterJsonKeepUniversal: true  # Important for universal binary
+    updaterJsonKeepUniversal: true # Important for universal binary
     args: ${{ matrix.args }}
 ```
 
@@ -235,6 +238,7 @@ cd src-tauri && cargo check && cd ..
 #### 4.2: Test Release
 
 1. Run the prepare release script:
+
    ```bash
    bun run release:prepare 0.2.0
    ```
@@ -247,6 +251,7 @@ cd src-tauri && cargo check && cd ..
    - `src-tauri/tauri.conf.json` version updated
 
 4. Commit and push:
+
    ```bash
    git add .
    git commit -m "chore(desktop): release desktop-v0.2.0"
@@ -282,24 +287,24 @@ cd src-tauri && cargo check && cd ..
 
 ## Files to Modify
 
-| File | Changes |
-|------|---------|
-| `src-tauri/tauri.conf.json` | Add pubkey, set `dialog: false`, set `hardenedRuntime: true`, set `signingIdentity: null` |
+| File                                     | Changes                                                                                                                   |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `src-tauri/tauri.conf.json`              | Add pubkey, set `dialog: false`, set `hardenedRuntime: true`, set `signingIdentity: null`                                 |
 | `/.github/workflows/release-desktop.yml` | Add Apple signing steps, update matrix for macos-14, add Rust targets, pin action version, add `updaterJsonKeepUniversal` |
-| `/scripts/prepare-release.js` | Update placeholder URLs to dannysmith/taskdn |
+| `/scripts/prepare-release.js`            | Update placeholder URLs to dannysmith/taskdn                                                                              |
 
 ## Required Secrets Summary
 
-| Secret | New/Reuse | Purpose |
-|--------|-----------|---------|
-| `TAURI_PRIVATE_KEY` | **New** | Signs update manifests (app-specific) |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | **New** | Password for signing key |
-| `APPLE_CERTIFICATE` | Reuse | Code signing certificate |
-| `APPLE_CERTIFICATE_PASSWORD` | Reuse | Certificate password |
-| `APPLE_API_KEY` | Reuse | App Store Connect API Key ID |
-| `APPLE_API_ISSUER` | Reuse | App Store Connect Issuer ID |
-| `APPLE_API_KEY_PATH` | Reuse | Contents of .p8 API key file |
-| `APPLE_TEAM_ID` | Reuse | Apple Developer Team ID |
+| Secret                               | New/Reuse | Purpose                               |
+| ------------------------------------ | --------- | ------------------------------------- |
+| `TAURI_PRIVATE_KEY`                  | **New**   | Signs update manifests (app-specific) |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | **New**   | Password for signing key              |
+| `APPLE_CERTIFICATE`                  | Reuse     | Code signing certificate              |
+| `APPLE_CERTIFICATE_PASSWORD`         | Reuse     | Certificate password                  |
+| `APPLE_API_KEY`                      | Reuse     | App Store Connect API Key ID          |
+| `APPLE_API_ISSUER`                   | Reuse     | App Store Connect Issuer ID           |
+| `APPLE_API_KEY_PATH`                 | Reuse     | Contents of .p8 API key file          |
+| `APPLE_TEAM_ID`                      | Reuse     | Apple Developer Team ID               |
 
 ## Follow-up Issues
 
@@ -308,6 +313,7 @@ cd src-tauri && cargo check && cd ..
 ## Reference Implementation
 
 The astro-editor project (`~/dev/astro-editor`) has a working implementation:
+
 - `/.github/workflows/release.yml` - Complete workflow with Apple signing
 - `/src-tauri/tauri.conf.json` - Correct bundle/updater configuration
 - `/docs/developer/apple-signing-setup.md` - Setup documentation
