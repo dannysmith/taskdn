@@ -79,7 +79,7 @@ describe('tdn set status (complete)', () => {
     expect(exitCode).toBe(0);
     const output = JSON.parse(stdout);
     expect(output.task.completedAt).toBeDefined();
-    expect(output.task.completedAt).toContain('2025-');
+    expect(output.task.completedAt).toContain(`${new Date().getFullYear()}-`);
   });
 
   test('updates updated-at timestamp', async () => {
