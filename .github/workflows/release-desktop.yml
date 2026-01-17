@@ -134,3 +134,91 @@ jobs:
           includeUpdaterJson: true
           updaterJsonKeepUniversal: true
           args: ${{ matrix.args }}
+
+      - name: Upload macOS artifact for website
+        if: matrix.platform == 'macos-14'
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-macos
+          path: tdn-desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+
+      - name: Upload Windows artifact for website
+        if: matrix.platform == 'windows-latest'
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-windows
+          path: tdn-desktop/src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Upload Linux artifact for website
+        if: matrix.platform == 'ubuntu-22.04'
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-linux
+          path: tdn-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
+
+  # Collect all artifacts and commit to website folder
+  update-website:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Download macOS artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: website-macos
+          path: /tmp/artifacts
+
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: website-windows
+          path: /tmp/artifacts
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: website-linux
+          path: /tmp/artifacts
+
+      - name: Copy artifacts to website folder
+        run: |
+          echo "Available artifacts:"
+          ls -la /tmp/artifacts/
+
+          # Copy macOS DMG
+          DMG_FILE=$(find /tmp/artifacts -name "*.dmg" | head -1)
+          if [ -n "$DMG_FILE" ]; then
+            cp "$DMG_FILE" website/public/taskdn-desktop-latest.dmg
+            echo "✓ Copied DMG: $DMG_FILE"
+          fi
+
+          # Copy Windows MSI
+          MSI_FILE=$(find /tmp/artifacts -name "*.msi" | head -1)
+          if [ -n "$MSI_FILE" ]; then
+            cp "$MSI_FILE" website/public/taskdn-desktop-latest.msi
+            echo "✓ Copied MSI: $MSI_FILE"
+          fi
+
+          # Copy Linux AppImage
+          APPIMAGE_FILE=$(find /tmp/artifacts -name "*.AppImage" | head -1)
+          if [ -n "$APPIMAGE_FILE" ]; then
+            cp "$APPIMAGE_FILE" website/public/taskdn-desktop-latest.AppImage
+            echo "✓ Copied AppImage: $APPIMAGE_FILE"
+          fi
+
+          echo "Website public folder contents:"
+          ls -la website/public/*.dmg website/public/*.msi website/public/*.AppImage 2>/dev/null || true
+
+      - name: Commit website artifacts
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add website/public/taskdn-desktop-latest.dmg website/public/taskdn-desktop-latest.msi website/public/taskdn-desktop-latest.AppImage
+          git commit -m "chore(website): update desktop installers for ${{ needs.publish-tauri.outputs.tag || github.ref_name }}" || echo "No changes to commit"
+          git push origin main || echo "Failed to push, continuing..."
