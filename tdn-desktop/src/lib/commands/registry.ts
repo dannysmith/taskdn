@@ -10,6 +10,13 @@ export function registerCommands(commands: AppCommand[]): void {
 }
 
 /**
+ * Clear all registered commands. Used for test isolation.
+ */
+export function clearCommandRegistry(): void {
+  commandRegistry.clear()
+}
+
+/**
  * Generate dynamic navigation commands for areas and projects.
  * These are created on-the-fly based on current vault data.
  */

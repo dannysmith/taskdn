@@ -2,6 +2,7 @@ import * as React from 'react'
 import { DatePicker as DannyDatePicker } from '@dannysmith/datepicker'
 import { ChevronDownIcon } from 'lucide-react'
 
+import { formatShortDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -53,7 +54,7 @@ function DatePicker({
           />
         }
       >
-        {value ? value.toLocaleDateString() : placeholder}
+        {value ? formatShortDate(value.toISOString()) : placeholder}
         <ChevronDownIcon className="size-4" />
       </PopoverTrigger>
       <PopoverContent

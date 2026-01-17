@@ -71,7 +71,7 @@ export function MonthDayCell({
     <div
       ref={setNodeRef}
       className={cn(
-        '@container flex flex-col min-h-[100px] border-e border-border/30 last:border-e-0',
+        '@container flex flex-col min-h-(--month-day-min-height) border-e border-border/30 last:border-e-0',
         !isCurrentMonth && 'bg-muted/30 opacity-50',
         isWeekendDay && isCurrentMonth && 'bg-muted/10',
         (isOver || isDropTarget) && 'bg-primary/5'

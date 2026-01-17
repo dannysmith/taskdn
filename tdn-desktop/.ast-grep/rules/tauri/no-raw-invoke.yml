@@ -1,0 +1,17 @@
+id: no-raw-invoke
+message: |
+  Use type-safe commands from tauri-bindings, not raw invoke().
+
+  BAD: await invoke('my_command', { arg: value })
+  GOOD: await commands.myCommand({ arg: value })
+
+  tauri-specta provides compile-time type checking and autocomplete.
+severity: error
+language: TypeScript
+rule:
+  pattern: invoke($$$ARGS)
+note: |
+  All Tauri commands should use the generated bindings:
+  import { commands } from '@/lib/tauri-bindings'
+
+  See docs/developer/tauri-commands.md for usage patterns.

@@ -9,6 +9,13 @@ import {
   markMutationStart,
   markMutationComplete,
   vaultConfigChanged,
+  formatVaultError,
+  handleVaultError,
+  isRecentMutation,
+  getTimeSinceLastMutation,
+  initializeVault,
+  isVaultConfigured,
+  MUTATION_DEBOUNCE_MS,
 } from './vault'
 import type { Task, Project, Area, AppPreferences } from '@/lib/tauri-bindings'
 import {
@@ -27,6 +34,8 @@ vi.mock('@/lib/tauri-bindings', () => ({
     getTask: vi.fn(),
     getProject: vi.fn(),
     getArea: vi.fn(),
+    initVault: vi.fn().mockResolvedValue({ status: 'ok', data: null }),
+    isVaultConfigured: vi.fn().mockResolvedValue(true),
   },
 }))
 
@@ -647,28 +656,28 @@ describe('vault service', () => {
   describe('vaultConfigChanged', () => {
     const basePrefs: AppPreferences = {
       theme: 'system',
-      quick_pane_shortcut: null,
+      quickPaneShortcut: null,
       language: null,
-      tasks_dir: '/path/to/tasks',
-      areas_dir: '/path/to/areas',
-      projects_dir: '/path/to/projects',
+      tasksDir: '/path/to/tasks',
+      areasDir: '/path/to/areas',
+      projectsDir: '/path/to/projects',
       ignore: null,
-      show_obsidian_features: null,
-      permanent_delete_tasks: null,
+      showObsidianFeatures: null,
+      permanentDeleteTasks: null,
     }
 
-    it('returns true when tasks_dir changes', () => {
-      const newPrefs = { ...basePrefs, tasks_dir: '/new/path' }
+    it('returns true when tasksDir changes', () => {
+      const newPrefs = { ...basePrefs, tasksDir: '/new/path' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
     })
 
-    it('returns true when areas_dir changes', () => {
-      const newPrefs = { ...basePrefs, areas_dir: '/new/path' }
+    it('returns true when areasDir changes', () => {
+      const newPrefs = { ...basePrefs, areasDir: '/new/path' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
     })
 
-    it('returns true when projects_dir changes', () => {
-      const newPrefs = { ...basePrefs, projects_dir: '/new/path' }
+    it('returns true when projectsDir changes', () => {
+      const newPrefs = { ...basePrefs, projectsDir: '/new/path' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(true)
     })
 
@@ -682,8 +691,8 @@ describe('vault service', () => {
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
     })
 
-    it('returns false when quick_pane_shortcut changes', () => {
-      const newPrefs = { ...basePrefs, quick_pane_shortcut: 'Ctrl+Shift+T' }
+    it('returns false when quickPaneShortcut changes', () => {
+      const newPrefs = { ...basePrefs, quickPaneShortcut: 'Ctrl+Shift+T' }
       expect(vaultConfigChanged(basePrefs, newPrefs)).toBe(false)
     })
 
@@ -702,11 +711,268 @@ describe('vault service', () => {
       expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(false)
     })
 
-    it('returns true when ignore patterns differ in order', () => {
-      // JSON.stringify preserves order, so different order = different
+    it('returns false when ignore patterns differ only in order', () => {
+      // Order doesn't matter for ignore patterns - same patterns = no change
       const prefsWithIgnore = { ...basePrefs, ignore: ['*.tmp', '*.bak'] }
       const newPrefs = { ...basePrefs, ignore: ['*.bak', '*.tmp'] }
-      expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(true)
+      expect(vaultConfigChanged(prefsWithIgnore, newPrefs)).toBe(false)
+    })
+  })
+
+  describe('formatVaultError', () => {
+    it('formats notConfigured error', () => {
+      const error = {
+        type: 'notConfigured' as const,
+        message: 'Vault not configured',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('not configured')
+    })
+
+    it('formats fileNotFound error with path', () => {
+      const error = { type: 'fileNotFound' as const, path: '/path/to/file.md' }
+      const result = formatVaultError(error)
+      expect(result).toContain('File not found')
+      expect(result).toContain('/path/to/file.md')
+    })
+
+    it('formats entityNotFound error with type and id', () => {
+      const error = {
+        type: 'entityNotFound' as const,
+        entity_type: 'task',
+        id: 'task-123',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('task')
+      expect(result).toContain('task-123')
+    })
+
+    it('formats readError with message', () => {
+      const error = {
+        type: 'readError' as const,
+        path: '/path/to/file.md',
+        message: 'Permission denied',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('read')
+      expect(result).toContain('Permission denied')
+    })
+
+    it('formats writeError with message', () => {
+      const error = {
+        type: 'writeError' as const,
+        path: '/path/to/file.md',
+        message: 'Disk full',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('write')
+      expect(result).toContain('Disk full')
+    })
+
+    it('formats parseError with message', () => {
+      const error = {
+        type: 'parseError' as const,
+        path: '/path/to/file.md',
+        message: 'Invalid YAML',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('parse')
+      expect(result).toContain('Invalid YAML')
+    })
+
+    it('formats validationError with field and message', () => {
+      const error = {
+        type: 'validationError' as const,
+        field: 'status',
+        message: 'Invalid status value',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('status')
+      expect(result).toContain('Invalid status value')
+    })
+
+    it('formats watcherError with message', () => {
+      const error = {
+        type: 'watcherError' as const,
+        message: 'Watch limit exceeded',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('watcher')
+      expect(result).toContain('Watch limit exceeded')
+    })
+
+    it('formats internal error with message', () => {
+      const error = {
+        type: 'internal' as const,
+        message: 'Unexpected error',
+      }
+      const result = formatVaultError(error)
+      expect(result).toContain('Internal')
+      expect(result).toContain('Unexpected error')
+    })
+
+    it('returns unknown error for unrecognized type', () => {
+      // Cast to simulate an unrecognized error type at runtime
+      const error = {
+        type: 'unknownType',
+        message: 'Something unexpected',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any
+      const result = formatVaultError(error)
+      expect(result).toContain('Unknown error')
+    })
+  })
+
+  describe('handleVaultError', () => {
+    it('logs error and shows toast', async () => {
+      const error = { type: 'internal' as const, message: 'Test error' }
+      const loggerModule = await import('@/lib/logger')
+      const sonnerModule = await import('sonner')
+
+      const result = handleVaultError(error, 'Test operation')
+
+      expect(loggerModule.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('Vault'),
+        expect.objectContaining({ error })
+      )
+      expect(sonnerModule.toast.error).toHaveBeenCalledWith(
+        expect.stringContaining('Test operation'),
+        expect.objectContaining({
+          description: expect.any(String),
+        })
+      )
+      expect(result).toContain('Test error')
+    })
+  })
+
+  describe('isRecentMutation and getTimeSinceLastMutation', () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('returns true immediately after mutation', () => {
+      vi.setSystemTime(new Date('2025-06-15T12:00:00'))
+      markMutationStart()
+
+      expect(isRecentMutation()).toBe(true)
+      expect(getTimeSinceLastMutation()).toBe(0)
+    })
+
+    it('returns true within debounce window', () => {
+      vi.setSystemTime(new Date('2025-06-15T12:00:00'))
+      markMutationStart()
+
+      // Advance time by 200ms (within MUTATION_DEBOUNCE_MS window)
+      const withinWindow = MUTATION_DEBOUNCE_MS - 300
+      vi.setSystemTime(new Date(`2025-06-15T12:00:00.${withinWindow}`))
+
+      expect(isRecentMutation()).toBe(true)
+      expect(getTimeSinceLastMutation()).toBe(withinWindow)
+    })
+
+    it('returns false after debounce window expires', () => {
+      vi.setSystemTime(new Date('2025-06-15T12:00:00'))
+      markMutationStart()
+
+      // Advance time past MUTATION_DEBOUNCE_MS window
+      const pastWindow = MUTATION_DEBOUNCE_MS + 100
+      vi.setSystemTime(new Date(`2025-06-15T12:00:00.${pastWindow}`))
+
+      expect(isRecentMutation()).toBe(false)
+      expect(getTimeSinceLastMutation()).toBe(pastWindow)
+    })
+
+    it('extends window when markMutationComplete is called', () => {
+      vi.setSystemTime(new Date('2025-06-15T12:00:00'))
+      markMutationStart()
+
+      // Advance time by 400ms
+      vi.setSystemTime(new Date('2025-06-15T12:00:00.400'))
+      markMutationComplete()
+
+      // Advance time by 200ms more (600ms from start, but only 200ms from complete)
+      vi.setSystemTime(new Date('2025-06-15T12:00:00.600'))
+
+      expect(isRecentMutation()).toBe(true)
+      expect(getTimeSinceLastMutation()).toBe(200)
+    })
+  })
+
+  describe('initializeVault', () => {
+    it('initializes vault with correct parameters', async () => {
+      const tauriModule = await import('@/lib/tauri-bindings')
+
+      await initializeVault(
+        '/path/to/tasks',
+        '/path/to/projects',
+        '/path/to/areas',
+        ['*.tmp']
+      )
+
+      expect(tauriModule.commands.initVault).toHaveBeenCalledWith(
+        '/path/to/tasks',
+        '/path/to/projects',
+        '/path/to/areas',
+        ['*.tmp']
+      )
+    })
+
+    it('initializes vault with null ignore list', async () => {
+      const tauriModule = await import('@/lib/tauri-bindings')
+
+      await initializeVault(
+        '/path/to/tasks',
+        '/path/to/projects',
+        '/path/to/areas',
+        null
+      )
+
+      expect(tauriModule.commands.initVault).toHaveBeenCalledWith(
+        '/path/to/tasks',
+        '/path/to/projects',
+        '/path/to/areas',
+        null
+      )
+    })
+
+    it('throws error when vault initialization fails', async () => {
+      const tauriModule = await import('@/lib/tauri-bindings')
+      vi.mocked(tauriModule.commands.initVault).mockResolvedValueOnce({
+        status: 'error',
+        error: { type: 'internal', message: 'Initialization failed' },
+      } as never)
+
+      await expect(
+        initializeVault('/tasks', '/projects', '/areas', null)
+      ).rejects.toThrow()
+    })
+  })
+
+  describe('isVaultConfigured', () => {
+    it('returns true when vault is configured', async () => {
+      const tauriModule = await import('@/lib/tauri-bindings')
+      vi.mocked(tauriModule.commands.isVaultConfigured).mockResolvedValueOnce(
+        true
+      )
+
+      const result = await isVaultConfigured()
+
+      expect(result).toBe(true)
+    })
+
+    it('returns false when vault is not configured', async () => {
+      const tauriModule = await import('@/lib/tauri-bindings')
+      vi.mocked(tauriModule.commands.isVaultConfigured).mockResolvedValueOnce(
+        false
+      )
+
+      const result = await isVaultConfigured()
+
+      expect(result).toBe(false)
     })
   })
 })

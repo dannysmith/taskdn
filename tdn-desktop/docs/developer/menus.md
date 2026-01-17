@@ -10,20 +10,17 @@ This app builds menus from **JavaScript** using Tauri's JS Menu API (`@tauri-app
 - Dynamic menu rebuilding when language changes
 - Direct integration with React state (Zustand)
 
-## Current Menu Structure
+## Menu Structure
+
+The app has multiple menus (Taskdn, File, Edit, View, Go, Window, Help). For the complete menu structure with all items and shortcuts, see [command-registry.md](./command-registry.md).
+
+**Simplified example:**
 
 ```
 App Name
 ├── About App Name
-├── ────────────────────
-├── Check for Updates...
-├── ────────────────────
 ├── Preferences...           (Cmd+,)
-├── ────────────────────
-├── Hide App Name            (Cmd+H)
-├── Hide Others              (Cmd+Alt+H)
-├── Show All
-├── ────────────────────
+├── Hide / Hide Others / Show All
 └── Quit App Name            (Cmd+Q)
 
 View

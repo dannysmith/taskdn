@@ -6,6 +6,7 @@ import {
   useCreateTask,
   useDeleteTask,
 } from '@/services/vault'
+import { stripWikilink } from '@/lib/wikilink'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useCommandContext } from '@/hooks/use-command-context'
@@ -97,22 +98,14 @@ export function ProjectView({ projectId }: ProjectViewProps) {
     [tasks]
   )
 
-  // Helper: extract title from WikiLink format [[Title]]
-  const extractTitle = React.useCallback((wikilink: string): string => {
-    if (wikilink.startsWith('[[') && wikilink.endsWith(']]')) {
-      return wikilink.slice(2, -2)
-    }
-    return wikilink
-  }, [])
-
   // Helper: get area name from WikiLink
   const getAreaName = React.useCallback(
     (wikilink: string): string | undefined => {
-      const title = extractTitle(wikilink)
+      const title = stripWikilink(wikilink)
       const area = areas.find(a => a.title === title)
       return area?.title
     },
-    [areas, extractTitle]
+    [areas]
   )
 
   const handleReorder = React.useCallback(

@@ -217,7 +217,7 @@ describe('task-creation-store', () => {
         taskCount: 5,
       })
 
-      updateActiveListSelection('task-b', 1)
+      updateActiveListSelection('task-b')
 
       expect(useTaskCreationStore.getState().activeListSelectedTaskId).toBe(
         'task-b'
@@ -235,7 +235,7 @@ describe('task-creation-store', () => {
         taskCount: 5,
       })
 
-      updateActiveListSelection(null, null)
+      updateActiveListSelection(null)
 
       expect(
         useTaskCreationStore.getState().activeListSelectedTaskId

@@ -10,7 +10,11 @@ import {
   SettingsSection,
 } from '../shared/SettingsComponents'
 import { FolderPicker } from '../shared/FolderPicker'
-import { usePreferences, useSavePreferences } from '@/services/preferences'
+import {
+  preferencesQueryKeys,
+  usePreferences,
+  useSavePreferences,
+} from '@/services/preferences'
 import { commands, type AppPreferences } from '@/lib/tauri-bindings'
 import { reinitializeVault, vaultConfigChanged } from '@/services/vault'
 import { logger } from '@/lib/logger'
@@ -26,7 +30,7 @@ export function VaultPane() {
 
   // Check if running in dev mode
   const { data: isDevMode } = useQuery({
-    queryKey: ['is-dev-mode'],
+    queryKey: preferencesQueryKeys.devMode(),
     queryFn: () => commands.isDevMode(),
     staleTime: Infinity,
   })
@@ -45,16 +49,16 @@ export function VaultPane() {
       // If vault config changed and all paths are configured, reinitialize
       if (
         configChanged &&
-        newPreferences.tasks_dir &&
-        newPreferences.areas_dir &&
-        newPreferences.projects_dir
+        newPreferences.tasksDir &&
+        newPreferences.areasDir &&
+        newPreferences.projectsDir
       ) {
         setIsReinitializing(true)
         try {
           await reinitializeVault(
-            newPreferences.tasks_dir,
-            newPreferences.projects_dir,
-            newPreferences.areas_dir,
+            newPreferences.tasksDir,
+            newPreferences.projectsDir,
+            newPreferences.areasDir,
             newPreferences.ignore ?? null
           )
         } catch (error) {
@@ -76,7 +80,7 @@ export function VaultPane() {
   // Directory path handlers - fire-and-forget with internal error handling
   // FolderPicker's onChange is synchronous, so we don't await
   const createDirChangeHandler =
-    (field: 'tasks_dir' | 'areas_dir' | 'projects_dir') =>
+    (field: 'tasksDir' | 'areasDir' | 'projectsDir') =>
     (path: string | null) => {
       if (!preferences) return
       // Don't await - saveAndReinitialize handles its own errors
@@ -104,9 +108,9 @@ export function VaultPane() {
     const cliConfig = result.data
     const success = await saveAndReinitialize({
       ...preferences,
-      tasks_dir: cliConfig.tasksDir ?? preferences.tasks_dir,
-      areas_dir: cliConfig.areasDir ?? preferences.areas_dir,
-      projects_dir: cliConfig.projectsDir ?? preferences.projects_dir,
+      tasksDir: cliConfig.tasksDir ?? preferences.tasksDir,
+      areasDir: cliConfig.areasDir ?? preferences.areasDir,
+      projectsDir: cliConfig.projectsDir ?? preferences.projectsDir,
       ignore: cliConfig.ignore ?? preferences.ignore,
     })
     if (success) {
@@ -121,9 +125,9 @@ export function VaultPane() {
     const result = await commands.getDummyVaultPaths()
     const success = await saveAndReinitialize({
       ...preferences,
-      tasks_dir: result.tasks_dir,
-      areas_dir: result.areas_dir,
-      projects_dir: result.projects_dir,
+      tasksDir: result.tasksDir,
+      areasDir: result.areasDir,
+      projectsDir: result.projectsDir,
     })
     if (success) {
       toast.success(t('toast.success.dummyVaultSet'))
@@ -161,8 +165,8 @@ export function VaultPane() {
           description={t('preferences.vault.tasksDirDescription')}
         >
           <FolderPicker
-            value={preferences?.tasks_dir ?? null}
-            onChange={createDirChangeHandler('tasks_dir')}
+            value={preferences?.tasksDir ?? null}
+            onChange={createDirChangeHandler('tasksDir')}
             disabled={isDisabled}
           />
         </SettingsField>
@@ -172,8 +176,8 @@ export function VaultPane() {
           description={t('preferences.vault.areasDirDescription')}
         >
           <FolderPicker
-            value={preferences?.areas_dir ?? null}
-            onChange={createDirChangeHandler('areas_dir')}
+            value={preferences?.areasDir ?? null}
+            onChange={createDirChangeHandler('areasDir')}
             disabled={isDisabled}
           />
         </SettingsField>
@@ -183,8 +187,8 @@ export function VaultPane() {
           description={t('preferences.vault.projectsDirDescription')}
         >
           <FolderPicker
-            value={preferences?.projects_dir ?? null}
-            onChange={createDirChangeHandler('projects_dir')}
+            value={preferences?.projectsDir ?? null}
+            onChange={createDirChangeHandler('projectsDir')}
             disabled={isDisabled}
           />
         </SettingsField>

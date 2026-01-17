@@ -1,0 +1,23 @@
+id: no-query-hook-in-lib
+message: |
+  lib/ modules should import queryClient singleton, not use the React hook.
+
+  BAD: const queryClient = useQueryClient()
+  GOOD: import { queryClient } from '@/lib/query-client'
+
+  useQueryClient is a React hook - lib/ should remain React-free.
+severity: error
+language: Tsx
+files:
+  - 'src/lib/**/*.ts'
+  - 'src/lib/**/*.tsx'
+rule:
+  pattern: useQueryClient()
+note: |
+  QueryClient access pattern:
+  - React components/hooks: useQueryClient() hook
+  - Non-React contexts (lib/, event handlers): import singleton
+
+  Both access the same instance, so cache state is shared.
+
+  See: docs/developer/architecture-guide.md (QueryClient Access Pattern)

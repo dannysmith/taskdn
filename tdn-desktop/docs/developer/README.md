@@ -17,6 +17,7 @@ Technical documentation for building and extending this app. These docs describe
 | --------------------------------------------- | ----------------------------------------------- |
 | [Command Registry](./command-registry.md)     | Complete list of all commands and shortcuts     |
 | [Command System](./command-system.md)         | Unified action dispatch, command registration   |
+| [Deep Linking](./deep-linking.md)             | Custom URL scheme (taskdn://) handling          |
 | [Keyboard Shortcuts](./keyboard-shortcuts.md) | Global shortcut handling, platform modifiers    |
 | [Menus](./menus.md)                           | Native menu building with i18n                  |
 | [Quick Panes](./quick-panes.md)               | Multi-window quick entry pattern                |

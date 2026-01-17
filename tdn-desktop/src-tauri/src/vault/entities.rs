@@ -28,6 +28,21 @@ pub enum TaskStatus {
     Done,
 }
 
+impl TaskStatus {
+    /// Returns the kebab-case string representation for YAML frontmatter.
+    pub fn as_kebab_str(&self) -> &'static str {
+        match self {
+            TaskStatus::Inbox => "inbox",
+            TaskStatus::Icebox => "icebox",
+            TaskStatus::Ready => "ready",
+            TaskStatus::InProgress => "in-progress",
+            TaskStatus::Blocked => "blocked",
+            TaskStatus::Dropped => "dropped",
+            TaskStatus::Done => "done",
+        }
+    }
+}
+
 /// Internal frontmatter structure for tasks (kebab-case for YAML).
 /// Not exposed via specta - used only for parsing.
 #[derive(Debug, Clone, Deserialize)]
@@ -131,6 +146,20 @@ pub enum ProjectStatus {
     InProgress,
     Paused,
     Done,
+}
+
+impl ProjectStatus {
+    /// Returns the kebab-case string representation for YAML frontmatter.
+    pub fn as_kebab_str(&self) -> &'static str {
+        match self {
+            ProjectStatus::Planning => "planning",
+            ProjectStatus::Ready => "ready",
+            ProjectStatus::Blocked => "blocked",
+            ProjectStatus::InProgress => "in-progress",
+            ProjectStatus::Paused => "paused",
+            ProjectStatus::Done => "done",
+        }
+    }
 }
 
 /// Internal frontmatter structure for projects (kebab-case for YAML).
@@ -386,5 +415,26 @@ mod tests {
         let status = AreaStatus::Archived;
         let json = serde_json::to_string(&status).unwrap();
         assert_eq!(json, r#""archived""#);
+    }
+
+    #[test]
+    fn test_task_status_as_kebab_str() {
+        assert_eq!(TaskStatus::Inbox.as_kebab_str(), "inbox");
+        assert_eq!(TaskStatus::Icebox.as_kebab_str(), "icebox");
+        assert_eq!(TaskStatus::Ready.as_kebab_str(), "ready");
+        assert_eq!(TaskStatus::InProgress.as_kebab_str(), "in-progress");
+        assert_eq!(TaskStatus::Blocked.as_kebab_str(), "blocked");
+        assert_eq!(TaskStatus::Dropped.as_kebab_str(), "dropped");
+        assert_eq!(TaskStatus::Done.as_kebab_str(), "done");
+    }
+
+    #[test]
+    fn test_project_status_as_kebab_str() {
+        assert_eq!(ProjectStatus::Planning.as_kebab_str(), "planning");
+        assert_eq!(ProjectStatus::Ready.as_kebab_str(), "ready");
+        assert_eq!(ProjectStatus::Blocked.as_kebab_str(), "blocked");
+        assert_eq!(ProjectStatus::InProgress.as_kebab_str(), "in-progress");
+        assert_eq!(ProjectStatus::Paused.as_kebab_str(), "paused");
+        assert_eq!(ProjectStatus::Done.as_kebab_str(), "done");
     }
 }

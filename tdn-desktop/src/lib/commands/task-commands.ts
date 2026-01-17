@@ -17,6 +17,7 @@ import {
 import i18n from '@/i18n/config'
 import { commands } from '@/lib/tauri-bindings'
 import { logger } from '@/lib/logger'
+import { stripWikilink } from '@/lib/wikilink'
 import { markMutationStart, markMutationComplete } from '@/services/vault'
 import type { AppCommand } from './types'
 import { isTaskCommandAvailable, getTargetTask } from './types'
@@ -203,8 +204,8 @@ export const taskCommands: AppCommand[] = [
       const result = await commands.createTask({
         title: task.title,
         status: task.status,
-        projectId: task.project ? extractIdFromWikilink(task.project) : null,
-        areaId: task.area ? extractIdFromWikilink(task.area) : null,
+        projectId: task.project ? stripWikilink(task.project) : null,
+        areaId: task.area ? stripWikilink(task.area) : null,
         scheduled: task.scheduled,
         due: task.due,
         deferUntil: task.deferUntil,
@@ -266,12 +267,3 @@ export const taskCommands: AppCommand[] = [
     },
   },
 ]
-
-/**
- * Extracts the ID from a wikilink format string.
- * e.g., "[[Work]]" -> "Work", "[[My Project]]" -> "My Project"
- */
-function extractIdFromWikilink(wikilink: string): string {
-  const match = wikilink.match(/^\[\[(.+)\]\]$/)
-  return match?.[1] ?? wikilink
-}

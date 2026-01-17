@@ -3,6 +3,7 @@ import { DatePicker } from '@dannysmith/datepicker'
 import { format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
+import { formatShortDate } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import {
   Popover,
@@ -128,7 +129,7 @@ export function DateButton({
       >
         {icon}
         <span className="truncate">
-          {value ? format(new Date(value), 'MMM d') : tooltip}
+          {value ? formatShortDate(value) : tooltip}
         </span>
       </PopoverTrigger>
       <PopoverContent

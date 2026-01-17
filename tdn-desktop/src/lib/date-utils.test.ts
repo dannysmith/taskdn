@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { formatRelativeDate, isOverdue, isToday } from './date-utils'
+import {
+  formatRelativeDate,
+  formatShortDate,
+  isOverdue,
+  isToday,
+} from './date-utils'
 
 describe('date-utils', () => {
   beforeEach(() => {
@@ -60,16 +65,16 @@ describe('date-utils', () => {
       expect(formatRelativeDate('2025-06-09')).toBe('Last Mon')
     })
 
-    it('returns "Mon Day" format for dates beyond a week in the future', () => {
-      expect(formatRelativeDate('2025-06-22')).toBe('Jun 22')
-      expect(formatRelativeDate('2025-07-04')).toBe('Jul 4')
-      expect(formatRelativeDate('2025-12-25')).toBe('Dec 25')
+    it('returns "Day Mon" format for dates beyond a week in the future', () => {
+      expect(formatRelativeDate('2025-06-22')).toBe('22 Jun')
+      expect(formatRelativeDate('2025-07-04')).toBe('4 Jul')
+      expect(formatRelativeDate('2025-12-25')).toBe('25 Dec')
     })
 
-    it('returns "Mon Day" format for dates beyond a week in the past', () => {
-      expect(formatRelativeDate('2025-06-08')).toBe('Jun 8')
-      expect(formatRelativeDate('2025-05-01')).toBe('May 1')
-      expect(formatRelativeDate('2025-01-15')).toBe('Jan 15')
+    it('returns "Day Mon" format for dates beyond a week in the past', () => {
+      expect(formatRelativeDate('2025-06-08')).toBe('8 Jun')
+      expect(formatRelativeDate('2025-05-01')).toBe('1 May')
+      expect(formatRelativeDate('2025-01-15')).toBe('15 Jan')
     })
 
     it('returns original string for invalid dates', () => {
@@ -83,6 +88,37 @@ describe('date-utils', () => {
       expect(formatRelativeDate('2025-06-15T10:30:00')).toBe('Today')
       // ISO format with timezone
       expect(formatRelativeDate('2025-06-15T10:30:00Z')).toBe('Today')
+    })
+
+    it('adds year suffix for dates not in current year', () => {
+      // Current year is 2025
+      expect(formatRelativeDate('2024-06-22')).toBe('22 Jun 24')
+      expect(formatRelativeDate('2026-01-15')).toBe('15 Jan 26')
+      expect(formatRelativeDate('2023-12-25')).toBe('25 Dec 23')
+    })
+  })
+
+  describe('formatShortDate', () => {
+    it('returns "Day Mon" format for dates in current year', () => {
+      expect(formatShortDate('2025-06-15')).toBe('15 Jun')
+      expect(formatShortDate('2025-01-01')).toBe('1 Jan')
+      expect(formatShortDate('2025-12-31')).toBe('31 Dec')
+    })
+
+    it('adds year suffix for dates not in current year', () => {
+      expect(formatShortDate('2024-06-15')).toBe('15 Jun 24')
+      expect(formatShortDate('2026-01-01')).toBe('1 Jan 26')
+      expect(formatShortDate('2023-12-25')).toBe('25 Dec 23')
+    })
+
+    it('returns original string for invalid dates', () => {
+      expect(formatShortDate('invalid')).toBe('invalid')
+      expect(formatShortDate('')).toBe('')
+    })
+
+    it('handles ISO format with time', () => {
+      expect(formatShortDate('2025-06-15T10:30:00')).toBe('15 Jun')
+      expect(formatShortDate('2024-06-15T10:30:00Z')).toBe('15 Jun 24')
     })
   })
 

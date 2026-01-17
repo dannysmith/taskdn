@@ -9,6 +9,8 @@ export interface Tag {
   text: string
 }
 
+export type TagInputValidationError = 'duplicate' | 'max-tags'
+
 export interface TagInputProps extends Omit<
   React.ComponentProps<'div'>,
   'onChange'
@@ -19,6 +21,8 @@ export interface TagInputProps extends Omit<
   maxTags?: number
   allowDuplicates?: boolean
   disabled?: boolean
+  /** Called when validation fails (duplicate tag or max tags reached) */
+  onValidationError?: (error: TagInputValidationError) => void
 }
 
 const TagInput = React.forwardRef<HTMLDivElement, TagInputProps>(
@@ -31,6 +35,7 @@ const TagInput = React.forwardRef<HTMLDivElement, TagInputProps>(
       maxTags,
       allowDuplicates = false,
       disabled = false,
+      onValidationError,
       ...props
     },
     ref
@@ -45,12 +50,14 @@ const TagInput = React.forwardRef<HTMLDivElement, TagInputProps>(
       // Check for duplicates if not allowed
       if (!allowDuplicates && tags.some(tag => tag.text === trimmedValue)) {
         setInputValue('')
+        onValidationError?.('duplicate')
         return
       }
 
       // Check max tags limit
       if (maxTags && tags.length >= maxTags) {
         setInputValue('')
+        onValidationError?.('max-tags')
         return
       }
 

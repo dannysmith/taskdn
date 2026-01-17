@@ -99,10 +99,7 @@ interface TaskCreationState {
   /**
    * Update the selection within the currently active list.
    */
-  updateActiveListSelection: (
-    taskId: string | null,
-    index: number | null
-  ) => void
+  updateActiveListSelection: (taskId: string | null) => void
 
   /**
    * Trigger task creation via Cmd+N.
@@ -180,7 +177,7 @@ export const useTaskCreationStore = create<TaskCreationState>()(
         }
       },
 
-      updateActiveListSelection: (taskId, _index) => {
+      updateActiveListSelection: taskId => {
         set(
           { activeListSelectedTaskId: taskId },
           undefined,
