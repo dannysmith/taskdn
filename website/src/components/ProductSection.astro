@@ -4,10 +4,12 @@ interface Props {
   icon: string
   description: string
   features: string[]
-  ctaText: string
-  ctaHref: string
+  ctaText?: string
+  ctaHref?: string
   badge?: string
   reverse?: boolean
+  /** Remove the frame/border from the demo container (for plain images) */
+  noDemoFrame?: boolean
 }
 
 const {
@@ -19,7 +21,10 @@ const {
   ctaHref,
   badge,
   reverse = false,
+  noDemoFrame = false,
 } = Astro.props
+
+const hasCustomCta = Astro.slots.has('cta')
 ---
 
 <section class:list={['product-section', { reverse }]}>
@@ -36,26 +41,32 @@ const {
       {features.map((feature) => <li>{feature}</li>)}
     </ul>
 
-    <a href={ctaHref} class="product-cta">
-      {ctaText}
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-      >
-        <path d="M5 12h14"></path>
-        <path d="m12 5 7 7-7 7"></path>
-      </svg>
-    </a>
+    {
+      hasCustomCta ? (
+        <slot name="cta" />
+      ) : (
+        <a href={ctaHref} class="product-cta">
+          {ctaText}
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M5 12h14" />
+            <path d="m12 5 7 7-7 7" />
+          </svg>
+        </a>
+      )
+    }
   </div>
 
-  <div class="product-demo">
+  <div class:list={['product-demo', { 'no-frame': noDemoFrame }]}>
     <slot />
   </div>
 </section>
@@ -189,6 +200,23 @@ const {
   .product-demo > :global(*) {
     position: absolute;
     inset: 0;
+  }
+
+  /* No frame variant - just show content directly */
+  .product-demo.no-frame {
+    background: none;
+    border: none;
+    aspect-ratio: auto;
+  }
+
+  .product-demo.no-frame > :global(*) {
+    position: static;
+  }
+
+  .product-demo.no-frame > :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
   }
 
   /* Responsive */

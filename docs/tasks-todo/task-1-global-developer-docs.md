@@ -1,5 +1,11 @@
 # Tasks: Global Developer Docs
 
+## Cleanup Tasks
+
+- [ ] Update demo-vault so the various dates are this/next week etc. We can have a few overdue things but rught now most stuff with dates is from ages ago which makes it not too useful for testing. While we're here, let's not include any scheduled dates on any tasks, and only a few due and defer-until dates. That makes it more reusable as time goes on.
+
+## High-level docs rework
+
 We should add and update a couple of high level global developer docs. These should include:
 
 - [ ] Product Semantics and Visual Design
@@ -17,12 +23,12 @@ We should add and update a couple of high level global developer docs. These sho
 
 ## Other Updates to Global Setup
 
-- [ ] Update `docs/README.md` to be a simple table which is an index of all docs in  `docs/` and `docs/developer` - one row per item. This is the only index and can men mentioned in CLAUDE.md etc to always have it loaded. 
-- [ ] Remove `product-overviews/` entirely.
+- [ ] Update `docs/README.md` to be a simple table which is an index of all docs in  `docs/` and `docs/developer` - one row per item. This is the only index and can be mentioned in CLAUDE.md etc to always have it loaded. 
+- [ ] Remove `product-overviews/` entirely and all references to it everywhere in the codebase.
 - [ ] Simplify `overview.md` – make this into a document which I can point AI at and it will get a full understanding of the entire suite both by reading this and being pointed at the correct places in the docs.
   - Include some background on goals/non-goals etc. This is the stuff that isn't on the public website or in any other internal doc.
   - `@mention` relevant overview docs in the website so they are directly loaded.
   - Mention `@./REAMDE.md` to it is always read as part of the overview (it's the index of docs.)
   - Include an index of docs and developer docs.
 - [ ] update `docs/tasks.md` to include a note on task management within sub projects and also to differentiate the whole task task thing that we currently have in Claude.md.
-- [ ] Update global CLAUDE.md to be better and accurate now the suite is almost done. Include pointer to `website/src/content/docs/` as a good place to read docs and descriptions of how all this stuff works. Generally tweak rules etc.
+- [ ] Update global AGENTS.md to be better and accurate now the suite is almost done. Include pointer to `website/src/content/docs/` as a good place to read docs and descriptions of how all this stuff works. Generally tweak rules etc.

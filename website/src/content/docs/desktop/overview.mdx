@@ -1,12 +1,10 @@
 ---
 title: 'Desktop App'
 description: 'Native task management application'
-banner:
-  content: 🚧 Desktop App coming soon!
 ---
 
 import { Image } from 'astro:assets'
-import UnderConstruction from '@components/UnderConstruction.astro'
+import DesktopAppDownloadButtons from '@components/DesktopAppDownloadButtons.astro'
 import desktop1 from '@assets/desktop-1.png'
 import desktop2 from '@assets/desktop-2.png'
 import desktop3 from '@assets/desktop-3.png'
@@ -14,19 +12,11 @@ import desktop4 from '@assets/desktop-4.png'
 import desktop5 from '@assets/desktop-5.png'
 import desktop6 from '@assets/desktop-6.png'
 
-<UnderConstruction />
-
 The desktop app makes your task files feel like a proper task management app. Instead of editing markdown and YAML, you get a clean, fast interface designed for getting work done. Your data stays as files on disk, but the experience is native app, not text editor.
 
 ## Installation
 
-{/* TODO: Add actual download button/link */}
-
-<div style="background: var(--sl-color-gray-6); padding: 2rem; text-align: center; border-radius: 0.5rem; margin: 1rem 0;">
-  <em>Download coming soon</em>
-  <br />
-  <small>macOS first, Windows and Linux planned</small>
-</div>
+<DesktopAppDownloadButtons compact />
 
 <Image src={desktop2} alt="Taskdn desktop app showing the Today view with task detail sidebar" />
 
