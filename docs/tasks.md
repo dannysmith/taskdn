@@ -1,5 +1,14 @@
 # Task Management
 
+These are **development tasks** for tracking work on the codebase—simple markdown files that do NOT follow the Taskdn specification. (For the distinction between development tasks and Taskdn tasks, see `AGENTS.md`.)
+
+## Task Location
+
+- **Top-level** (`docs/tasks-todo/`): Cross-cutting work, monorepo-level tasks, or quick tasks that span multiple products
+- **Product-specific** (`tdn-<name>/docs/tasks-todo/`): Work scoped to a single product
+
+The working pattern is identical either way. When working within a specific product directory, prefer that product's task folder.
+
 ## Overview
 
 - **Uncompleted tasks** are in tasks-todo/
