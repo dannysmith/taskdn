@@ -16,7 +16,7 @@ A task-management system for **individuals** that stores data as markdown files 
 | **Specs**           | Formal specifications for the protocol             | `tdn-specs/`                                                                     | ✅ Stable      |
 | **CLI**             | Command-line interface for humans and AI agents    | `tdn-cli/`                                                                       | ✅ Stable      |
 | **Claude Plugin**   | Claude Code plugin for AI-assisted task management | `tdn-claude-plugin/`                                                             | ✅ Stable      |
-| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                                   | ⌛ In Progress |
+| **Desktop App**     | Cross-platform Tauri app for day-to-day use        | `tdn-desktop/`                                                                   | ✅ Alpha (macOS) |
 | **Obsidian Plugin** | Render task wikilinks as interactive widgets       | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn)                 | ✅ Stable      |
 | **Starter Vault**   | Pre-configured Obsidian vault with templates/bases | [tdn-obsidian-starter-vault](https://github.com/dannysmith/tdn-obsidian-starter-vault) | ✅ Stable      |
 | **Website**         | Documentation and marketing site                   | `website/`                                                                       | ✅ Stable      |
@@ -27,6 +27,10 @@ A task-management system for **individuals** that stores data as markdown files 
 - [The Core Specification](tdn-specs/S1-core.md) – Formal spec for task/project/area file formats.
 
 ## Installation
+
+### Desktop App Installation
+
+Download the latest release from [the website](https://tdn.danny.is) and configure the paths in the preferences.
 
 ### CLI Installation
 
@@ -76,7 +80,7 @@ taskdn/
 │   └── tasks-todo/      # Active development tasks
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)
 ├── tdn-claude-plugin/   # Claude Code plugin
-├── tdn-desktop/         # Desktop app (Tauri v2)
+├── tdn-desktop/         # Desktop app (Tauri)
 ├── tdn-obsidian-plugin/ # Stub with README.md pointing at obsidian-taskdn repo
 ├── tdn-specs/           # Protocol specifications
 └── website/             # Documentation & marketing site (Astro/Starlight)

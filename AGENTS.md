@@ -14,13 +14,6 @@ All top level documentation lives in `docs/`.
 
   `docs/tasks-done` - Completed tasks. Old documents which may be useful to reference. Do not reference these without asking the user as they'll be out of date.
 
-### Product Overview Docs
-
-`docs/product-overviews/` Contains one folder for each of the products in development. This is for storing the important high level evergreen documents for each product. These are stored in the top level docs because it will often be necessary for other projects to reference these.
-
-- Each **must** contain a `<name>-requirements.md` for non-technical product requirements and `<name>-tech.md` for overview of technical architecture, approach, external interface and any major decisions etc.
-- Each may contain other relevant evergreen documents.
-- As a general rule, these documents should not contain information on **internal** implementation details.
 
 ### Detailed Developer Docs
 
