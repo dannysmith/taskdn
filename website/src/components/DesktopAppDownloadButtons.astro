@@ -63,7 +63,19 @@
 </script>
 
 <style>
+  /*
+   * CSS variables with fallbacks for both Starlight (--sl-color-*) and
+   * standalone pages (--color-*), with hardcoded defaults as final fallback.
+   */
   .download-buttons {
+    --_text: var(--sl-color-text, var(--color-text, #1c1b1a));
+    --_text-muted: var(--sl-color-gray-3, var(--color-text-muted, #878580));
+    --_bg: var(--sl-color-bg, var(--color-bg, #fffcf0));
+    --_bg-2: var(--sl-color-gray-6, var(--color-bg-2, #f2f0e5));
+    --_border: var(--sl-color-gray-5, var(--color-border, #e6e4d9));
+    --_accent: var(--sl-color-accent, var(--color-accent, #4385be));
+    --_accent-hover: var(--sl-color-accent-high, var(--color-accent-hover, #205ea6));
+
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 0.75rem;
@@ -87,28 +99,28 @@
     border-radius: 0.5rem;
     font-weight: 500;
     font-size: 0.875rem;
-    background: var(--color-bg-2);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
+    background: var(--_bg-2);
+    color: var(--_text);
+    border: 1px solid var(--_border);
     transition: all 0.15s ease;
     text-decoration: none;
   }
 
   .download-btn:hover {
-    background: var(--color-bg);
-    border-color: var(--color-text-muted);
+    background: var(--_bg);
+    border-color: var(--_text-muted);
     text-decoration: none;
   }
 
   .download-btn.recommended {
-    background: var(--color-accent);
+    background: var(--_accent);
     color: white;
-    border-color: var(--color-accent);
+    border-color: var(--_accent);
   }
 
   .download-btn.recommended:hover {
-    background: var(--color-accent-hover);
-    border-color: var(--color-accent-hover);
+    background: var(--_accent-hover);
+    border-color: var(--_accent-hover);
   }
 
   .download-btn.recommended .btn-note {
@@ -134,7 +146,7 @@
 
   .btn-note {
     font-size: 0.6875rem;
-    color: var(--color-text-muted);
+    color: var(--_text-muted);
     font-weight: 400;
   }
 </style>
