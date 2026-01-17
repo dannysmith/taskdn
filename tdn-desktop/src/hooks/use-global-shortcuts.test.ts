@@ -292,10 +292,7 @@ describe('useGlobalShortcuts', () => {
       document.body.removeChild(select)
     })
 
-    // Note: jsdom doesn't properly implement isContentEditable (returns undefined)
-    // This behavior is tested in real browsers but can't be unit tested with jsdom
-    // See: https://github.com/jsdom/jsdom/issues/1670
-    it.skip('skips when contenteditable is focused (jsdom limitation)', () => {
+    it('skips when contenteditable is focused', () => {
       const mockCommand = {
         id: 'test-command',
         labelKey: 'commands.test',
@@ -306,25 +303,49 @@ describe('useGlobalShortcuts', () => {
       vi.mocked(getAllCommands).mockReturnValue([mockCommand])
       vi.mocked(matchesKeyboardEvent).mockReturnValue(true)
 
-      // Create and focus a contenteditable div
+      // Create a contenteditable div
+      // Note: jsdom doesn't properly implement isContentEditable, so we mock it
+      // See: https://github.com/jsdom/jsdom/issues/1670
       const div = document.createElement('div')
       div.contentEditable = 'true'
-      document.body.appendChild(div)
-      div.focus()
-
-      renderHook(() => useGlobalShortcuts(mockContext))
-
-      const event = new KeyboardEvent('keydown', {
-        key: 't',
-        metaKey: true,
-        bubbles: true,
+      Object.defineProperty(div, 'isContentEditable', {
+        value: true,
+        configurable: true,
       })
-      document.dispatchEvent(event)
 
-      expect(executeCommand).not.toHaveBeenCalled()
+      // Save original activeElement getter and mock it
+      const originalDescriptor = Object.getOwnPropertyDescriptor(
+        Document.prototype,
+        'activeElement'
+      )
 
-      // Cleanup
-      document.body.removeChild(div)
+      try {
+        Object.defineProperty(document, 'activeElement', {
+          get: () => div,
+          configurable: true,
+        })
+
+        renderHook(() => useGlobalShortcuts(mockContext))
+
+        const event = new KeyboardEvent('keydown', {
+          key: 't',
+          metaKey: true,
+          bubbles: true,
+        })
+        document.dispatchEvent(event)
+
+        expect(executeCommand).not.toHaveBeenCalled()
+      } finally {
+        // Restore original activeElement - delete our override first
+        delete (document as { activeElement?: unknown }).activeElement
+        if (originalDescriptor) {
+          Object.defineProperty(
+            Document.prototype,
+            'activeElement',
+            originalDescriptor
+          )
+        }
+      }
     })
   })
 

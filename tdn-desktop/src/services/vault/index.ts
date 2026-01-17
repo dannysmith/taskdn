@@ -15,6 +15,8 @@ export {
   formatVaultError,
   markMutationStart,
   markMutationComplete,
+  isRecentMutation,
+  getTimeSinceLastMutation,
 } from './utils'
 
 // Query hooks
