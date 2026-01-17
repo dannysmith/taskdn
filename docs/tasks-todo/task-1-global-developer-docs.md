@@ -2,7 +2,7 @@
 
 We should add some high-level documents to `docs/` And also make some updates and tweaks to the internal documentation which we have. Now the purpose of all of this documentation is to make it easy for both human developers and AI agent developers to have and find the information they need to consistently work well across all of these products in this system. These are internal documents.
 
-## 1. `products.md`
+## 1. `products.md` [✅ DONE]
 
 Succinct one-file overview of each major product in taskdn. Should simply provide a list of the products which form part of this system. This is intended for both humans and AI agents to read to get an overview of the different products that we have here. For each we should provide:
 
@@ -19,11 +19,11 @@ Succinct one-file overview of each major product in taskdn. Should simply provid
 
 we can draw on the documentation in `website/src/content/docs/` as well as `docs/product-overviews` and any other documentation where we can get this information. 
 
-## 2. `product-principles.md`
+## 2. `product-principles.md` [✅ DONE]
 
 Extract from `overview.md` and `/Users/danny/dev/taskdn/website/src/content/docs/philosophy.mdx`. We Should probably do our best to create some numbered clearly defined principles. Uh these principles should in general apply to all products in this suite. The purpose of this document is to allow humans and AI agents to quickly understand some of the core product design principles so they can better make decisions about product design. Uh we will almost certainly have to iterate on this together. This should not just be a cut and paste from our philosophy. This should actually be the kind of document that we would want new product managers working on this suite to really read and fully understand when making decisions about new products to develop or new features in existing products. It is essentially a overall guidelines and set of principles, but also a reference document in this regard. 
 
-## 3. `developer/semantics-and-visual-design.md`
+## 3. `developer/semantics-and-visual-design.md` [✅ DONE]
 
 The purpose of this document is to provide a simple canonical reference on semantics, naming, colouring etc. This is intended for designers and product managers and AI agents to reference when designing and building new products, when writing new documentation, etcetera. It is a core reference for helping us keep things consistent Across our various products. it should begin by referencing `product-principles.md` and explaining that individual products will have in addition to this their own more granular visual design guides and that this guide is intended to explain the higher level stuff.
 
