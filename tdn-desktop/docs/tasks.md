@@ -7,7 +7,7 @@
   - The lowest number is the current task
   - If NUMBER is x, the task has not been prioritized yet
 - **Completed tasks** are in tasks-done/
-  - Named task-YYYY-MM-DD-name.md with completion date
+  - Named task-YYYY-MM-DD-NUMBER-name.md with completion date (where NUMBER is optional)
 
 ## Completing Tasks
 
@@ -24,13 +24,13 @@ The script will:
 
 1. Find the matching task in tasks-todo/
 2. Strip the task-NUMBER- prefix
-3. Add todays date prefix: task-YYYY-MM-DD-
+3. Add todays date prefix: task-YYYY-MM-DD-NUMBER-
 4. Move it to tasks-done/
 
 Example transformation:
 tasks-todo/task-2-frontend-performance-optimization.md
 becomes
-tasks-done/task-2025-11-01-frontend-performance-optimization.md
+tasks-done/task-2025-11-01-2-frontend-performance-optimization.md
 
 ### Renaming Existing Completed Tasks
 

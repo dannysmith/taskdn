@@ -1,8 +1,4 @@
-# Claude Code Instructions
-
-Read @AGENTS.md for all project instructions.
-
-See the parent `../CLAUDE.md` for general monorepo instructions.
+@AGENTS.md
 
 ## Local Status
 

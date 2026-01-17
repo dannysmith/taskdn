@@ -24,7 +24,7 @@ All top level documentation lives in `docs/`.
 
 ### Detailed Developer Docs
 
-Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in doubt, ask the user.
+Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo/` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in doubt, ask the user.
 
 ## Product Sub-directories
 
