@@ -67,10 +67,6 @@ export default defineConfig({
         },
         {
           label: '🖥️ Desktop App',
-          badge: {
-            text: 'Soon',
-            variant: 'note',
-          },
           items: [
             {
               slug: 'desktop/overview',

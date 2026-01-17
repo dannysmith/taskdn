@@ -2,7 +2,7 @@
 
 ## Cleanup Tasks
 
-- [ ] Update demo-vault so the various dates are this/next week etc. We can have a few overdue things but rught now most stuff with dates is from ages ago which makes it not too useful for testing. While we're here, let's not include any scheduled dates on any tasks, and only a few due and defer-until dates. That makes it more reusable as time goes on.
+- [x] Update demo-vault so the various dates are this/next week etc. We can have a few overdue things but rught now most stuff with dates is from ages ago which makes it not too useful for testing. While we're here, let's not include any scheduled dates on any tasks, and only a few due and defer-until dates. That makes it more reusable as time goes on.
 
 ## High-level docs rework
 

@@ -156,8 +156,6 @@ See [CLI README](../tdn-cli/README.md)
 
 A cross-platform Tauri app for day-to-day task management—fast, beautiful, and keyboard-first.
 
-If they're in _planning mode_ they'll want to see contextual views and have important information surfaced where it's needed. If they're in _doing mode_ they'll want to see and work with their short-term task list without distractions.
-
 See [Desktop README](../tdn-desktop/README.md)
 
 ### 4. Obsidian Plugin
