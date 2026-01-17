@@ -228,6 +228,54 @@ std::fs::rename(&temp_path, &final_path)?;
 
 See [Tauri Security Documentation](https://v2.tauri.app/security/) for detailed guidance.
 
+## Platform-Specific Notes
+
+### macOS Private API Usage
+
+This application uses macOS private APIs via the `tauri-nspanel` crate for the Quick Pane feature.
+
+**Why private APIs?**
+
+The Quick Pane requires native panel behavior that isn't available through public macOS APIs:
+
+- **Fullscreen overlay** - Panel appears above fullscreen apps
+- **Click-outside dismiss** - Panel auto-hides when clicking elsewhere
+- **Non-activating window** - Panel doesn't steal focus from other apps
+- **Level management** - Panel floats above normal windows
+
+Standard `NSWindow` cannot achieve this behavior; `NSPanel` with specific configurations is required, and some of those configurations require private API access.
+
+**Configuration:**
+
+```json
+// src-tauri/tauri.conf.json
+{
+  "app": {
+    "macOSPrivateApi": true
+  }
+}
+```
+
+```toml
+# src-tauri/Cargo.toml
+tauri = { version = "2", features = ["macos-private-api"] }
+```
+
+**Implications:**
+
+| Consideration | Impact |
+|---------------|--------|
+| Mac App Store | Likely rejection - private APIs violate App Store guidelines |
+| macOS Updates | Risk of breakage if Apple changes internal APIs |
+| Notarization | Works fine - notarization doesn't check for private API usage |
+| Direct Distribution | No issues - only App Store has restrictions |
+
+**Mitigation:**
+
+- The `tauri-nspanel` dependency is pinned to a specific commit for stability
+- If App Store distribution becomes required, the Quick Pane could fall back to a standard window with reduced functionality
+- The feature degrades gracefully on non-macOS platforms (uses standard window)
+
 ## Type-Safe Tauri Commands
 
 All Tauri commands use [tauri-specta](https://github.com/specta-rs/tauri-specta) for type safety:
