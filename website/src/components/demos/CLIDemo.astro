@@ -244,9 +244,12 @@ import WindowChrome from './WindowChrome.astro'
     width: 100%;
   }
 
-  /* Hardcoded dark colors - terminal is always dark */
+  /*
+   * Terminal colors - inherit from WindowChrome's --terminal-* vars
+   * with hardcoded fallbacks (terminal is always dark)
+   */
   .terminal-content {
-    color: #cecdc3;
+    color: var(--terminal-text, #cecdc3);
   }
 
   .terminal-line {
@@ -256,18 +259,18 @@ import WindowChrome from './WindowChrome.astro'
   }
 
   .prompt {
-    color: #878580;
+    color: var(--terminal-muted, #878580);
   }
 
   .command-text {
-    color: #cecdc3;
+    color: var(--terminal-text, #cecdc3);
   }
 
   .cursor {
     display: inline-block;
     width: 0.6em;
     height: 1.1em;
-    background: #cecdc3;
+    background: var(--terminal-text, #cecdc3);
     opacity: 0.7;
     vertical-align: text-bottom;
   }
@@ -275,134 +278,96 @@ import WindowChrome from './WindowChrome.astro'
   .terminal-output {
     display: flex;
     flex-direction: column;
+
+    > div {
+      min-height: 1.4em;
+    }
   }
 
-  .terminal-output > div {
-    min-height: 1.4em;
-  }
-
-  /* Output line styling via global classes applied through innerHTML */
-  .terminal-output :global(.heading) {
-    color: #cecdc3;
-    font-weight: 600;
-    margin-bottom: 0.25em;
-  }
-
-  .terminal-output :global(.section) {
-    display: flex;
-    gap: 0.5em;
-    align-items: center;
-  }
-
-  .terminal-output :global(.section-title) {
-    font-weight: 600;
-    color: #cecdc3;
-  }
-
-  .terminal-output :global(.task) {
-    padding-left: 1.75em;
-    display: flex;
-    gap: 1em;
-  }
-
-  .terminal-output :global(.task-name) {
-    color: #cecdc3;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .terminal-output :global(.task-project) {
-    color: #4385be;
-    opacity: 0.8;
-    white-space: nowrap;
-  }
-
-  .terminal-output :global(.task-date) {
-    color: #878580;
-    white-space: nowrap;
-  }
-
-  /* Tree view (Scene 2) */
-  .terminal-output :global(.tree) {
-    color: #cecdc3;
-  }
-
-  .terminal-output :global(.tree-status) {
-    color: #878580;
-  }
-
-  .terminal-output :global(.status-blue) {
-    color: #4385be;
-  }
-
-  .terminal-output :global(.status-green) {
-    color: #879a39;
-  }
-
-  /* New task (Scene 3) */
-  .terminal-output :global(.success) {
-    color: #879a39;
-  }
-
-  .terminal-output :global(.detail) {
-    color: #878580;
-  }
-
-  /* Static fallback styles (inside template, applied when used) */
+  /* Static fallback line container */
   .output-line {
     min-height: 1.4em;
   }
 
-  .output-line.heading {
-    color: #cecdc3;
+  /*
+   * Consolidated output styles - works for both:
+   * - Animated: .terminal-output :global(.classname)
+   * - Static fallback: .output-line.classname or .output-line .classname
+   */
+  :is(.terminal-output :global(.heading), .output-line.heading) {
+    color: var(--terminal-text, #cecdc3);
     font-weight: 600;
     margin-bottom: 0.25em;
   }
 
-  .output-line.section {
+  :is(.terminal-output :global(.section), .output-line.section) {
     display: flex;
     gap: 0.5em;
     align-items: center;
   }
 
-  .output-line .section-title {
+  :is(.terminal-output :global(.section-title), .output-line .section-title) {
     font-weight: 600;
-    color: #cecdc3;
+    color: var(--terminal-text, #cecdc3);
   }
 
-  .output-line.task {
+  :is(.terminal-output :global(.task), .output-line.task) {
     padding-left: 1.75em;
     display: flex;
     gap: 1em;
   }
 
-  .output-line .task-name {
-    color: #cecdc3;
+  :is(.terminal-output :global(.task-name), .output-line .task-name) {
+    color: var(--terminal-text, #cecdc3);
     flex: 1;
     min-width: 0;
   }
 
-  .output-line .task-project {
-    color: #4385be;
+  :is(.terminal-output :global(.task-project), .output-line .task-project) {
+    color: var(--terminal-blue, #4385be);
     opacity: 0.8;
     white-space: nowrap;
   }
 
-  .output-line .task-date {
-    color: #878580;
+  :is(.terminal-output :global(.task-date), .output-line .task-date) {
+    color: var(--terminal-muted, #878580);
     white-space: nowrap;
+  }
+
+  /* Tree view (Scene 2) - animated only */
+  .terminal-output :global(.tree) {
+    color: var(--terminal-text, #cecdc3);
+  }
+
+  .terminal-output :global(.tree-status) {
+    color: var(--terminal-muted, #878580);
+  }
+
+  .terminal-output :global(.status-blue) {
+    color: var(--terminal-blue, #4385be);
+  }
+
+  .terminal-output :global(.status-green) {
+    color: var(--terminal-green, #879a39);
+  }
+
+  /* New task (Scene 3) - animated only */
+  .terminal-output :global(.success) {
+    color: var(--terminal-green, #879a39);
+  }
+
+  .terminal-output :global(.detail) {
+    color: var(--terminal-muted, #878580);
   }
 
   /* Responsive */
   @media (max-width: 600px) {
-    .terminal-output :global(.task),
-    .output-line.task {
+    :is(.terminal-output :global(.task), .output-line.task) {
       flex-wrap: wrap;
       gap: 0.25em 0.75em;
     }
 
-    .terminal-output :global(.task-name),
-    .output-line .task-name {
+    :is(.terminal-output :global(.task-name), .output-line .task-name) {
       flex-basis: 100%;
     }
   }
