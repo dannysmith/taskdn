@@ -1,8 +1,23 @@
-# Taskdn Documentation Index
+# Taskdn Documentation
 
-- `overview.md` - General Overview of the Project, Goals, Products, Principles etc
-- `tasks-todo` & `tasks-done` - See `tasks.md`.
-- `product-overviews/` - contains one folder for each of the products in development. Contains important evergreen documents about each. Each must contain a `<name>-requirements.md` for the non-technical product requirements and `<name>-tech.md` for an overview of technical architecture, implementation and major decisions etc. May contain other docs.
-  - `product-overviews/cli` - The CLI Tool (includes embedded Rust core)
-  - `product-overviews/desktop` - The Tauri Desktop App
-- `developer` - Developer-facing documentation common to all products.
+This folder contains top-level documentation for the Taskdn monorepo.
+
+## Index
+
+| Document | Description |
+|----------|-------------|
+| `overview.md` | General overview of the project, goals, and architecture |
+| `products.md` | Index of all Taskdn products with links and descriptions |
+| `product-principles.md` | Core principles guiding product decisions |
+| `monorepo-architecture.md` | Technical overview of the monorepo structure |
+| `tasks.md` | How development task tracking works in this repo |
+| `developer/brand.md` | Brand aesthetic and visual identity |
+| `developer/semantics-and-visual-design.md` | Entity styling, colors, icons, and status treatments |
+| `developer/releases-and-versioning.md` | Versioning strategy and release process |
+
+## Task Tracking
+
+- `tasks-todo/` — Active development tasks
+- `tasks-done/` — Completed development tasks
+
+See `tasks.md` for details on the task management workflow.

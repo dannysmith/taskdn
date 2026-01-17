@@ -90,7 +90,7 @@ Table showing various fields and their visual representation (eg defer-until, du
 The taskdn colour palette, design aesthetic, reference to the icons in `images/` etc. We should be able to keep this one relatively simple. The intent of this document is simply to provide a place for us to keep the design reference, basically. Again, this document should point out that different products will potentially have more detailed or granular guidelines on this. 
 
 
-## 5. `monorepo-architecture.md`
+## 5. `monorepo-architecture.md` [✅ DONE]
 
 Technical overview of how the monorepo is set up and configured. This can probably be a very simple stub document for now.
 
