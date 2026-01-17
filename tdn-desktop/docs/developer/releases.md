@@ -71,13 +71,13 @@ All three files must have matching versions:
 
 Each release creates:
 
-| Platform | Artifact | Notes |
-|----------|----------|-------|
-| macOS | `.dmg` | Universal binary (arm64 + x86_64), signed and notarized |
-| Windows | `.msi` | Standard installer |
-| Linux | `.AppImage` | Portable executable |
-| All | `latest.json` | Auto-updater manifest |
-| All | `.sig` files | Cryptographic signatures |
+| Platform | Artifact      | Notes                                                   |
+| -------- | ------------- | ------------------------------------------------------- |
+| macOS    | `.dmg`        | Universal binary (arm64 + x86_64), signed and notarized |
+| Windows  | `.msi`        | Standard installer                                      |
+| Linux    | `.AppImage`   | Portable executable                                     |
+| All      | `latest.json` | Auto-updater manifest                                   |
+| All      | `.sig` files  | Cryptographic signatures                                |
 
 The workflow also commits latest installers to `website/public/` for direct downloads.
 
@@ -87,21 +87,21 @@ The following secrets must be configured in the repository (Settings → Secrets
 
 ### Tauri Auto-Updater Signing
 
-| Secret | Description |
-|--------|-------------|
-| `TAURI_PRIVATE_KEY` | Private key for signing update manifests (app-specific) |
-| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Password for the signing key |
+| Secret                               | Description                                             |
+| ------------------------------------ | ------------------------------------------------------- |
+| `TAURI_PRIVATE_KEY`                  | Private key for signing update manifests (app-specific) |
+| `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` | Password for the signing key                            |
 
 ### Apple Code Signing (macOS only)
 
-| Secret | Description |
-|--------|-------------|
-| `APPLE_CERTIFICATE` | Base64-encoded .p12 certificate |
-| `APPLE_CERTIFICATE_PASSWORD` | Password for the .p12 file |
-| `APPLE_API_KEY` | App Store Connect API Key ID |
-| `APPLE_API_ISSUER` | App Store Connect Issuer ID |
-| `APPLE_API_KEY_PATH` | Contents of the .p8 API key file |
-| `APPLE_TEAM_ID` | Apple Developer Team ID |
+| Secret                       | Description                      |
+| ---------------------------- | -------------------------------- |
+| `APPLE_CERTIFICATE`          | Base64-encoded .p12 certificate  |
+| `APPLE_CERTIFICATE_PASSWORD` | Password for the .p12 file       |
+| `APPLE_API_KEY`              | App Store Connect API Key ID     |
+| `APPLE_API_ISSUER`           | App Store Connect Issuer ID      |
+| `APPLE_API_KEY_PATH`         | Contents of the .p8 API key file |
+| `APPLE_TEAM_ID`              | Apple Developer Team ID          |
 
 ## Initial Setup
 
@@ -171,13 +171,13 @@ All updates are cryptographically signed:
 
 ## Troubleshooting
 
-| Issue | Solution |
-|-------|----------|
-| Workflow doesn't trigger | Ensure tag starts with `desktop-v` and is pushed |
-| Build fails | Check GitHub secrets, run `bun run check:all` locally |
-| macOS "unidentified developer" | Apple secrets misconfigured or notarization failed |
-| Updates not detected | Verify endpoint URL and public key match |
-| Download fails | Check signatures, file permissions, disk space |
+| Issue                          | Solution                                              |
+| ------------------------------ | ----------------------------------------------------- |
+| Workflow doesn't trigger       | Ensure tag starts with `desktop-v` and is pushed      |
+| Build fails                    | Check GitHub secrets, run `bun run check:all` locally |
+| macOS "unidentified developer" | Apple secrets misconfigured or notarization failed    |
+| Updates not detected           | Verify endpoint URL and public key match              |
+| Download fails                 | Check signatures, file permissions, disk space        |
 
 ## Reference
 
