@@ -81,11 +81,9 @@
     gap: 0.75rem;
     width: 100%;
     container-type: inline-size;
-  }
 
-  /* Stack when container is narrow */
-  @container (max-width: 380px) {
-    .download-buttons {
+    /* Stack when container is narrow */
+    @container (max-width: 380px) {
       grid-template-columns: 1fr;
     }
   }
@@ -102,29 +100,29 @@
     background: var(--_bg-2);
     color: var(--_text);
     border: 1px solid var(--_border);
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
     text-decoration: none;
-  }
 
-  .download-btn:hover {
-    background: var(--_bg);
-    border-color: var(--_text-muted);
-    text-decoration: none;
-  }
+    &:hover {
+      background: var(--_bg);
+      border-color: var(--_text-muted);
+      text-decoration: none;
+    }
 
-  .download-btn.recommended {
-    background: var(--_accent);
-    color: white;
-    border-color: var(--_accent);
-  }
+    &.recommended {
+      background: var(--_accent);
+      color: white;
+      border-color: var(--_accent);
 
-  .download-btn.recommended:hover {
-    background: var(--_accent-hover);
-    border-color: var(--_accent-hover);
-  }
+      &:hover {
+        background: var(--_accent-hover);
+        border-color: var(--_accent-hover);
+      }
 
-  .download-btn.recommended .btn-note {
-    color: rgba(255, 255, 255, 0.8);
+      .btn-note {
+        color: rgba(255, 255, 255, 0.8);
+      }
+    }
   }
 
   .os-icon {

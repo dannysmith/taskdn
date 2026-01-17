@@ -48,6 +48,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
 
 <style is:global>
   :root {
+    /* Enable light-dark() function */
+    color-scheme: light dark;
+
     /* Flexoki-inspired palette - dark mode (default) */
     --color-bg: #100f0f;
     --color-bg-2: #1c1b1a;
@@ -97,6 +100,22 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
     padding: 0;
   }
 
+  /* Defensive media defaults - prevent overflow, auto-center blocks */
+  img,
+  picture,
+  video,
+  canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  /* Inline SVGs should remain inline for icon use */
+  svg {
+    max-width: 100%;
+  }
+
   html {
     font-family: var(--font-sans);
     background: var(--color-bg);
@@ -113,10 +132,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
   a {
     color: var(--color-accent);
     text-decoration: none;
-  }
 
-  a:hover {
-    color: var(--color-accent-hover);
-    text-decoration: underline;
+    &:hover {
+      color: var(--color-accent-hover);
+      text-decoration: underline;
+    }
   }
 </style>
