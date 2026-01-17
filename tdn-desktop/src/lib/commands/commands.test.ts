@@ -102,8 +102,12 @@ vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: vi.fn(() => mockWindow),
 }))
 
-const { registerCommands, getAllCommands, executeCommand } =
-  await import('./registry')
+const {
+  registerCommands,
+  getAllCommands,
+  executeCommand,
+  clearCommandRegistry,
+} = await import('./registry')
 const { navigationCommands } = await import('./navigation-commands')
 const { appCommands } = await import('./app-commands')
 const { entityCommands } = await import('./entity-commands')
@@ -172,6 +176,7 @@ describe('Simplified Command System', () => {
 
   afterEach(() => {
     vi.clearAllMocks()
+    clearCommandRegistry()
   })
 
   describe('Command Registration', () => {
@@ -463,6 +468,10 @@ describe('Entity Commands', () => {
     registerCommands(entityCommands)
   })
 
+  afterEach(() => {
+    clearCommandRegistry()
+  })
+
   describe('reveal-in-finder', () => {
     it('calls revealItemInDir with entity path', async () => {
       const task = createTestTask({
@@ -738,6 +747,10 @@ describe('Task Commands', () => {
     })
   })
 
+  afterEach(() => {
+    clearCommandRegistry()
+  })
+
   describe('set-scheduled-today', () => {
     it('updates task with today date', async () => {
       const task = createTestTask({ id: 'task-123', scheduled: null })
@@ -970,6 +983,10 @@ describe('Window Commands', () => {
     mockContext = createMockContext()
     vi.clearAllMocks()
     registerCommands(windowCommands)
+  })
+
+  afterEach(() => {
+    clearCommandRegistry()
   })
 
   describe('window-close', () => {

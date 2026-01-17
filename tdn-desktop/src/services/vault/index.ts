@@ -17,6 +17,7 @@ export {
   markMutationComplete,
   isRecentMutation,
   getTimeSinceLastMutation,
+  MUTATION_DEBOUNCE_MS,
 } from './utils'
 
 // Query hooks

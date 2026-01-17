@@ -15,6 +15,7 @@ import {
   getTimeSinceLastMutation,
   initializeVault,
   isVaultConfigured,
+  MUTATION_DEBOUNCE_MS,
 } from './vault'
 import type { Task, Project, Area, AppPreferences } from '@/lib/tauri-bindings'
 import {
@@ -865,22 +866,24 @@ describe('vault service', () => {
       vi.setSystemTime(new Date('2025-06-15T12:00:00'))
       markMutationStart()
 
-      // Advance time by 200ms (within 500ms debounce window)
-      vi.setSystemTime(new Date('2025-06-15T12:00:00.200'))
+      // Advance time by 200ms (within MUTATION_DEBOUNCE_MS window)
+      const withinWindow = MUTATION_DEBOUNCE_MS - 300
+      vi.setSystemTime(new Date(`2025-06-15T12:00:00.${withinWindow}`))
 
       expect(isRecentMutation()).toBe(true)
-      expect(getTimeSinceLastMutation()).toBe(200)
+      expect(getTimeSinceLastMutation()).toBe(withinWindow)
     })
 
     it('returns false after debounce window expires', () => {
       vi.setSystemTime(new Date('2025-06-15T12:00:00'))
       markMutationStart()
 
-      // Advance time by 600ms (past 500ms debounce window)
-      vi.setSystemTime(new Date('2025-06-15T12:00:00.600'))
+      // Advance time past MUTATION_DEBOUNCE_MS window
+      const pastWindow = MUTATION_DEBOUNCE_MS + 100
+      vi.setSystemTime(new Date(`2025-06-15T12:00:00.${pastWindow}`))
 
       expect(isRecentMutation()).toBe(false)
-      expect(getTimeSinceLastMutation()).toBe(600)
+      expect(getTimeSinceLastMutation()).toBe(pastWindow)
     })
 
     it('extends window when markMutationComplete is called', () => {
