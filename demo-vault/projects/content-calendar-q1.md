@@ -1,6 +1,7 @@
 ---
 title: Content Calendar Q1
-area: "[[Marketing and Sales]]"
+status: in-progress
+area: "[[Marketing]]"
 description: Plan and execute Q1 content marketing strategy.
 start-date: 2025-01-01
 end-date: 2025-03-31

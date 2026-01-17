@@ -5,7 +5,6 @@ created-at: 2025-01-19
 updated-at: 2025-01-20
 projects:
   - "[[Open Source CLI Tool]]"
-due: 2025-01-25
 ---
 
 Need comprehensive changelog for v2.0 release. Breaking changes need clear documentation.

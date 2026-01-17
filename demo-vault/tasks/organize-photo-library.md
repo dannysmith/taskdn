@@ -3,7 +3,7 @@ title: Organize photo library
 status: in-progress
 created-at: 2025-01-10
 updated-at: 2025-01-19
-area: "[[House, Family & Friends]]"
+area: "[[Home]]"
 ---
 
 Photos from the last 2 years are a mess. Need to organize and backup properly.

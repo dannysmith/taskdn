@@ -4,7 +4,7 @@ status: done
 created-at: 2024-11-15
 updated-at: 2025-01-05
 completed-at: 2025-01-05
-area: "[[Fitness, Health & Self-Care]]"
+area: "[[Health]]"
 projects:
   - "[[Home Office Setup]]"
 ---

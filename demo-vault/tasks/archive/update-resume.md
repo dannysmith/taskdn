@@ -4,7 +4,7 @@ status: done
 created-at: 2024-10-15
 updated-at: 2024-11-01
 completed-at: 2024-11-01
-area: "[[Marketing and Sales]]"
+area: "[[Marketing]]"
 ---
 
 Updated resume with:

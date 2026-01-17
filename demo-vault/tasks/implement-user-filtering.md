@@ -5,7 +5,6 @@ created-at: 2025-01-10
 updated-at: 2025-01-21
 projects:
   - "[[Acme Dashboard Redesign]]"
-due: 2025-01-24
 ---
 
 Add ability to filter dashboard data by user. This is a key feature request from the operations team. [[Sarah Chen]] flagged this as high priority in last week's sync.

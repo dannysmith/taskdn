@@ -4,7 +4,7 @@ status: done
 created-at: 2024-09-10
 updated-at: 2024-10-15
 completed-at: 2024-10-15
-area: "[[House, Family & Friends]]"
+area: "[[Home]]"
 ---
 
 Finally cleaned out the garage:

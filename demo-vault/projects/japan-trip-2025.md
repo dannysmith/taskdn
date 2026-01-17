@@ -1,5 +1,6 @@
 ---
 title: Japan Trip 2025
+status: in-progress
 area: "[[Travel]]"
 description: Two-week trip to Japan in autumn 2025.
 start-date: 2025-06-01

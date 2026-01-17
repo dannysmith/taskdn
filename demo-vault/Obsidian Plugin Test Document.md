@@ -18,16 +18,17 @@ This document tests all the different ways task widgets can be displayed. Use it
 | `done` | Completed successfully | [[archive/setup-bitwarden]] |
 | `dropped` | Abandoned, will not be completed | [[archive/try-coworking-space]] |
 
-### Project Statuses (6 total)
+### Project Statuses (7 total)
 
 | Status | Description | Example Project |
 |--------|-------------|-----------------|
-| `planning` | Still being scoped or planned | [[Side Hustle App]] |
-| `ready` | Planned and ready to begin | [[Garden Renovation]] |
-| `blocked` | Cannot proceed due to dependency | — |
+| `planning` | Still being scoped or planned | [[Side Hustle App]], [[Custom Mechanical Keyboard Build]] |
+| `ready` | Planned and ready to begin | [[Newsletter Setup]], [[Declutter Storage Unit]] |
+| `blocked` | Cannot proceed due to dependency | [[Garden Renovation]] |
 | `in-progress` | Active work is happening | [[Acme Dashboard Redesign]] |
-| `paused` | Temporarily on hold | — |
+| `paused` | Temporarily on hold | [[Emergency Fund Goal]] |
 | `done` | Completed | [[Holiday Party 2024]] |
+| `dropped` | Abandoned, will not be completed | [[Investment Portfolio Review]] |
 
 ---
 
@@ -35,7 +36,7 @@ This document tests all the different ways task widgets can be displayed. Use it
 
 ### Tasks with Area Only
 
-- [[check-new-coffee-shop]] — area: House, Family & Friends
+- [[check-new-coffee-shop]] — area: Home
 - [[think-summer-travel]] — area: Travel
 - [[backup-laptop]] — area: Coding
 - [[learn-piano]] — area: Learning
@@ -50,36 +51,30 @@ This document tests all the different ways task widgets can be displayed. Use it
 ### Tasks with Both Area and Project
 
 - [[learn-japanese]] — area: Learning, project: Japan Trip 2025
-- [[review-website-analytics]] — area: Marketing & Sales, project: Personal Website Rebuild
+- [[review-website-analytics]] — area: Marketing, project: Personal Website Rebuild
 
 ### Tasks with Due Date
 
-- [[implement-user-filtering]] — due: 2025-01-24
-- [[prep-quarterly-review-slides]] — due: 2025-01-30
-- [[review-insurance-renewal]] — due: 2025-02-15
-- [[plan-valentines-dinner]] — due: 2025-02-14
-- [[write-newsletter-issue-3]] — due: 2025-01-24
+- [[car-mot]] — due: 2025-12-10 (overdue example)
+- [[renew-domain]] — due: 2025-12-20 (overdue example)
+- [[mums-birthday-present]] — due: 2027-04-02 (far future)
+- [[renew-passport]] — due: 2027-09-01 (far future)
 
 ### Tasks with Scheduled Date
 
-- [[backup-laptop]] — scheduled: 2025-01-25
-- [[clean-out-email-inbox]] — scheduled: 2025-01-26
-- [[meal-prep-sunday]] — scheduled: 2025-01-26
-- [[review-website-analytics]] — scheduled: 2025-01-28
+- [[review-investment-allocation]] — scheduled: 2027-02-01
 
 ### Tasks with Defer-Until Date
 
-- [[mums-birthday-present]] — defer-until: 2025-03-15
-- [[buy-birthday-card-for-tom]] — defer-until: 2025-02-03
-- [[review-insurance-renewal]] — defer-until: 2025-02-01
-- [[print-japan-photos]] — defer-until: 2025-11-20
+- [[mums-birthday-present]] — defer-until: 2027-03-15
+- [[book-summer-flights]] — defer-until: 2027-03-01
+- [[renew-passport]] — defer-until: 2027-06-01
+- [[print-japan-photos]] — defer-until: 2027-11-01
 
 ### Tasks with Multiple Date Fields
 
-- [[prep-quarterly-review-slides]] — due + scheduled
-- [[plan-valentines-dinner]] — due + scheduled
 - [[mums-birthday-present]] — due + defer-until
-- [[plan-dinner-with-alex]] — due + scheduled
+- [[renew-passport]] — due + defer-until
 
 ### Tasks with DateTime (not just date)
 
@@ -193,7 +188,7 @@ These are native Obsidian checkboxes with task links inside. Obsidian controls t
 - [[learn-webassembly]] — Icebox for later
 - [[book-recommendation-from-podcast]] — New book to check
 
-### Health & Fitness ([[Fitness, Health & Self-Care]])
+### Health & Fitness ([[Health]])
 
 - [[complete-week-2-runs]] — Marathon training
 - [[order-new-running-shoes]] — Equipment
@@ -214,7 +209,7 @@ These are native Obsidian checkboxes with task links inside. Obsidian controls t
 - [[plan-long-weekend-getaway]] — Inbox item
 - [[print-japan-photos]] — Deferred until after trip
 
-### Home & Family ([[House, Family & Friends]])
+### Home & Family ([[Home]])
 
 - [[mums-birthday-present]] — Deferred gift planning
 - [[buy-birthday-card-for-tom]] — Friend's birthday

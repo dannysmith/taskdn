@@ -3,7 +3,7 @@ title: Update emergency contact info
 status: ready
 created-at: 2025-01-17
 updated-at: 2025-01-17
-area: "[[House, Family & Friends]]"
+area: "[[Home]]"
 ---
 
 Need to update emergency contacts on various accounts after [[Mum]] moved.

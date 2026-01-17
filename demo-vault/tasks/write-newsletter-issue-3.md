@@ -5,7 +5,6 @@ created-at: 2025-01-20
 updated-at: 2025-01-22
 projects:
   - "[[Newsletter Setup]]"
-due: 2025-01-24
 ---
 
 Third issue of the newsletter. Theme: lessons learned from building in public.

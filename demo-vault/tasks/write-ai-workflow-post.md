@@ -5,7 +5,6 @@ created-at: 2025-01-16
 updated-at: 2025-01-21
 projects:
   - "[[Tech Blog Relaunch]]"
-due: 2025-01-31
 ---
 
 First post for the relaunched blog.

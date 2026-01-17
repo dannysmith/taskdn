@@ -1,5 +1,5 @@
 ---
-title: Fitness, Health & Self-Care
+title: Health
 type: life-area
 status: active
 description: Maintaining physical and mental wellbeing.

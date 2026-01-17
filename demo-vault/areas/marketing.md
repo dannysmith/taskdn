@@ -1,5 +1,5 @@
 ---
-title: Marketing and Sales
+title: Marketing
 type: life-area
 status: active
 description: Building visibility, authority, and generating opportunities.

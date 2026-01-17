@@ -1,6 +1,7 @@
 ---
 title: Half Marathon Training
-area: "[[Fitness, Health & Self-Care]]"
+status: in-progress
+area: "[[Health]]"
 description: Train for and complete a half marathon.
 start-date: 2025-01-06
 end-date: 2025-04-20

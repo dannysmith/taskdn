@@ -1,6 +1,7 @@
 ---
 title: Holiday Party 2024
-area: "[[House, Family & Friends]]"
+status: done
+area: "[[Home]]"
 description: Annual holiday party - December 2024.
 start-date: 2024-11-01
 end-date: 2024-12-14

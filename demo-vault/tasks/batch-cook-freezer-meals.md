@@ -3,8 +3,7 @@ title: Batch cook freezer meals
 status: ready
 created-at: 2025-01-19
 updated-at: 2025-01-19
-area: "[[Fitness, Health & Self-Care]]"
-scheduled: 2025-02-02
+area: "[[Health]]"
 ---
 
 Spend a Sunday batch cooking meals to freeze for busy weeks.
