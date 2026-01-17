@@ -7,7 +7,7 @@ message: |
 
   useQueryClient is a React hook - lib/ should remain React-free.
 severity: error
-language: TypeScript
+language: Tsx
 files:
   - 'src/lib/**/*.ts'
   - 'src/lib/**/*.tsx'

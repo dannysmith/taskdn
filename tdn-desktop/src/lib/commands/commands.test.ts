@@ -289,7 +289,7 @@ describe('isTaskCommandAvailable', () => {
   })
 
   afterEach(() => {
-    vi.restoreAllMocks()
+    vi.clearAllMocks()
   })
 
   it('returns true when context menu target is a task', () => {
@@ -438,18 +438,7 @@ describe('getTargetTask', () => {
   })
 
   it('falls back to selected task when context menu target is not a task', () => {
-    const project = {
-      id: 'project-1',
-      path: '/test/projects/project-1.md',
-      title: 'Test Project',
-      status: null,
-      area: null,
-      startDate: null,
-      endDate: null,
-      description: null,
-      blockedBy: null,
-      body: '',
-    }
+    const project = createTestProject({ id: 'project-1' })
     const selectedTask = createTestTask({ id: 'selected-task' })
 
     // Context menu target is a project, not a task

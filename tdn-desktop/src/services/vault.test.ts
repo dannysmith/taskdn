@@ -899,36 +899,6 @@ describe('vault service', () => {
     })
   })
 
-  describe('addTaskToCache', () => {
-    let queryClient: QueryClient
-
-    beforeEach(() => {
-      // We need to test with the actual queryClient
-      // This is a bit tricky since addTaskToCache uses the singleton
-      queryClient = new QueryClient({
-        defaultOptions: {
-          queries: {
-            retry: false,
-            staleTime: Infinity,
-          },
-        },
-      })
-    })
-
-    afterEach(() => {
-      queryClient.clear()
-    })
-
-    it('adds task to empty cache', () => {
-      const task = createTestTask({ id: 'new-task' })
-
-      // Note: addTaskToCache uses the singleton queryClient,
-      // so we can't directly test it here without more setup.
-      // This test documents the expected behavior.
-      expect(task.id).toBe('new-task')
-    })
-  })
-
   describe('initializeVault', () => {
     it('initializes vault with correct parameters', async () => {
       const tauriModule = await import('@/lib/tauri-bindings')
