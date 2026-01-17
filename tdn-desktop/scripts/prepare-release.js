@@ -160,10 +160,10 @@ async function prepareRelease() {
 
       console.log(`\n🎊 Release ${tagVersion} has been published!`)
       console.log(
-        '📱 Check GitHub Actions: https://github.com/YOUR_USERNAME/YOUR_REPO/actions'
+        '📱 Check GitHub Actions: https://github.com/dannysmith/taskdn/actions'
       )
       console.log(
-        '📦 Draft release will appear at: https://github.com/YOUR_USERNAME/YOUR_REPO/releases'
+        '📦 Draft release will appear at: https://github.com/dannysmith/taskdn/releases'
       )
       console.log(
         '\n⚠️  Remember: You need to manually publish the draft release on GitHub!'

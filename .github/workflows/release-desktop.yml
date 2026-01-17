@@ -22,8 +22,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - platform: 'macos-latest'
-            args: '--bundles app,dmg'
+          - platform: 'macos-14'
+            args: '--target universal-apple-darwin --bundles app,dmg'
           - platform: 'windows-latest'
             args: '--bundles msi'
           - platform: 'ubuntu-22.04'
@@ -65,6 +65,12 @@ jobs:
       - name: Install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Install Rust targets for universal binary
+        if: matrix.platform == 'macos-14'
+        run: |
+          rustup target add aarch64-apple-darwin
+          rustup target add x86_64-apple-darwin
+
       - name: Rust cache
         uses: swatinem/rust-cache@v2
         with:
@@ -79,12 +85,34 @@ jobs:
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
 
+      - name: Import Code-Signing Certificates
+        if: matrix.platform == 'macos-14'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Create API Key file
+        if: matrix.platform == 'macos-14'
+        run: |
+          mkdir -p ~/private_keys
+          echo "${{ secrets.APPLE_API_KEY_PATH }}" > ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+          chmod 600 ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+
       - name: Build and release
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.5.22
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CI: true
+          # Tauri updater signing
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          # Apple code signing (macOS only - ignored on other platforms)
+          APPLE_SIGNING_IDENTITY: 'Developer ID Application: Daniel Smith (XT349SJG9U)'
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
+          APPLE_API_KEY_PATH: ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: tdn-desktop
           tagName: ${{ steps.version.outputs.tag }}
@@ -104,4 +132,5 @@ jobs:
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
+          updaterJsonKeepUniversal: true
           args: ${{ matrix.args }}

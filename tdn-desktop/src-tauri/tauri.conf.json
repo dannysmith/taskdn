@@ -54,7 +54,8 @@
     "macOS": {
       "frameworks": [],
       "minimumSystemVersion": "10.15",
-      "signingIdentity": "-",
+      "signingIdentity": null,
+      "hardenedRuntime": true,
       "providerShortName": null,
       "entitlements": null,
       "exceptionDomain": ""
@@ -71,8 +72,8 @@
       "endpoints": [
         "https://github.com/dannysmith/taskdn/releases/latest/download/latest.json"
       ],
-      "dialog": true,
-      "pubkey": "YOUR_UPDATER_PUBLIC_KEY_HERE"
+      "dialog": false,
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUzRTBCRTFEMkU5OTRDMTkKUldRWlRKa3VIYjdnNCsxNFBMd0JLakhLSmVMdHFCQmRCMXg0dmtrN0Z6WW5sN1Z3eloxY01CNXAK"
     }
   }
 }
