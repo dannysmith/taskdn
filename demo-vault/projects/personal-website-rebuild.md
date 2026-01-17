@@ -1,5 +1,6 @@
 ---
 title: Personal Website Rebuild
+status: in-progress
 unique-id: proj-website-2025
 area: "[[Coding]]"
 description: Complete rebuild of personal website using modern stack.

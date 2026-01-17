@@ -1,5 +1,6 @@
 ---
 title: Investment Portfolio Review
+status: dropped
 area: "[[Finance]]"
 description: Comprehensive review and rebalancing of investment portfolio.
 start-date: 2024-11-01

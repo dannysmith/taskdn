@@ -1,5 +1,5 @@
 ---
-title: House, Family & Friends
+title: Home
 type: life-area
 status: active
 description: Home maintenance and nurturing important relationships.

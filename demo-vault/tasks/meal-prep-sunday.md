@@ -3,8 +3,7 @@ title: Meal prep for the week
 status: ready
 created-at: 2025-01-19
 updated-at: 2025-01-19
-area: "[[Fitness, Health & Self-Care]]"
-scheduled: 2025-01-26
+area: "[[Health]]"
 ---
 
 Prep lunches for the week to avoid ordering takeout.

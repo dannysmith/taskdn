@@ -1,5 +1,6 @@
 ---
 title: Open Source CLI Tool
+status: in-progress
 area: "[[Coding]]"
 description: Build and release a useful CLI tool as open source.
 start-date: 2025-01-15

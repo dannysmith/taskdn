@@ -1,6 +1,7 @@
 ---
 title: Garden Renovation
-area: "[[House, Family & Friends]]"
+status: blocked
+area: "[[Home]]"
 description: Renovate the back garden into a usable outdoor space.
 blocked-by:
   - "[[Home Office Setup]]"

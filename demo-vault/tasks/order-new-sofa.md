@@ -3,7 +3,7 @@ title: Order new sofa
 status: blocked
 created-at: 2025-01-05
 updated-at: 2025-01-20
-area: "[[House, Family & Friends]]"
+area: "[[Home]]"
 ---
 
 Found the perfect sofa at [[Made.com]] but waiting on a few things.

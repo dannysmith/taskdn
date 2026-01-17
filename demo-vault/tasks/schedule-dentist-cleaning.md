@@ -3,7 +3,7 @@ title: Schedule dentist cleaning
 status: blocked
 created-at: 2025-01-15
 updated-at: 2025-01-18
-area: "[[Fitness, Health & Self-Care]]"
+area: "[[Health]]"
 ---
 
 Need to book 6-month cleaning appointment.

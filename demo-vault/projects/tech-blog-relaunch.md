@@ -1,5 +1,6 @@
 ---
 title: Tech Blog Relaunch
+status: in-progress
 area: "[[Writing]]"
 description: Relaunch the technical blog with fresh content and improved design.
 start-date: 2025-01-15

@@ -1,5 +1,6 @@
 ---
 title: Learn Rust
+status: in-progress
 area: "[[Learning]]"
 description: Learn Rust programming language through structured study and projects.
 start-date: 2025-01-01

@@ -1,5 +1,6 @@
 ---
 title: Newsletter Setup
+status: ready
 area: "[[Writing]]"
 description: Set up an email newsletter for regular updates.
 ---

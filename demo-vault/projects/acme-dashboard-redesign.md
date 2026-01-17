@@ -1,5 +1,6 @@
 ---
 title: Acme Dashboard Redesign
+status: in-progress
 unique-id: acme-dash-2024
 area: "[[Acme Corp]]"
 description: Complete redesign of the Acme Corp internal dashboard.

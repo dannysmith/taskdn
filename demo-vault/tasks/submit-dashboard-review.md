@@ -5,7 +5,6 @@ created-at: 2025-01-18
 updated-at: 2025-01-21
 projects:
   - "[[Acme Dashboard Redesign]]"
-due: 2025-01-25
 ---
 
 Dashboard implementation is ready for design review, but waiting on final design assets from the Acme design team.

@@ -5,7 +5,7 @@ created-at: 2025-01-18
 updated-at: 2025-01-18
 projects:
   - "[[Investment Portfolio Review]]"
-scheduled: 2025-02-01
+scheduled: 2027-02-01
 ---
 
 Annual review of investment portfolio allocation. Check if rebalancing is needed.

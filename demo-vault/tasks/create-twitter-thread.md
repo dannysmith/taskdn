@@ -3,7 +3,7 @@ title: Create Twitter thread about productivity
 status: in-progress
 created-at: 2025-01-19
 updated-at: 2025-01-20
-area: "[[Marketing and Sales]]"
+area: "[[Marketing]]"
 ---
 
 Writing a thread about my current productivity system. Good content for visibility.

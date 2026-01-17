@@ -5,7 +5,6 @@ created-at: 2025-01-20 10:30:00
 updated-at: 2025-01-20 10:30:00
 projects:
   - "[[Side Hustle App]]"
-defer-until: 2025-01-15
 ---
 
 Survey was sent out last week. Check responses and analyze results to see if the idea has legs.

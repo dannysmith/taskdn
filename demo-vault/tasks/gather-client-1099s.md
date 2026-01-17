@@ -5,7 +5,6 @@ created-at: 2025-01-08
 updated-at: 2025-01-20
 projects:
   - "[[Q1 Tax Preparation]]"
-due: 2025-01-31
 ---
 
 Need to collect 1099s from all clients I invoiced in 2024.

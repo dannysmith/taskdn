@@ -5,8 +5,6 @@ created-at: 2025-01-18
 updated-at: 2025-01-20
 projects:
   - "[[Acme Dashboard Redesign]]"
-due: 2025-01-30
-scheduled: 2025-01-27
 ---
 
 Need to present progress on dashboard redesign to [[Sarah Chen]] and the leadership team.

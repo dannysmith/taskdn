@@ -3,7 +3,7 @@ title: Update LinkedIn profile
 status: ready
 created-at: 2025-01-08
 updated-at: 2025-01-15
-area: "[[Marketing and Sales]]"
+area: "[[Marketing]]"
 ---
 
 Profile is outdated. Need to update:

@@ -1,6 +1,7 @@
 ---
 title: Home Office Setup
-area: "[[House, Family & Friends]]"
+status: in-progress
+area: "[[Home]]"
 description: Create a proper dedicated workspace at home.
 start-date: 2025-01-10
 ---

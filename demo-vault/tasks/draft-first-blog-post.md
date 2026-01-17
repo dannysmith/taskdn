@@ -5,7 +5,6 @@ created-at: 2025-01-16
 updated-at: 2025-01-20
 projects:
   - "[[Tech Blog Relaunch]]"
-due: 2025-01-31
 ---
 
 Write the first post for the relaunched blog. Topic: "How I'm Using AI Tools in My Workflow"

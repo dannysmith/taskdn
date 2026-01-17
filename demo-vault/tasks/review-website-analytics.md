@@ -5,8 +5,7 @@ created-at: 2025-01-14
 updated-at: 2025-01-18
 projects:
   - "[[Personal Website Rebuild]]"
-area: "[[Marketing & Sales]]"
-scheduled: 2025-01-28
+area: "[[Marketing]]"
 ---
 
 Check how the new site is performing. Set up proper analytics dashboard.

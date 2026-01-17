@@ -5,7 +5,6 @@ created-at: 2025-01-12
 updated-at: 2025-01-18
 projects:
   - "[[Acme Dashboard Redesign]]"
-due: 2025-01-28
 priority: 2
 ---
 

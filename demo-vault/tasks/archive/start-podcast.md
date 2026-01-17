@@ -4,7 +4,7 @@ status: dropped
 created-at: 2024-08-05
 updated-at: 2024-12-15
 completed-at: 2024-12-15
-area: "[[Marketing & Sales]]"
+area: "[[Marketing]]"
 ---
 
 Considered starting a podcast about indie development.
