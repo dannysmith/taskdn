@@ -85,7 +85,7 @@ Table showing various fields and their visual representation (eg defer-until, du
 - Scheduled - Little calendar icon
 - Any others?
 
-## 4. `developer/brand.md`
+## 4. `developer/brand.md` [✅ DONE]
 
 The taskdn colour palette, design aesthetic, reference to the icons in `images/` etc. We should be able to keep this one relatively simple. The intent of this document is simply to provide a place for us to keep the design reference, basically. Again, this document should point out that different products will potentially have more detailed or granular guidelines on this. 
 
