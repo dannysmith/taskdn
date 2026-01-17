@@ -6,20 +6,47 @@ This is a **monorepo root**. After initial work on a new product, most work sess
 
 ## Documentation
 
-All top level documentation lives in `docs/`.
+All top-level documentation lives in `docs/`. See @docs/README.md for a complete index.
 
-- `docs/overview.md` - General Overview of the Project, Goals, Products, Principles etc.
-- `docs/tasks-todo` - See @docs/tasks.md.
-- `docs/developer` - Technical documentation common to all products.
+### When Starting a Session
 
-  `docs/tasks-done` - Completed tasks. Old documents which may be useful to reference. Do not reference these without asking the user as they'll be out of date.
+- `docs/overview.md` — Project background, goals, and file format summary
+- `docs/products.md` — Index of all products with tech stacks and links
 
+### When Making Product Decisions
 
-### Detailed Developer Docs
+- `docs/product-principles.md` — Core principles guiding product design
 
-Most of the product sub-directories will have their own `tdn-<name>/docs/` with their own `developer/`, `tasks-todo/` etc. Developer-facing documentation about **internal** design patterns, implementation details etc should generally go there. If in doubt, ask the user.
+### When Doing Visual/Design Work
+
+- `docs/developer/semantics-and-visual-design.md` — Entity styling, colors, icons, status treatments
+- `docs/developer/brand.md` — Brand aesthetic and visual identity
+
+### When Working on Releases
+
+- `docs/developer/releases-and-versioning.md` — Versioning strategy
+
+### For Monorepo Structure
+
+- `docs/monorepo-architecture.md` — How the codebase is organized
+
+### For Development Task Tracking
+
+- @docs/tasks.md — How dev tasks work (NOT Taskdn tasks)
+- `docs/tasks-todo/` — Active tasks
+- `docs/tasks-done/` — Completed tasks (may be out of date)
+
+### User-Facing Documentation
+
+The canonical user-facing documentation for all products lives in `website/src/content/docs/`. This is often the best place to understand how features work from a user's perspective.
+
+### Product-Specific Developer Docs
+
+Most product sub-directories have their own `tdn-<name>/docs/` with `developer/`, `tasks-todo/` etc. Internal design patterns and implementation details go there. If in doubt, ask the user.
 
 ## Product Sub-directories
+
+See `docs/products.md` for detailed descriptions of each product.
 
 | Directory              | What it is                        | Language/Stack        | Documentation                                                                        |
 | ---------------------- | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------ |

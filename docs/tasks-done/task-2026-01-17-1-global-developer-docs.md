@@ -103,7 +103,7 @@ Update `docs/README.md` to includeonly an intro sentance and a table containing 
 
 Remove this entirely and all references to it everywhere in the codebase. Before we do that we should check that there is no incredibly important information in here that we want to retain. These documents were originally written uh before we built these products and now we've built the products and we have the website documentation and their internal documentation. Much of what is in these is no longer necessary and we can clean this up a little bit by removing these.
 
-## 8. Simplify `overview.md` 
+## 8. Simplify `overview.md` [✅ DONE]
 
 Make this into a simple document which I can point an AI at and it will get a full understanding of the entire suite without using loads of tokens in the context window. Should probably include:
 
@@ -112,10 +112,10 @@ Make this into a simple document which I can point an AI at and it will get a fu
 
 Doing this will allow us to slim down the top level `AGENTS.md` significantly, reducing duplication.
 
-## 9. `docs/tasks.md`
+## 9. `docs/tasks.md` [✅ DONE]
 
 Update `docs/tasks.md` to include a note on task management within sub projects and also to differentiate the whole task thing that we currently have in AGENTS.md Which is there to avoid confusion re "dev tasks" and "tasks the part of the product". This should definitely be sourced with `@docs/tasks.md` in the top-level AGENTS.md. We may also be able to take this opportunity to remove or simplify some of the `docs/tasks.md` files which exist in the sub project directories. 
 
-## 10. `AGENTS.md`
+## 10. `AGENTS.md` [✅ DONE]
 
 Update global AGENTS.md to be better and accurate now the suite is almost done. Include pointer to `website/src/content/docs/` as a good place to read docs and descriptions of how all this stuff works. include mentions and links to many of the documents above, being extremely clear about when to look at these each of these documents. And also generally tweak rules/guidance etc.
