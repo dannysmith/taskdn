@@ -192,7 +192,7 @@ This serves no purpose and should be deleted.
 
 # Implementation Plan
 
-## Phase 1: Quick Cleanup
+## Phase 1: Quick Cleanup [✅ DONE]
 
 **Goal:** Remove noise and improve existing tests
 
@@ -206,7 +206,7 @@ This serves no purpose and should be deleted.
 
 ---
 
-## Phase 2: Rust Command Tests - Vault CRUD
+## Phase 2: Rust Command Tests - Vault CRUD [✅ DONE]
 
 **Goal:** Test the most critical command module (`commands/vault.rs`)
 
@@ -227,7 +227,7 @@ This module exposes 16 Tauri commands that handle all entity CRUD operations. Wh
 
 ---
 
-## Phase 3: Rust Command Tests - Persistence
+## Phase 3: Rust Command Tests - Persistence [✅ DONE]
 
 **Goal:** Test user data persistence commands (`commands/preferences.rs`, `commands/recovery.rs`)
 
