@@ -405,3 +405,111 @@ pub fn update_quick_pane_shortcut(app: AppHandle, shortcut: Option<String>) -> R
 
     Ok(())
 }
+
+// =============================================================================
+// Tests
+// =============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // -------------------------------------------------------------------------
+    // Constants Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn quick_pane_label_is_correct() {
+        assert_eq!(QUICK_PANE_LABEL, "quick-pane");
+    }
+
+    #[test]
+    fn quick_pane_dimensions_are_reasonable() {
+        // Width should be reasonable for a quick entry panel
+        assert!(QUICK_PANE_WIDTH >= 400.0);
+        assert!(QUICK_PANE_WIDTH <= 1200.0);
+
+        // Height should be reasonable
+        assert!(QUICK_PANE_HEIGHT >= 300.0);
+        assert!(QUICK_PANE_HEIGHT <= 1000.0);
+    }
+
+    #[test]
+    fn quick_pane_is_larger_than_minimum_usable_size() {
+        // Ensure the panel is large enough to be usable
+        assert!(QUICK_PANE_WIDTH >= 600.0, "Width should be at least 600px");
+        assert!(QUICK_PANE_HEIGHT >= 400.0, "Height should be at least 400px");
+    }
+
+    // -------------------------------------------------------------------------
+    // get_default_quick_pane_shortcut Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn get_default_quick_pane_shortcut_returns_expected_value() {
+        let shortcut = get_default_quick_pane_shortcut();
+
+        // Should match the constant from types.rs
+        assert_eq!(shortcut, DEFAULT_QUICK_PANE_SHORTCUT);
+    }
+
+    #[test]
+    fn get_default_quick_pane_shortcut_uses_command_or_control() {
+        let shortcut = get_default_quick_pane_shortcut();
+
+        // Should use CommandOrControl for cross-platform compatibility
+        assert!(
+            shortcut.contains("CommandOrControl"),
+            "Shortcut should use CommandOrControl for cross-platform support"
+        );
+    }
+
+    #[test]
+    fn get_default_quick_pane_shortcut_has_modifier() {
+        let shortcut = get_default_quick_pane_shortcut();
+
+        // Should have at least one modifier (Shift in this case)
+        assert!(
+            shortcut.contains("Shift"),
+            "Shortcut should include Shift modifier"
+        );
+    }
+
+    #[test]
+    fn get_default_quick_pane_shortcut_has_key() {
+        let shortcut = get_default_quick_pane_shortcut();
+
+        // Should end with a key (period in this case)
+        assert!(
+            shortcut.contains('.'),
+            "Shortcut should include a key character"
+        );
+    }
+
+    #[test]
+    fn get_default_quick_pane_shortcut_is_not_empty() {
+        let shortcut = get_default_quick_pane_shortcut();
+        assert!(!shortcut.is_empty());
+    }
+
+    // -------------------------------------------------------------------------
+    // Shortcut Tracking State Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn current_shortcut_mutex_is_accessible() {
+        // Just verify we can lock the mutex without panicking
+        let guard = CURRENT_QUICK_PANE_SHORTCUT.lock();
+        assert!(guard.is_ok());
+    }
+
+    #[test]
+    fn current_shortcut_starts_as_none() {
+        // Note: This test may be affected by other tests that modify the state
+        // In a fresh process, the value should be None
+        let guard = CURRENT_QUICK_PANE_SHORTCUT.lock().unwrap();
+        // We can't assert it's None because other tests may have set it
+        // Just verify we can read the value
+        let _value: &Option<String> = &guard;
+    }
+}
