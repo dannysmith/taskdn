@@ -17,9 +17,8 @@ This app uses [react-i18next](https://react.i18next.com/) for internationalizati
 
 ```
 /locales/
-├── en.json              # English (default)
-├── ar.json              # Arabic (RTL example)
-└── [lang].json          # Additional languages
+├── en.json              # English (default, currently the only language)
+└── [lang].json          # Additional languages (add as needed)
 
 /src/i18n/
 ├── config.ts            # i18next configuration

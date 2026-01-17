@@ -159,7 +159,16 @@ See [quick-panes.md](./quick-panes.md) for a complete implementation example.
 
 Tauri v2 uses a permission-based capabilities system. Each window only gets the permissions it needs.
 
-**Location:** `src-tauri/capabilities/default.json`
+**Location:** `src-tauri/capabilities/`
+
+```
+capabilities/
+├── default.json    # Main window permissions
+├── desktop.json    # Desktop-specific permissions
+└── quick-pane.json # Quick pane window permissions
+```
+
+**Example capability:**
 
 ```json
 {
