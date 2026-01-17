@@ -22,7 +22,7 @@ views:
       - area
       - start-date
     sort:
-      - property: note.start-date
+      - property: start-date
         direction: DESC
   - type: table
     name: Active
@@ -33,7 +33,7 @@ views:
       - file.name
       - area
     sort:
-      - property: note.area
+      - property: area
         direction: ASC
       - property: file.name
         direction: ASC
