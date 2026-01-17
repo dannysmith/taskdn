@@ -1,0 +1,148 @@
+---
+interface Props {
+  href: string
+  variant?: 'primary' | 'secondary' | 'outline'
+  showArrow?: boolean
+}
+
+const { href, variant = 'primary', showArrow = false, ...attrs } = Astro.props
+
+const hasIcon = Astro.slots.has('icon')
+const hasSubtext = Astro.slots.has('subtext')
+---
+
+<a
+  href={href}
+  class:list={['btn', variant, { 'has-subtext': hasSubtext }]}
+  {...attrs}
+>
+  {
+    hasIcon && (
+      <span class="btn-icon">
+        <slot name="icon" />
+      </span>
+    )
+  }
+  <span class="btn-content">
+    <span class="btn-label"><slot /></span>
+    {
+      hasSubtext && (
+        <span class="btn-subtext">
+          <slot name="subtext" />
+        </span>
+      )
+    }
+  </span>
+  {
+    showArrow && (
+      <svg
+        class="btn-arrow"
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M5 12h14" />
+        <path d="m12 5 7 7-7 7" />
+      </svg>
+    )
+  }
+</a>
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    font-size: 0.9375rem;
+    text-decoration: none;
+    transition: all 0.15s ease;
+  }
+
+  .btn:hover {
+    text-decoration: none;
+  }
+
+  /* Primary variant */
+  .btn.primary {
+    background: var(--color-accent);
+    color: white;
+  }
+
+  .btn.primary:hover {
+    background: var(--color-accent-hover);
+  }
+
+  /* Secondary variant */
+  .btn.secondary {
+    background: var(--color-bg-2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  .btn.secondary:hover {
+    background: var(--color-bg);
+    border-color: var(--color-text-muted);
+  }
+
+  /* Outline variant */
+  .btn.outline {
+    background: var(--color-bg-2);
+    color: var(--color-text);
+    border: 1px solid var(--color-border);
+  }
+
+  .btn.outline:hover {
+    background: var(--color-bg);
+    border-color: var(--color-text-muted);
+  }
+
+  /* Icon */
+  .btn-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .btn-icon :global(svg) {
+    width: 1.125rem;
+    height: 1.125rem;
+  }
+
+  /* Content with optional subtext */
+  .btn-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    line-height: 1.2;
+  }
+
+  .btn.has-subtext .btn-content {
+    text-align: left;
+  }
+
+  .btn-subtext {
+    font-size: 0.6875rem;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  /* Arrow */
+  .btn-arrow {
+    flex-shrink: 0;
+    transition: transform 0.15s ease;
+  }
+
+  .btn:hover .btn-arrow {
+    transform: translateX(3px);
+  }
+</style>
