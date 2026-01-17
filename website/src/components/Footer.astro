@@ -14,15 +14,15 @@ import Default from '@astrojs/starlight/components/Footer.astro'
     text-align: center;
     font-size: var(--sl-text-2xs);
     color: var(--sl-color-gray-3);
-  }
 
-  .sl-footer-links a {
-    color: var(--sl-color-gray-3);
-    text-decoration: none;
-  }
+    a {
+      color: var(--sl-color-gray-3);
+      text-decoration: none;
 
-  .sl-footer-links a:hover {
-    color: var(--sl-color-white);
-    text-decoration: underline;
+      &:hover {
+        color: var(--sl-color-white);
+        text-decoration: underline;
+      }
+    }
   }
 </style>

@@ -76,76 +76,54 @@ const { title, variant = 'terminal' } = Astro.props
     line-height: 1.5;
   }
 
-  /* Terminal variant - dark mode (darker, more contrast) */
+  /*
+   * Terminal variant
+   * Content stays dark in both modes; chrome adapts via light-dark()
+   * Exposes color variables for child demo components to inherit
+   */
   .window-terminal {
-    background: #1c1b1a;
-  }
+    /* Terminal palette - available to child components */
+    --terminal-text: #cecdc3;
+    --terminal-muted: #878580;
+    --terminal-blue: #4385be;
+    --terminal-green: #879a39;
+    --terminal-yellow: #d0a215;
 
-  .window-terminal .window-titlebar {
-    background: #100f0f;
-    border-bottom: 1px solid #403e3c;
-  }
+    background: light-dark(#f2f0e5, #1c1b1a);
 
-  .window-terminal .window-title {
-    color: #878580;
-  }
-
-  .window-terminal .window-content {
-    background: #100f0f;
-    color: #cecdc3;
-  }
-
-  /* Terminal in light mode - light chrome, softer dark content */
-  @media (prefers-color-scheme: light) {
-    .window-terminal {
-      background: #f2f0e5;
+    .window-titlebar {
+      background: light-dark(#e6e4d9, #100f0f);
+      border-bottom: 1px solid light-dark(#d9d7cc, #403e3c);
     }
 
-    .window-terminal .window-titlebar {
-      background: #e6e4d9;
-      border-bottom: 1px solid #d9d7cc;
+    .window-title {
+      color: light-dark(#6f6e69, #878580);
     }
 
-    .window-terminal .window-title {
-      color: #6f6e69;
-    }
-
-    .window-terminal .window-content {
-      background: #343331;
-      color: #cecdc3;
+    /* Content always dark, slightly softer in light mode */
+    .window-content {
+      background: light-dark(#343331, #100f0f);
+      color: var(--terminal-text);
     }
   }
 
-  /* Editor variant - adapts to theme */
+  /*
+   * Editor variant - fully adapts to theme via light-dark()
+   */
   .window-editor {
-    background: var(--color-bg-2);
-  }
+    background: light-dark(#f2f0e5, var(--color-bg-2));
 
-  .window-editor .window-titlebar {
-    background: var(--color-bg);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .window-editor .window-title {
-    color: var(--color-text-muted);
-  }
-
-  .window-editor .window-content {
-    background: var(--color-bg);
-  }
-
-  /* Light mode: editor gets light background */
-  @media (prefers-color-scheme: light) {
-    .window-editor {
-      background: #f2f0e5;
+    .window-titlebar {
+      background: light-dark(#e6e4d9, var(--color-bg));
+      border-bottom: 1px solid var(--color-border);
     }
 
-    .window-editor .window-titlebar {
-      background: #e6e4d9;
+    .window-title {
+      color: var(--color-text-muted);
     }
 
-    .window-editor .window-content {
-      background: #fffcf0;
+    .window-content {
+      background: light-dark(#fffcf0, var(--color-bg));
     }
   }
 

@@ -13,7 +13,7 @@ const hasSubtext = Astro.slots.has('subtext')
 
 <a
   href={href}
-  class:list={['btn', variant, { 'has-subtext': hasSubtext }]}
+  class:list={['btn', variant, { 'has-subtext': hasSubtext, 'has-arrow': showArrow }]}
   {...attrs}
 >
   {
@@ -65,69 +65,65 @@ const hasSubtext = Astro.slots.has('subtext')
     font-weight: 500;
     font-size: 0.9375rem;
     text-decoration: none;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      text-decoration: none;
+    }
+
+    /* Primary variant */
+    &.primary {
+      background: var(--color-accent);
+      color: white;
+
+      &:hover {
+        background: var(--color-accent-hover);
+      }
+    }
+
+    /* Secondary/Outline variant - same visual treatment */
+    &.secondary,
+    &.outline {
+      background: var(--color-bg-2);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+
+      &:hover {
+        background: var(--color-bg);
+        border-color: var(--color-text-muted);
+      }
+    }
+
+    &.has-subtext .btn-content {
+      text-align: left;
+    }
+
+    /* Optical compensation: arrow adds visual weight on right, balance with left padding */
+    &.has-arrow {
+      padding-left: 1.75rem;
+    }
+
+    &:hover .btn-arrow {
+      transform: translateX(3px);
+    }
   }
 
-  .btn:hover {
-    text-decoration: none;
-  }
-
-  /* Primary variant */
-  .btn.primary {
-    background: var(--color-accent);
-    color: white;
-  }
-
-  .btn.primary:hover {
-    background: var(--color-accent-hover);
-  }
-
-  /* Secondary variant */
-  .btn.secondary {
-    background: var(--color-bg-2);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-  }
-
-  .btn.secondary:hover {
-    background: var(--color-bg);
-    border-color: var(--color-text-muted);
-  }
-
-  /* Outline variant */
-  .btn.outline {
-    background: var(--color-bg-2);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-  }
-
-  .btn.outline:hover {
-    background: var(--color-bg);
-    border-color: var(--color-text-muted);
-  }
-
-  /* Icon */
   .btn-icon {
     display: flex;
     align-items: center;
     flex-shrink: 0;
+
+    :global(svg) {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
   }
 
-  .btn-icon :global(svg) {
-    width: 1.125rem;
-    height: 1.125rem;
-  }
-
-  /* Content with optional subtext */
   .btn-content {
     display: flex;
     flex-direction: column;
     gap: 0.125rem;
     line-height: 1.2;
-  }
-
-  .btn.has-subtext .btn-content {
-    text-align: left;
   }
 
   .btn-subtext {
@@ -136,13 +132,8 @@ const hasSubtext = Astro.slots.has('subtext')
     opacity: 0.7;
   }
 
-  /* Arrow */
   .btn-arrow {
     flex-shrink: 0;
     transition: transform 0.15s ease;
-  }
-
-  .btn:hover .btn-arrow {
-    transform: translateX(3px);
   }
 </style>
