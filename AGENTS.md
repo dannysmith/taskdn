@@ -21,13 +21,16 @@ Most of the product sub-directories will have their own `tdn-<name>/docs/` with 
 
 ## Product Sub-directories
 
-| Directory      | What it is            | Language/Stack        | High-level docs                  |
-| -------------- | --------------------- | --------------------- | -------------------------------- |
-| `tdn-cli/`     | CLI tool              | TypeScript/Bun + Rust | `docs/product-overviews/cli`     |
-| `tdn-desktop/` | Desktop app           | Tauri v2 & React      | `docs/product-overviews/desktop` |
-| `website/`     | Docs & marketing site | Astro/Starlight       | —                                |
+| Directory              | What it is                        | Language/Stack        | Documentation                                                                        |
+| ---------------------- | --------------------------------- | --------------------- | ------------------------------------------------------------------------------------ |
+| `tdn-cli/`             | CLI tool                          | TypeScript/Bun + Rust | [tdn-cli/README.md](tdn-cli/README.md), [Website: CLI](https://tdn.danny.is/cli)     |
+| `tdn-desktop/`         | Desktop app                       | Tauri v2 & React      | [tdn-desktop/README.md](tdn-desktop/README.md), [Website: Desktop](https://tdn.danny.is/desktop) |
+| `tdn-claude-plugin/`   | Claude Code plugin                | Markdown (skills)     | [tdn-claude-plugin/README.md](tdn-claude-plugin/README.md)                           |
+| `tdn-obsidian-plugin/` | Obsidian plugin (external repo)   | —                     | [obsidian-taskdn](https://github.com/dannysmith/obsidian-taskdn)                     |
+| `tdn-specs/`           | Protocol specifications           | Markdown              | [tdn-specs/S1-core.md](tdn-specs/S1-core.md)                                         |
+| `website/`             | Docs & marketing site             | Astro/Starlight       | [https://tdn.danny.is](https://tdn.danny.is)                                         |
 
-**Note:** The CLI contains an embedded Rust core library (via NAPI-RS). When the desktop app is ready, this core MAY be extracted to a shared workspace crate. See `docs/product-overviews/cli/cli-tech.md` for details.
+**Note:** The CLI contains an embedded Rust core library (via NAPI-RS). See `tdn-cli/docs/developer/architecture-guide.md` for details.
 
 ## Important: "Tasks" in This Project
 

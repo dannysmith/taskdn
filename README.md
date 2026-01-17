@@ -73,9 +73,7 @@ taskdn/
 ├── demo-vault/          # Sample vault for testing
 ├── docs/                # Project-wide documentation
 │   ├── archive/         # Old docs for reference
-│   ├── product-overviews/
-│   │   ├── cli/         # CLI requirements & tech docs
-│   │   └── desktop/     # Desktop app requirements & tech docs
+│   ├── developer/       # Developer guides common to all products
 │   ├── tasks-done/      # Completed development tasks
 │   └── tasks-todo/      # Active development tasks
 ├── tdn-cli/             # CLI tool (TypeScript/Bun + Rust)

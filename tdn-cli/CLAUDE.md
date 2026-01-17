@@ -2,8 +2,6 @@
 
 See the parent `../CLAUDE.md` for general project instructions.
 
-High-level documentation (requirements, technical overview) lives in `../docs/product-overviews/cli/`.
-
 ## Overview
 
 This is the CLI tool for Taskdn - a hybrid TypeScript + Rust project:

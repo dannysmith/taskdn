@@ -2,7 +2,7 @@
 
 Task management CLI for humans and AI agents.
 
-Part of the [Taskdn](../) monorepo. See `../docs/product-overviews/cli/` for high-level requirements and technical overview.
+Part of the [Taskdn](../) monorepo. See the [CLI documentation](https://tdn.danny.is/cli/overview) for usage guides.
 
 ## What Is This?
 
@@ -242,12 +242,6 @@ tdn complete fish > ~/.config/fish/completions/tdn.fish
 - [VaultSession Pattern](docs/developer/vault-session-pattern.md) - Index caching & performance
 - [Testing Guide](docs/developer/testing.md) - E2E-first testing strategy
 - [AI Context](docs/developer/ai-context.md) - AI mode output specification
-
-### Product Docs
-
-High-level requirements and technical overview in the monorepo:
-- `../docs/product-overviews/cli/cli-requirements.md`
-- `../docs/product-overviews/cli/cli-tech.md`
 
 ## Testing
 

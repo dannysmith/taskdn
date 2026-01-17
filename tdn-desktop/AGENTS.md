@@ -4,8 +4,6 @@
 
 This is part of the [Taskdn monorepo](../docs/overview.md). See the parent `../CLAUDE.md` for general project instructions.
 
-High-level documentation (requirements, technical overview) lives in `../docs/product-overviews/desktop/`.
-
 ## Overview
 
 Taskdn Desktop is a desktop application for managing [S1-compliant](../tdn-specs/S1-core.md) task systems, built with Tauri v2 and React 19.
