@@ -11,6 +11,229 @@ bun run test:run       # TypeScript tests (single run)
 bun run rust:test      # Rust tests
 ```
 
+## Testing Philosophy
+
+### Why 30% Coverage Thresholds?
+
+Our coverage thresholds are intentionally set low (30% lines/functions, 15% branches) because **coverage percentage is a poor proxy for test quality**. Here's what we actually measure:
+
+| Layer | Target Coverage | Rationale |
+|-------|-----------------|-----------|
+| **Stores** (Zustand) | 90%+ | Core state logic, must be bulletproof |
+| **Hooks** (ordering, data) | 80%+ | Business logic that drives the UI |
+| **Utilities** (date, wikilink) | 90%+ | Pure functions, easy to test exhaustively |
+| **Commands** | 70%+ | Application orchestration layer |
+| **Components** | Smoke tests only | Visual testing is expensive, returns diminish quickly |
+
+The 30% threshold exists to catch accidental removal of test files, not to enforce minimum coverage.
+
+### Test Logic, Smoke-Test UI
+
+**Core principle:** Thoroughly test business logic; minimally test UI rendering.
+
+**Why this works for desktop apps:**
+- React components are largely composition of well-tested primitives (shadcn/ui)
+- Visual regressions are caught during development, not CI
+- UI tests are brittle (break on style changes) and slow
+- Business logic bugs cause data loss; UI bugs cause inconvenience
+
+**What to test thoroughly:**
+- State transitions (navigation store, display order store)
+- Data transformations (vault helpers, ordering hooks)
+- Error handling (vault error formatting, recovery)
+- Platform-specific behavior (keyboard shortcuts, date formatting)
+
+**What to smoke-test:**
+- Components render without crashing
+- Critical user flows (app loads, sidebar toggles)
+- Accessibility basics (headings exist, buttons are clickable)
+
+### Tauri-Specific Considerations
+
+Testing Tauri apps requires understanding the Rust↔TypeScript boundary:
+
+1. **Command handlers (Rust)**: Test the actual logic, not the IPC wrapper
+2. **Command callers (TypeScript)**: Mock the Tauri bindings, test orchestration
+3. **Event listeners**: Test handler logic separately from event setup
+4. **Platform APIs**: Always mock (`@tauri-apps/plugin-*`), never call real APIs
+
+The test environment runs in Node.js/jsdom, not a real Tauri window. Any code that touches `window.__TAURI__` must be mocked.
+
+## What to Test for New Features
+
+### Adding a New Tauri Command
+
+1. **Rust side** (`src-tauri/src/commands/*.rs`):
+   - Test core logic in the module's `#[cfg(test)]` block
+   - Use `tempfile` for file operations
+   - Test error cases (invalid input, missing files)
+
+2. **TypeScript side**:
+   - Add mock to `src/test/setup.ts`
+   - Test mutation hooks if using TanStack Query
+   - Test any helper functions that transform the response
+
+### Adding a New Store
+
+```typescript
+// store/my-store.test.ts
+import { useMyStore } from './my-store'
+
+beforeEach(() => {
+  useMyStore.setState(useMyStore.getInitialState())
+})
+
+describe('MyStore', () => {
+  it('starts with correct initial state', () => {
+    expect(useMyStore.getState().someValue).toBe(defaultValue)
+  })
+
+  it('updates state correctly', () => {
+    const { someAction } = useMyStore.getState()
+    someAction(newValue)
+    expect(useMyStore.getState().someValue).toBe(newValue)
+  })
+})
+```
+
+### Adding a New Hook
+
+Focus on the logic, not the React wrapper:
+
+```typescript
+// hooks/use-my-hook.test.ts
+import { renderHook, act } from '@testing-library/react'
+import { useMyHook } from './use-my-hook'
+
+it('computes derived value correctly', () => {
+  const { result } = renderHook(() => useMyHook(inputData))
+  expect(result.current.derivedValue).toBe(expectedValue)
+})
+```
+
+### Adding a New Command (App Command System)
+
+```typescript
+// Test in lib/commands/commands.test.ts
+describe('my-new-command', () => {
+  it('executes the expected action', async () => {
+    const mockContext = createMockContext()
+    // Setup mocks for dependencies
+
+    const result = await executeCommand('my-new-command', mockContext)
+
+    expect(result.success).toBe(true)
+    expect(mockContext.someAction).toHaveBeenCalled()
+  })
+
+  it('is available when conditions are met', () => {
+    const mockContext = createMockContext()
+    // Setup conditions
+
+    const commands = getAllCommands(mockContext)
+    const cmd = commands.find(c => c.id === 'my-new-command')
+
+    expect(cmd).toBeDefined()
+  })
+})
+```
+
+## Good Test Patterns
+
+### Pattern: Comprehensive Edge Case Coverage
+
+From `src/lib/date-utils.test.ts`:
+
+```typescript
+describe('getWeekNumber', () => {
+  it('handles year boundary correctly', () => {
+    // Dec 31, 2024 is in week 1 of 2025
+    expect(getWeekNumber(new Date(2024, 11, 31))).toBe(1)
+  })
+
+  it('handles leap years', () => {
+    expect(getWeekNumber(new Date(2024, 1, 29))).toBe(9)
+  })
+
+  it('handles invalid dates', () => {
+    expect(getWeekNumber(new Date('invalid'))).toBeNaN()
+  })
+})
+```
+
+### Pattern: State Machine Testing
+
+From `src/store/navigation-store.test.ts`:
+
+```typescript
+describe('navigation history', () => {
+  it('maintains history stack on navigation', () => {
+    const { navigateToView, goBack, canGoBack } = useNavigationStore.getState()
+
+    navigateToView('today')
+    navigateToView('inbox')
+
+    expect(canGoBack()).toBe(true)
+
+    goBack()
+
+    expect(useNavigationStore.getState().currentView).toBe('today')
+  })
+
+  it('clears forward history on new navigation', () => {
+    // Navigate: A -> B -> C, go back to B, navigate to D
+    // Forward history (C) should be cleared
+  })
+})
+```
+
+### Pattern: Mock Context for Commands
+
+From `src/lib/commands/commands.test.ts`:
+
+```typescript
+const createMockContext = (): CommandContext => ({
+  openPreferences: vi.fn(),
+  isObsidianEnabled: vi.fn(() => false),
+  showToast: vi.fn(),
+  navigateToView: vi.fn(),
+  // ... all context methods mocked
+  getContextMenuTarget: vi.fn(() => null),
+  selectedTaskId: null,
+})
+```
+
+### Pattern: Testing Availability Conditions
+
+```typescript
+it('command is only available when task is selected', () => {
+  const context = createMockContext()
+
+  // Not available without selection
+  context.selectedTaskId = null
+  expect(isTaskCommandAvailable(context)).toBe(false)
+
+  // Available with selection
+  context.selectedTaskId = 'task-123'
+  expect(isTaskCommandAvailable(context)).toBe(true)
+})
+```
+
+### Pattern: jsdom Workarounds
+
+jsdom doesn't implement everything. Document workarounds:
+
+```typescript
+// jsdom doesn't implement isContentEditable properly
+// See: https://github.com/jsdom/jsdom/issues/1670
+const div = document.createElement('div')
+div.contentEditable = 'true'
+Object.defineProperty(div, 'isContentEditable', {
+  value: true,
+  configurable: true,
+})
+```
+
 ## TypeScript Testing
 
 Uses **Vitest** + **@testing-library/react**. Configuration in `vitest.config.ts`.
