@@ -63,6 +63,8 @@ bun run ast:fix     # Auto-fix where possible
 - No Zustand destructuring (causes render cascades)
 - Hooks must be in `hooks/` directory
 - No store subscriptions in `lib/`
+- No `useQueryClient()` hook in `lib/` (use singleton import instead)
+- No raw `invoke()` calls (use type-safe `commands` from tauri-bindings)
 
 See [writing-ast-grep-rules.md](./writing-ast-grep-rules.md) for creating new rules.
 

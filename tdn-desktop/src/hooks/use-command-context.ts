@@ -27,7 +27,7 @@ export const commandContext: CommandContext = {
     const prefs = queryClient.getQueryData<AppPreferences>(
       preferencesQueryKeys.preferences()
     )
-    return prefs?.show_obsidian_features === true
+    return prefs?.showObsidianFeatures === true
   },
 
   // Notifications
@@ -136,7 +136,7 @@ export const commandContext: CommandContext = {
     const prefs = queryClient.getQueryData<AppPreferences>(
       preferencesQueryKeys.preferences()
     )
-    return prefs?.permanent_delete_tasks === true
+    return prefs?.permanentDeleteTasks === true
   },
 
   // Context menu target management
@@ -147,8 +147,18 @@ export const commandContext: CommandContext = {
 }
 
 /**
- * Command context hook - provides essential actions for commands.
- * Returns a stable reference to avoid unnecessary re-renders.
+ * Returns the command context singleton for use in React components.
+ *
+ * NOTE: This is a stable-reference hook that always returns the same object.
+ * It does NOT cause re-renders when underlying values change - use for
+ * imperative operations only (commands, menu handlers, keyboard shortcuts).
+ *
+ * For reactive access to specific values, use the underlying stores directly:
+ * - Navigation: `useNavigationStore(state => state.selection)`
+ * - UI: `useUIStore(state => state.commandPaletteOpen)`
+ * - Tasks: `useTaskDetailStore(state => state.openTaskId)`
+ *
+ * For non-React contexts (menu handlers, etc.), import `commandContext` directly.
  */
 export function useCommandContext(): CommandContext {
   return commandContext

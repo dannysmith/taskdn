@@ -159,7 +159,16 @@ See [quick-panes.md](./quick-panes.md) for a complete implementation example.
 
 Tauri v2 uses a permission-based capabilities system. Each window only gets the permissions it needs.
 
-**Location:** `src-tauri/capabilities/default.json`
+**Location:** `src-tauri/capabilities/`
+
+```
+capabilities/
+├── default.json    # Main window permissions
+├── desktop.json    # Desktop-specific permissions
+└── quick-pane.json # Quick pane window permissions
+```
+
+**Example capability:**
 
 ```json
 {
@@ -228,6 +237,54 @@ std::fs::rename(&temp_path, &final_path)?;
 
 See [Tauri Security Documentation](https://v2.tauri.app/security/) for detailed guidance.
 
+## Platform-Specific Notes
+
+### macOS Private API Usage
+
+This application uses macOS private APIs via the `tauri-nspanel` crate for the Quick Pane feature.
+
+**Why private APIs?**
+
+The Quick Pane requires native panel behavior that isn't available through public macOS APIs:
+
+- **Fullscreen overlay** - Panel appears above fullscreen apps
+- **Click-outside dismiss** - Panel auto-hides when clicking elsewhere
+- **Non-activating window** - Panel doesn't steal focus from other apps
+- **Level management** - Panel floats above normal windows
+
+Standard `NSWindow` cannot achieve this behavior; `NSPanel` with specific configurations is required, and some of those configurations require private API access.
+
+**Configuration:**
+
+```json
+// src-tauri/tauri.conf.json
+{
+  "app": {
+    "macOSPrivateApi": true
+  }
+}
+```
+
+```toml
+# src-tauri/Cargo.toml
+tauri = { version = "2", features = ["macos-private-api"] }
+```
+
+**Implications:**
+
+| Consideration       | Impact                                                        |
+| ------------------- | ------------------------------------------------------------- |
+| Mac App Store       | Likely rejection - private APIs violate App Store guidelines  |
+| macOS Updates       | Risk of breakage if Apple changes internal APIs               |
+| Notarization        | Works fine - notarization doesn't check for private API usage |
+| Direct Distribution | No issues - only App Store has restrictions                   |
+
+**Mitigation:**
+
+- The `tauri-nspanel` dependency is pinned to a specific commit for stability
+- If App Store distribution becomes required, the Quick Pane could fall back to a standard window with reduced functionality
+- The feature degrades gracefully on non-macOS platforms (uses standard window)
+
 ## Type-Safe Tauri Commands
 
 All Tauri commands use [tauri-specta](https://github.com/specta-rs/tauri-specta) for type safety:
@@ -246,6 +303,61 @@ const prefs = await invoke<AppPreferences>('load_preferences')
 ```
 
 See [tauri-commands.md](./tauri-commands.md) for adding new commands.
+
+## QueryClient Access Pattern
+
+TanStack Query's `QueryClient` can be accessed two ways depending on context:
+
+### In React Components and Hooks
+
+Use the `useQueryClient()` hook - this follows React's rules and ensures proper integration with the React lifecycle:
+
+```typescript
+import { useQueryClient } from '@tanstack/react-query'
+
+function MyComponent() {
+  const queryClient = useQueryClient()
+
+  const handleClick = () => {
+    queryClient.invalidateQueries({ queryKey: ['tasks'] })
+  }
+
+  return <button onClick={handleClick}>Refresh</button>
+}
+```
+
+### In Non-React Contexts
+
+Import the singleton directly for event handlers, utilities, and other non-React code:
+
+```typescript
+import { queryClient } from '@/lib/query-client'
+
+// Event listener (outside React)
+listen('vault-changed', () => {
+  queryClient.invalidateQueries({ queryKey: ['tasks'] })
+})
+
+// Utility function
+function getTaskFromCache(taskId: string): Task | undefined {
+  const tasks = queryClient.getQueryData<Task[]>(['tasks'])
+  return tasks?.find(t => t.id === taskId)
+}
+```
+
+**Decision Tree:**
+
+```
+Are you inside a React component or custom hook?
+├─ Yes → Use useQueryClient() hook
+└─ No → Import queryClient from @/lib/query-client
+```
+
+**Why this pattern exists:**
+
+- The `useQueryClient()` hook ensures proper React context integration
+- Direct import works outside React but bypasses React's lifecycle
+- Both access the same singleton instance, so cache state is shared
 
 ## Quality Gates
 

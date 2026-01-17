@@ -22,6 +22,12 @@
   --container-7xs: 11.25rem; /* 180px - area/project cards expand */
   --container-8xs: 12.5rem; /* 200px - area/project cards row layout */
 
+  /* Layout sizing tokens - named dimensions for consistent layouts */
+  --kanban-column-width: 18rem; /* 288px (w-72) */
+  --kanban-column-min-height: 12.5rem; /* 200px */
+  --month-day-min-height: 6.25rem; /* 100px */
+  --week-day-min-height: 18.75rem; /* 300px */
+
   /* Taskdn icon colors */
   --color-icon-today: var(--icon-today);
   --color-icon-week: var(--icon-week);

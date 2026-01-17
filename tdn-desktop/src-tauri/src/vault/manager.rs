@@ -10,7 +10,7 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use log::{debug, error, info, warn};
 use notify_debouncer_full::{
@@ -155,7 +155,6 @@ impl VaultIndex {
 struct VaultManagerInner {
     config: Option<VaultConfig>,
     index: VaultIndex,
-    last_write: Instant,
     writing_flag: Arc<AtomicBool>,
 }
 
@@ -173,7 +172,6 @@ impl VaultManager {
             inner: RwLock::new(VaultManagerInner {
                 config: None,
                 index: VaultIndex::default(),
-                last_write: Instant::now(),
                 writing_flag: Arc::new(AtomicBool::new(false)),
             }),
             watcher: RwLock::new(None),
@@ -386,16 +384,11 @@ impl VaultManager {
     ) -> Result<String, VaultError> {
         self.ensure_configured()?;
 
-        // Get the entity's path based on type
-        let path = match entity_type {
-            "task" => self.inner.read().index.get_task(id).map(|t| t.path.clone()),
-            "project" => self
-                .inner
-                .read()
-                .index
-                .get_project(id)
-                .map(|p| p.path.clone()),
-            "area" => self.inner.read().index.get_area(id).map(|a| a.path.clone()),
+        // Capitalize entity type for error messages
+        let entity_type_display = match entity_type {
+            "task" => "Task",
+            "project" => "Project",
+            "area" => "Area",
             _ => {
                 return Err(VaultError::validation_error(
                     "entity_type",
@@ -404,16 +397,20 @@ impl VaultManager {
             }
         };
 
-        // Capitalize entity type for error message
-        let entity_type_display = match entity_type {
-            "task" => "Task",
-            "project" => "Project",
-            "area" => "Area",
-            _ => entity_type,
+        // Acquire lock once, extract path, then release before file I/O
+        let path = {
+            let inner = self.inner.read();
+            match entity_type {
+                "task" => inner.index.get_task(id).map(|t| t.path.clone()),
+                "project" => inner.index.get_project(id).map(|p| p.path.clone()),
+                "area" => inner.index.get_area(id).map(|a| a.path.clone()),
+                _ => unreachable!(), // Already validated above
+            }
         };
+
         let path = path.ok_or_else(|| VaultError::entity_not_found(entity_type_display, id))?;
 
-        // Read the raw file content
+        // Read the raw file content (lock released)
         std::fs::read_to_string(&path).map_err(|e| VaultError::read_error(&path, e.to_string()))
     }
 
@@ -583,11 +580,41 @@ impl VaultManager {
 
     fn set_writing(&self, writing: bool) {
         debug!("Write flag: {writing}");
-        let mut inner = self.inner.write();
+        let inner = self.inner.read();
         inner.writing_flag.store(writing, Ordering::SeqCst);
-        if !writing {
-            inner.last_write = Instant::now();
+    }
+
+    // =========================================================================
+    // Test Support
+    // =========================================================================
+
+    /// Initialize the vault for testing without file watcher.
+    /// Only available in test builds.
+    #[cfg(test)]
+    pub fn initialize_for_test(&self, config: VaultConfig) -> Result<(), VaultError> {
+        // Validate config
+        if !config.is_valid() {
+            return Err(VaultError::not_configured(
+                "One or more vault directories do not exist",
+            ));
         }
+
+        // Scan all directories
+        let tasks = scan_tasks(&config);
+        let projects = scan_projects(&config);
+        let areas = scan_areas(&config);
+
+        // Build index
+        let index = VaultIndex::from_scans(tasks, projects, areas);
+
+        // Update state (no file watcher in test mode)
+        {
+            let mut inner = self.inner.write();
+            inner.config = Some(config);
+            inner.index = index;
+        }
+
+        Ok(())
     }
 }
 

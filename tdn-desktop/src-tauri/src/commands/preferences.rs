@@ -155,3 +155,354 @@ pub async fn save_preferences(app: AppHandle, preferences: AppPreferences) -> Re
     log::info!("Successfully saved preferences to {prefs_path:?}");
     Ok(())
 }
+
+// =============================================================================
+// Testable Core Functions (test-only)
+// =============================================================================
+
+/// Load preferences from the given path.
+/// Returns default preferences if the file doesn't exist.
+#[cfg(test)]
+fn load_preferences_from_path(path: &std::path::Path) -> Result<AppPreferences, String> {
+    if !path.exists() {
+        return Ok(AppPreferences::default());
+    }
+
+    let contents = std::fs::read_to_string(path)
+        .map_err(|e| format!("Failed to read preferences file: {e}"))?;
+
+    serde_json::from_str(&contents).map_err(|e| format!("Failed to parse preferences: {e}"))
+}
+
+/// Save preferences to the given path using atomic write (temp file + rename).
+#[cfg(test)]
+fn save_preferences_to_path(
+    path: &std::path::Path,
+    preferences: &AppPreferences,
+) -> Result<(), String> {
+    // Validate theme value
+    validate_theme(&preferences.theme)?;
+
+    // Ensure parent directory exists
+    if let Some(parent) = path.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("Failed to create preferences directory: {e}"))?;
+    }
+
+    let json_content = serde_json::to_string_pretty(preferences)
+        .map_err(|e| format!("Failed to serialize preferences: {e}"))?;
+
+    // Write to a temporary file first, then rename (atomic operation)
+    let temp_path = path.with_extension("tmp");
+
+    std::fs::write(&temp_path, &json_content)
+        .map_err(|e| format!("Failed to write preferences file: {e}"))?;
+
+    if let Err(rename_err) = std::fs::rename(&temp_path, path) {
+        // Clean up the temp file
+        let _ = std::fs::remove_file(&temp_path);
+        return Err(format!("Failed to finalize preferences file: {rename_err}"));
+    }
+
+    Ok(())
+}
+
+// =============================================================================
+// Tests
+// =============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use tempfile::TempDir;
+
+    /// Create a temp directory for testing
+    fn create_test_dir() -> TempDir {
+        TempDir::new().expect("Failed to create temp dir")
+    }
+
+    // -------------------------------------------------------------------------
+    // load_preferences_from_path Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn load_preferences_returns_defaults_when_file_missing() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("nonexistent.json");
+
+        let prefs = load_preferences_from_path(&path).expect("load failed");
+
+        assert_eq!(prefs.theme, "system");
+        assert!(prefs.quick_pane_shortcut.is_none());
+        assert!(prefs.language.is_none());
+        assert!(prefs.tasks_dir.is_none());
+    }
+
+    #[test]
+    fn load_preferences_reads_valid_file() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let json = r#"{"theme": "dark", "language": "es"}"#;
+        std::fs::write(&path, json).expect("write failed");
+
+        let prefs = load_preferences_from_path(&path).expect("load failed");
+
+        assert_eq!(prefs.theme, "dark");
+        assert_eq!(prefs.language, Some("es".to_string()));
+    }
+
+    #[test]
+    fn load_preferences_handles_partial_json() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        // Only some fields present - others should default
+        let json = r#"{"theme": "light"}"#;
+        std::fs::write(&path, json).expect("write failed");
+
+        let prefs = load_preferences_from_path(&path).expect("load failed");
+
+        assert_eq!(prefs.theme, "light");
+        assert!(prefs.quick_pane_shortcut.is_none());
+        assert!(prefs.tasks_dir.is_none());
+    }
+
+    #[test]
+    fn load_preferences_fails_on_invalid_json() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        std::fs::write(&path, "not valid json {{{").expect("write failed");
+
+        let result = load_preferences_from_path(&path);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("parse"));
+    }
+
+    #[test]
+    fn load_preferences_reads_all_fields() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let json = r#"{
+            "theme": "dark",
+            "quickPaneShortcut": "Ctrl+Space",
+            "language": "de",
+            "tasksDir": "/path/to/tasks",
+            "areasDir": "/path/to/areas",
+            "projectsDir": "/path/to/projects",
+            "ignore": ["*.tmp", ".DS_Store"],
+            "showObsidianFeatures": true,
+            "permanentDeleteTasks": true
+        }"#;
+        std::fs::write(&path, json).expect("write failed");
+
+        let prefs = load_preferences_from_path(&path).expect("load failed");
+
+        assert_eq!(prefs.theme, "dark");
+        assert_eq!(prefs.quick_pane_shortcut, Some("Ctrl+Space".to_string()));
+        assert_eq!(prefs.language, Some("de".to_string()));
+        assert_eq!(prefs.tasks_dir, Some("/path/to/tasks".to_string()));
+        assert_eq!(prefs.areas_dir, Some("/path/to/areas".to_string()));
+        assert_eq!(prefs.projects_dir, Some("/path/to/projects".to_string()));
+        assert_eq!(
+            prefs.ignore,
+            Some(vec!["*.tmp".to_string(), ".DS_Store".to_string()])
+        );
+        assert_eq!(prefs.show_obsidian_features, Some(true));
+        assert_eq!(prefs.permanent_delete_tasks, Some(true));
+    }
+
+    // -------------------------------------------------------------------------
+    // save_preferences_to_path Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn save_preferences_creates_file() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let prefs = AppPreferences::default();
+        save_preferences_to_path(&path, &prefs).expect("save failed");
+
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn save_preferences_writes_valid_json() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let prefs = AppPreferences {
+            theme: "dark".to_string(),
+            language: Some("fr".to_string()),
+            ..Default::default()
+        };
+        save_preferences_to_path(&path, &prefs).expect("save failed");
+
+        let content = std::fs::read_to_string(&path).expect("read failed");
+        assert!(content.contains("\"theme\": \"dark\""));
+        assert!(content.contains("\"language\": \"fr\""));
+    }
+
+    #[test]
+    fn save_preferences_rejects_invalid_theme() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let prefs = AppPreferences {
+            theme: "invalid_theme".to_string(),
+            ..Default::default()
+        };
+        let result = save_preferences_to_path(&path, &prefs);
+
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("Invalid theme"));
+        // File should not be created
+        assert!(!path.exists());
+    }
+
+    #[test]
+    fn save_preferences_creates_parent_directories() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir
+            .path()
+            .join("nested")
+            .join("dir")
+            .join("preferences.json");
+
+        let prefs = AppPreferences::default();
+        save_preferences_to_path(&path, &prefs).expect("save failed");
+
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn save_preferences_overwrites_existing() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        // Save initial
+        let prefs1 = AppPreferences {
+            theme: "light".to_string(),
+            ..Default::default()
+        };
+        save_preferences_to_path(&path, &prefs1).expect("save failed");
+
+        // Overwrite
+        let prefs2 = AppPreferences {
+            theme: "dark".to_string(),
+            ..Default::default()
+        };
+        save_preferences_to_path(&path, &prefs2).expect("save failed");
+
+        let content = std::fs::read_to_string(&path).expect("read failed");
+        assert!(content.contains("\"theme\": \"dark\""));
+        assert!(!content.contains("\"theme\": \"light\""));
+    }
+
+    #[test]
+    fn save_preferences_atomic_no_temp_file_left() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+        let temp_path = temp_dir.path().join("preferences.tmp");
+
+        let prefs = AppPreferences::default();
+        save_preferences_to_path(&path, &prefs).expect("save failed");
+
+        // Temp file should be renamed, not left behind
+        assert!(!temp_path.exists());
+        assert!(path.exists());
+    }
+
+    // -------------------------------------------------------------------------
+    // Round-trip Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn save_load_roundtrip_preserves_data() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let original = AppPreferences {
+            theme: "dark".to_string(),
+            quick_pane_shortcut: Some("Ctrl+Shift+P".to_string()),
+            language: Some("ja".to_string()),
+            tasks_dir: Some("/my/tasks".to_string()),
+            areas_dir: Some("/my/areas".to_string()),
+            projects_dir: Some("/my/projects".to_string()),
+            ignore: Some(vec!["*.bak".to_string()]),
+            show_obsidian_features: Some(true),
+            permanent_delete_tasks: Some(false),
+        };
+
+        save_preferences_to_path(&path, &original).expect("save failed");
+        let loaded = load_preferences_from_path(&path).expect("load failed");
+
+        assert_eq!(loaded.theme, original.theme);
+        assert_eq!(loaded.quick_pane_shortcut, original.quick_pane_shortcut);
+        assert_eq!(loaded.language, original.language);
+        assert_eq!(loaded.tasks_dir, original.tasks_dir);
+        assert_eq!(loaded.areas_dir, original.areas_dir);
+        assert_eq!(loaded.projects_dir, original.projects_dir);
+        assert_eq!(loaded.ignore, original.ignore);
+        assert_eq!(
+            loaded.show_obsidian_features,
+            original.show_obsidian_features
+        );
+        assert_eq!(
+            loaded.permanent_delete_tasks,
+            original.permanent_delete_tasks
+        );
+    }
+
+    #[test]
+    fn save_load_roundtrip_with_defaults() {
+        let temp_dir = create_test_dir();
+        let path = temp_dir.path().join("preferences.json");
+
+        let original = AppPreferences::default();
+
+        save_preferences_to_path(&path, &original).expect("save failed");
+        let loaded = load_preferences_from_path(&path).expect("load failed");
+
+        assert_eq!(loaded.theme, "system");
+        assert!(loaded.quick_pane_shortcut.is_none());
+        assert!(loaded.language.is_none());
+    }
+
+    // -------------------------------------------------------------------------
+    // greet command Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn greet_valid_name() {
+        let result = greet("Alice");
+        assert!(result.is_ok());
+        assert!(result.unwrap().contains("Alice"));
+    }
+
+    #[test]
+    fn greet_rejects_too_long_name() {
+        let long_name = "a".repeat(101);
+        let result = greet(&long_name);
+        assert!(result.is_err());
+        assert!(result.unwrap_err().contains("too long"));
+    }
+
+    #[test]
+    fn greet_accepts_max_length_name() {
+        let max_name = "a".repeat(100);
+        let result = greet(&max_name);
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn greet_accepts_unicode_names() {
+        let result = greet("日本語");
+        assert!(result.is_ok());
+        assert!(result.unwrap().contains("日本語"));
+    }
+}

@@ -7,6 +7,8 @@ import { commands, type AppPreferences } from '@/lib/tauri-bindings'
 export const preferencesQueryKeys = {
   all: ['preferences'] as const,
   preferences: () => [...preferencesQueryKeys.all] as const,
+  devMode: () => ['is-dev-mode'] as const,
+  defaultQuickPaneShortcut: () => ['default-quick-pane-shortcut'] as const,
 }
 
 // TanStack Query hooks following the architectural patterns
@@ -24,14 +26,14 @@ export function usePreferences() {
         })
         return {
           theme: 'system',
-          quick_pane_shortcut: null,
+          quickPaneShortcut: null,
           language: null,
-          tasks_dir: null,
-          areas_dir: null,
-          projects_dir: null,
+          tasksDir: null,
+          areasDir: null,
+          projectsDir: null,
           ignore: null,
-          show_obsidian_features: null,
-          permanent_delete_tasks: null,
+          showObsidianFeatures: null,
+          permanentDeleteTasks: null,
         }
       }
 

@@ -8,7 +8,7 @@ use std::path::Path;
 
 use globset::{GlobBuilder, GlobSetBuilder};
 use gray_matter::{engine::YAML, Matter};
-use log::{debug, warn};
+use log::{debug, error, warn};
 use rayon::prelude::*;
 use serde::de::DeserializeOwned;
 
@@ -189,10 +189,16 @@ where
     }
 
     // Security: Configure thread pool with resource limits
-    let pool = rayon::ThreadPoolBuilder::new()
+    let pool = match rayon::ThreadPoolBuilder::new()
         .num_threads(MAX_PARALLEL_THREADS)
         .build()
-        .unwrap();
+    {
+        Ok(pool) => pool,
+        Err(e) => {
+            error!("Failed to create thread pool for scanning {dir_path}: {e}");
+            return Vec::new();
+        }
+    };
 
     // Process files in parallel with limited concurrency
     pool.install(|| {

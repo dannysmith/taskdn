@@ -1,17 +1,5 @@
 import * as React from 'react'
-import {
-  DndContext,
-  DragOverlay,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  pointerWithin,
-  defaultDropAnimationSideEffects,
-  type DragStartEvent,
-  type DragEndEvent,
-  type DragOverEvent,
-  type DropAnimation,
-} from '@dnd-kit/core'
+import { DndContext, DragOverlay, pointerWithin } from '@dnd-kit/core'
 import {
   startOfWeek,
   endOfWeek,
@@ -28,12 +16,8 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
-import {
-  parseCalendarTaskDragId,
-  type CalendarTaskDragData,
-  type DayDropData,
-} from '@/types/calendar-order'
 import { useCalendarOrder } from '@/hooks/use-calendar-order'
+import { useCalendarDnd } from './use-calendar-dnd'
 import { Button } from '@/components/ui/button'
 import type { TaskCardVariant } from '@/components/cards/TaskCard'
 import { DayColumn } from './DayColumn'
@@ -53,13 +37,6 @@ import { TaskCardDragPreview } from './DraggableTaskCard'
  *
  * Order persistence uses useCalendarOrder hook.
  */
-
-interface DragState {
-  taskId: string
-  task: Task
-  sourceDate: string
-  currentOverDate: string | null
-}
 
 interface TaskContext {
   projectName?: string
@@ -123,7 +100,6 @@ export function WeekCalendar({
   const [currentWeekStart, setCurrentWeekStart] = React.useState(
     () => startOfWeek(new Date(), { weekStartsOn: 1 }) // Monday
   )
-  const [dragState, setDragState] = React.useState<DragState | null>(null)
   const [editingTaskId, setEditingTaskId] = React.useState<string | null>(null)
 
   // Handle creating a task for a day
@@ -268,6 +244,23 @@ export function WeekCalendar({
       getTasksForDate,
     })
 
+  // DnD management
+  const {
+    dragState,
+    sensors,
+    dropAnimation,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+    handleDragCancel,
+  } = useCalendarDnd({
+    getTaskById,
+    onTaskScheduleChange,
+    reorderTasksInDay,
+    moveTaskToDay,
+    getInsertIndex,
+  })
+
   // Navigation handlers
   const goToPreviousWeek = () => {
     setCurrentWeekStart(prev => subWeeks(prev, 1))
@@ -279,134 +272,6 @@ export function WeekCalendar({
 
   const goToToday = () => {
     setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))
-  }
-
-  // DnD Sensors
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    })
-  )
-
-  // Drop animation
-  const dropAnimation: DropAnimation = {
-    sideEffects: defaultDropAnimationSideEffects({
-      styles: { active: { opacity: '0.5' } },
-    }),
-  }
-
-  // DnD Handlers
-  const handleDragStart = (event: DragStartEvent) => {
-    const data = event.active.data.current as CalendarTaskDragData | undefined
-    if (data?.type === 'calendar-task') {
-      const task = getTaskById(data.taskId)
-      if (task) {
-        setDragState({
-          taskId: data.taskId,
-          task,
-          sourceDate: data.sourceDate,
-          currentOverDate: null,
-        })
-      }
-    }
-  }
-
-  const handleDragOver = (event: DragOverEvent) => {
-    if (!dragState) return
-
-    const { over } = event
-    if (!over) {
-      setDragState(prev => (prev ? { ...prev, currentOverDate: null } : null))
-      return
-    }
-
-    const overData = over.data.current as
-      | DayDropData
-      | CalendarTaskDragData
-      | undefined
-    if (!overData) return
-
-    // Determine which date we're over
-    let overDate: string | null = null
-    if (overData.type === 'day') {
-      overDate = overData.date
-    } else if (overData.type === 'calendar-task') {
-      // If hovering over another task, use its date
-      overDate = overData.sourceDate
-    }
-
-    if (overDate !== dragState.currentOverDate) {
-      setDragState(prev =>
-        prev ? { ...prev, currentOverDate: overDate } : null
-      )
-    }
-  }
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (!dragState) return
-
-    const { active, over } = event
-    if (!over) {
-      setDragState(null)
-      return
-    }
-
-    const overData = over.data.current as
-      | DayDropData
-      | CalendarTaskDragData
-      | undefined
-    if (!overData) {
-      setDragState(null)
-      return
-    }
-
-    // Parse the active item to get taskId
-    const activeId = active.id as string
-    const parsedActive = parseCalendarTaskDragId(activeId)
-    if (!parsedActive) {
-      setDragState(null)
-      return
-    }
-
-    const { taskId: activeTaskId } = parsedActive
-    const sourceDate = dragState.sourceDate
-
-    // Determine target date and handling based on drop target type
-    if (overData.type === 'day') {
-      // Dropped on a day container (not on a specific task)
-      const targetDate = overData.date
-
-      if (targetDate !== sourceDate) {
-        // Cross-day move: update scheduled date and add to end of target day
-        moveTaskToDay(activeTaskId, sourceDate, targetDate)
-        onTaskScheduleChange(activeTaskId, targetDate)
-      }
-      // If same day and dropped on container, no reorder needed
-    } else if (overData.type === 'calendar-task') {
-      // Dropped on another task
-      const targetDate = overData.sourceDate
-      const overTaskId = overData.taskId
-
-      if (targetDate === sourceDate) {
-        // Within-day reorder: just update order
-        if (activeTaskId !== overTaskId) {
-          reorderTasksInDay(sourceDate, activeTaskId, overTaskId)
-        }
-      } else {
-        // Cross-day move with specific position
-        const insertIndex = getInsertIndex(targetDate, overTaskId)
-        moveTaskToDay(activeTaskId, sourceDate, targetDate, insertIndex)
-        onTaskScheduleChange(activeTaskId, targetDate)
-      }
-    }
-
-    setDragState(null)
-  }
-
-  const handleDragCancel = () => {
-    setDragState(null)
   }
 
   // Month/year display

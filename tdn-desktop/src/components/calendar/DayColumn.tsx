@@ -92,7 +92,7 @@ export function DayColumn({
     <div
       ref={setNodeRef}
       className={cn(
-        '@container flex flex-col min-h-[300px] border-e border-border/50 last:border-e-0',
+        '@container flex flex-col min-h-(--week-day-min-height) border-e border-border/50 last:border-e-0',
         isWeekendDay && 'bg-muted/20',
         (isOver || isDropTarget) && 'bg-primary/5'
       )}

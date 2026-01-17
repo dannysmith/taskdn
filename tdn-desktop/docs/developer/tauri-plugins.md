@@ -25,6 +25,7 @@ Guide to all Tauri plugins installed in this app, plus built-in features and gui
 | --------------------- | --------------------------------- | -------------------------------------- |
 | **opener**            | Open files/URLs with default apps | `@tauri-apps/plugin-opener`            |
 | **clipboard-manager** | Clipboard read/write              | `@tauri-apps/plugin-clipboard-manager` |
+| **deep-link**         | Custom URL scheme (taskdn://)     | `@tauri-apps/plugin-deep-link`         |
 | **notification**      | System notifications              | `@tauri-apps/plugin-notification`      |
 | **process**           | Exit/restart app                  | `@tauri-apps/plugin-process`           |
 | **os**                | OS information                    | `@tauri-apps/plugin-os`                |
@@ -166,6 +167,16 @@ log::debug!("Debug value: {}", value);
 log::error!("Something went wrong: {}", error);
 ```
 
+### Deep Link
+
+Custom URL scheme handling for `taskdn://` URLs. See [deep-linking.md](./deep-linking.md) for full implementation details.
+
+**How it works**:
+
+- URLs are received by the OS and routed to the app
+- The `onOpenUrl` event fires in JavaScript
+- URLs are parsed and dispatched to handlers
+
 ### Opener
 
 Open files/URLs with the default system application.
@@ -202,7 +213,6 @@ These plugins aren't included by default but are commonly needed:
 | **shell**      | Need to spawn child processes or run terminal commands      |
 | **http**       | Making API calls that need to bypass CORS                   |
 | **autostart**  | Utility apps that should launch at system startup           |
-| **deep-link**  | Custom URL schemes (myapp://path)                           |
 | **sql**        | Local SQLite database for structured data                   |
 | **positioner** | Tray apps or floating windows that need precise positioning |
 
@@ -220,7 +230,9 @@ These plugins aren't included by default but are commonly needed:
 
 3. **Add capability permissions** if needed (check plugin docs)
 
-4. **Create frontend utilities** in `src/lib/` if the plugin needs a wrapper
+4. **Add test mocks** in `src/test/setup.ts` for any frontend APIs. See [testing.md](./testing.md#mocking-tauri-apis-critical)
+
+5. **Create frontend utilities** in `src/lib/` if the plugin needs a wrapper
 
 ## Plugin Registration Order
 

@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { devtools } from 'zustand/middleware'
+import { devtools, persist } from 'zustand/middleware'
 
 import type { ViewMode } from '@/components/ui/view-toggle'
 
@@ -47,15 +47,18 @@ const availableModes: Record<ViewModeKey, ViewMode[]> = {
 
 export const useViewModeStore = create<ViewModeState>()(
   devtools(
-    set => ({
-      modes: defaultModes,
-      setViewMode: (key, mode) =>
-        set(
-          state => ({ modes: { ...state.modes, [key]: mode } }),
-          undefined,
-          'setViewMode'
-        ),
-    }),
+    persist(
+      set => ({
+        modes: defaultModes,
+        setViewMode: (key, mode) =>
+          set(
+            state => ({ modes: { ...state.modes, [key]: mode } }),
+            undefined,
+            'setViewMode'
+          ),
+      }),
+      { name: 'view-mode-storage', version: 1 }
+    ),
     { name: 'view-mode-store' }
   )
 )

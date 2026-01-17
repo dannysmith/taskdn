@@ -76,7 +76,7 @@ export function GeneralPane() {
   const handleObsidianToggle = (checked: boolean) => {
     if (!preferences) return
     savePreferences.mutate(
-      { ...preferences, show_obsidian_features: checked ? true : null },
+      { ...preferences, showObsidianFeatures: checked ? true : null },
       { onError: () => toast.error(t('toast.error.generic')) }
     )
   }
@@ -84,7 +84,7 @@ export function GeneralPane() {
   const handlePermanentDeleteToggle = (checked: boolean) => {
     if (!preferences) return
     savePreferences.mutate(
-      { ...preferences, permanent_delete_tasks: checked ? true : null },
+      { ...preferences, permanentDeleteTasks: checked ? true : null },
       { onError: () => toast.error(t('toast.error.generic')) }
     )
   }
@@ -169,7 +169,7 @@ export function GeneralPane() {
           description={t('preferences.general.showObsidianFeaturesDescription')}
         >
           <Switch
-            checked={preferences?.show_obsidian_features === true}
+            checked={preferences?.showObsidianFeatures === true}
             onCheckedChange={handleObsidianToggle}
             disabled={!preferences || savePreferences.isPending}
           />
@@ -180,7 +180,7 @@ export function GeneralPane() {
           description={t('preferences.general.permanentDeleteDescription')}
         >
           <Switch
-            checked={preferences?.permanent_delete_tasks === true}
+            checked={preferences?.permanentDeleteTasks === true}
             onCheckedChange={handlePermanentDeleteToggle}
             disabled={!preferences || savePreferences.isPending}
           />

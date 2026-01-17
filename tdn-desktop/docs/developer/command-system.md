@@ -290,11 +290,52 @@ Organize commands into logical groups (used in command palette headings):
 
 Group labels are translated via `commands.group.{groupName}` keys.
 
+## Dynamic Labels
+
+Most commands use i18n keys for labels (e.g., `commands.myAction.label`). However, some commands need dynamic labels from runtime data:
+
+- **Entity navigation**: Area/project titles come from user data
+- **Platform-specific**: "Reveal in Finder" vs "Show in Explorer"
+
+For these cases, use the `_dynamic:` prefix:
+
+```typescript
+// Dynamic label from entity data
+{
+  id: `navigate-area-${area.id}`,
+  labelKey: `_dynamic:${area.title}`,  // Display string, not i18n key
+  // ...
+}
+
+// Dynamic label from platform detection
+{
+  id: 'reveal-in-finder',
+  get labelKey() {
+    const strings = getPlatformStrings(getPlatform())
+    return `_dynamic:${strings.revealInFileManager}`
+  },
+  // ...
+}
+```
+
+**How it works:**
+
+1. The `_dynamic:` prefix signals that the rest of the string is the display value
+2. `getCommandLabel()` in `registry.ts` strips the prefix and returns the raw string
+3. `filterCommands()` strips the prefix before search matching
+
+**When to use:**
+
+- User-generated content (entity titles)
+- Platform-specific strings already resolved
+- Any label that can't be a static i18n key
+
 ## Best Practices
 
 | Do                                                 | Don't                             |
 | -------------------------------------------------- | --------------------------------- |
 | Use `labelKey` with translation keys               | Hardcode label strings            |
+| Use `_dynamic:` prefix for runtime labels          | Mix i18n keys with raw strings    |
 | Use `getState()` in execute functions              | Use hooks in commands             |
 | Use Tauri accelerator format for shortcuts         | Use display format (`⌘1`)         |
 | Check `isAvailable` for context-dependent commands | Show unavailable commands         |

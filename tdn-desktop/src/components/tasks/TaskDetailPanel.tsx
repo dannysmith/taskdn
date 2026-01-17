@@ -1,8 +1,10 @@
 import * as React from 'react'
-import { format } from 'date-fns'
 import { Calendar, Flag, Snowflake, FolderOpen, CircleDot } from 'lucide-react'
 
+import { formatShortDate } from '@/lib/date-utils'
+
 import { useVaultData, useVaultHelpers, useUpdateTask } from '@/services/vault'
+import { stripWikilink } from '@/lib/wikilink'
 import { useCommandContext } from '@/hooks/use-command-context'
 import { showTaskContextMenu } from '@/lib/context-menu'
 import {
@@ -94,25 +96,16 @@ export function TaskDetailPanel() {
   const activeProjects = getActiveProjects()
   const activeAreas = getActiveAreas()
 
-  // Extract title from wikilink like "[[Project Name]]" -> "Project Name"
-  const extractFromWikilink = (wikilink: string | null): string | null => {
-    if (!wikilink) return null
-    const match = wikilink.match(/^\[\[(.+)\]\]$/)
-    return match?.[1] ?? wikilink
-  }
-
   // Find project/area by matching wikilink
   const findProjectByWikilink = (wikilink: string | null) => {
     if (!wikilink) return null
-    const title = extractFromWikilink(wikilink)
-    if (!title) return null
+    const title = stripWikilink(wikilink)
     return projects.find(p => p.title === title || p.id === title) ?? null
   }
 
   const findAreaByWikilink = (wikilink: string | null) => {
     if (!wikilink) return null
-    const title = extractFromWikilink(wikilink)
-    if (!title) return null
+    const title = stripWikilink(wikilink)
     return areas.find(a => a.title === title || a.id === title) ?? null
   }
 
@@ -389,22 +382,10 @@ export function TaskDetailPanel() {
         {task.completedAt && (
           <span>Completed {formatShortDate(task.completedAt)}</span>
         )}
-        <span className="font-mono opacity-50 truncate max-w-20 @xs:max-w-none">
+        <span className="basis-full font-mono opacity-50 truncate">
           {task.path.split('/').pop()}
         </span>
       </div>
     </div>
   )
-}
-
-// -----------------------------------------------------------------------------
-// Helpers
-// -----------------------------------------------------------------------------
-
-function formatShortDate(isoString: string): string {
-  try {
-    return format(new Date(isoString), 'MMM d')
-  } catch {
-    return isoString
-  }
 }
