@@ -271,6 +271,19 @@ import WindowChrome from './WindowChrome.astro'
 
   .editor-text {
     display: inline;
+
+    /* Syntax highlighting in editor */
+    :global(.syntax) {
+      color: var(--color-text-muted);
+    }
+
+    :global(.bracket) {
+      color: var(--color-accent);
+    }
+
+    :global(.link-text) {
+      color: var(--color-text);
+    }
   }
 
   .cursor {
@@ -280,19 +293,6 @@ import WindowChrome from './WindowChrome.astro'
     background: var(--color-accent);
     opacity: 0.8;
     vertical-align: text-bottom;
-  }
-
-  /* Syntax highlighting in editor */
-  .editor-text :global(.syntax) {
-    color: var(--color-text-muted);
-  }
-
-  .editor-text :global(.bracket) {
-    color: var(--color-accent);
-  }
-
-  .editor-text :global(.link-text) {
-    color: var(--color-text);
   }
 
   /* Rendered view styles */
@@ -326,7 +326,7 @@ import WindowChrome from './WindowChrome.astro'
     font-size: 0.9375em;
   }
 
-  /* Task widget container - no checkbox inside */
+  /* Task widget container */
   .taskdn-widget {
     display: inline-flex;
     align-items: center;
@@ -335,19 +335,19 @@ import WindowChrome from './WindowChrome.astro'
     border-radius: 4px;
     background-color: var(--color-bg-2);
     font-family: var(--font-sans);
-  }
 
-  /* Status indicated by left border color */
-  .taskdn-widget[data-status='inbox'] {
-    border-inline-start: 3px solid var(--color-blue);
-  }
+    /* Status indicated by left border color */
+    &[data-status='inbox'] {
+      border-inline-start: 3px solid var(--color-blue);
+    }
 
-  .taskdn-widget[data-status='in-progress'] {
-    border-inline-start: 3px solid var(--color-yellow);
-  }
+    &[data-status='in-progress'] {
+      border-inline-start: 3px solid var(--color-yellow);
+    }
 
-  .taskdn-widget[data-status='blocked'] {
-    border-inline-start: 3px solid var(--color-red);
+    &[data-status='blocked'] {
+      border-inline-start: 3px solid var(--color-red);
+    }
   }
 
   .taskdn-title {
@@ -366,7 +366,7 @@ import WindowChrome from './WindowChrome.astro'
     color: var(--color-text-muted);
     opacity: 0.6;
     font-size: 0.8em;
-    margin-left: 0.25em;
+    margin-inline-start: 0.25em;
   }
 
   /* Responsive */

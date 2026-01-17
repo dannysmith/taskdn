@@ -279,8 +279,7 @@ Key points to review:
   .hero,
   .concept {
     max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
   }
 
   .hero {
@@ -308,8 +307,7 @@ Key points to review:
     font-size: 1.125rem;
     color: var(--color-text-muted);
     margin-bottom: 2rem;
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline: auto;
     line-height: 1.5;
     max-width: 500px;
   }
@@ -329,35 +327,35 @@ Key points to review:
     border-radius: 0.5rem;
     font-weight: 500;
     font-size: 1rem;
-    transition: all 0.15s ease;
-  }
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 
-  .button svg {
-    flex-shrink: 0;
-  }
+    svg {
+      flex-shrink: 0;
+    }
 
-  .button:hover {
-    text-decoration: none;
-  }
+    &:hover {
+      text-decoration: none;
+    }
 
-  .button.primary {
-    background: var(--color-accent);
-    color: white;
-  }
+    &.primary {
+      background: var(--color-accent);
+      color: white;
 
-  .button.primary:hover {
-    background: var(--color-accent-hover);
-  }
+      &:hover {
+        background: var(--color-accent-hover);
+      }
+    }
 
-  .button.secondary {
-    background: var(--color-bg-2);
-    color: var(--color-text);
-    border: 1px solid var(--color-border);
-  }
+    &.secondary {
+      background: var(--color-bg-2);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
 
-  .button.secondary:hover {
-    border-color: var(--color-text-muted);
-    background: var(--color-bg);
+      &:hover {
+        border-color: var(--color-text-muted);
+        background: var(--color-bg);
+      }
+    }
   }
 
   /* Concept section */
@@ -378,6 +376,18 @@ Key points to review:
     border-radius: 0.75rem;
     overflow: hidden;
     text-align: left;
+
+    pre {
+      margin: 0;
+      padding: 1rem;
+      overflow-x: auto;
+      font-size: 0.8125rem;
+      line-height: 1.6;
+    }
+
+    code {
+      font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
+    }
   }
 
   .file-header {
@@ -399,49 +409,35 @@ Key points to review:
     font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
   }
 
-  .file-example pre {
-    margin: 0;
-    padding: 1rem;
-    overflow-x: auto;
-    font-size: 0.8125rem;
-    line-height: 1.6;
-  }
-
-  .file-example code {
-    font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace;
-  }
-
+  /* YAML syntax highlighting - use light-dark() for theme adaptation */
   .yaml-delimiter {
     color: var(--color-text-muted);
   }
+
   .yaml-key {
     color: var(--color-accent);
   }
+
   .yaml-string {
     color: var(--color-text);
   }
+
   .yaml-value {
-    color: #d0a215;
+    color: light-dark(#ad5c00, #d0a215);
   }
+
   .yaml-date {
-    color: #879a39;
+    color: light-dark(#66800b, #879a39);
   }
+
   .yaml-link {
     color: var(--color-accent);
     opacity: 0.8;
   }
+
   .md-heading {
     color: var(--color-text);
     font-weight: 600;
-  }
-
-  @media (prefers-color-scheme: light) {
-    .yaml-value {
-      color: #ad5c00;
-    }
-    .yaml-date {
-      color: #66800b;
-    }
   }
 
   .concept-text {
@@ -465,21 +461,21 @@ Key points to review:
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
     width: 190px;
-  }
 
-  .hierarchy-areas {
-    background: rgba(67, 133, 190, 0.1);
-    border: 1px solid rgba(67, 133, 190, 0.2);
-  }
+    &.hierarchy-areas {
+      background: rgba(67, 133, 190, 0.1);
+      border: 1px solid rgba(67, 133, 190, 0.2);
+    }
 
-  .hierarchy-projects {
-    background: rgba(135, 154, 57, 0.1);
-    border: 1px solid rgba(135, 154, 57, 0.2);
-  }
+    &.hierarchy-projects {
+      background: rgba(135, 154, 57, 0.1);
+      border: 1px solid rgba(135, 154, 57, 0.2);
+    }
 
-  .hierarchy-tasks {
-    background: rgba(208, 162, 21, 0.1);
-    border: 1px solid rgba(208, 162, 21, 0.2);
+    &.hierarchy-tasks {
+      background: rgba(208, 162, 21, 0.1);
+      border: 1px solid rgba(208, 162, 21, 0.2);
+    }
   }
 
   .hierarchy-icon {
@@ -513,6 +509,7 @@ Key points to review:
     line-height: 1;
   }
 
+  /* Concept section responsive */
   @media (max-width: 600px) {
     .concept-grid {
       grid-template-columns: 1fr;
@@ -553,14 +550,14 @@ Key points to review:
     padding: 5rem 0;
     max-width: 1100px;
     margin: 0 auto;
-  }
 
-  .product.reverse {
-    direction: rtl;
-  }
+    &.reverse {
+      direction: rtl;
 
-  .product.reverse > * {
-    direction: ltr;
+      > * {
+        direction: ltr;
+      }
+    }
   }
 
   .product-content {
@@ -572,17 +569,17 @@ Key points to review:
     align-items: center;
     gap: 0.75rem;
     margin-bottom: 1.25rem;
+
+    h2 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--color-text);
+      margin: 0;
+    }
   }
 
   .product-icon {
     font-size: 1.75rem;
-  }
-
-  .product-header h2 {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: var(--color-text);
-    margin: 0;
   }
 
   .product-description {
@@ -599,26 +596,26 @@ Key points to review:
     display: flex;
     flex-direction: column;
     gap: 0.625rem;
-  }
 
-  .product-features li {
-    font-size: 0.9375rem;
-    color: var(--color-text);
-    padding-left: 1.5rem;
-    position: relative;
-    line-height: 1.5;
-  }
+    li {
+      font-size: 0.9375rem;
+      color: var(--color-text);
+      padding-left: 1.5rem;
+      position: relative;
+      line-height: 1.5;
 
-  .product-features li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.5em;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--color-accent);
-    opacity: 0.7;
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.5em;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--color-accent);
+        opacity: 0.7;
+      }
+    }
   }
 
   .product-actions {
@@ -630,11 +627,11 @@ Key points to review:
   .product-visual {
     border-radius: 0.5rem;
     overflow: hidden;
-  }
 
-  .product-visual > :global(img) {
-    width: 100%;
-    height: auto;
+    > :global(img) {
+      width: 100%;
+      height: auto;
+    }
   }
 
   /* Demo frame styling for animated demos */
@@ -644,22 +641,23 @@ Key points to review:
     background: var(--color-bg-2);
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
+
+    > :global(*) {
+      position: absolute;
+      inset: 0;
+    }
   }
 
-  .demo-frame > :global(*) {
-    position: absolute;
-    inset: 0;
-  }
-
+  /* Product sections responsive */
   @media (max-width: 900px) {
     .product {
       grid-template-columns: 1fr;
       gap: 2rem;
       padding: 3rem 1.5rem;
-    }
 
-    .product.reverse {
-      direction: ltr;
+      &.reverse {
+        direction: ltr;
+      }
     }
 
     .product-content {
@@ -674,8 +672,7 @@ Key points to review:
     .product-features {
       text-align: left;
       max-width: 400px;
-      margin-left: auto;
-      margin-right: auto;
+      margin-inline: auto;
     }
 
     .product-actions {
@@ -696,17 +693,17 @@ Key points to review:
     text-align: center;
     font-size: 0.875rem;
     color: var(--color-text-muted);
-  }
 
-  footer a {
-    color: var(--color-text-muted);
-  }
+    a {
+      color: var(--color-text-muted);
 
-  footer a:hover {
-    color: var(--color-text);
+      &:hover {
+        color: var(--color-text);
+      }
+    }
   }
 
   .separator {
-    margin: 0 0.5rem;
+    margin-inline: 0.5rem;
   }
 </style>
