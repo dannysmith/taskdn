@@ -1,10 +1,10 @@
 # Taskdn Product Principles
 
-This document defines the core principles that guide product decisions across all Taskdn products. It's intended for product managers, developers, and AI agents making decisions about new features, new products, or changes to existing functionality.
+Core principles guiding product decisions across all Taskdn products. For background on the project and its goals, see [Overview](./overview.md).
 
-These principles aren't aspirational—they're constraints. When evaluating a feature or design decision, check it against these principles. If it violates one, either reconsider the approach or have a very good reason for the exception.
+These principles are constraints, not aspirations. When evaluating a feature or design decision, check it against these principles. If it violates one, either reconsider the approach or have a very good reason for the exception.
 
-For the user-facing philosophy and rationale behind these principles, see the [Philosophy](https://tdn.danny.is/philosophy/) page on the website.
+For the user-facing philosophy, see the [Philosophy](https://tdn.danny.is/philosophy/) page on the website.
 
 ---
 

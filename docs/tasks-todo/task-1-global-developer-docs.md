@@ -94,12 +94,12 @@ The taskdn colour palette, design aesthetic, reference to the icons in `images/`
 
 Technical overview of how the monorepo is set up and configured. This can probably be a very simple stub document for now.
 
-## 6. `README.md`
+## 6. `README.md` [✅ DONE]
 
 Update `docs/README.md` to includeonly an intro sentance and a table containing an index of all docs in  `docs/` and `docs/developer` - one row per item. This is the only index of these and can be mentioned in AGENTS.md to provide a single source of truth for the top level monorepo documentation. 
 
 
-## 7. Remove `product-overviews/`
+## 7. Remove `product-overviews/` [✅ DONE]
 
 Remove this entirely and all references to it everywhere in the codebase. Before we do that we should check that there is no incredibly important information in here that we want to retain. These documents were originally written uh before we built these products and now we've built the products and we have the website documentation and their internal documentation. Much of what is in these is no longer necessary and we can clean this up a little bit by removing these.
 
