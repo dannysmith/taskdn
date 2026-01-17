@@ -58,8 +58,9 @@ The script updates versions, runs checks, and optionally pushes the tag. See `td
 | Step | Description |
 |------|-------------|
 | Trigger | Push tag `desktop-v*` |
-| Build | GitHub Actions builds via Tauri for macOS, Windows, Linux |
+| Build | GitHub Actions builds via Tauri for macOS (universal, signed, notarized), Windows, Linux |
 | Distribution | Draft GitHub Release created; manually undraft to publish |
+| Website | Latest installers committed to `website/public/` |
 
 **To release:**
 
@@ -68,7 +69,7 @@ cd tdn-desktop
 bun run release:prepare 0.2.0
 ```
 
-See `tdn-desktop/scripts/prepare-release.js`.
+See `tdn-desktop/docs/developer/releases.md` for full details including GitHub secrets setup.
 
 ### tdn-claude-plugin
 
@@ -130,3 +131,4 @@ These products don't have release versions:
 | CI - CLI | `.github/workflows/ci-cli.yml` | Push/PR to `tdn-cli/**` |
 | Release - CLI | `.github/workflows/release-cli.yml` | Tag `tdn-cli-v*` |
 | Release - Desktop | `.github/workflows/release-desktop.yml` | Tag `desktop-v*` |
+| Deploy - Website | `.github/workflows/deploy-website.yml` | Push to `website/**` on main |

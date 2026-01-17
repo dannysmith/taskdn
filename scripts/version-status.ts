@@ -34,7 +34,7 @@ interface VersionInfo {
 const PROJECT_ROOT = path.resolve(import.meta.dir, '..')
 
 // GitHub repos
-const MAIN_REPO = 'taskdn/taskdn'
+const MAIN_REPO = 'dannysmith/taskdn'
 const OBSIDIAN_REPO = 'dannysmith/obsidian-taskdn'
 
 async function fetchJSON(url: string): Promise<unknown> {
