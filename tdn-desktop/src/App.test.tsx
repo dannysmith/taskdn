@@ -5,32 +5,33 @@ import App from './App'
 // Tauri bindings are mocked globally in src/test/setup.ts
 
 describe('App', () => {
-  it('renders main window layout', async () => {
+  it('renders main window layout with Today view', async () => {
     render(<App />)
 
-    // Wait for async effects to settle, then verify render
     // Default view is "Today" from navigation store
-    // Multiple "Today" elements exist (sidebar nav + view header)
+    // Wait for async initialization to complete
     await waitFor(() => {
+      // Should render at least one "Today" heading (view header and/or sidebar)
       const headings = screen.getAllByRole('heading', { name: /today/i })
-      expect(headings.length).toBeGreaterThan(0)
+      expect(headings.length).toBeGreaterThanOrEqual(1)
     })
   })
 
-  it('renders title bar with traffic light buttons', async () => {
+  it('renders macOS window control buttons', async () => {
     render(<App />)
 
-    // Wait for async effects to settle, then verify render
+    // Wait for async effects to settle
     await waitFor(() => {
-      const titleBarButtons = screen
-        .getAllByRole('button')
-        .filter(
-          button =>
-            button.getAttribute('aria-label')?.includes('window') ||
-            button.className.includes('window-control')
-        )
-      // Should have at least the window control buttons
-      expect(titleBarButtons.length).toBeGreaterThan(0)
+      // macOS window controls have specific aria-labels
+      expect(
+        screen.getByRole('button', { name: 'Close window' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Minimize window' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Enter fullscreen' })
+      ).toBeInTheDocument()
     })
   })
 })
