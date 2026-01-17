@@ -583,6 +583,39 @@ impl VaultManager {
         let inner = self.inner.read();
         inner.writing_flag.store(writing, Ordering::SeqCst);
     }
+
+    // =========================================================================
+    // Test Support
+    // =========================================================================
+
+    /// Initialize the vault for testing without file watcher.
+    /// Only available in test builds.
+    #[cfg(test)]
+    pub fn initialize_for_test(&self, config: VaultConfig) -> Result<(), VaultError> {
+        // Validate config
+        if !config.is_valid() {
+            return Err(VaultError::not_configured(
+                "One or more vault directories do not exist",
+            ));
+        }
+
+        // Scan all directories
+        let tasks = scan_tasks(&config);
+        let projects = scan_projects(&config);
+        let areas = scan_areas(&config);
+
+        // Build index
+        let index = VaultIndex::from_scans(tasks, projects, areas);
+
+        // Update state (no file watcher in test mode)
+        {
+            let mut inner = self.inner.write();
+            inner.config = Some(config);
+            inner.index = index;
+        }
+
+        Ok(())
+    }
 }
 
 impl Default for VaultManager {
