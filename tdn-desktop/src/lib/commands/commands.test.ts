@@ -109,9 +109,8 @@ const { appCommands } = await import('./app-commands')
 const { entityCommands } = await import('./entity-commands')
 const { taskCommands } = await import('./task-commands')
 const { windowCommands } = await import('./window-commands')
-const { revealItemInDir, openPath, openUrl } = await import(
-  '@tauri-apps/plugin-opener'
-)
+const { revealItemInDir, openPath, openUrl } =
+  await import('@tauri-apps/plugin-opener')
 const { writeText } = await import('@tauri-apps/plugin-clipboard-manager')
 const { commands } = await import('@/lib/tauri-bindings')
 
@@ -876,7 +875,9 @@ describe('Task Commands', () => {
       const result = await executeCommand('copy-task-title', mockContext)
 
       expect(result.success).toBe(true)
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith('My Task Title')
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        'My Task Title'
+      )
       expect(mockContext.showToast).toHaveBeenCalledWith(
         expect.any(String),
         'success'

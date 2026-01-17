@@ -397,7 +397,7 @@ describe('useGlobalShortcuts', () => {
 
     vi.mocked(getAllCommands).mockReturnValue([command1, command2])
     // Only match the first command
-    vi.mocked(matchesKeyboardEvent).mockImplementation((parsed, event) => {
+    vi.mocked(matchesKeyboardEvent).mockImplementation((_parsed, _event) => {
       return true // Both would match
     })
 

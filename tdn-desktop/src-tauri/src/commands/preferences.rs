@@ -176,7 +176,10 @@ fn load_preferences_from_path(path: &std::path::Path) -> Result<AppPreferences, 
 
 /// Save preferences to the given path using atomic write (temp file + rename).
 #[cfg(test)]
-fn save_preferences_to_path(path: &std::path::Path, preferences: &AppPreferences) -> Result<(), String> {
+fn save_preferences_to_path(
+    path: &std::path::Path,
+    preferences: &AppPreferences,
+) -> Result<(), String> {
     // Validate theme value
     validate_theme(&preferences.theme)?;
 
@@ -304,7 +307,10 @@ mod tests {
         assert_eq!(prefs.tasks_dir, Some("/path/to/tasks".to_string()));
         assert_eq!(prefs.areas_dir, Some("/path/to/areas".to_string()));
         assert_eq!(prefs.projects_dir, Some("/path/to/projects".to_string()));
-        assert_eq!(prefs.ignore, Some(vec!["*.tmp".to_string(), ".DS_Store".to_string()]));
+        assert_eq!(
+            prefs.ignore,
+            Some(vec!["*.tmp".to_string(), ".DS_Store".to_string()])
+        );
         assert_eq!(prefs.show_obsidian_features, Some(true));
         assert_eq!(prefs.permanent_delete_tasks, Some(true));
     }
@@ -361,7 +367,11 @@ mod tests {
     #[test]
     fn save_preferences_creates_parent_directories() {
         let temp_dir = create_test_dir();
-        let path = temp_dir.path().join("nested").join("dir").join("preferences.json");
+        let path = temp_dir
+            .path()
+            .join("nested")
+            .join("dir")
+            .join("preferences.json");
 
         let prefs = AppPreferences::default();
         save_preferences_to_path(&path, &prefs).expect("save failed");
@@ -438,8 +448,14 @@ mod tests {
         assert_eq!(loaded.areas_dir, original.areas_dir);
         assert_eq!(loaded.projects_dir, original.projects_dir);
         assert_eq!(loaded.ignore, original.ignore);
-        assert_eq!(loaded.show_obsidian_features, original.show_obsidian_features);
-        assert_eq!(loaded.permanent_delete_tasks, original.permanent_delete_tasks);
+        assert_eq!(
+            loaded.show_obsidian_features,
+            original.show_obsidian_features
+        );
+        assert_eq!(
+            loaded.permanent_delete_tasks,
+            original.permanent_delete_tasks
+        );
     }
 
     #[test]

@@ -17,13 +17,13 @@ bun run rust:test      # Rust tests
 
 Our coverage thresholds are intentionally set low (30% lines/functions, 15% branches) because **coverage percentage is a poor proxy for test quality**. Here's what we actually measure:
 
-| Layer | Target Coverage | Rationale |
-|-------|-----------------|-----------|
-| **Stores** (Zustand) | 90%+ | Core state logic, must be bulletproof |
-| **Hooks** (ordering, data) | 80%+ | Business logic that drives the UI |
-| **Utilities** (date, wikilink) | 90%+ | Pure functions, easy to test exhaustively |
-| **Commands** | 70%+ | Application orchestration layer |
-| **Components** | Smoke tests only | Visual testing is expensive, returns diminish quickly |
+| Layer                          | Target Coverage  | Rationale                                             |
+| ------------------------------ | ---------------- | ----------------------------------------------------- |
+| **Stores** (Zustand)           | 90%+             | Core state logic, must be bulletproof                 |
+| **Hooks** (ordering, data)     | 80%+             | Business logic that drives the UI                     |
+| **Utilities** (date, wikilink) | 90%+             | Pure functions, easy to test exhaustively             |
+| **Commands**                   | 70%+             | Application orchestration layer                       |
+| **Components**                 | Smoke tests only | Visual testing is expensive, returns diminish quickly |
 
 The 30% threshold exists to catch accidental removal of test files, not to enforce minimum coverage.
 
@@ -32,18 +32,21 @@ The 30% threshold exists to catch accidental removal of test files, not to enfor
 **Core principle:** Thoroughly test business logic; minimally test UI rendering.
 
 **Why this works for desktop apps:**
+
 - React components are largely composition of well-tested primitives (shadcn/ui)
 - Visual regressions are caught during development, not CI
 - UI tests are brittle (break on style changes) and slow
 - Business logic bugs cause data loss; UI bugs cause inconvenience
 
 **What to test thoroughly:**
+
 - State transitions (navigation store, display order store)
 - Data transformations (vault helpers, ordering hooks)
 - Error handling (vault error formatting, recovery)
 - Platform-specific behavior (keyboard shortcuts, date formatting)
 
 **What to smoke-test:**
+
 - Components render without crashing
 - Critical user flows (app loads, sidebar toggles)
 - Accessibility basics (headings exist, buttons are clickable)

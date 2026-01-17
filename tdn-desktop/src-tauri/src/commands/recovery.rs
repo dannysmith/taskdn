@@ -187,9 +187,10 @@ pub async fn cleanup_old_recovery_files(app: AppHandle) -> Result<u32, RecoveryE
 #[cfg(test)]
 fn save_emergency_data_to_path(path: &Path, data: &Value) -> Result<(), RecoveryError> {
     // Serialize to pretty JSON once for both size validation and writing
-    let json_content = serde_json::to_string_pretty(data).map_err(|e| RecoveryError::ParseError {
-        message: e.to_string(),
-    })?;
+    let json_content =
+        serde_json::to_string_pretty(data).map_err(|e| RecoveryError::ParseError {
+            message: e.to_string(),
+        })?;
 
     // Validate size (10MB limit)
     if json_content.len() > MAX_RECOVERY_DATA_BYTES as usize {

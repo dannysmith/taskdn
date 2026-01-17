@@ -272,12 +272,12 @@ tauri = { version = "2", features = ["macos-private-api"] }
 
 **Implications:**
 
-| Consideration | Impact |
-|---------------|--------|
-| Mac App Store | Likely rejection - private APIs violate App Store guidelines |
-| macOS Updates | Risk of breakage if Apple changes internal APIs |
-| Notarization | Works fine - notarization doesn't check for private API usage |
-| Direct Distribution | No issues - only App Store has restrictions |
+| Consideration       | Impact                                                        |
+| ------------------- | ------------------------------------------------------------- |
+| Mac App Store       | Likely rejection - private APIs violate App Store guidelines  |
+| macOS Updates       | Risk of breakage if Apple changes internal APIs               |
+| Notarization        | Works fine - notarization doesn't check for private API usage |
+| Direct Distribution | No issues - only App Store has restrictions                   |
 
 **Mitigation:**
 

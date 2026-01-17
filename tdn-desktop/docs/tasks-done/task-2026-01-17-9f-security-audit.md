@@ -17,6 +17,7 @@ Conduct a full security audit on this whole codebase as an expert security audit
 This Tauri v2 desktop application demonstrates generally solid security practices. The codebase handles local markdown files for personal task management and does not process sensitive credentials or connect to external APIs (beyond the auto-updater).
 
 #### Key Strengths
+
 - No XSS vulnerabilities (no `dangerouslySetInnerHTML` usage)
 - Type-safe IPC via tauri-specta
 - Strong filename validation with path traversal protection
@@ -25,6 +26,7 @@ This Tauri v2 desktop application demonstrates generally solid security practice
 - Write-loop prevention in file watcher
 
 #### Areas Requiring Attention
+
 - High: NPM dependency vulnerabilities (transitive, low practical risk)
 - Medium: CSP could be strengthened for defense-in-depth
 - Low: Path validation improvements (mitigated by existing controls)
@@ -53,11 +55,11 @@ Decision: THis will be addressed in a later task.
 
 **Location:** `package.json` (transitive dependencies via `shadcn`)
 
-| Dependency | Severity | Issue |
-|------------|----------|-------|
-| hono <4.11.4 | High | JWT algorithm confusion (GHSA-3vhc-576x-3qv4, GHSA-f67f-6cw9-8mq4) |
-| @modelcontextprotocol/sdk <1.25.2 | High | ReDoS vulnerability (GHSA-8r9q-7v3j-jr4g) |
-| diff <8.0.3 | Low | DoS in parsePatch/applyPatch (GHSA-73rr-hh4g-fpgx) |
+| Dependency                        | Severity | Issue                                                              |
+| --------------------------------- | -------- | ------------------------------------------------------------------ |
+| hono <4.11.4                      | High     | JWT algorithm confusion (GHSA-3vhc-576x-3qv4, GHSA-f67f-6cw9-8mq4) |
+| @modelcontextprotocol/sdk <1.25.2 | High     | ReDoS vulnerability (GHSA-8r9q-7v3j-jr4g)                          |
+| diff <8.0.3                       | Low      | DoS in parsePatch/applyPatch (GHSA-73rr-hh4g-fpgx)                 |
 
 **Practical Risk: LOW** - These are in `shadcn`'s CLI toolchain (MCP SDK), not runtime code shipped with the app. The JWT vulnerabilities in hono are irrelevant since this app doesn't use JWT authentication. The ReDoS vulnerability only affects CLI usage, not the bundled application.
 
@@ -111,6 +113,7 @@ pub fn is_valid(&self) -> bool {
 Only validates that directories exist, not whether paths are absolute or contain traversal sequences.
 
 **Practical Risk: VERY LOW** - Multiple mitigating factors make this a non-issue:
+
 1. User explicitly configures these paths via the UI (not from untrusted input)
 2. The app only processes `.md` files with valid S1-compliant frontmatter
 3. Even if pointed at `/etc`, files would fail frontmatter parsing and be skipped
@@ -134,6 +137,7 @@ return { type: 'open-path', path }
 Accepts any absolute path in `taskdn://open?path=...` deep links without validating the path is within configured vault directories.
 
 **Practical Risk: LOW** - The backend provides strong protection:
+
 1. `get_entity_raw_content` only returns content for paths that exist in the vault index
 2. The vault index is built by scanning configured directories only
 3. A deep link like `taskdn://open?path=/etc/passwd` would simply fail with "entity not found"
@@ -183,18 +187,18 @@ Decision: Just document this somewhere appropriate in the developer documents.
 
 ### OWASP Top 10 (2021) Mapping
 
-| Category | Status | Notes |
-|----------|--------|-------|
-| A01: Broken Access Control | Pass | Local app with file-level permissions |
-| A02: Cryptographic Failures | Pass | Updater key to be configured before release (separate task) |
-| A03: Injection | Pass | Type-safe Rust backend, no SQL |
-| A04: Insecure Design | Pass | Good separation of concerns |
-| A05: Security Misconfiguration | Pass | CSP is appropriate for local app context |
-| A06: Vulnerable Components | Pass | Reported vulns are in dev tooling, not runtime |
-| A07: Identification Failures | N/A | No authentication in app |
-| A08: Software Data Integrity | Pass | Updater signing will be configured before release |
-| A09: Logging Failures | Pass | Good logging implementation |
-| A10: SSRF | N/A | No server-side requests from user input |
+| Category                       | Status | Notes                                                       |
+| ------------------------------ | ------ | ----------------------------------------------------------- |
+| A01: Broken Access Control     | Pass   | Local app with file-level permissions                       |
+| A02: Cryptographic Failures    | Pass   | Updater key to be configured before release (separate task) |
+| A03: Injection                 | Pass   | Type-safe Rust backend, no SQL                              |
+| A04: Insecure Design           | Pass   | Good separation of concerns                                 |
+| A05: Security Misconfiguration | Pass   | CSP is appropriate for local app context                    |
+| A06: Vulnerable Components     | Pass   | Reported vulns are in dev tooling, not runtime              |
+| A07: Identification Failures   | N/A    | No authentication in app                                    |
+| A08: Software Data Integrity   | Pass   | Updater signing will be configured before release           |
+| A09: Logging Failures          | Pass   | Good logging implementation                                 |
+| A10: SSRF                      | N/A    | No server-side requests from user input                     |
 
 ---
 
@@ -237,15 +241,15 @@ These are nice-to-have but not required given the existing mitigations:
 
 ## Summary
 
-| Finding | Reported Severity | Practical Risk | Action |
-|---------|-------------------|----------------|--------|
-| Updater key placeholder | Critical | N/A | Separate task |
-| NPM vulnerabilities | High | Low | Periodic `bun update` |
-| Opener capability scope | Medium | Accepted | Required for app |
-| CSP unsafe-inline | Medium | Low | Optional hardening |
-| Vault path validation | Medium | Very Low | No action needed |
-| Deep link validation | Medium | Low | No action needed |
-| Git dependency pinning | Low | Low | Done |
-| macOS private API | Low | N/A | Done |
+| Finding                 | Reported Severity | Practical Risk | Action                |
+| ----------------------- | ----------------- | -------------- | --------------------- |
+| Updater key placeholder | Critical          | N/A            | Separate task         |
+| NPM vulnerabilities     | High              | Low            | Periodic `bun update` |
+| Opener capability scope | Medium            | Accepted       | Required for app      |
+| CSP unsafe-inline       | Medium            | Low            | Optional hardening    |
+| Vault path validation   | Medium            | Very Low       | No action needed      |
+| Deep link validation    | Medium            | Low            | No action needed      |
+| Git dependency pinning  | Low               | Low            | Done                  |
+| macOS private API       | Low               | N/A            | Done                  |
 
 **Conclusion:** The codebase has a solid security posture for a local-file desktop application. All required actions have been completed. Other findings have low practical risk due to existing mitigations.

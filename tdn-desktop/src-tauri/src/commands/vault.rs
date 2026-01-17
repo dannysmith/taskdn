@@ -663,8 +663,7 @@ mod tests {
         manager.update_task(update).expect("update_task failed");
 
         // Read file directly
-        let content =
-            std::fs::read_to_string(&created.path).expect("Failed to read task file");
+        let content = std::fs::read_to_string(&created.path).expect("Failed to read task file");
         assert!(content.contains("Persisted Title"));
     }
 

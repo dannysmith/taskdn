@@ -13,7 +13,6 @@ import {
   handleVaultError,
   isRecentMutation,
   getTimeSinceLastMutation,
-  addTaskToCache,
   initializeVault,
   isVaultConfigured,
 } from './vault'
@@ -721,7 +720,10 @@ describe('vault service', () => {
 
   describe('formatVaultError', () => {
     it('formats notConfigured error', () => {
-      const error = { type: 'notConfigured' as const }
+      const error = {
+        type: 'notConfigured' as const,
+        message: 'Vault not configured',
+      }
       const result = formatVaultError(error)
       expect(result).toContain('not configured')
     })
@@ -747,6 +749,7 @@ describe('vault service', () => {
     it('formats readError with message', () => {
       const error = {
         type: 'readError' as const,
+        path: '/path/to/file.md',
         message: 'Permission denied',
       }
       const result = formatVaultError(error)
@@ -757,6 +760,7 @@ describe('vault service', () => {
     it('formats writeError with message', () => {
       const error = {
         type: 'writeError' as const,
+        path: '/path/to/file.md',
         message: 'Disk full',
       }
       const result = formatVaultError(error)
@@ -767,6 +771,7 @@ describe('vault service', () => {
     it('formats parseError with message', () => {
       const error = {
         type: 'parseError' as const,
+        path: '/path/to/file.md',
         message: 'Invalid YAML',
       }
       const result = formatVaultError(error)
@@ -806,7 +811,12 @@ describe('vault service', () => {
     })
 
     it('returns unknown error for unrecognized type', () => {
-      const error = { type: 'unknownType' as never }
+      // Cast to simulate an unrecognized error type at runtime
+      const error = {
+        type: 'unknownType',
+        message: 'Something unexpected',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any
       const result = formatVaultError(error)
       expect(result).toContain('Unknown error')
     })

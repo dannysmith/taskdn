@@ -438,7 +438,10 @@ mod tests {
     fn quick_pane_is_larger_than_minimum_usable_size() {
         // Ensure the panel is large enough to be usable
         assert!(QUICK_PANE_WIDTH >= 600.0, "Width should be at least 600px");
-        assert!(QUICK_PANE_HEIGHT >= 400.0, "Height should be at least 400px");
+        assert!(
+            QUICK_PANE_HEIGHT >= 400.0,
+            "Height should be at least 400px"
+        );
     }
 
     // -------------------------------------------------------------------------
