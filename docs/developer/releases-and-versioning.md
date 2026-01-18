@@ -124,6 +124,51 @@ These products don't have release versions:
 | tdn-obsidian-extras | Collection of templates, no versioning needed |
 | website | Deployed website, continuously updated |
 
+## Website Release Posts
+
+When releases are published, posts are automatically created on the website at `/releases/`. These aggregate all product releases in one place.
+
+### Automation
+
+| Product | How |
+|---------|-----|
+| tdn-cli | Auto-created on `release: published` |
+| tdn-desktop | Auto-created on `release: published` |
+| obsidian-taskdn | Synced every 6 hours from external repo |
+| tdn-claude-plugin | Manual |
+| Specs | Manual |
+| Starter vault | Manual |
+
+### Creating Manual Release Posts
+
+Create `website/src/content/docs/releases/{product}-{version}.mdx`:
+
+```mdx
+---
+title: 'Claude Plugin v0.5.0'
+description: 'Brief summary for SEO'
+date: 2026-01-18
+product: claude-plugin
+---
+
+Release content here.
+```
+
+Valid `product` values: `cli`, `desktop`, `obsidian`, `claude-plugin`, `spec`, `vault`
+
+### File Naming
+
+- `cli-1.0.0.mdx`
+- `desktop-0.1.0.mdx`
+- `obsidian-1.2.0.mdx`
+- `claude-plugin-0.5.0.mdx`
+- `spec-2026-01.mdx` (date-based)
+- `vault-2026-01.mdx` (date-based)
+
+### Editing Auto-Generated Posts
+
+Edit the `.mdx` file directly. Add images to `releases/images/` if needed.
+
 ## GitHub Actions Workflows
 
 | Workflow | File | Trigger |
@@ -132,3 +177,5 @@ These products don't have release versions:
 | Release - CLI | `.github/workflows/release-cli.yml` | Tag `tdn-cli-v*` |
 | Release - Desktop | `.github/workflows/release-desktop.yml` | Tag `desktop-v*` |
 | Deploy - Website | `.github/workflows/deploy-website.yml` | Push to `website/**` on main |
+| Release Post | `.github/workflows/create-release-post.yml` | `release: published` (CLI/Desktop) |
+| Sync Obsidian | `.github/workflows/sync-obsidian-releases.yml` | Every 6 hours + manual |
