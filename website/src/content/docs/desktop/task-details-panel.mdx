@@ -3,50 +3,58 @@ title: 'Task Details Panel'
 description: 'View and edit the currently selected task'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro'
+import { Aside } from '@astrojs/starlight/components'
+import Center from '@components/Center.astro'
 
-<UnderConstruction />
+The task details panel appears as a sidebar on the right-hand side of the main window. It always shows the details of the currently-selected task, or the last selected task if none is currently selected.
 
-The task details panel appears on the right side of the window and shows the currently selected task.
+<Center>
+![task-panel.png](../../../assets/docs/2026-01-18-task-panel.png)
+</Center>
 
-## Field Editing
+## Editing a Task's Data
 
-{/* Content needed:
-- Which fields can be edited
-- How to edit each field type
-- Date pickers
-- Status dropdown
-- Project/area selection
-*/}
+The following fields can be edited directly from the task details panel:
 
-## The Markdown Editor
+| Field | Description |
+| :---- | :---------- |
+| **Title** | The task's name, displayed at the top of the panel. Click to edit, enter to save. Press excape to cancel. |
+| **Project** | The project this task belongs to. Select from the dropdown or leave empty. |
+| **Area** | The area of responsibility this task falls under. Select from the dropdown. |
+| **Status** | The task's current status (e.g. In Progress, Completed). Clicking the checkbox beside the title will toggle the status between *Ready* and *Done*. |
+| **Scheduled** | The date the task is scheduled to be worked on. Click to set or clear. |
+| **Due** | The task's deadline. Displayed in red/orange when approaching or overdue. |
+| **Defer** | A "defer until" date. The task won't appear in active lists until this date. |
 
-The task body supports Markdown editing for notes and additional content.
+The task's filename, `created-at`, `updated-at` and `completed-at` fields are shown at the bottom but cannot be manually edited.
 
-### Basic Markdown
+<Aside type="tip">
+Right-clicking on the background of the panel shows the task's context menu.
+</Aside>
 
-{/* Content needed:
-- Supported markdown syntax
-- Formatting shortcuts
-*/}
+### Using the Date Pickers
 
-### Checklists
+Clicking the *scheduled*, *due* or *defer* controls will open a datpicker. Pressing Enter will set the date, while Escape will close the date picker without setting a date. You can select a date in three ways:
 
-{/* Content needed:
-- How to create checklists
-- Checking/unchecking items
-*/}
+1. Using the left/right/up/down keys and pressing Enter
+2. Clicking on a date. You can quickly scroll to find dates in the far future.
+3. Typing natural language like "tomorrow", "three weeks", "next friday" or "25 jun" and pressing Enter. All common date formats are accepted, as well as things like "+5w" (which will select a date in five weeks time).
 
-### URL Pasting
+<Center>
+![datepicker-1.png](../../../assets/docs/2026-01-18-datepicker-1.png)
+</Center>
 
-{/* Content needed:
-- Auto-linking behavior
-- Paste as markdown link
-*/}
+<Center>
+![datepicker-2.png](../../../assets/docs/2026-01-18-datepicker-2.png)
+</Center>
 
-### Source Mode
+## Editing the task body
 
-{/* Content needed:
-- Toggling source mode
-- When to use it
-*/}
+The body of the task can be edited in the textarea below, which renders the markdown as a live preview. It supports all the features and keyboard shortcuts you'd expect in a WYSIWYG markdown editor plus a few extras:
+
+- Checkboxes in markdown checklists are clickable.
+- You can insert a new checklist item by typing `[]` followed by a space on any newline – same as in Notion.
+- Pasting a URL over selected text wraps it with a markdown link.
+- You can open any URL by holding Command/Control and clicking on it.
+
+You can toggle between live preview and the raw markdown source using the toggle in the bottom right of the textarea.
