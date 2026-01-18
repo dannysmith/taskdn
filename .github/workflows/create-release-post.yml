@@ -39,6 +39,8 @@ jobs:
         env:
           RELEASE_BODY: ${{ github.event.release.body }}
         run: |
+          mkdir -p website/src/content/docs/releases
+
           PRODUCT="${{ steps.info.outputs.product }}"
           VERSION="${{ steps.info.outputs.version }}"
           DATE="${{ steps.info.outputs.date }}"
