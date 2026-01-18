@@ -1,5 +1,49 @@
 # Task: Desktop App Userguide
 
+## 1. Pages to Create
+
+Create these docs in `/website/src/content/docs/desktop/`. The sub-items are major headings in each doc. Add them to the sidebar too.
+
+- [ ] Add these headings to overvire.mdx:
+  - Overview (of the main app window)
+  - Areas
+  - Projects
+  - Tasks
+  - Source of Truth
+- [ ] Task Details Panel
+- [ ] Views
+  - Today
+  - This Week
+  - Inbox
+  - Calendar
+  - Project View
+  - Area View
+  - No Area View
+- [ ] Working With Lists
+- [ ] Working with Kanban Boards & Calendars
+  - Calendars
+  - Kanban Boards
+- [ ] Global Quick Entry Pane
+- [ ] Command Pallete & Task Search
+  - Intro
+  - The Command Palette
+  - Searching for Tasks
+- [ ] Menus & Keyboard Shortcuts
+- [ ] Preferences
+  - General
+  - Vault
+  - Quick Entry Pane
+  - Advanced
+  - How Settings are Stored
+- [ ] URL Scheme
+- [ ] Keyboard Navigation
+
+## 2. Add content
+
+[Add actual content to each section]
+
+# Random Notes
+
 ## Overview
 
 - Why a desktop app
@@ -111,19 +155,15 @@
 ## Quick Entry Pane
 
 
-## Command Pallete
+## Command Pallete & Task Search
 
-## Task Search
-
-## Context Menus
+## Menus & Keyboard Shortcuts
 
 - Default App
 - Reveal
 - Open in Obsidian
 - Copy path / URL / as markdown
 - Tasks: can edit metadata etc
-
-## Keyboard Shortcuts
 
 ## Preferences
 
