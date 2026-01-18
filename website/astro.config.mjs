@@ -162,8 +162,8 @@ export default defineConfig({
           ],
         },
         {
-          label: '📦 Releases',
-          items: [{ label: 'All Releases', link: '/releases/' }],
+          label: 'Releases',
+          link: '/releases/',
         },
       ],
     }),
