@@ -20,6 +20,7 @@ The Obsidian plugin turns wikilinks to task files into interactive widgets. Link
 - **Status colours** — Coloured borders show task state at a glance (blue for inbox, yellow for in-progress, red for blocked)
 - **Check off tasks** — Click the checkbox to mark tasks done without leaving your note
 - **Convert checklist items** — Right-click any checklist item to turn it into a Taskdn task file
+- **Inline title replacement** — Display the task's title frontmatter instead of the kebab-case filename, with a status-coloured border
 
 ## Installation
 
@@ -39,6 +40,8 @@ Open **Settings → Taskdn** to configure:
 | Default status | Status for newly converted tasks (default: `inbox`) |
 | Show desktop button | Whether to show the "open in desktop app" button |
 | Exclude patterns | Files to ignore, supports wildcards |
+| Use task title as inline title | Show the title frontmatter instead of the filename in the inline title |
+| Sync filename with task title | Also rename the file when the inline title is edited |
 
 ## Usage
 
@@ -54,3 +57,54 @@ Link to task files using standard wikilink syntax:
 ```
 
 Works in both Live Preview and Reading mode. Tasks in bullet lists behave like native Obsidian checklists—completed tasks get strikethrough styling.
+
+## Inline Title
+
+By default, Obsidian displays the filename as the inline title at the top of documents. For task files, this means you see `buy-groceries` instead of "Buy groceries". The plugin can replace this with the human-readable title from frontmatter.
+
+### Setup
+
+1. Enable **Settings → Appearance → Show inline title** (Obsidian's native setting)
+2. Enable **Settings → Taskdn → Use task title as inline title**
+
+### Status Border
+
+When enabled, a coloured left border appears indicating the task's status:
+
+| Status | Border Colour |
+|--------|---------------|
+| inbox | Blue |
+| icebox | Cyan |
+| ready | Green |
+| in-progress | Yellow |
+| blocked | Red |
+| dropped | Pink |
+| done | Green |
+
+### Editing the Title
+
+Click the inline title to edit. When you finish (press Enter or click away), the plugin:
+
+1. Updates the `title` frontmatter
+2. Sets `updated-at` to today's date
+3. Optionally renames the file (if "Sync filename with task title" is enabled)
+
+The standard Obsidian behaviour of renaming the file is intercepted—your edits go to the frontmatter instead.
+
+### Filename Sync
+
+Enable **Sync filename with task title** to rename files when editing the inline title:
+
+- Filenames are converted to kebab-case ("Buy Groceries" → `buy-groceries.md`)
+- Obsidian updates all wikilinks automatically
+- Duplicate names get a number suffix (`buy-groceries-2.md`)
+
+### When It Applies
+
+The inline title replacement only activates when all of these conditions are met:
+
+1. The file is in your configured tasks directory
+2. The file is not matched by any pattern in the exclude patterns list
+3. The file has valid frontmatter with both `title` and `status` fields
+
+For all other files, Obsidian's normal inline title behaviour applies—edits will rename the file as usual.
