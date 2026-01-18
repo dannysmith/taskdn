@@ -1,11 +1,26 @@
 ---
 title: 'Obsidian Plugin v0.2.3'
-description: 'Release notes for Obsidian Plugin v0.2.3'
+description: 'Inline title replacement for task files'
 date: 2026-01-18
 product: obsidian
 ---
 
-No release notes provided.
+New feature: task files can now display their human-readable title instead of the filename.
+
+## Inline Title Replacement
+
+When Obsidian's "Show inline title" setting is enabled, you can optionally have task files display their `title` frontmatter instead of the filename.
+
+**How it works:**
+
+- Enable "Use task title as inline title" in the plugin settings
+- When viewing a task file, the inline title shows the `title` frontmatter (e.g., "Buy groceries") instead of the filename (e.g., "buy-groceries")
+- Editing the inline title updates the `title` frontmatter and sets `updated-at` to today's date
+- A coloured left border appears on the document indicating the task's status
+
+This only applies to valid Taskdn task files. For all other files, Obsidian's normal inline title behaviour is unchanged.
+
+**Optional filename sync:** Enable "Sync filename with task title" to also rename the file when you edit the inline title. The filename is converted to kebab-case (e.g., "Buy Groceries" → `buy-groceries.md`), and Obsidian automatically updates any links to the file.
 
 ---
 
