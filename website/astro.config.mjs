@@ -3,6 +3,7 @@ import { defineConfig } from 'astro/config'
 import starlight from '@astrojs/starlight'
 import starlightThemeFlexoki from 'starlight-theme-flexoki'
 import starlightLlmsTxt from 'starlight-llms-txt'
+import starlightKbd from 'starlight-kbd'
 
 // https://astro.build/config
 export default defineConfig({
@@ -12,6 +13,12 @@ export default defineConfig({
       plugins: [
         starlightThemeFlexoki({ accentColor: 'blue' }),
         starlightLlmsTxt(),
+        starlightKbd({
+          types: [
+            { id: 'mac', label: 'macOS', default: true },
+            { id: 'windows', label: 'Windows' },
+          ],
+        })
       ],
       title: 'Taskdn',
       customCss: ['./src/styles/docs-demos.css'],
