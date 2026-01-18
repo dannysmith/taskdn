@@ -80,13 +80,20 @@ jobs:
           else
             git commit -m "docs(releases): add ${{ steps.info.outputs.title_prefix }} v${{ steps.info.outputs.version }}"
 
+            push_succeeded=false
             for i in 1 2 3; do
               if git push; then
                 echo "Push succeeded"
+                push_succeeded=true
                 break
               else
                 echo "Push failed, attempt $i of 3"
                 git pull --rebase
               fi
             done
+
+            if [ "$push_succeeded" = false ]; then
+              echo "All push attempts failed"
+              exit 1
+            fi
           fi
