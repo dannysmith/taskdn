@@ -1,0 +1,99 @@
+name: Create Release Post
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  create-post:
+    if: startsWith(github.event.release.tag_name, 'tdn-cli-v') || startsWith(github.event.release.tag_name, 'desktop-v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Determine product and version
+        id: info
+        run: |
+          TAG="${{ github.event.release.tag_name }}"
+
+          if [[ "$TAG" == tdn-cli-v* ]]; then
+            echo "product=cli" >> "$GITHUB_OUTPUT"
+            echo "version=${TAG#tdn-cli-v}" >> "$GITHUB_OUTPUT"
+            echo "title_prefix=CLI" >> "$GITHUB_OUTPUT"
+          elif [[ "$TAG" == desktop-v* ]]; then
+            echo "product=desktop" >> "$GITHUB_OUTPUT"
+            echo "version=${TAG#desktop-v}" >> "$GITHUB_OUTPUT"
+            echo "title_prefix=Desktop" >> "$GITHUB_OUTPUT"
+          fi
+
+          DATE=$(echo '${{ github.event.release.published_at }}' | cut -d'T' -f1)
+          echo "date=${DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Create release post
+        env:
+          RELEASE_BODY: ${{ github.event.release.body }}
+        run: |
+          PRODUCT="${{ steps.info.outputs.product }}"
+          VERSION="${{ steps.info.outputs.version }}"
+          DATE="${{ steps.info.outputs.date }}"
+          TITLE_PREFIX="${{ steps.info.outputs.title_prefix }}"
+          TAG="${{ github.event.release.tag_name }}"
+
+          FILENAME="website/src/content/docs/releases/${PRODUCT}-${VERSION}.mdx"
+
+          if [ -f "$FILENAME" ]; then
+            echo "Release post already exists: $FILENAME"
+            exit 0
+          fi
+
+          {
+            printf '%s\n' "---"
+            printf '%s\n' "title: '${TITLE_PREFIX} v${VERSION}'"
+            printf '%s\n' "description: 'Release notes for ${TITLE_PREFIX} v${VERSION}'"
+            printf '%s\n' "date: ${DATE}"
+            printf '%s\n' "product: ${PRODUCT}"
+            printf '%s\n' "---"
+            printf '\n'
+            printf '%s\n' "$RELEASE_BODY"
+            printf '\n'
+            printf '%s\n' "---"
+            printf '\n'
+            printf '%s\n' "[View on GitHub](https://github.com/${{ github.repository }}/releases/tag/${TAG})"
+          } > "$FILENAME"
+
+          echo "Created: $FILENAME"
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add website/src/content/docs/releases/
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs(releases): add ${{ steps.info.outputs.title_prefix }} v${{ steps.info.outputs.version }}"
+
+            push_succeeded=false
+            for i in 1 2 3; do
+              if git push; then
+                echo "Push succeeded"
+                push_succeeded=true
+                break
+              else
+                echo "Push failed, attempt $i of 3"
+                git pull --rebase
+              fi
+            done
+
+            if [ "$push_succeeded" = false ]; then
+              echo "All push attempts failed"
+              exit 1
+            fi
+          fi
