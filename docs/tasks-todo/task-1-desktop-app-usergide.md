@@ -42,7 +42,7 @@ Create these docs in `/website/src/content/docs/desktop/`. The sub-items are maj
 
 [Add actual content to each section]
 
-# Random Notes
+# Random Notes on Content
 
 ## Overview
 

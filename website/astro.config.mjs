@@ -71,6 +71,36 @@ export default defineConfig({
             {
               slug: 'desktop/overview',
             },
+            {
+              slug: 'desktop/task-details-panel',
+            },
+            {
+              slug: 'desktop/views',
+            },
+            {
+              slug: 'desktop/working-with-lists',
+            },
+            {
+              slug: 'desktop/working-with-kanban-and-calendars',
+            },
+            {
+              slug: 'desktop/quick-entry-pane',
+            },
+            {
+              slug: 'desktop/command-palette',
+            },
+            {
+              slug: 'desktop/menus-and-shortcuts',
+            },
+            {
+              slug: 'desktop/preferences',
+            },
+            {
+              slug: 'desktop/url-scheme',
+            },
+            {
+              slug: 'desktop/keyboard-navigation',
+            },
           ],
         },
         {
