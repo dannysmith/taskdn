@@ -20,6 +20,8 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.OBSIDIAN_REPO_PAT }}
         run: |
+          mkdir -p website/src/content/docs/releases
+
           RELEASES=$(gh api repos/dannysmith/obsidian-taskdn/releases \
             --jq '[.[] | select(.draft == false and .prerelease == false)]')
 
