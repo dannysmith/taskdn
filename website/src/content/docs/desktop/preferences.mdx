@@ -3,47 +3,38 @@ title: 'Preferences'
 description: 'Configure the desktop app settings'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro'
+import { Aside } from '@astrojs/starlight/components'
 
-<UnderConstruction />
-
-Access preferences via the application menu or keyboard shortcut.
+You can open the preferences fro the **File** menu or the [command palette](/desktop/command-palette/). It contains a number of panes.
 
 ## General
 
-{/* Content needed:
-- Launch at login
-- Default view
-- Appearance settings
-*/}
+![prefs-general.png](../../../assets/docs/2026-01-19-prefs-general.png)
+
+In addition to your theme and language preferences, you can also configure the following global preferences:
+
+1. **Show Obsidian Features** – Controls whether features like *Open in Obsidian* are shown in the UI.
+2. **Permanently Delete Tasks** - By default, tasks deleted via the desktop app are moved to the system recycle bin/trash can. With this switch enabled, they will instead be permenantly deleted.
+
 
 ## Vault
 
-{/* Content needed:
-- Configuring vault location
-- Tasks/projects/areas directories
-*/}
+The **vault** pane contains settings related to your on-disk files. For the application to work, you must provide paths to the directories containing your areas, projects and tasks.
+
+![prefs-vault-paths.png](../../../assets/docs/2026-01-19-prefs-vault-paths.png)
+
+<Aside type="tip">
+If you have the [CLI](/cli/overview) installed and configured via a `~/.taskdn.json` file, you can click <strong>Read from CLI Config</strong> to import your settings from there.
+</Aside>
+
+If any of these directories contain files which should be ignored (eg. `tasks/README.md`), you can also configure that here.
 
 ## Quick Entry Pane
 
-{/* Content needed:
-- Global shortcut configuration
-- Default project/area
-- Behavior settings
-*/}
+Settings for the quick entry pane. You can change your global keyboard shortcut here.
 
-## Advanced
+![prefs-quickentry.png](../../../assets/docs/2026-01-19-prefs-quickentry.png)
 
-{/* Content needed:
-- Developer options
-- Debug settings
-- Performance options
-*/}
+## How your settings are stored
 
-## How Settings are Stored
-
-{/* Content needed:
-- Settings file location
-- Format
-- Syncing considerations
-*/}
+Your settings are persisted to disk in a `preferences.json`. The location of this differs depending on your operating system, but you can find it via the **Advanced** pane in the preferences.
