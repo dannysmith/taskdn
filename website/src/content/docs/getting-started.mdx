@@ -5,7 +5,7 @@ description: 'Learn the fundamentals of Taskdn'
 
 import { Badge, LinkCard, CardGrid } from '@astrojs/starlight/components'
 import { Image } from 'astro:assets'
-import desktopScreenshot from '@assets/desktop-1.png'
+import desktopScreenshot from '@assets/desktop-app-screenshot.png'
 import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
 import CLIDemo from '@components/demos/CLIDemo.astro'
 import ObsidianDemo from '@components/demos/ObsidianDemo.astro'
@@ -13,7 +13,7 @@ import ClaudeDemo from '@components/demos/ClaudeDemo.astro'
 
 Most task management apps force a choice: use something like Notion and get powerful features but lose ownership of your data, or use plain files and miss out on good UIs. Taskdn is a different approach—your tasks live as markdown files on disk, but you get proper tools to work with them.
 
-The system stores tasks, projects, and areas as markdown files with YAML frontmatter. Three directories, one file per entity, that's it. Keep them in an [Obsidian](https://obsidian.md) vault, a git repo, or just a folder on your desktop. Since everything is just files, you can edit them in any text editor, version them, back them up however you like, or build your own tools on top.
+The system stores tasks, projects, and areas as markdown files with YAML frontmatter. Three directories, one file per entity, that's it. Keep them in an [Obsidian](https://obsidian.md) vault, a git repo, or just a folder on your desktop. Since everything is just files, you can edit them in any text editor, version them, back them up however you like, or build your own tools on top. The full file format is defined in the [Core Specification](/specification/s1-core/).
 
 But raw files aren't great for actually *doing* task management. That's where the Taskdn products come in—interfaces designed for specific contexts, all reading and writing the same files.
 
@@ -21,10 +21,10 @@ But raw files aren't great for actually *doing* task management. That's where th
 
 |     | Product                                     | Status                                       | Description                                        |
 | --- | ------------------------------------------- | -------------------------------------------- | -------------------------------------------------- |
-| 🖥️  | [Desktop App](/desktop/overview)            | <Badge text="Available" variant="success" />  | Day-to-day task management with a beautiful UI     |
-| ⌨️  | [CLI](/cli/overview)                        | <Badge text="Available" variant="success" /> | Terminal interface for humans and AI agents        |
-| 💎  | [Obsidian Plugin](/obsidian/plugin)         | <Badge text="Available" variant="success" /> | View and manage tasks within Obsidian              |
-| 🤖  | [Claude Code Plugin](/claude-code/overview) | <Badge text="Available" variant="success" /> | Skill and commands for AI-assisted task management |
+| 🖥️  | [Desktop App](/desktop/overview)            | <Badge text="Ready" variant="success" />  | Day-to-day task management with a beautiful UI     |
+| ⌨️  | [CLI](/cli/overview)                        | <Badge text="Ready" variant="success" /> | Terminal interface for humans and AI agents        |
+| 💎  | [Obsidian Plugin](/obsidian/plugin)         | <Badge text="Ready" variant="success" /> | View and manage tasks within Obsidian              |
+| 🤖  | [Claude Code Plugin](/claude-code/overview) | <Badge text="Ready" variant="success" /> | Skill and commands for AI-assisted task management |
 
 <LinkCard
   title="Setup Guide"
@@ -71,7 +71,7 @@ Key points to review:
 
 #### Task Statuses
 
-Tasks follow a simple workflow: <Badge text="inbox" variant="note" /> for new captures, <Badge text="ready" variant="default" /> once processed, <Badge text="in-progress" variant="caution" /> when you're working on it, then <Badge text="done" variant="success" /> when complete. Use <Badge text="blocked" variant="danger" /> for tasks waiting on something external, <Badge text="icebox" variant="note" /> for things you're intentionally deferring indefinitely, or <Badge text="dropped" variant="danger" /> for tasks you've decided not to do.
+Tasks follow a simple workflow: <Badge text="inbox" variant="note" /> for new captures, <Badge text="ready" variant="default" /> once processed, <Badge text="in-progress" variant="caution" /> when you're working on it, then <Badge text="done" variant="success" /> when complete. Use <Badge text="blocked" variant="danger" /> for tasks waiting on something external, <Badge text="icebox" variant="note" /> for things you're intentionally deferring indefinitely, or <Badge text="dropped" variant="danger" /> for tasks you've decided not to do. See the [specification](/specification/s1-core/#33-status-required) for the full status definitions.
 
 ### Projects
 
@@ -91,7 +91,7 @@ This project covers all Q1 planning activities...
 
 #### Project Statuses
 
-Projects have their own workflow: <Badge text="planning" variant="note" /> while scoping, <Badge text="ready" variant="default" /> when planned, <Badge text="in-progress" variant="caution" /> during active work, and <Badge text="done" variant="success" /> when complete. You can also mark projects as <Badge text="paused" variant="caution" /> or <Badge text="blocked" variant="danger" /> when needed.
+Projects have their own workflow: <Badge text="planning" variant="note" /> while scoping, <Badge text="ready" variant="default" /> when planned, <Badge text="in-progress" variant="caution" /> during active work, and <Badge text="done" variant="success" /> when complete. You can also mark projects as <Badge text="paused" variant="caution" /> or <Badge text="blocked" variant="danger" /> when needed. See the [specification](/specification/s1-core/#43-status-required) for the full status definitions.
 
 ### Areas
 
@@ -107,7 +107,7 @@ description: Professional responsibilities and career development.
 Current role, key responsibilities, and long-term goals...
 ```
 
-Areas don't have workflow statuses—they're just `active` or `archived`.
+Areas don't have workflow statuses—they're just `active` or `archived`. See the [specification](/specification/s1-core/#55-status-optional) for details.
 
 ## The Products
 

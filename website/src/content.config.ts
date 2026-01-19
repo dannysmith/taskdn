@@ -10,7 +10,14 @@ export const collections = {
       extend: z.object({
         date: z.coerce.date().optional(),
         product: z
-          .enum(['cli', 'desktop', 'obsidian', 'claude-plugin', 'spec', 'vault'])
+          .enum([
+            'cli',
+            'desktop',
+            'obsidian',
+            'claude-plugin',
+            'spec',
+            'vault',
+          ])
           .optional(),
       }),
     }),

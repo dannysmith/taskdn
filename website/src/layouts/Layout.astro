@@ -38,8 +38,10 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site)
     <meta name="twitter:image" content={new URL(image, Astro.site)} />
 
     <!-- Analytics -->
-    <script async src="https://scripts.simpleanalyticscdn.com/latest.js"
-    ></script>
+    <script
+      is:inline
+      async
+      src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
   </head>
   <body>
     <slot />

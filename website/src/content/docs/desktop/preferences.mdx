@@ -1,0 +1,51 @@
+---
+title: 'Preferences'
+description: 'Configure the desktop app settings'
+---
+
+import { Aside } from '@astrojs/starlight/components'
+import { Image } from 'astro:assets'
+import Center from '@components/Center.astro'
+import prefsGeneral from '@assets/docs/2026-01-19-prefs-general.png'
+import prefsVault from '@assets/docs/2026-01-19-prefs-vault-paths.png'
+import prefsQuickEntry from '@assets/docs/2026-01-19-prefs-quickentry.png'
+
+You can open the preferences from the **File** menu or the [command palette](/desktop/command-palette/). It contains a number of panes.
+
+## General
+
+<Center>
+<Image src={prefsGeneral} alt="General preferences pane" />
+</Center>
+
+In addition to your theme and language preferences, you can also configure the following global preferences:
+
+1. **Show Obsidian Features** – Controls whether features like *Open in Obsidian* are shown in the UI.
+2. **Permanently Delete Tasks** - By default, tasks deleted via the desktop app are moved to the system recycle bin/trash can. With this switch enabled, they will instead be permanently deleted.
+
+
+## Vault
+
+The **vault** pane contains settings related to your on-disk files. For the application to work, you must provide paths to the directories containing your areas, projects and tasks.
+
+<Center>
+<Image src={prefsVault} alt="Vault preferences pane" />
+</Center>
+
+<Aside type="tip">
+If you have the [CLI](/cli/overview) installed and configured via a `~/.taskdn.json` file, you can click <strong>Read from CLI Config</strong> to import your settings from there.
+</Aside>
+
+If any of these directories contain files which should be ignored (eg. `tasks/README.md`), you can also configure that here.
+
+## Quick Entry Pane
+
+Settings for the quick entry pane. You can change your global keyboard shortcut here.
+
+<Center>
+<Image src={prefsQuickEntry} alt="Quick Entry preferences pane" />
+</Center>
+
+## How your settings are stored
+
+Your settings are persisted to disk in a `preferences.json`. The location of this differs depending on your operating system, but you can find it via the **Advanced** pane in the preferences.
