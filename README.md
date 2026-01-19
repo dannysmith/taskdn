@@ -9,6 +9,9 @@
 
 A task-management system for **individuals** that stores data as markdown files (with YAML frontmatter) on disk while providing beautiful, purpose-built interfaces for actually managing your tasks. Tasks can be read and manipulated via text editors (Obsidian, VSCode), command line tools, and AI coding assistants.
 
+![desktop-app-screenshot C7W2VO2R_Z14GpVE](https://github.com/user-attachments/assets/a560a27d-120b-4aec-b0a5-628a5c02ff93)
+
+
 **The core idea:** provide the right user interface in the right context.
 
 | Tool                | Description                                        | Directory                                                                        | Status         |
