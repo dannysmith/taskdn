@@ -18,7 +18,7 @@ export default defineConfig({
             { id: 'mac', label: 'macOS', default: true },
             { id: 'windows', label: 'Windows' },
           ],
-        })
+        }),
       ],
       title: 'Taskdn',
       customCss: ['./src/styles/docs-demos.css'],

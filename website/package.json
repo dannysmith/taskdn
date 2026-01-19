@@ -10,7 +10,7 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
-    "check": "astro check && tsc --noEmit && lint && format:check",
+    "check": "astro check && tsc --noEmit && bun run lint && bun run format:check",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
