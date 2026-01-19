@@ -56,14 +56,12 @@ Follow these conventions when creating or editing content in `src/content/docs/`
 
 | Type               | Purpose              | Location                |
 | ------------------ | -------------------- | ----------------------- |
-| **Section Index**  | Overview             | `{section}/index.mdx`   |
 | **Content Page**   | Tutorial or guide    | `{section}/{topic}.mdx` |
 | **Reference Page** | Lookup tables, specs | `reference/{topic}.mdx` |
 
 ### File Naming
 
 - **kebab-case** for all files and folders
-- **index.mdx** for section landing pages
 - **Singular nouns** for concept pages — unless genuinely plural (`statuses.mdx`)
 - Use Starlight's sidebar config for ordering (no numbered prefixes)
 
@@ -75,19 +73,13 @@ Every page requires:
 ---
 title: 'Page Title' # Appears in sidebar & H1
 description: 'One sentence' # For SEO/meta
-sidebar:
-  order: 1 # Position within section
-  # label: "Short Name"       # Optional shorter sidebar text
-  # badge: "New"              # Optional badge
 ---
 ```
 
 ### Headings
 
 - **H1**: Never use — generated from `title`
-- **H2**: Main sections
-- **H3**: Subsections or individual items
-- **H4**: Rarely, only for deeply nested content
+- **H2-H4**: Section Hierachy
 
 ### Using Components
 
@@ -107,7 +99,7 @@ import MyComponent from '@components/MyComponent.astro';
 
 ### Images & Assets
 
-Images used in documentation live in `src/assets/`. Import them using the `@assets` alias and render with Astro's `<Image>` component:
+Images used in documentation live in `src/assets/`. Ideally, import them using the `@assets` alias and render with Astro's `<Image>` component:
 
 ```mdx
 import { Image } from 'astro:assets'
@@ -115,6 +107,8 @@ import screenshot from '@assets/my-screenshot.png'
 
 <Image src={screenshot} alt="Description of the image" />
 ```
+
+It's also fine to use standard markdowm.
 
 ### Steps Component
 
