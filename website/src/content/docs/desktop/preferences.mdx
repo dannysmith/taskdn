@@ -4,14 +4,18 @@ description: 'Configure the desktop app settings'
 ---
 
 import { Aside } from '@astrojs/starlight/components'
+import { Image } from 'astro:assets'
 import Center from '@components/Center.astro'
+import prefsGeneral from '@assets/docs/2026-01-19-prefs-general.png'
+import prefsVault from '@assets/docs/2026-01-19-prefs-vault-paths.png'
+import prefsQuickEntry from '@assets/docs/2026-01-19-prefs-quickentry.png'
 
 You can open the preferences from the **File** menu or the [command palette](/desktop/command-palette/). It contains a number of panes.
 
 ## General
 
 <Center>
-![prefs-general.png](../../../assets/docs/2026-01-19-prefs-general.png)
+<Image src={prefsGeneral} alt="General preferences pane" />
 </Center>
 
 In addition to your theme and language preferences, you can also configure the following global preferences:
@@ -25,7 +29,7 @@ In addition to your theme and language preferences, you can also configure the f
 The **vault** pane contains settings related to your on-disk files. For the application to work, you must provide paths to the directories containing your areas, projects and tasks.
 
 <Center>
-![prefs-vault-paths.png](../../../assets/docs/2026-01-19-prefs-vault-paths.png)
+<Image src={prefsVault} alt="Vault preferences pane" />
 </Center>
 
 <Aside type="tip">
@@ -39,7 +43,7 @@ If any of these directories contain files which should be ignored (eg. `tasks/RE
 Settings for the quick entry pane. You can change your global keyboard shortcut here.
 
 <Center>
-![prefs-quickentry.png](../../../assets/docs/2026-01-19-prefs-quickentry.png)
+<Image src={prefsQuickEntry} alt="Quick Entry preferences pane" />
 </Center>
 
 ## How your settings are stored

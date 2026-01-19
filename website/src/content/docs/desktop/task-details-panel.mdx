@@ -4,12 +4,16 @@ description: 'View and edit the currently selected task'
 ---
 
 import { Aside } from '@astrojs/starlight/components'
+import { Image } from 'astro:assets'
 import Center from '@components/Center.astro'
+import taskPanel from '@assets/docs/2026-01-18-task-panel.png'
+import datepicker1 from '@assets/docs/2026-01-18-datepicker-1.png'
+import datepicker2 from '@assets/docs/2026-01-18-datepicker-2.png'
 
 The task details panel appears as a sidebar on the right-hand side of the main window. It always shows the details of the currently-selected task, or the last selected task if none is currently selected.
 
 <Center>
-![task-panel.png](../../../assets/docs/2026-01-18-task-panel.png)
+<Image src={taskPanel} alt="Task details panel" />
 </Center>
 
 ## Editing a Task's Data
@@ -41,11 +45,11 @@ Clicking the *scheduled*, *due* or *defer* controls will open a date picker. Pre
 3. Typing natural language like "tomorrow", "three weeks", "next friday" or "25 jun" and pressing Enter. All common date formats are accepted, as well as things like "+5w" (which will select a date in five weeks time).
 
 <Center>
-![datepicker-1.png](../../../assets/docs/2026-01-18-datepicker-1.png)
+<Image src={datepicker1} alt="Date picker" />
 </Center>
 
 <Center>
-![datepicker-2.png](../../../assets/docs/2026-01-18-datepicker-2.png)
+<Image src={datepicker2} alt="Date picker with natural language" />
 </Center>
 
 ## Editing the task body

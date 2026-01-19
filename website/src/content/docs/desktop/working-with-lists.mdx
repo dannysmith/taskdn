@@ -4,23 +4,26 @@ description: 'Create, edit, and manage tasks in list view'
 ---
 
 import { Kbd } from 'starlight-kbd/components'
+import { Image } from 'astro:assets'
 import Center from '@components/Center.astro'
+import selectedTask from '@assets/docs/2026-01-19-selected-task.png'
+import editingTask from '@assets/docs/2026-01-19-screenshot-2026-01-19-at-0044.06.png'
 
 You've probably noticed that all [the views](/desktop/views/) have two main ways of displaying tasks: cards and lists. Cards are used in calendars & kanban boards and lists are used everywhere else. Let's look at lists in a bit more detail...
 
 You can select a task by clicking on it or using the up/down keys. The currently selected task will have a blue background and will always be loaded in the [task details panel](/desktop/task-details-panel/).
 
 <Center>
-![selected-task.png](../../../assets/docs/2026-01-19-selected-task.png)
+<Image src={selectedTask} alt="Selected task in list view" />
 </Center>
 
 You can edit a task's title by double-clicking or pressing Enter while it's selected. Confirm your edit by clicking somewhere else or pressing enter again, or cancel with Escape.
 
 <Center>
-![Screenshot 2026-01-19 at 00.44.06.png](../../../assets/docs/2026-01-19-screenshot-2026-01-19-at-0044.06.png)
+<Image src={editingTask} alt="Editing a task title" />
 </Center>
 
-You can quickly reorder the task and edit other fields with the [keyboard shortcuts and right-click menu](desktop/menus-and-shortcuts/). The task's status is shown in the checkbox, and clicking it will toggle between *ready* and *done*.
+You can quickly reorder the task and edit other fields with the [keyboard shortcuts and right-click menu](/desktop/menus-and-shortcuts/). The task's status is shown in the checkbox, and clicking it will toggle between *ready* and *done*.
 
 
 ## Creating Tasks

@@ -4,12 +4,25 @@ title: The Views
 ---
 
 import { Aside } from '@astrojs/starlight/components'
+import { Image } from 'astro:assets'
 import Center from '@components/Center.astro'
+import leftSidebar from '@assets/docs/2026-01-18-left-sidebar.png'
+import today from '@assets/docs/2026-01-18-today.png'
+import addingAHeading from '@assets/docs/2026-01-18-adding-a-heading.png'
+import todayHeadings from '@assets/docs/2026-01-18-today-headings.png'
+import thisWeek from '@assets/docs/2026-01-18-this-week.png'
+import thisWeekKanban from '@assets/docs/2026-01-19-this-week-kanban.png'
+import inbox from '@assets/docs/2026-01-19-inbox.png'
+import calendar from '@assets/docs/2026-01-19-calendar.png'
+import projectView from '@assets/docs/2026-01-19-project-view.png'
+import projectViewKanban from '@assets/docs/2026-01-19-project-view-kanban.png'
+import areaView from '@assets/docs/2026-01-19-area-view.png'
+import areaViewKanban from '@assets/docs/2026-01-19-area-view-kanban.png'
 
 The desktop app provides several views for working with your tasks, each designed for a specific type of work. Before we get into them, let's look at the left sidebar
 
 <Center>
-![left-sidebar.png](../../../assets/docs/2026-01-18-left-sidebar.png)
+<Image src={leftSidebar} alt="Left sidebar showing views and areas" />
 </Center>
 
 The top part of the sidebar contains the main views. Your areas are shown below as collapsible "folders" containing their projects. The final "area" is always *No Area* and contains your area-less projects and any tasks which have neither a project or area set.
@@ -20,7 +33,7 @@ You can drag your projects and areas into any order you want. Just be aware that
 
 Each project's status is shown by an indicator in the sidebar. *Active*, *Ready* and *Planning* projects have a progress indicator which shows how many of their tasks have been completed.
 
-| Status | Color | Indicator |
+| Status | Colour | Indicator |
 | ------ | ----- | --------- |
 | Planning | Blue | Progress indicator |
 | Ready | Grey | Progress indicator |
@@ -36,7 +49,7 @@ Clicking an item in the sidebar shows the appropriate view in the main window...
 The Today view is your working daily task list. The **Scheduled for Today** section contains everything you've scheduled for today. Below that there are collapsible sections showing **Overdue or Due Today** (uncompleted tasks with a due date of today or earlier) and **Became Available Today** (uncompleted tasks with a `defer-until` date of today).
 
 <Center>
-![today.png](../../../assets/docs/2026-01-18-today.png)
+<Image src={today} alt="Today view" />
 </Center>
 
 The last two sections exclude tasks which are scheduled for today, so dragging a task into *Scheduled for Today* will set its scheduled date and "remove" it from the other sections.
@@ -44,13 +57,13 @@ The last two sections exclude tasks which are scheduled for today, so dragging a
 You can reorder the tasks in *Scheduled for Today*. You can also add temporary headings to help with planning your day.
 
 <Center>
-![adding-a-heading.png](../../../assets/docs/2026-01-18-adding-a-heading.png)
+<Image src={addingAHeading} alt="Adding a heading in the Today view" />
 </Center>
 
 Headings have a name and colour, and can be reordered within *Scheduled for Today* in a similar way to tasks. **Headings are purely presentational** – they have no effect on your task files or any other part of the desktop UI. Here's an example of a *Today* view using three headings, where all overdue and newly-available tasks have been moved (ie. scheduled) for today.
 
 <Center>
-![today-headings.png](../../../assets/docs/2026-01-18-today-headings.png)
+<Image src={todayHeadings} alt="Today view with headings" />
 </Center>
 
 <Aside type="tip">
@@ -66,7 +79,7 @@ A common morning workflow involves:
 The **This Week** view is intended for short-term planning. It shows the current week in a calendar view, with tasks displayed as cards.
 
 <Center>
-![this-week.png](../../../assets/docs/2026-01-18-this-week.png)
+<Image src={thisWeek} alt="This Week calendar view" />
 </Center>
 
 1. The calendar shows tasks with a **scheduled** date, and dragging a task between days sets its **scheduled** date.
@@ -76,7 +89,7 @@ The **This Week** view is intended for short-term planning. It shows the current
 Your *This Week* view also includes a Kanban board showing all tasks scheduled for this week by status, which can be helpful when you want a general overview of the week's progress.
 
 <Center>
-![this-week-kanban.png](../../../assets/docs/2026-01-19-this-week-kanban.png)
+<Image src={thisWeekKanban} alt="This Week kanban view" />
 </Center>
 
 ## Inbox 📥
@@ -84,7 +97,7 @@ Your *This Week* view also includes a Kanban board showing all tasks scheduled f
 The Inbox view shows all tasks with status `inbox`. This is a simple list view intended to make processing new tasks easy.
 
 <Center>
-![inbox.png](../../../assets/docs/2026-01-19-inbox.png)
+<Image src={inbox} alt="Inbox view" />
 </Center>
 
 ## Calendar 📅
@@ -92,7 +105,7 @@ The Inbox view shows all tasks with status `inbox`. This is a simple list view i
 The Calendar view is similar to the *This Week* view, but for longer-term planning and scheduling, and generally behaves in the same way. Only scheduled and defer-until tasks are shown and dragging a task always updates its scheduled date.
 
 <Center>
-![calendar.png](../../../assets/docs/2026-01-19-calendar.png)
+<Image src={calendar} alt="Calendar view" />
 </Center>
 
 ## Project View ⚪
@@ -100,13 +113,13 @@ The Calendar view is similar to the *This Week* view, but for longer-term planni
 Selecting a project in the left sidebar shows its project view. The project's status can be changed in the header, and the body of the project document is available for reference in the expandable section at the top. The project's tasks are shown below.
 
 <Center>
-![project-view.png](../../../assets/docs/2026-01-19-project-view.png)
+<Image src={projectView} alt="Project view" />
 </Center>
 
 You can also view the project's tasks in a kanban board...
 
 <Center>
-![project-view-kanban.png](../../../assets/docs/2026-01-19-project-view-kanban.png)
+<Image src={projectViewKanban} alt="Project kanban view" />
 </Center>
 
 ## Area View 📁
@@ -114,17 +127,17 @@ You can also view the project's tasks in a kanban board...
 In a similar way, selecting an Area in the left sidebar shows its area view. The body of the area file is shown in the expandable section at the top and its **active** projects are shown as cards below.
 
 <Center>
-![area-view.png](../../../assets/docs/2026-01-19-area-view.png)
+<Image src={areaView} alt="Area view" />
 </Center>
 
 The **Loose Tasks** section shows all tasks which belong to the area but don't have a project. The sections below show the areas active projects and their tasks.
 
-Dragging a task from one project to another (or to/from the *Loose Tasks* section) will update the task's `area` field.
+Dragging a task from one project to another (or to/from the *Loose Tasks* section) will update (or clear) the task's `project` field appropriately.
 
 As with projects, areas also have a kanban board...
 
 <Center>
-![area-view-kanban.png](../../../assets/docs/2026-01-19-area-view-kanban.png)
+<Image src={areaViewKanban} alt="Area kanban view" />
 </Center>
 
 ### The _No Area_ View
