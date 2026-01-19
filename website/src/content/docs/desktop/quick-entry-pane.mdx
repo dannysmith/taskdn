@@ -3,32 +3,25 @@ title: 'Quick Entry Pane'
 description: 'Capture tasks from anywhere with a global keyboard shortcut'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro'
+import { Kbd } from 'starlight-kbd/components'
+import { Aside } from '@astrojs/starlight/components'
 
-<UnderConstruction />
+The Quick Entry Pane lets you quickly capture tasks without switching to the desktop app. You can assign a global hotkey in the preferences which, when triggered, will display the quick entry pane over whatever app or screen you're currently working on.
 
-The Quick Entry Pane lets you capture tasks without switching away from what you're working on.
+![quick-entry-over-chrome.png](../../../assets/docs/2026-01-19-quick-entry-over-chrome.png)
 
-## Opening Quick Entry
+The fastest way to create a new task is to simply type it and press <Kbd mac="Command+Enter" windows="Control+Enter" /> to save. This will create a new task with status `inbox`, which you can process later.
 
-{/* Content needed:
-- Global keyboard shortcut
-- How to configure the shortcut
-- Behavior when app is closed vs open
-*/}
+If you want to add a task with specific fields, you can do so by clicking the various controls, or using the same keyboard shortcuts you would in the main app.
 
-## Creating Tasks
+![quick-entry.png](../../../assets/docs/2026-01-19-quick-entry.png)
 
-{/* Content needed:
-- Title entry
-- Natural language dates with @
-- Project mentions with /
-- Setting other fields
-*/}
+<Aside type="tip">
+The Quick Entry Pane is often used to add new tasks to the end of today's list. You can do this with <Kbd mac="Command+T" windows="Control+T" />, which will set the scheduled date to today.
+</Aside>
 
-## Preferences
+## Adding a body
 
-{/* Content needed:
-- Configuring quick entry behavior
-- Link to Preferences page
-*/}
+While the majority of tasks created this way probably won't have a body, pressing <Kbd mac="Command++Shift+Enter" windows="Control+Shift+Enter" /> will open an area where you can add notes which will form the body of the task document. Pressing it again will close that area.
+
+![quick-entry-with-body.png](../../../assets/docs/2026-01-19-quick-entry-with-body.png)
