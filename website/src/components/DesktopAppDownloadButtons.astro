@@ -74,7 +74,10 @@
     --_bg-2: var(--sl-color-gray-6, var(--color-bg-2, #f2f0e5));
     --_border: var(--sl-color-gray-5, var(--color-border, #e6e4d9));
     --_accent: var(--sl-color-accent, var(--color-accent, #4385be));
-    --_accent-hover: var(--sl-color-accent-high, var(--color-accent-hover, #205ea6));
+    --_accent-hover: var(
+      --sl-color-accent-high,
+      var(--color-accent-hover, #205ea6)
+    );
 
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -100,7 +103,9 @@
     background: var(--_bg-2);
     color: var(--_text);
     border: 1px solid var(--_border);
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease;
     text-decoration: none;
 
     &:hover {

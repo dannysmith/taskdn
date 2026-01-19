@@ -4,6 +4,7 @@ description: 'Get everything installed and configured'
 ---
 
 import { Steps, Aside, LinkCard } from '@astrojs/starlight/components'
+import DesktopAppDownloadButtons from '@components/DesktopAppDownloadButtons.astro'
 
 This guide walks through setting up the full Taskdn suite. It assumes you already have [Obsidian](https://obsidian.md) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed.
 
@@ -87,6 +88,8 @@ This guide walks through setting up the full Taskdn suite. It assumes you alread
    <LinkCard title="Claude Code Plugin Documentation" href="/claude-code/overview" />
 
 5. **Install the desktop app**
+
+   <DesktopAppDownloadButtons />
 
    Once installed, point it at your vault directory and you'll see your tasks in a proper task management UI.
 

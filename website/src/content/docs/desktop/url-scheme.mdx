@@ -1,0 +1,106 @@
+---
+title: 'URL Scheme'
+description: 'Deep link into the desktop app from other tools'
+---
+
+import { Aside, LinkCard } from '@astrojs/starlight/components'
+
+The desktop app registers a `taskdn://` URL scheme, letting you open tasks, projects, and views from other applications. This is useful for linking your notes to specific tasks, creating quick-capture workflows, or building automations. You might use this in circumstances where you don't want to open the app directly from elsewhere:
+
+- **Obsidian notes** — Link directly to a task you're discussing in a meeting note or project document
+- **Alfred/Raycast** — Create a global hotkey that captures a task without opening the app first
+- **Browser bookmarks** — Quick links to your Today or Inbox view
+- **Calendar apps** — Link calendar events to related tasks
+
+<Aside type="tip">
+The [Obsidian plugin](/obsidian/plugin) has a setting to automatically add a small link icon next to each task it renders. Clicking this link opens the task in the desktop app using the URL scheme.
+</Aside>
+
+## Opening Things
+
+Use `taskdn://open` to jump to a specific task, project, area, or view. Navigate directly to one of the main views:
+
+```text frame="none"
+taskdn://open?view=today
+taskdn://open?view=inbox
+taskdn://open?view=this-week
+taskdn://open?view=calendar
+```
+
+Open a specific file by its path. The path must be URL-encoded:
+
+```text frame="none"
+taskdn://open?path=%2FUsers%2Fdanny%2Fnotes%2Ftasks%2Ffix-login-bug.md
+```
+
+When you open a task, the app navigates to the appropriate view (its project, area, or inbox) and selects it. Projects open in Project view, areas in Area view.
+
+<Aside type="tip">
+Don't worry about encoding paths manually. Right-click any task, project, or area in the app and select **Copy Local URL** to get a ready-to-use link.
+</Aside>
+
+## Creating Tasks
+
+Use `taskdn://new` to create a task and open it for editing - all parameters are optional. You might use this to create a task from another tool:
+
+```text frame="none"
+taskdn://new?title=Buy%20milk
+```
+
+Assign to an existing project (matched by title, case-insensitive), or assign dates:
+
+```text frame="none"
+taskdn://new?title=Update%20landing%20page&project=Website%20Redesign
+taskdn://new?title=Submit%20expenses&due=2025-01-31
+taskdn://new?title=Weekly%20review&scheduled=2025-01-20
+```
+
+You can include URL-encoded body content (newlines are `%0A`) like this:
+
+```text frame="none"
+taskdn://new?title=Call%20Sarah&body=Discuss%3A%0A-%20Project%20timeline%0A-%20Budget
+```
+
+This creates a task with the body:
+
+```markdown frame="none"
+Discuss:
+- Project timeline
+- Budget
+```
+
+## Practical Examples
+
+### Alfred/Raycast Quick Capture
+
+Create a workflow triggered by a hotkey that prompts for text and creates a task:
+
+```bash frame="none"
+open "taskdn://new?title={query}"
+```
+
+### Link From Obsidian
+
+In a meeting note, link to the task you're discussing:
+
+```markdown frame="none"
+We agreed to prioritise [the login bug](taskdn://open?path=%2FUsers%2Fdanny%2Fnotes%2Ftasks%2Ffix-login-bug.md) this sprint.
+```
+
+### Bookmark Your Daily View
+
+Save this as a browser bookmark or add it to your dock:
+
+```text frame="none"
+taskdn://open?view=today
+```
+
+## Full Reference
+
+For complete documentation of all parameters, status values, and encoding rules:
+
+<LinkCard
+  title="URL Scheme Reference"
+  href="/reference/desktop-reference/url-scheme"
+  description="Complete technical reference for the taskdn:// URL scheme"
+/>

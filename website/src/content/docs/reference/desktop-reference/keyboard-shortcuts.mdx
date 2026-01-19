@@ -1,8 +1,129 @@
 ---
 title: 'Keyboard Shortcuts'
-description: 'Complete keyboard shortcut reference'
+description: 'Complete keyboard shortcut reference for the desktop app'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro';
+import { Aside } from '@astrojs/starlight/components'
+import { Kbd } from 'starlight-kbd/components'
 
-<UnderConstruction />
+This is a complete reference of all keyboard shortcuts available in the Taskdn desktop app. Shortcuts are shown for both macOS and Windows/Linux; on Windows/Linux, use Control in place of Command.
+
+<Aside type="tip">
+You can access most commands via the [command palette](/desktop/command-palette/) (<Kbd mac="Command+K" windows="Control+K" />), which also shows their keyboard shortcuts.
+</Aside>
+
+## Navigation
+
+| Shortcut | Action |
+|----------|--------|
+| <Kbd mac="Command+3" windows="Control+3" /> | Go to Today view |
+| <Kbd mac="Command+4" windows="Control+4" /> | Go to This Week view |
+| <Kbd mac="Command+5" windows="Control+5" /> | Go to Inbox |
+| <Kbd mac="Command+6" windows="Control+6" /> | Go to Calendar |
+| <Kbd mac="Command+[" windows="Control+[" /> | Go back (navigation history) |
+| <Kbd mac="Command+]" windows="Control+]" /> | Go forward (navigation history) |
+
+## Interface
+
+| Shortcut | Action |
+|----------|--------|
+| <Kbd mac="Command+1" windows="Control+1" /> | Toggle left sidebar |
+| <Kbd mac="Command+2" windows="Control+2" /> | Toggle right sidebar |
+| <Kbd mac="Command+K" windows="Control+K" /> | Open command palette |
+| <Kbd mac="Command+P" windows="Control+P" /> | Open task search |
+| <Kbd mac="Control+Command+F" windows="F11" /> | Toggle full screen |
+| <Kbd mac="Command+," windows="Control+," /> | Open preferences |
+
+## Task Creation & Editing
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| <Kbd mac="Command+N" windows="Control+N" /> | Create new task | Always available |
+| <Kbd mac="Enter" windows="Enter" /> | Edit selected task title | Task selected |
+| <Kbd mac="Escape" windows="Escape" /> | Cancel editing / Deselect | Various |
+| <Kbd mac="Command+'" windows="Control+'" /> | Duplicate task | Task selected |
+| <Kbd mac="Command+Backspace" windows="Control+Backspace" /> | Delete task | Task selected |
+
+### Task Dates
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| <Kbd mac="Command+T" windows="Control+T" /> | Set scheduled date to today | Task selected |
+| <Kbd mac="Command+D" windows="Control+D" /> | Edit scheduled date | Task selected |
+| <Kbd mac="Option+Command+D" windows="Alt+Control+D" /> | Edit due date | Task selected |
+| <Kbd mac="Shift+Option+Command+D" windows="Shift+Alt+Control+D" /> | Edit defer-until date | Task selected |
+
+### Task Status
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| <Kbd mac="Command+S" windows="Control+S" /> | Edit status | Task selected |
+
+## Task List Navigation & Reordering
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| <Kbd mac="Up" windows="Up" /> | Select previous task | Task list focused |
+| <Kbd mac="Down" windows="Down" /> | Select next task | Task list focused |
+| <Kbd mac="Command+Up" windows="Control+Up" /> | Move task up | Task selected |
+| <Kbd mac="Command+Down" windows="Control+Down" /> | Move task down | Task selected |
+| <Kbd mac="Option+Command+Up" windows="Alt+Control+Up" /> | Move task to top | Task selected |
+| <Kbd mac="Option+Command+Down" windows="Alt+Control+Down" /> | Move task to bottom | Task selected |
+
+## Clipboard Operations
+
+| Shortcut | Action | Context |
+|----------|--------|---------|
+| <Kbd mac="Command+C" windows="Control+C" /> | Copy task title | Task selected (not in text field) |
+| <Kbd mac="Option+Command+C" windows="Alt+Control+C" /> | Copy file path | Task selected |
+
+## File Operations
+
+These work when any task, project, or area is selected.
+
+| Shortcut | Action |
+|----------|--------|
+| <Kbd mac="Option+Command+C" windows="Alt+Control+C" /> | Copy file path |
+
+The following have no default shortcut but are available via right-click menu and command palette:
+
+- Reveal in Finder (Explorer on Windows)
+- Open in Default App
+- Open in Obsidian (if enabled in preferences)
+- Copy Local URL
+- Copy as Markdown
+
+## Quick Entry Pane
+
+These shortcuts work when the [Quick Entry Pane](/desktop/quick-entry-pane/) is open.
+
+| Shortcut | Action |
+|----------|--------|
+| <Kbd mac="Command+Enter" windows="Control+Enter" /> | Save task |
+| <Kbd mac="Command+Shift+Enter" windows="Control+Shift+Enter" /> | Toggle body editor |
+| <Kbd mac="Command+T" windows="Control+T" /> | Set scheduled to today |
+| <Kbd mac="Command+D" windows="Control+D" /> | Open scheduled date picker |
+| <Kbd mac="Option+Command+D" windows="Alt+Control+D" /> | Open due date picker |
+| <Kbd mac="Shift+Option+Command+D" windows="Shift+Alt+Control+D" /> | Open defer date picker |
+| <Kbd mac="Command+S" windows="Control+S" /> | Open status picker |
+| <Kbd mac="Escape" windows="Escape" /> | Close pane (or close open picker) |
+
+## Keyboard Navigation
+
+| Key | Action | Context |
+|-----|--------|---------|
+| <Kbd mac="Tab" windows="Tab" /> | Move focus between panels | Global |
+| <Kbd mac="Shift+Tab" windows="Shift+Tab" /> | Move focus backwards | Global |
+| <Kbd mac="Up" windows="Up" /> / <Kbd mac="Down" windows="Down" /> | Navigate items | Lists, date pickers |
+| <Kbd mac="Left" windows="Left" /> / <Kbd mac="Right" windows="Right" /> | Navigate dates | Date pickers |
+| <Kbd mac="Enter" windows="Enter" /> | Confirm selection | Pickers, dialogs |
+| <Kbd mac="Escape" windows="Escape" /> | Cancel / Close | Pickers, dialogs, editing |
+
+## Modifier Key Reference
+
+| macOS | Windows/Linux | Symbol |
+|-------|---------------|--------|
+| Command | Control | ⌘ |
+| Option | Alt | ⌥ |
+| Shift | Shift | ⇧ |
+| Control | Control | ⌃ |
