@@ -102,9 +102,6 @@ export default defineConfig({
             {
               slug: 'desktop/url-scheme',
             },
-            {
-              slug: 'desktop/keyboard-navigation',
-            },
           ],
         },
         {
