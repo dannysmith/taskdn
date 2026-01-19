@@ -5,16 +5,21 @@ description: 'Capture tasks from anywhere with a global keyboard shortcut'
 
 import { Kbd } from 'starlight-kbd/components'
 import { Aside } from '@astrojs/starlight/components'
+import Center from '@components/Center.astro'
 
 The Quick Entry Pane lets you quickly capture tasks without switching to the desktop app. You can assign a global hotkey in the preferences which, when triggered, will display the quick entry pane over whatever app or screen you're currently working on.
 
+<Center>
 ![quick-entry-over-chrome.png](../../../assets/docs/2026-01-19-quick-entry-over-chrome.png)
+</Center>
 
 The fastest way to create a new task is to simply type it and press <Kbd mac="Command+Enter" windows="Control+Enter" /> to save. This will create a new task with status `inbox`, which you can process later.
 
 If you want to add a task with specific fields, you can do so by clicking the various controls, or using the same keyboard shortcuts you would in the main app.
 
+<Center>
 ![quick-entry.png](../../../assets/docs/2026-01-19-quick-entry.png)
+</Center>
 
 <Aside type="tip">
 The Quick Entry Pane is often used to add new tasks to the end of today's list. You can do this with <Kbd mac="Command+T" windows="Control+T" />, which will set the scheduled date to today.
@@ -22,6 +27,8 @@ The Quick Entry Pane is often used to add new tasks to the end of today's list. 
 
 ## Adding a body
 
-While the majority of tasks created this way probably won't have a body, pressing <Kbd mac="Command++Shift+Enter" windows="Control+Shift+Enter" /> will open an area where you can add notes which will form the body of the task document. Pressing it again will close that area.
+While the majority of tasks created this way probably won't have a body, pressing <Kbd mac="Command+Shift+Enter" windows="Control+Shift+Enter" /> will open an area where you can add notes which will form the body of the task document. Pressing it again will close that area.
 
+<Center>
 ![quick-entry-with-body.png](../../../assets/docs/2026-01-19-quick-entry-with-body.png)
+</Center>
