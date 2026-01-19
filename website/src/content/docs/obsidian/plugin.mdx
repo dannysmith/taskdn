@@ -4,6 +4,7 @@ description: 'Integrate Taskdn with your Obsidian vault'
 ---
 
 import { Image } from 'astro:assets'
+import { Steps } from '@astrojs/starlight/components'
 import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
 import ObsidianDemo from '@components/demos/ObsidianDemo.astro'
 
@@ -24,9 +25,57 @@ The Obsidian plugin turns wikilinks to task files into interactive widgets. Link
 
 ## Installation
 
-1. Open **Settings → Community Plugins**
-2. Search for "Taskdn"
-3. Click **Install**, then **Enable**
+### Community Plugins (Coming Soon)
+
+The plugin isn't in the Obsidian Community Plugins store yet. Once available, install it by going to **Settings → Community Plugins**, searching for "Taskdn", and clicking **Install**.
+
+Until then, use one of the methods below.
+
+### Using BRAT (Recommended)
+
+[BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewer's Auto-update Tool) handles installation and keeps the plugin updated automatically.
+
+<Steps>
+
+1. Install BRAT from **Settings → Community Plugins → Browse**, search for "BRAT"
+
+2. Enable BRAT in your Community Plugins list
+
+3. Open the Command Palette (`Cmd/Ctrl+P`) and run **BRAT: Add a beta plugin for testing**
+
+4. Enter the repository: `dannysmith/obsidian-taskdn`
+
+5. Go to **Settings → Community Plugins**, find "Taskdn", and enable it
+
+</Steps>
+
+### Manual Download
+
+<Steps>
+
+1. Download the latest release:
+
+   [Download obsidian-taskdn.zip](https://github.com/dannysmith/obsidian-taskdn/releases/latest/download/obsidian-taskdn.zip)
+
+2. Extract the zip file
+
+3. Copy the extracted files (`main.js`, `manifest.json`, `styles.css`) to your vault's plugin folder:
+
+   ```
+   YOUR_VAULT/.obsidian/plugins/obsidian-taskdn/
+   ```
+
+   Create the `obsidian-taskdn` folder if it doesn't exist.
+
+4. Restart Obsidian
+
+5. Go to **Settings → Community Plugins**, find "Taskdn", and enable it
+
+</Steps>
+
+:::note[Hidden Folders]
+The `.obsidian` folder is hidden by default. Use `Cmd+Shift+.` on macOS or `Ctrl+H` on Linux to show hidden files in your file manager.
+:::
 
 Make sure Wikilinks are enabled in your vault settings.
 
