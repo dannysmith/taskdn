@@ -3,49 +3,27 @@ title: 'Working With Lists'
 description: 'Create, edit, and manage tasks in list view'
 ---
 
-import UnderConstruction from '@components/UnderConstruction.astro'
+import { Kbd } from 'starlight-kbd/components'
 
-<UnderConstruction />
+You've probably noticed that all [the views](/desktop/views/) have two main ways of displaying tasks: cards and lists. Cards are used in calendars & kanban boards and lists are used everywhere else. Let's look at lists in a bit more detail...
 
-Lists are the primary way to view and manage tasks in the desktop app.
+You can select a task by clicking on it or using the up/down keys. The currently selected task will have a blue background and will always be loaded in the [task details panel](/desktop/task-details-panel/).
 
-## Editing a Task Title
+![selected-task.png](../../../assets/docs/2026-01-19-selected-task.png)
 
-{/* Content needed:
-- Click to edit
-- Keyboard shortcut
-- Saving changes
-*/}
+You can edit a task's title by double-clicking or pressing Enter while it's selected. Confirm your edit by clicking somewhere else or pressing enter again, or cancel with Escape.
 
-## Creating a New Task
+![Screenshot 2026-01-19 at 00.44.06.png](../../../assets/docs/2026-01-19-screenshot-2026-01-19-at-0044.06.png)
 
-{/* Content needed:
-- Where new tasks appear
-- Default values
-- Quick creation shortcuts
-*/}
+You can quickly reorder the task and edit other fields with the [keyboard shortcuts and right-click menu](desktop/menus-and-shortcuts/). The task's status is shown in the checkbox, and clicking it will toggle between *ready* and *done*.
 
-## Deleting a Task
 
-{/* Content needed:
-- How to delete
-- Confirmation behavior
-- Undo options
-*/}
+## Creating Tasks
 
-## Reordering
+Pressing <Kbd mac="Command+N" windows="Control+N" /> with a task selected will insert a new task immediatly below the selected one. Pressing enter or clicking away will save the task while <Kbd mac="Esc" windows="Esc" /> will remove it.
 
-{/* Content needed:
-- Drag and drop
-- How ordering is persisted
-- Scope of ordering (per-view)
-*/}
+If no task is selected, the behaviour of <Kbd mac="Command+N" windows="Control+N" /> will depend on context: it will usually create a new task at the end of the most appropriate list. In the *Today* view, you'll get a "loose task" at the end of *Scheduled for Today*. In a project or area view it'll add a task to the appropriate prokect or area. Etc.
 
-## Keyboard Shortcuts
+## Deleting Tasks
 
-{/* Content needed:
-- Navigation (up/down)
-- Selection
-- Quick actions
-- Link to full keyboard reference
-*/}
+You can delete the selected task with <Kbd mac="Command+Backspace" windows="Control+Backspace" />. This will move the task file to your OS Recycle Bin/Trash Can (unless you have enabled permenant deletion in the preferences).

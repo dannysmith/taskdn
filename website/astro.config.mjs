@@ -88,9 +88,6 @@ export default defineConfig({
               slug: 'desktop/working-with-lists',
             },
             {
-              slug: 'desktop/working-with-kanban-and-calendars',
-            },
-            {
               slug: 'desktop/quick-entry-pane',
             },
             {
