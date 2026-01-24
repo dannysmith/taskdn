@@ -2,6 +2,8 @@
   "name": "tdn-cli",
   "version": "1.0.0",
   "description": "Task management CLI for humans and AI agents",
+  "author": "Danny Smith",
+  "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
   "bin": {

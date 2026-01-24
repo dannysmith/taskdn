@@ -103,4 +103,4 @@ This plugin is part of the [Taskdn](../) monorepo. See the main repository for c
 
 ## License
 
-MIT
+Licensed under [MIT](./LICENSE).

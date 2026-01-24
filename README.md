@@ -106,3 +106,19 @@ Run these from the repository root with `bun <script>`:
 | `task:rename-done` | Add dates to existing completed task files |
 
 See [docs/developer/releases-and-versioning.md](docs/developer/releases-and-versioning.md) for release processes.
+
+## License
+
+This monorepo uses different licenses for different components:
+
+| Component | License | Rationale |
+|-----------|---------|-----------|
+| **tdn-specs** | [CC BY 4.0](tdn-specs/LICENSE) | Maximum openness for spec adoption |
+| **tdn-desktop** | [AGPL-3.0](tdn-desktop/LICENSE) | Copyleft; modifications must be shared |
+| **tdn-cli** | [MIT](tdn-cli/LICENSE) | Permissive; maximum adoption |
+| **tdn-claude-plugin** | [MIT](tdn-claude-plugin/LICENSE) | Permissive; standard for plugins |
+| **website** | [MIT](website/LICENSE) (code) / CC BY 4.0 (content) | Standard for docs |
+| **obsidian-taskdn** | [MIT](https://github.com/dannysmith/obsidian-taskdn) | External repo |
+| **Everything else** | [MIT](LICENSE) | Default |
+
+See the root [LICENSE](LICENSE) file for full details.

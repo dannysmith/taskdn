@@ -6,7 +6,7 @@
   "type": "module",
   "author": "Danny Smith",
   "copyright": "Copyright © 2025 Danny Smith. All rights reserved.",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "engines": {
     "node": ">=20.0.0"
   },
