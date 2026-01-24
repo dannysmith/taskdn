@@ -8,7 +8,7 @@ on:
 
 jobs:
   cla-notice:
-    if: github.actor != 'dannysmith'
+    # if: github.actor != 'dannysmith'
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
