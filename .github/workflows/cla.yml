@@ -1,0 +1,35 @@
+name: CLA Notice
+
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - 'tdn-desktop/**'
+
+jobs:
+  cla-notice:
+    if: github.actor != 'dannysmith'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post CLA notice
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const body = `
+            👋 @${context.actor} — this PR touches \`tdn-desktop/\`, which has a [Contributor License Agreement](https://github.com/dannysmith/taskdn/blob/main/CLA.md).
+
+            **By keeping this PR open for merge, you're agreeing to the CLA.**
+
+            The short version: your code will be AGPL-3.0 and publicly available, but you're also granting me the right to use it under other licenses if I ever commercialize the desktop app (unlikely, but I want to keep the option).
+
+            If you're not okay with that, just close the PR.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
