@@ -4,6 +4,8 @@
 @import './theme-variables.css';
 @import '@dannysmith/datepicker/styles.css';
 
+/* Test comment */
+
 /* Ensure field-sizing utility is available */
 @utility field-sizing-content {
   field-sizing: content;
