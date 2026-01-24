@@ -5,6 +5,10 @@ import Default from '@astrojs/starlight/components/Footer.astro'
 <Default><slot /></Default>
 
 <footer class="sl-footer-links">
+  <span>© {new Date().getFullYear()} Danny Smith</span>
+  <span class="separator">·</span>
+  <a href="https://creativecommons.org/licenses/by/4.0/">Content CC BY 4.0</a>
+  <span class="separator">·</span>
   <a href="/privacy/">Privacy Policy</a>
 </footer>
 
@@ -14,6 +18,11 @@ import Default from '@astrojs/starlight/components/Footer.astro'
     text-align: center;
     font-size: var(--sl-text-2xs);
     color: var(--sl-color-gray-3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 
     a {
       color: var(--sl-color-gray-3);
@@ -23,6 +32,10 @@ import Default from '@astrojs/starlight/components/Footer.astro'
         color: var(--sl-color-white);
         text-decoration: underline;
       }
+    }
+
+    .separator {
+      opacity: 0.5;
     }
   }
 </style>

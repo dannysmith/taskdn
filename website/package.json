@@ -3,6 +3,8 @@
   "description": "Documentation website for Taskdn",
   "version": "0.0.1",
   "private": true,
+  "author": "Danny Smith",
+  "license": "MIT",
   "type": "module",
   "scripts": {
     "dev": "astro dev",

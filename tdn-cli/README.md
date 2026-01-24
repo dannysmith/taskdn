@@ -254,3 +254,7 @@ bun run test                     # Run all tests
 ```
 
 See [Testing Guide](docs/developer/testing.md) for details.
+
+## License
+
+Licensed under [MIT](./LICENSE).

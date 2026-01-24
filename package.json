@@ -2,6 +2,8 @@
   "name": "taskdn",
   "type": "module",
   "private": true,
+  "author": "Danny Smith",
+  "license": "SEE LICENSE IN LICENSE",
   "scripts": {
     "task:complete": "node scripts/complete-task.js",
     "task:rename-done": "node scripts/complete-task.js --rename-existing",

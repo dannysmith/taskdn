@@ -29,3 +29,7 @@ bun run check:all
 ## Documentation
 
 - **[Developer Docs](docs/developer/)** - Architecture, patterns, and contribution guides
+
+## License
+
+Licensed under [AGPL-3.0](./LICENSE). This means you can use, modify, and distribute this software, but any modifications must also be shared under AGPL-3.0. See the license file for details.
