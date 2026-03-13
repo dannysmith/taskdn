@@ -8,6 +8,11 @@ import starlightKbd from 'starlight-kbd'
 // https://astro.build/config
 export default defineConfig({
   site: 'https://tdn.danny.is',
+  vite: {
+    server: {
+      allowedHosts: ['.orb.local']
+    }
+  },
   integrations: [
     starlight({
       plugins: [
