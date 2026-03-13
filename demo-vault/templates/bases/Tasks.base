@@ -22,7 +22,7 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
       - property: file.name
         direction: ASC
@@ -36,7 +36,7 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
   - type: table
     name: In Progress
@@ -48,5 +48,5 @@ views:
       - due
       - projects
     sort:
-      - property: note.due
+      - property: due
         direction: ASC
