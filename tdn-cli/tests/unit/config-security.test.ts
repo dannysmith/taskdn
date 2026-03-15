@@ -22,8 +22,8 @@ describe('config security', () => {
     });
 
     test('accepts paths in user home directory', () => {
-      // Use a path that's definitely in the home directory
-      const result = validateVaultPath('~/tasks', 'tasksDir');
+      const home = homedir();
+      const result = validateVaultPath(join(home, 'tasks'), 'tasksDir');
       expect(result).toContain('tasks');
       expect(warnCalls).toHaveLength(0);
     });
