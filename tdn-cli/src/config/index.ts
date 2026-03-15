@@ -68,10 +68,11 @@ export function validateVaultPath(path: string, pathType: string = 'vault path')
     }
 
     // Warn if outside home directory (informational, not blocking)
-    // Exceptions: temp directories on macOS (/var/folders) and Linux (/tmp)
+    // Exceptions: temp directories, and sandboxed environments (e.g. Cowork VM mount paths)
     const home = homedir();
     const isTempDir = absolutePath.startsWith('/var/folders/') || absolutePath.startsWith('/tmp/');
-    if (!absolutePath.startsWith(home) && !isTempDir) {
+    const isSandboxedMount = absolutePath.startsWith('/sessions/') || absolutePath.startsWith('/mnt/');
+    if (!absolutePath.startsWith(home) && !isTempDir && !isSandboxedMount) {
       console.warn(
         `Warning: ${pathType} is outside your home directory: ${absolutePath}\n` +
           `This may cause permission issues or affect system files.`
