@@ -1,0 +1,58 @@
+#!/usr/bin/env node
+
+"use strict";
+
+const { spawnSync } = require("child_process");
+const { join, dirname } = require("path");
+
+const PLATFORMS = {
+  "darwin arm64": { pkg: "@taskdn/cli-darwin-arm64", exe: "tdn" },
+  "darwin x64": { pkg: "@taskdn/cli-darwin-x64", exe: "tdn" },
+  "linux arm64": { pkg: "@taskdn/cli-linux-arm64", exe: "tdn" },
+  "linux x64": { pkg: "@taskdn/cli-linux-x64", exe: "tdn" },
+  "win32 x64": { pkg: "@taskdn/cli-win32-x64", exe: "tdn.exe" },
+};
+
+const key = `${process.platform} ${process.arch}`;
+const platform = PLATFORMS[key];
+
+if (!platform) {
+  console.error(
+    `Unsupported platform: ${process.platform} ${process.arch}\n` +
+      `tdn supports: ${Object.keys(PLATFORMS).join(", ")}`
+  );
+  process.exit(1);
+}
+
+let binPath;
+try {
+  binPath = join(
+    dirname(require.resolve(`${platform.pkg}/package.json`)),
+    platform.exe
+  );
+} catch {
+  console.error(
+    `Could not find package ${platform.pkg}.\n` +
+      `The platform-specific binary package was not installed.\n` +
+      `Try reinstalling: npm install -g @taskdn/cli`
+  );
+  process.exit(1);
+}
+
+const result = spawnSync(binPath, process.argv.slice(2), {
+  stdio: "inherit",
+});
+
+if (result.error) {
+  if (result.error.code === "ENOENT") {
+    console.error(
+      `Binary not found at ${binPath}.\n` +
+        `Try reinstalling: npm install -g @taskdn/cli`
+    );
+  } else {
+    throw result.error;
+  }
+  process.exit(1);
+}
+
+process.exit(result.status ?? 1);

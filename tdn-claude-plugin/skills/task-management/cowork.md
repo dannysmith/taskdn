@@ -25,7 +25,7 @@ When you detect you're in a Cowork environment (no `tdn` in PATH, Linux platform
 **Primary method — download from GitHub Releases:**
 
 ```bash
-curl -fsSL https://github.com/taskdn/taskdn/releases/latest/download/install.sh | bash
+curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash
 export PATH="$PATH:$HOME/.local/bin"
 ```
 

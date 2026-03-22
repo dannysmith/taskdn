@@ -13,7 +13,7 @@ VERSION="${TDN_VERSION:-latest}"
 INSTALL_DIR="${TDN_INSTALL_DIR:-$HOME/.local/bin}"
 SKIP_VERIFY="${TDN_SKIP_VERIFY:-0}"
 
-REPO="taskdn/taskdn"
+REPO="dannysmith/taskdn"
 
 # Colors (disabled if not a terminal)
 if [ -t 1 ]; then

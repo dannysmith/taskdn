@@ -85,91 +85,48 @@ Instead of storing an `NPM_TOKEN` secret, configure each package on npmjs.com to
 
 ## Implementation
 
-### Phase 1: npm Org & Package Setup (manual)
+### Phase 1: npm Org & Package Setup (manual) ✅
 
-- [ ] Create the `@taskdn` org on npmjs.com
-- [ ] Delete (or deprecate) the old `taskdn-sdk` package
-- [ ] Create placeholder packages to reserve the names — each needs an initial publish before trusted publishing can be configured:
+- [x] Create the `@taskdn` org on npmjs.com
+- [x] Delete (or deprecate) the old `taskdn-sdk` package
+- [x] Create placeholder packages (v0.0.0) to reserve the names:
   - `@taskdn/cli`
   - `@taskdn/cli-darwin-arm64`
   - `@taskdn/cli-darwin-x64`
   - `@taskdn/cli-linux-arm64`
   - `@taskdn/cli-linux-x64`
   - `@taskdn/cli-win32-x64`
-- [ ] Configure trusted publishing on each package:
+- [x] Configure trusted publishing on each package:
   - Repository owner: `dannysmith`
   - Repository: `taskdn`
   - Workflow: `release-cli.yml`
 
-### Phase 2: Create npm Package Files
+### Phase 2: Create npm Package Files ✅
 
-Create the `tdn-cli/npm/` directory structure.
+Created `tdn-cli/npm/` directory structure with:
 
-**For each platform package** (`cli-darwin-arm64`, etc.):
+- [x] 5 platform `package.json` files with `os`/`cpu`/`preferUnplugged` fields
+- [x] Main `@taskdn/cli` `package.json` with `bin`, `optionalDependencies`, `engines`
+- [x] `bin/tdn` wrapper script using `spawnSync` with passthrough stdio
 
-- [ ] Create `package.json` with:
-  - `name`, `version` (matching CLI version)
-  - `os` and `cpu` fields
-  - `description`, `license`, `repository`
-  - `preferUnplugged: true` (for Yarn PnP compatibility)
-  - No `bin` field (main package handles that)
-- [ ] The binary itself is NOT committed — CI copies it in at build time
+### Phase 3: Update Release Workflow ✅
 
-**For the main package** (`cli/`):
+- [x] Added `publish-npm` job to `release-cli.yml` (parallel with `release`, both need `build`)
+- [x] OIDC trusted publishing via `permissions.id-token: write`
+- [x] `actions/setup-node@v4` with `node-version: 24.x` (no `registry-url`)
+- [x] Extracts binaries from build artifacts, sets versions, publishes platform packages then main wrapper
 
-- [ ] Create `package.json` with:
-  - `name: "@taskdn/cli"`
-  - `bin: { "tdn": "bin/tdn" }`
-  - `optionalDependencies` listing all 5 platform packages at the same version
-  - `engines: { "node": ">=18" }`
-- [ ] Create `bin/tdn` wrapper script (Node.js, ~50 lines):
-  - Platform/arch detection via `process.platform` and `process.arch`
-  - Map to package name
-  - `require.resolve()` to find the binary
-  - `execFileSync()` to run it with passthrough stdio
-  - Clear error message if no matching platform package is installed
+### Phase 4: Update prepare-release Script ✅
 
-### Phase 3: Update Release Workflow
+- [x] `prepare-release.js` now bumps versions in all `npm/*/package.json` files
+- [x] Added npm publish to post-push output messages
 
-Extend `.github/workflows/release-cli.yml` with a new `publish-npm` job. The workflow structure becomes:
+### Phase 5: Fix Existing URL Issues ✅
 
-```
-build (existing matrix, unchanged)
-├── publish-npm (new, needs: build)  ← publishes all 6 npm packages
-└── release (existing, needs: build) ← GitHub Release + Homebrew
-```
-
-`publish-npm` and `release` run in parallel — both only need `build` to complete.
-
-**New `publish-npm` job:**
-
-- [ ] Add job with `needs: build`, `runs-on: ubuntu-latest`
-- [ ] Set `permissions.id-token: write` (required for trusted publishing OIDC)
-- [ ] Use `actions/setup-node@v4` with `node-version: 24.x` (do NOT set `registry-url` — it breaks OIDC)
-- [ ] Download all build artifacts
-- [ ] Extract version from git tag
-- [ ] For each platform package:
-  - Copy the binary from the artifact into `npm/cli-<platform>/`
-  - Set the version in its `package.json`
-  - Run `npm publish --access public`
-- [ ] After all platform packages are published:
-  - Set the version + `optionalDependencies` versions in `npm/cli/package.json`
-  - Run `npm publish --access public` for the main `@taskdn/cli` package
-- [ ] Ensure the existing `release` job (GitHub Release + Homebrew) is unaffected
-
-### Phase 4: Update prepare-release Script
-
-- [ ] Update `tdn-cli/scripts/prepare-release.js` to also bump versions in all `npm/*/package.json` files
-- [ ] Fix repo URL: `taskdn/taskdn` → `dannysmith/taskdn` in the script's output messages
-
-### Phase 5: Fix Existing URL Issues
-
-These are wrong in multiple places and should be fixed regardless of npm publishing.
-
-- [ ] `tdn-cli/scripts/install.sh` line 16: `REPO="taskdn/taskdn"` → `REPO="dannysmith/taskdn"`
-- [ ] `tdn-claude-plugin/commands/prime.md` line 13: fix GitHub URL to `dannysmith/taskdn`
-- [ ] `tdn-claude-plugin/skills/task-management/cowork.md` line 28: fix GitHub URL
-- [ ] `tdn-cli/scripts/prepare-release.js` lines 132-136: fix GitHub URLs
+- [x] `tdn-cli/scripts/install.sh`: `REPO="dannysmith/taskdn"`
+- [x] `tdn-claude-plugin/commands/prime.md`: fixed GitHub URL
+- [x] `tdn-claude-plugin/skills/task-management/cowork.md`: fixed GitHub URL
+- [x] `tdn-cli/scripts/prepare-release.js`: fixed GitHub URLs
 
 ### Phase 6: Update Claude Plugin for npm Install
 
