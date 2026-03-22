@@ -131,6 +131,7 @@ const createMockContext = (): CommandContext => ({
   goForward: vi.fn(),
   canGoBack: vi.fn(() => false),
   canGoForward: vi.fn(() => false),
+  getTasks: vi.fn(() => []),
   getAreas: vi.fn(() => []),
   getProjects: vi.fn(() => []),
   collapseAllAreas: vi.fn(),

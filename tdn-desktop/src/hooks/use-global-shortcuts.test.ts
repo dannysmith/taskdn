@@ -39,6 +39,7 @@ describe('useGlobalShortcuts', () => {
       navigateToArea: vi.fn(),
       navigateToProject: vi.fn(),
       navigateToNoArea: vi.fn(),
+      getTasks: vi.fn(() => []),
       goBack: vi.fn(),
       goForward: vi.fn(),
       canGoBack: vi.fn(() => false),
