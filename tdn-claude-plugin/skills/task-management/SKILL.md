@@ -202,6 +202,7 @@ If a tdn command fails:
 ## Detailed Documentation
 
 - [command-reference.md](command-reference.md) — Complete command documentation
+- [cowork.md](cowork.md) — Setup and usage in Claude Cowork (sandboxed VM)
 - [decision-guide.md](decision-guide.md) — When to use what approach
 - [examples.md](examples.md) — Common workflow examples
 - [obsidian.md](obsidian.md) — Obsidian-specific guidance (if vault is in Obsidian)

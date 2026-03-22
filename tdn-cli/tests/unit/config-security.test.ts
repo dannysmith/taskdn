@@ -22,8 +22,8 @@ describe('config security', () => {
     });
 
     test('accepts paths in user home directory', () => {
-      // Use a path that's definitely in the home directory
-      const result = validateVaultPath('~/tasks', 'tasksDir');
+      const home = homedir();
+      const result = validateVaultPath(join(home, 'tasks'), 'tasksDir');
       expect(result).toContain('tasks');
       expect(warnCalls).toHaveLength(0);
     });
@@ -143,6 +143,18 @@ describe('config security', () => {
         expect(result).toBe('/opt/tasks');
         expect(warnCalls.length).toBeGreaterThan(0);
         expect(warnCalls[0]).toContain('outside your home directory');
+      });
+
+      test('accepts /sessions/ paths without warning (Cowork VM mount)', () => {
+        const result = validateVaultPath('/sessions/abc123/mnt/tasks', 'tasksDir');
+        expect(result).toBe('/sessions/abc123/mnt/tasks');
+        expect(warnCalls).toHaveLength(0);
+      });
+
+      test('accepts /mnt/ paths without warning (generic mount point)', () => {
+        const result = validateVaultPath('/mnt/shared/tasks', 'tasksDir');
+        expect(result).toBe('/mnt/shared/tasks');
+        expect(warnCalls).toHaveLength(0);
       });
     });
 
