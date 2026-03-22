@@ -1,0 +1,14 @@
+{
+  "name": "@taskdn/cli-darwin-arm64",
+  "version": "1.0.0",
+  "description": "tdn CLI binary for macOS ARM64 (Apple Silicon)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dannysmith/taskdn.git",
+    "directory": "tdn-cli"
+  },
+  "os": ["darwin"],
+  "cpu": ["arm64"],
+  "preferUnplugged": true
+}

@@ -21,6 +21,12 @@ Key features:
 
 ## Installation
 
+### npm (any platform with Node.js 18+)
+
+```bash
+npm install -g @taskdn/cli
+```
+
 ### Homebrew (macOS/Linux)
 
 ```bash

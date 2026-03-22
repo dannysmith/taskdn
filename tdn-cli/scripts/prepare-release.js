@@ -85,6 +85,29 @@ async function prepareRelease() {
       `   ${oldCargoVersion ? oldCargoVersion[1] : 'unknown'} -> ${cleanVersion}`
     )
 
+    // Update npm package versions
+    console.log('Updating npm package versions...')
+    const npmPackages = [
+      'cli',
+      'cli-darwin-arm64',
+      'cli-darwin-x64',
+      'cli-linux-arm64',
+      'cli-linux-x64',
+      'cli-win32-x64',
+    ]
+    for (const dir of npmPackages) {
+      const npmPkgPath = `npm/${dir}/package.json`
+      const npmPkg = JSON.parse(fs.readFileSync(npmPkgPath, 'utf8'))
+      npmPkg.version = cleanVersion
+      if (npmPkg.optionalDependencies) {
+        for (const dep of Object.keys(npmPkg.optionalDependencies)) {
+          npmPkg.optionalDependencies[dep] = cleanVersion
+        }
+      }
+      fs.writeFileSync(npmPkgPath, JSON.stringify(npmPkg, null, 2) + '\n')
+    }
+    console.log(`   All npm packages -> ${cleanVersion}`)
+
     // Run bun install to update lock files
     console.log('\nUpdating lock files...')
     exec('bun install', { silent: true })
@@ -105,6 +128,7 @@ async function prepareRelease() {
     console.log('\nAfter pushing:')
     console.log('   - GitHub Actions will automatically build the release')
     console.log('   - Binaries for all platforms will be uploaded to GitHub Releases')
+    console.log('   - npm packages will be published to @taskdn/*')
     console.log('   - Homebrew formula update will be triggered (if configured)')
 
     // Interactive execution option
@@ -130,10 +154,10 @@ async function prepareRelease() {
 
       console.log(`\nRelease ${tagVersion} has been published!`)
       console.log(
-        'Check GitHub Actions: https://github.com/taskdn/taskdn/actions'
+        'Check GitHub Actions: https://github.com/dannysmith/taskdn/actions'
       )
       console.log(
-        'Release will appear at: https://github.com/taskdn/taskdn/releases'
+        'Release will appear at: https://github.com/dannysmith/taskdn/releases'
       )
     } else {
       console.log('\nGit commands saved for manual execution.')

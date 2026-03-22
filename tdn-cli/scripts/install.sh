@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # tdn-cli installer
-# Usage: curl -fsSL https://github.com/taskdn/taskdn/releases/latest/download/install.sh | bash
+# Usage: curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash
 #
 # Environment variables:
 #   TDN_VERSION     - Version to install (default: latest)
@@ -13,7 +13,7 @@ VERSION="${TDN_VERSION:-latest}"
 INSTALL_DIR="${TDN_INSTALL_DIR:-$HOME/.local/bin}"
 SKIP_VERIFY="${TDN_SKIP_VERIFY:-0}"
 
-REPO="taskdn/taskdn"
+REPO="dannysmith/taskdn"
 
 # Colors (disabled if not a terminal)
 if [ -t 1 ]; then

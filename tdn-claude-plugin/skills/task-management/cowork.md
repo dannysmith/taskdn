@@ -22,14 +22,23 @@ When you detect you're in a Cowork environment (no `tdn` in PATH, Linux platform
 
 ### Step 1: Install the tdn Binary
 
-**Primary method — download from GitHub Releases:**
+**Primary method — install via npm:**
 
 ```bash
-curl -fsSL https://github.com/taskdn/taskdn/releases/latest/download/install.sh | bash
+npm install -g @taskdn/cli
+export PATH="$PATH:$(npm prefix -g)/bin"
+```
+
+This is the most reliable method in Cowork, since `registry.npmjs.org` is on the default allowlist.
+
+**Fallback 1 — download from GitHub Releases:**
+
+```bash
+curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash
 export PATH="$PATH:$HOME/.local/bin"
 ```
 
-**Fallback — if download fails (no internet, etc.):**
+**Fallback 2 — pre-placed binary in mounted folder:**
 
 Search mounted directories for a pre-placed binary:
 
@@ -40,7 +49,7 @@ find /sessions/*/mnt/ -name 'tdn' -o -name 'tdn-linux-arm64' 2>/dev/null
 
 If found, use it directly by its full path.
 
-If neither method works, fall back to direct file access mode (see "Degraded Mode" below).
+If no method works, fall back to direct file access mode (see "Degraded Mode" below).
 
 ### Step 2: Discover Mounted Vault Directories
 

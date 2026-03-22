@@ -1,0 +1,79 @@
+#!/usr/bin/env node
+
+"use strict";
+
+const { spawnSync } = require("child_process");
+const { join, dirname } = require("path");
+
+const PLATFORMS = {
+  "darwin arm64": { pkg: "@taskdn/cli-darwin-arm64", exe: "tdn" },
+  "darwin x64": { pkg: "@taskdn/cli-darwin-x64", exe: "tdn" },
+  "linux arm64": { pkg: "@taskdn/cli-linux-arm64", exe: "tdn" },
+  "linux x64": { pkg: "@taskdn/cli-linux-x64", exe: "tdn" },
+  "win32 x64": { pkg: "@taskdn/cli-win32-x64", exe: "tdn.exe" },
+};
+
+const key = `${process.platform} ${process.arch}`;
+const platform = PLATFORMS[key];
+
+if (!platform) {
+  console.error(
+    `Unsupported platform: ${process.platform} ${process.arch}\n` +
+      `tdn supports: ${Object.keys(PLATFORMS).join(", ")}`
+  );
+  process.exit(1);
+}
+
+let binPath;
+try {
+  binPath = join(
+    dirname(require.resolve(`${platform.pkg}/package.json`)),
+    platform.exe
+  );
+} catch {
+  console.error(
+    `Could not find package ${platform.pkg}.\n` +
+      `The platform-specific binary package was not installed.\n` +
+      `Try reinstalling: npm install -g @taskdn/cli`
+  );
+  process.exit(1);
+}
+
+// Warn if tdn is also installed via Homebrew (macOS only)
+if (process.platform === "darwin" && !process.env.TDN_NO_DUAL_WARN) {
+  const { existsSync } = require("fs");
+  const brewPaths = ["/opt/homebrew/bin/tdn", "/usr/local/bin/tdn"];
+  const brewPath = brewPaths.find((p) => existsSync(p));
+  if (brewPath) {
+    console.error(
+      `Note: tdn is also installed via Homebrew at ${brewPath}\n` +
+        `You are running the npm-installed version. To suppress this warning:\n` +
+        `  export TDN_NO_DUAL_WARN=1\n`
+    );
+  }
+}
+
+const result = spawnSync(binPath, process.argv.slice(2), {
+  stdio: "inherit",
+});
+
+if (result.error) {
+  if (result.error.code === "ENOENT") {
+    console.error(
+      `Binary not found at ${binPath}.\n` +
+        `Try reinstalling: npm install -g @taskdn/cli`
+    );
+  } else {
+    throw result.error;
+  }
+  process.exit(1);
+}
+
+if (result.status !== null) {
+  process.exit(result.status);
+}
+
+// Process was killed by a signal — use conventional 128 + signal exit code
+const os = require("os");
+const signum = os.constants.signals[result.signal];
+process.exit(signum ? 128 + signum : 1);

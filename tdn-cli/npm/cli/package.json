@@ -1,0 +1,24 @@
+{
+  "name": "@taskdn/cli",
+  "version": "1.0.0",
+  "description": "Taskdn CLI — task management from the command line",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dannysmith/taskdn.git",
+    "directory": "tdn-cli"
+  },
+  "bin": {
+    "tdn": "bin/tdn"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "optionalDependencies": {
+    "@taskdn/cli-darwin-arm64": "1.0.0",
+    "@taskdn/cli-darwin-x64": "1.0.0",
+    "@taskdn/cli-linux-arm64": "1.0.0",
+    "@taskdn/cli-linux-x64": "1.0.0",
+    "@taskdn/cli-win32-x64": "1.0.0"
+  }
+}
