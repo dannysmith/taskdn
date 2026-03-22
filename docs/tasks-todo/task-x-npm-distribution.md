@@ -128,36 +128,24 @@ Created `tdn-cli/npm/` directory structure with:
 - [x] `tdn-claude-plugin/skills/task-management/cowork.md`: fixed GitHub URL
 - [x] `tdn-cli/scripts/prepare-release.js`: fixed GitHub URLs
 
-### Phase 6: Update Claude Plugin for npm Install
+### Phase 6: Update Claude Plugin for npm Install ✅
 
-Update the plugin's install flow to prefer npm when available.
+- [x] Updated `tdn-claude-plugin/commands/prime.md`: npm first, curl fallback, mounted binary fallback, direct file access fallback
+- [x] Updated `tdn-claude-plugin/skills/task-management/cowork.md`: npm as primary install method with curl and mounted binary fallbacks
+- [x] Updated `docs/tasks-todo/task-x-claude-cowork-integration.md`: npm as primary method, resolved open question about Cowork proxy
 
-- [ ] Update `tdn-claude-plugin/commands/prime.md`:
-  - Step 3a: try `npm install -g @taskdn/cli` first
-  - Step 3b: fall back to curl install script (with corrected URL)
-  - Step 3c: search mounted dirs for binary
-  - Step 3d: fall back to direct file access
-- [ ] Update `tdn-claude-plugin/skills/task-management/cowork.md`:
-  - Primary method: `npm install -g @taskdn/cli`
-  - Fallback: curl install script
-  - Fallback: pre-placed binary in mounted folder
-  - Fallback: direct file access (degraded mode)
-- [ ] Update `docs/tasks-todo/task-x-claude-cowork-integration.md` to reflect npm as the primary Cowork install method
+### Phase 7: Dual-Install Conflict Detection ✅
 
-### Phase 7: Dual-Install Conflict Detection
+- [x] Most tools (biome, esbuild, etc.) don't cross-check — PATH order determines which runs
+- [x] Added macOS-only check in `bin/tdn`: warns if Homebrew `tdn` exists at `/opt/homebrew/bin/tdn` or `/usr/local/bin/tdn`, suppressible via `TDN_NO_DUAL_WARN=1`
+- [x] Homebrew formula does not need an inverse check (can't easily detect npm globals)
 
-Users might have `tdn` installed via both Homebrew and npm, which can cause confusion about which binary is being used.
+### Phase 8: Update Documentation ✅
 
-- [ ] Research how other CLI tools handle this (e.g. how `biome`, `eslint`, `prettier` handle Homebrew vs npm coexistence)
-- [ ] Add a check in the npm wrapper script (`bin/tdn`): if `tdn` exists at a Homebrew path (e.g. from `brew --prefix`), print a warning explaining the situation and which binary is being used
-- [ ] Consider whether the Homebrew formula should do the inverse check — likely not worth it since Homebrew formulas can't easily detect npm globals, and the npm wrapper is the more common entry point
-
-### Phase 8: Update Documentation
-
-- [ ] Update `tdn-cli/README.md`: add npm as an installation method alongside Homebrew and the install script
-- [ ] Update `tdn-cli/docs/developer/releases.md`: document the npm publishing step in the release process
-- [ ] Update `website/` user-facing docs: add npm installation instructions to the CLI installation page
-- [ ] Update `tdn-claude-plugin/README.md`: mention npm install as the primary method for Cowork environments
+- [x] `tdn-cli/README.md`: added npm as first installation method
+- [x] `tdn-cli/docs/developer/releases.md`: documented npm publishing step, prerequisites, troubleshooting
+- [x] `website/src/content/docs/cli/overview.mdx`: already had npm tab (no change needed)
+- [x] `tdn-claude-plugin/README.md`: updated Cowork section to list npm as primary install method
 
 ## Testing
 

@@ -39,6 +39,20 @@ try {
   process.exit(1);
 }
 
+// Warn if tdn is also installed via Homebrew (macOS only)
+if (process.platform === "darwin" && !process.env.TDN_NO_DUAL_WARN) {
+  const { existsSync } = require("fs");
+  const brewPaths = ["/opt/homebrew/bin/tdn", "/usr/local/bin/tdn"];
+  const brewPath = brewPaths.find((p) => existsSync(p));
+  if (brewPath) {
+    console.error(
+      `Note: tdn is also installed via Homebrew at ${brewPath}\n` +
+        `You are running the npm-installed version. To suppress this warning:\n` +
+        `  export TDN_NO_DUAL_WARN=1\n`
+    );
+  }
+}
+
 const result = spawnSync(binPath, process.argv.slice(2), {
   stdio: "inherit",
 });

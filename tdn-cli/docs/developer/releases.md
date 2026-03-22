@@ -8,15 +8,19 @@ Releases are triggered by pushing a git tag in the format `tdn-cli-v<version>`. 
 
 1. Builds binaries for all 5 platforms
 2. Creates archives with SHA256 checksums
-3. Publishes a GitHub Release with all assets
-4. Triggers an auto-update PR in the Homebrew tap
+3. Publishes all 6 npm packages (`@taskdn/cli` + 5 platform packages) via OIDC trusted publishing
+4. Publishes a GitHub Release with all assets
+5. Triggers an auto-update PR in the Homebrew tap
+
+Steps 3-5 run in parallel after the build completes.
 
 ## Prerequisites
 
 Before your first release, ensure:
 
 1. **Homebrew tap exists**: `dannysmith/homebrew-taproom` with the formula and update workflow
-2. **GitHub secret configured**: `HOMEBREW_TAP_TOKEN` in `taskdn/taskdn` repo settings
+2. **GitHub secret configured**: `HOMEBREW_TAP_TOKEN` in `dannysmith/taskdn` repo settings
+3. **npm trusted publishing**: All 6 `@taskdn/*` packages on npmjs.com have trusted publishing configured for the `release-cli.yml` workflow
 
 ## Release Process
 
@@ -36,6 +40,7 @@ bun run release:prepare 1.0.0
 This script:
 - Updates version in `package.json`
 - Updates version in `crates/core/Cargo.toml`
+- Updates version in all `npm/*/package.json` files
 - Runs all checks (`bun run check`)
 - Prompts to create a git commit and tag
 
@@ -68,17 +73,30 @@ git push origin tdn-cli-v1.0.0
    - `tdn-windows-x64.zip` + `.sha256`
    - `install.sh`
 
-### 4. Merge the Homebrew PR
+### 4. Verify npm packages
+
+Check that all packages were published:
+
+```bash
+npm view @taskdn/cli version
+```
+
+This should show the version you just released.
+
+### 5. Merge the Homebrew PR
 
 1. Go to [homebrew-taproom PRs](https://github.com/dannysmith/homebrew-taproom/pulls)
 2. Review the auto-generated PR (version and checksums should be updated)
 3. Merge it
 
-### 5. Verify installation
+### 6. Verify installation
 
 Test that users can install:
 
 ```bash
+# npm
+npm install -g @taskdn/cli
+
 # Homebrew (if tap already added)
 brew upgrade tdn
 
@@ -100,10 +118,18 @@ git push origin tdn-cli-v1.0.0-beta.1
 ```
 
 Pre-releases (versions containing `-`) will:
+- Publish npm packages (pre-release versions are fine on npm)
 - Create a GitHub Release (marked as pre-release)
 - **Not** trigger the Homebrew formula update
 
 ## Troubleshooting
+
+### npm publish fails
+
+- Verify trusted publishing is configured on all 6 `@taskdn/*` packages on npmjs.com
+- Check that the workflow has `permissions.id-token: write`
+- Ensure `actions/setup-node` does **not** have `registry-url` set (breaks OIDC)
+- npm CLI must be v11.5.1+ (Node.js 24.x ships with this)
 
 ### Build fails on a specific platform
 
