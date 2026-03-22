@@ -1,6 +1,7 @@
 .local
 *.local.*
 .DS_Store
+node_modules/
 dummy-demo-vault/
 .idea
 .vscode

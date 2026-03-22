@@ -2,166 +2,137 @@
 
 ## Background
 
-Anthropic released [Claude Cowork](https://claude.com/blog/cowork-research-preview) in January 2026 - a research preview that brings Claude Code's agentic capabilities to Claude Desktop for non-developers. It runs tasks in an isolated Linux VM using Apple's Virtualization Framework (VZVirtualMachine).
+Anthropic released [Claude Cowork](https://claude.com/blog/cowork-research-preview) in January 2026 — a research preview that brings Claude Code's agentic capabilities to Claude Desktop for non-developers. It runs tasks in an isolated Linux VM.
 
 **Key technical details:**
-- Runs a lightweight Linux VM on macOS (Apple Silicon only currently)
-- Uses VZVirtualMachine with a custom Linux rootfs
-- Pre-installed tools: Python, git, grep (no Node.js/Bun)
-- User folders mounted at paths like `/sessions/[session-id]/mnt/[folder-name]`
-- Hard isolation: Claude can only access explicitly mounted directories
+- Runs a lightweight Linux VM (Apple Silicon Macs and Windows)
+- Hard isolation: Claude can only access explicitly mounted/shared folders
 - No `~/.taskdn.json` or global `tdn` binary available
+- No access to host `~/.claude/` — plugins/skills are managed via the Desktop app UI
+- Pre-installed tools include Python, git, grep, curl (no Node.js/Bun)
 
 **Goal:** Make the existing Claude Code plugin (`tdn-claude-plugin/`) work in both:
 1. Claude Code (local machine, `tdn` globally installed)
-2. Cowork sandbox (bundled binary, mounted directories)
+2. Cowork sandbox (binary installed at session start, mounted directories)
 
-## Research Sources
+## Research (March 2026 Update)
 
-- [Cowork announcement](https://claude.com/blog/cowork-research-preview)
-- [Simon Willison's analysis](https://simonwillison.net/2026/Jan/12/claude-cowork/)
-- [Cowork Architecture Deep Dive](https://claudecn.com/en/blog/claude-cowork-architecture/)
-- [Getting Started with Cowork](https://support.claude.com/en/articles/13345190-getting-started-with-cowork)
-- [HN discussion](https://news.ycombinator.com/item?id=46613304)
+The original version of this doc (January 2026) proposed bundling a pre-compiled binary with the plugin. That approach doesn't work:
 
-## Proposed Approach
+1. **Plugins can't bundle binaries** — the Claude Code plugin system supports markdown skills, scripts, hooks, and MCP configs, but not pre-compiled executables.
+2. **Binary is 102MB** — the standalone `tdn` binary (built with `bun build --compile`) is far larger than the 15-25MB originally estimated.
+3. **Cowork VM can't see `~/.claude/`** — plugin directories on the host aren't accessible from inside the VM.
 
-Bundle a pre-compiled Linux ARM64 `tdn` binary with the skill. When Claude detects it's in a sandboxed Cowork environment (no global `tdn`, mounted paths), use the bundled binary with a dynamically created config file.
+### What Does Work (Verified)
 
-### Why This Approach
+Proof of concept tested on Linux ARM64 (2026-03-14):
 
-1. **Binary compilation works**: `bun build --compile` creates self-contained executables
-2. **Config already flexible**: CLI supports env vars > local `.taskdn.json` > user config > defaults
-3. **Cross-compilation ready**: Already builds for `linux-arm64-gnu` and `linux-arm64-musl`
+- `bun build --compile --minify src/index.ts --outfile dist/tdn-linux-arm64` produces a working standalone binary
+- The binary runs with zero dependencies beyond glibc
+- A local `.taskdn.json` in the working directory correctly overrides defaults
+- `tdn context --ai` successfully reads a vault and produces structured output
+- The existing `install.sh` script handles Linux ARM64 detection and installation
+
+### Revised Approach: Install at Session Start
+
+Instead of bundling, have Claude install `tdn` from GitHub Releases at the start of each Cowork session. The user mounts their vault folders, and the skill guides Claude through setup.
+
+**Why this works:**
+- `curl` and `tar` are available in the Cowork VM
+- The install script already supports `linux-arm64`
+- Local `.taskdn.json` in the working directory takes precedence over global config
+- No changes needed to the binary or release pipeline
 
 ## Implementation Checklist
 
-### Phase 1: Build & Verify Binary
+### Phase 1: Cowork Setup Documentation [✅ DONE]
 
-- [ ] Build Linux ARM64 standalone binary
-  ```bash
-  # Build for glibc (standard Linux)
-  napi build --release --target aarch64-unknown-linux-gnu -o bindings
-  bun build --compile --minify src/index.ts --outfile dist/tdn-linux-arm64
-  ```
-- [ ] Verify binary size (expect 15-25MB) - check if acceptable for skill bundling
-- [ ] Test binary in Cowork VM manually (mount folder containing binary, run it)
-- [ ] Determine if Cowork uses glibc or musl
+- [x] Create `skills/task-management/cowork.md` with:
+  - How Cowork environment differs from Claude Code
+  - Step-by-step setup instructions for Claude to follow
+  - How to discover mounted vault directories
+  - How to create a local `.taskdn.json`
+  - Troubleshooting (no internet, wrong paths, etc.)
 
-### Phase 2: Environment Detection
+### Phase 2: Update `/tdn:prime` for Environment Detection [✅ DONE]
 
-- [ ] Add detection logic to SKILL.md:
-  - Check if `which tdn` returns a path (Claude Code)
-  - Check for `/sessions/*/mnt/*` paths (Cowork)
-  - Check for bundled binary in known location
-- [ ] Document detection signals:
+- [x] Update `commands/prime.md` to detect the environment before running commands:
+  1. Check if `tdn` is already available (`which tdn`)
+  2. If not: check for Cowork signals (mounted paths, no home dir config)
+  3. If Cowork detected: run install script, discover mounted dirs, create `.taskdn.json`
+  4. Then proceed with normal priming (`tdn config --ai && tdn context --ai`)
+- [x] Add `cowork.md` to the skill's detailed documentation list in SKILL.md
+
+### Phase 3: Handle the "No Internet" Fallback [✅ DONE]
+
+- [x] Document a fallback for when `curl` can't reach GitHub (e.g. no internet in VM):
+  - User can pre-download the binary and include it in a mounted folder
+  - Skill docs explain: "place `tdn` binary in your mounted folder, Claude will find it"
+  - Claude searches mounted directories for a `tdn` or `tdn-linux-arm64` executable
+- [x] Add fallback instructions to `cowork.md`
+
+### Phase 4: Update Plugin README [✅ DONE]
+
+- [x] Add "Using with Claude Cowork" section to README
+- [x] Document user requirements:
+  - Must share/mount their tasks, projects, and areas folders
+  - Binary is downloaded automatically on first use (or placed in a mounted folder)
+- [x] Note that setup runs once per session (not persistent across sessions)
+
+### Phase 5: Suppress Warnings for Cowork Paths [✅ DONE]
+
+- [x] The CLI warned when dirs are "outside your home directory" — this always triggers in Cowork where paths look like `/sessions/xxx/mnt/tasks`
+- [x] Added `/sessions/` and `/mnt/` to the exemption list alongside `/tmp/` and `/var/folders/`
+- [x] Added tests for the new exemptions
+- [x] This was a CLI change in `tdn-cli/src/config/index.ts`
+
+## Environment Detection Signals
 
 | Signal | Claude Code | Cowork |
 |--------|-------------|--------|
 | `which tdn` | Returns path | Empty/error |
-| `/sessions/*/mnt/` | No | Yes |
 | `~/.taskdn.json` | Usually exists | No |
+| Mounted paths (`/sessions/*/mnt/*` or similar) | No | Yes |
+| `uname -s` | Darwin (usually) | Linux |
+| Internet access | Yes | Usually yes |
 
-### Phase 3: Update Plugin Structure
+## Setup Flow (What Claude Does)
 
-- [ ] Add binary to plugin:
-  ```
-  tdn-claude-plugin/
-  ├── bin/
-  │   └── tdn-linux-arm64          # Bundled binary
-  ├── skills/
-  │   └── task-management/
-  │       ├── SKILL.md             # Updated with env detection
-  │       ├── setup-cowork.md      # NEW: Cowork setup docs
-  │       └── ...
-  └── commands/
-      ├── prime.md                 # Updated to handle both envs
-      └── setup.md                 # NEW: /tdn:setup command
-  ```
-
-### Phase 4: Create Setup Flow
-
-- [ ] Create `/tdn:setup` command that:
-  1. Detects environment (Claude Code vs Cowork)
-  2. In Cowork: discovers mounted directories
-  3. Creates local `.taskdn.json` with mounted paths:
-     ```json
-     {
-       "tasksDir": "/sessions/xxx/mnt/tasks",
-       "projectsDir": "/sessions/xxx/mnt/projects",
-       "areasDir": "/sessions/xxx/mnt/areas"
-     }
-     ```
-  4. Verifies binary works: `./tdn-linux-arm64 config --ai`
-- [ ] Update `/tdn:prime` to run setup if needed
-
-### Phase 5: Update SKILL.md
-
-- [ ] Add "Environment Detection" section
-- [ ] Add "Cowork Setup" section
-- [ ] Update command patterns to use appropriate binary path
-- [ ] Document that users must mount tasks/projects/areas folders
-
-### Phase 6: Documentation & Distribution
-
-- [ ] Update plugin README with Cowork instructions
-- [ ] Document user requirements:
-  - Must grant folder access to tasks, projects, and areas directories
-  - May need to include binary in a mounted folder (if plugins aren't accessible in VM)
-- [ ] Consider a "Cowork starter kit" with binary included
-
-## Key Unknowns to Resolve
-
-1. **Plugin accessibility in Cowork**: Are `~/.claude/plugins/` files accessible from inside the Cowork VM? May need binary distributed separately.
-
-2. **Skill size limits**: Is there a maximum size for skill bundles? Binary is 15-25MB.
-
-3. **libc variant**: Does Cowork's Linux use glibc or musl? (Likely glibc)
-
-4. **Session persistence**: Each session gets new ID - config needs regeneration each time.
-
-5. **Path discovery**: Need reliable way to find mounted directories (glob `/sessions/*/mnt/*`).
+```
+1. User says /tdn:prime (or asks about tasks)
+2. Claude checks: which tdn
+   ├─ Found → normal flow (Claude Code)
+   └─ Not found → Cowork setup:
+      a. Install: curl -fsSL <install-url> | bash
+         ├─ Success → continue
+         └─ Failure → look for binary in mounted dirs
+      b. Discover vault dirs in mounted paths
+      c. Create .taskdn.json with discovered paths
+      d. Verify: tdn config --ai
+      e. Continue with normal priming
+```
 
 ## Path Mapping Reference
 
 | User's Mac | Cowork VM |
 |------------|-----------|
-| `~/notes/tasks` | `/sessions/xxx/mnt/tasks` |
+| `~/notes/tasks` | `/sessions/xxx/mnt/tasks` (or similar) |
 | `~/notes/projects` | `/sessions/xxx/mnt/projects` |
 | `~/notes/areas` | `/sessions/xxx/mnt/areas` |
 
-## Modified Command Pattern
-
-```markdown
-# In SKILL.md
-
-## Running Commands
-
-Determine the tdn binary path at session start:
-
-**Claude Code (global)**:
-```bash
-TDN_BIN="tdn"
-```
-
-**Cowork (bundled)**:
-```bash
-TDN_BIN="/path/to/mounted/bin/tdn-linux-arm64"
-```
-
-Then use consistently:
-```bash
-$TDN_BIN list --ai
-$TDN_BIN new "Task title" --ai
-```
-```
+The exact mount paths depend on what the user shares and the session ID. Claude should discover these dynamically rather than assuming a structure.
 
 ## Alternative Approaches Considered
+
+### Binary Bundling in Plugin (Original Plan — Rejected)
+Bundle a pre-compiled `tdn` binary inside the plugin directory. Rejected because:
+- Plugin system doesn't support binary bundling
+- Binary is 102MB (too large)
+- Cowork VM can't access host plugin directories
 
 ### MCP Server (Rejected)
 Create an MCP server wrapping tdn CLI that runs on host. Rejected because:
 - User explicitly doesn't want MCP
-- Unclear if Cowork VM can access host MCP servers
 - Adds complexity
 
 ### Python-based Skill (Rejected)
@@ -170,8 +141,13 @@ Reimplement CLI logic in Python (pre-installed in Cowork). Rejected because:
 - Maintenance burden of two implementations
 - Loses Rust performance benefits
 
-### Direct File Access Only (Partial)
-Just mount directories and work with files directly. Acceptable as fallback but:
+### Direct File Access Only (Fallback)
+Just mount directories and work with files directly. Acceptable as degraded fallback but:
 - Loses CLI benefits (validation, querying, formatted output)
 - More error-prone for mutations
-- Could be used as degraded mode if binary doesn't work
+- The skill's `templates.md` and `specification.md` already document the file format for this case
+
+## Open Questions
+
+1. **Internet in Cowork VM** — Can the VM always reach GitHub to download releases? If not, the "pre-download binary" fallback becomes the primary path.
+2. **Install location persistence** — Does `~/.local/bin/` persist across Cowork sessions or is it wiped? If wiped, install runs every session (acceptable — takes seconds).

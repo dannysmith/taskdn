@@ -85,17 +85,51 @@ tdn-claude-plugin/
 ├── .claude-plugin/
 │   └── plugin.json           # Plugin manifest
 ├── commands/
+│   ├── prime.md              # /tdn:prime slash command
 │   └── today.md              # /tdn:today slash command
 ├── skills/
 │   └── task-management/
 │       ├── SKILL.md          # Main skill (overview)
 │       ├── command-reference.md
+│       ├── cowork.md         # Cowork environment setup
 │       ├── decision-guide.md
 │       ├── examples.md
 │       ├── specification.md
 │       └── templates.md
 └── README.md
 ```
+
+## Using with Claude Cowork
+
+This plugin works in [Claude Cowork](https://claude.com/blog/cowork-research-preview) (Anthropic's sandboxed desktop VM environment) with automatic setup.
+
+### Requirements
+
+You must **share/mount your vault folders** with the Cowork session:
+- Your `tasks` directory
+- Your `projects` directory
+- Your `areas` directory
+
+### How It Works
+
+When you run `/tdn:prime` (or ask about your tasks), Claude will:
+
+1. Detect that `tdn` isn't installed
+2. Download and install it automatically from GitHub Releases
+3. Discover your mounted vault directories
+4. Create a local config file pointing to them
+5. Proceed normally
+
+If the download fails (e.g. no internet), Claude will look for a `tdn` binary you've placed in one of your mounted folders. If no binary is available at all, Claude falls back to working with your task files directly.
+
+### Pre-downloading the Binary (Optional)
+
+If your Cowork sessions don't have internet access, download the Linux ARM64 binary from [GitHub Releases](https://github.com/taskdn/taskdn/releases) and place it in one of the folders you share with Cowork.
+
+### Notes
+
+- Setup runs once per session (not persistent across sessions)
+- The CLI may warn about paths being "outside your home directory" — this is expected and harmless in Cowork
 
 ## Contributing
 
