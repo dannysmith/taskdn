@@ -131,17 +131,31 @@ Create the `tdn-cli/npm/` directory structure.
 
 ### Phase 3: Update Release Workflow
 
-Extend `.github/workflows/release-cli.yml` to publish to npm after building.
+Extend `.github/workflows/release-cli.yml` with a new `publish-npm` job. The workflow structure becomes:
 
-- [ ] Add `id-token: write` to permissions
-- [ ] In each platform build job, after building the binary:
-  - Copy the binary into the correct `npm/cli-<platform>/` directory
-  - Set the version in `package.json` from the git tag
+```
+build (existing matrix, unchanged)
+├── publish-npm (new, needs: build)  ← publishes all 6 npm packages
+└── release (existing, needs: build) ← GitHub Release + Homebrew
+```
+
+`publish-npm` and `release` run in parallel — both only need `build` to complete.
+
+**New `publish-npm` job:**
+
+- [ ] Add job with `needs: build`, `runs-on: ubuntu-latest`
+- [ ] Set `permissions.id-token: write` (required for trusted publishing OIDC)
+- [ ] Use `actions/setup-node@v4` with `node-version: 24.x` (do NOT set `registry-url` — it breaks OIDC)
+- [ ] Download all build artifacts
+- [ ] Extract version from git tag
+- [ ] For each platform package:
+  - Copy the binary from the artifact into `npm/cli-<platform>/`
+  - Set the version in its `package.json`
   - Run `npm publish --access public`
-- [ ] Add a new `publish-npm` job (after all platform builds complete):
-  - Update the version in `npm/cli/package.json` + all `optionalDependencies` versions
+- [ ] After all platform packages are published:
+  - Set the version + `optionalDependencies` versions in `npm/cli/package.json`
   - Run `npm publish --access public` for the main `@taskdn/cli` package
-- [ ] Ensure the existing GitHub Release + Homebrew steps still work (they run in the `release` job which already `needs: build`)
+- [ ] Ensure the existing `release` job (GitHub Release + Homebrew) is unaffected
 
 ### Phase 4: Update prepare-release Script
 
@@ -171,6 +185,22 @@ Update the plugin's install flow to prefer npm when available.
   - Fallback: curl install script
   - Fallback: pre-placed binary in mounted folder
   - Fallback: direct file access (degraded mode)
+- [ ] Update `docs/tasks-todo/task-x-claude-cowork-integration.md` to reflect npm as the primary Cowork install method
+
+### Phase 7: Dual-Install Conflict Detection
+
+Users might have `tdn` installed via both Homebrew and npm, which can cause confusion about which binary is being used.
+
+- [ ] Research how other CLI tools handle this (e.g. how `biome`, `eslint`, `prettier` handle Homebrew vs npm coexistence)
+- [ ] Add a check in the npm wrapper script (`bin/tdn`): if `tdn` exists at a Homebrew path (e.g. from `brew --prefix`), print a warning explaining the situation and which binary is being used
+- [ ] Consider whether the Homebrew formula should do the inverse check — likely not worth it since Homebrew formulas can't easily detect npm globals, and the npm wrapper is the more common entry point
+
+### Phase 8: Update Documentation
+
+- [ ] Update `tdn-cli/README.md`: add npm as an installation method alongside Homebrew and the install script
+- [ ] Update `tdn-cli/docs/developer/releases.md`: document the npm publishing step in the release process
+- [ ] Update `website/` user-facing docs: add npm installation instructions to the CLI installation page
+- [ ] Update `tdn-claude-plugin/README.md`: mention npm install as the primary method for Cowork environments
 
 ## Testing
 
