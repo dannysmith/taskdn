@@ -69,4 +69,11 @@ if (result.error) {
   process.exit(1);
 }
 
-process.exit(result.status ?? 1);
+if (result.status !== null) {
+  process.exit(result.status);
+}
+
+// Process was killed by a signal — use conventional 128 + signal exit code
+const os = require("os");
+const signum = os.constants.signals[result.signal];
+process.exit(signum ? 128 + signum : 1);
