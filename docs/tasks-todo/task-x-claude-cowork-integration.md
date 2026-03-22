@@ -35,10 +35,21 @@ Proof of concept tested on Linux ARM64 (2026-03-14):
 
 ### Revised Approach: Install at Session Start
 
-Instead of bundling, have Claude install `tdn` from GitHub Releases at the start of each Cowork session. The user mounts their vault folders, and the skill guides Claude through setup.
+Instead of bundling, have Claude install `tdn` at the start of each Cowork session. The user mounts their vault folders, and the skill guides Claude through setup.
+
+**Primary method: npm** (preferred since `registry.npmjs.org` is on Cowork's default allowlist):
+```bash
+npm install -g @taskdn/cli
+```
+
+**Fallback: GitHub Releases** (if npm is unavailable):
+```bash
+curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash
+```
 
 **Why this works:**
-- `curl` and `tar` are available in the Cowork VM
+- npm's registry is on the Cowork allowlist (GitHub release assets are blocked)
+- `curl` and `tar` are available as a fallback
 - The install script already supports `linux-arm64`
 - Local `.taskdn.json` in the working directory takes precedence over global config
 - No changes needed to the binary or release pipeline
@@ -103,13 +114,16 @@ Instead of bundling, have Claude install `tdn` from GitHub Releases at the start
 2. Claude checks: which tdn
    ├─ Found → normal flow (Claude Code)
    └─ Not found → Cowork setup:
-      a. Install: curl -fsSL <install-url> | bash
+      a. Try npm: npm install -g @taskdn/cli
+         ├─ Success → continue
+         └─ Failure → try curl
+      b. Try curl: curl -fsSL <install-url> | bash
          ├─ Success → continue
          └─ Failure → look for binary in mounted dirs
-      b. Discover vault dirs in mounted paths
-      c. Create .taskdn.json with discovered paths
-      d. Verify: tdn config --ai
-      e. Continue with normal priming
+      c. Discover vault dirs in mounted paths
+      d. Create .taskdn.json with discovered paths
+      e. Verify: tdn config --ai
+      f. Continue with normal priming
 ```
 
 ## Path Mapping Reference
@@ -149,5 +163,5 @@ Just mount directories and work with files directly. Acceptable as degraded fall
 
 ## Open Questions
 
-1. **Internet in Cowork VM** — Can the VM always reach GitHub to download releases? If not, the "pre-download binary" fallback becomes the primary path.
+1. ~~**Internet in Cowork VM** — Can the VM always reach GitHub to download releases?~~ **Resolved:** The Cowork proxy blocks `release-assets.githubusercontent.com` but allows `registry.npmjs.org`. npm install is now the primary method; curl install script is the fallback for environments where npm isn't available.
 2. **Install location persistence** — Does `~/.local/bin/` persist across Cowork sessions or is it wiped? If wiped, install runs every session (acceptable — takes seconds).

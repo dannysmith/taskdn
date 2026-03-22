@@ -85,122 +85,67 @@ Instead of storing an `NPM_TOKEN` secret, configure each package on npmjs.com to
 
 ## Implementation
 
-### Phase 1: npm Org & Package Setup (manual)
+### Phase 1: npm Org & Package Setup (manual) ✅
 
-- [ ] Create the `@taskdn` org on npmjs.com
-- [ ] Delete (or deprecate) the old `taskdn-sdk` package
-- [ ] Create placeholder packages to reserve the names — each needs an initial publish before trusted publishing can be configured:
+- [x] Create the `@taskdn` org on npmjs.com
+- [x] Delete (or deprecate) the old `taskdn-sdk` package
+- [x] Create placeholder packages (v0.0.0) to reserve the names:
   - `@taskdn/cli`
   - `@taskdn/cli-darwin-arm64`
   - `@taskdn/cli-darwin-x64`
   - `@taskdn/cli-linux-arm64`
   - `@taskdn/cli-linux-x64`
   - `@taskdn/cli-win32-x64`
-- [ ] Configure trusted publishing on each package:
+- [x] Configure trusted publishing on each package:
   - Repository owner: `dannysmith`
   - Repository: `taskdn`
   - Workflow: `release-cli.yml`
 
-### Phase 2: Create npm Package Files
+### Phase 2: Create npm Package Files ✅
 
-Create the `tdn-cli/npm/` directory structure.
+Created `tdn-cli/npm/` directory structure with:
 
-**For each platform package** (`cli-darwin-arm64`, etc.):
+- [x] 5 platform `package.json` files with `os`/`cpu`/`preferUnplugged` fields
+- [x] Main `@taskdn/cli` `package.json` with `bin`, `optionalDependencies`, `engines`
+- [x] `bin/tdn` wrapper script using `spawnSync` with passthrough stdio
 
-- [ ] Create `package.json` with:
-  - `name`, `version` (matching CLI version)
-  - `os` and `cpu` fields
-  - `description`, `license`, `repository`
-  - `preferUnplugged: true` (for Yarn PnP compatibility)
-  - No `bin` field (main package handles that)
-- [ ] The binary itself is NOT committed — CI copies it in at build time
+### Phase 3: Update Release Workflow ✅
 
-**For the main package** (`cli/`):
+- [x] Added `publish-npm` job to `release-cli.yml` (parallel with `release`, both need `build`)
+- [x] OIDC trusted publishing via `permissions.id-token: write`
+- [x] `actions/setup-node@v4` with `node-version: 24.x` (no `registry-url`)
+- [x] Extracts binaries from build artifacts, sets versions, publishes platform packages then main wrapper
 
-- [ ] Create `package.json` with:
-  - `name: "@taskdn/cli"`
-  - `bin: { "tdn": "bin/tdn" }`
-  - `optionalDependencies` listing all 5 platform packages at the same version
-  - `engines: { "node": ">=18" }`
-- [ ] Create `bin/tdn` wrapper script (Node.js, ~50 lines):
-  - Platform/arch detection via `process.platform` and `process.arch`
-  - Map to package name
-  - `require.resolve()` to find the binary
-  - `execFileSync()` to run it with passthrough stdio
-  - Clear error message if no matching platform package is installed
+### Phase 4: Update prepare-release Script ✅
 
-### Phase 3: Update Release Workflow
+- [x] `prepare-release.js` now bumps versions in all `npm/*/package.json` files
+- [x] Added npm publish to post-push output messages
 
-Extend `.github/workflows/release-cli.yml` with a new `publish-npm` job. The workflow structure becomes:
+### Phase 5: Fix Existing URL Issues ✅
 
-```
-build (existing matrix, unchanged)
-├── publish-npm (new, needs: build)  ← publishes all 6 npm packages
-└── release (existing, needs: build) ← GitHub Release + Homebrew
-```
+- [x] `tdn-cli/scripts/install.sh`: `REPO="dannysmith/taskdn"`
+- [x] `tdn-claude-plugin/commands/prime.md`: fixed GitHub URL
+- [x] `tdn-claude-plugin/skills/task-management/cowork.md`: fixed GitHub URL
+- [x] `tdn-cli/scripts/prepare-release.js`: fixed GitHub URLs
 
-`publish-npm` and `release` run in parallel — both only need `build` to complete.
+### Phase 6: Update Claude Plugin for npm Install ✅
 
-**New `publish-npm` job:**
+- [x] Updated `tdn-claude-plugin/commands/prime.md`: npm first, curl fallback, mounted binary fallback, direct file access fallback
+- [x] Updated `tdn-claude-plugin/skills/task-management/cowork.md`: npm as primary install method with curl and mounted binary fallbacks
+- [x] Updated `docs/tasks-todo/task-x-claude-cowork-integration.md`: npm as primary method, resolved open question about Cowork proxy
 
-- [ ] Add job with `needs: build`, `runs-on: ubuntu-latest`
-- [ ] Set `permissions.id-token: write` (required for trusted publishing OIDC)
-- [ ] Use `actions/setup-node@v4` with `node-version: 24.x` (do NOT set `registry-url` — it breaks OIDC)
-- [ ] Download all build artifacts
-- [ ] Extract version from git tag
-- [ ] For each platform package:
-  - Copy the binary from the artifact into `npm/cli-<platform>/`
-  - Set the version in its `package.json`
-  - Run `npm publish --access public`
-- [ ] After all platform packages are published:
-  - Set the version + `optionalDependencies` versions in `npm/cli/package.json`
-  - Run `npm publish --access public` for the main `@taskdn/cli` package
-- [ ] Ensure the existing `release` job (GitHub Release + Homebrew) is unaffected
+### Phase 7: Dual-Install Conflict Detection ✅
 
-### Phase 4: Update prepare-release Script
+- [x] Most tools (biome, esbuild, etc.) don't cross-check — PATH order determines which runs
+- [x] Added macOS-only check in `bin/tdn`: warns if Homebrew `tdn` exists at `/opt/homebrew/bin/tdn` or `/usr/local/bin/tdn`, suppressible via `TDN_NO_DUAL_WARN=1`
+- [x] Homebrew formula does not need an inverse check (can't easily detect npm globals)
 
-- [ ] Update `tdn-cli/scripts/prepare-release.js` to also bump versions in all `npm/*/package.json` files
-- [ ] Fix repo URL: `taskdn/taskdn` → `dannysmith/taskdn` in the script's output messages
+### Phase 8: Update Documentation ✅
 
-### Phase 5: Fix Existing URL Issues
-
-These are wrong in multiple places and should be fixed regardless of npm publishing.
-
-- [ ] `tdn-cli/scripts/install.sh` line 16: `REPO="taskdn/taskdn"` → `REPO="dannysmith/taskdn"`
-- [ ] `tdn-claude-plugin/commands/prime.md` line 13: fix GitHub URL to `dannysmith/taskdn`
-- [ ] `tdn-claude-plugin/skills/task-management/cowork.md` line 28: fix GitHub URL
-- [ ] `tdn-cli/scripts/prepare-release.js` lines 132-136: fix GitHub URLs
-
-### Phase 6: Update Claude Plugin for npm Install
-
-Update the plugin's install flow to prefer npm when available.
-
-- [ ] Update `tdn-claude-plugin/commands/prime.md`:
-  - Step 3a: try `npm install -g @taskdn/cli` first
-  - Step 3b: fall back to curl install script (with corrected URL)
-  - Step 3c: search mounted dirs for binary
-  - Step 3d: fall back to direct file access
-- [ ] Update `tdn-claude-plugin/skills/task-management/cowork.md`:
-  - Primary method: `npm install -g @taskdn/cli`
-  - Fallback: curl install script
-  - Fallback: pre-placed binary in mounted folder
-  - Fallback: direct file access (degraded mode)
-- [ ] Update `docs/tasks-todo/task-x-claude-cowork-integration.md` to reflect npm as the primary Cowork install method
-
-### Phase 7: Dual-Install Conflict Detection
-
-Users might have `tdn` installed via both Homebrew and npm, which can cause confusion about which binary is being used.
-
-- [ ] Research how other CLI tools handle this (e.g. how `biome`, `eslint`, `prettier` handle Homebrew vs npm coexistence)
-- [ ] Add a check in the npm wrapper script (`bin/tdn`): if `tdn` exists at a Homebrew path (e.g. from `brew --prefix`), print a warning explaining the situation and which binary is being used
-- [ ] Consider whether the Homebrew formula should do the inverse check — likely not worth it since Homebrew formulas can't easily detect npm globals, and the npm wrapper is the more common entry point
-
-### Phase 8: Update Documentation
-
-- [ ] Update `tdn-cli/README.md`: add npm as an installation method alongside Homebrew and the install script
-- [ ] Update `tdn-cli/docs/developer/releases.md`: document the npm publishing step in the release process
-- [ ] Update `website/` user-facing docs: add npm installation instructions to the CLI installation page
-- [ ] Update `tdn-claude-plugin/README.md`: mention npm install as the primary method for Cowork environments
+- [x] `tdn-cli/README.md`: added npm as first installation method
+- [x] `tdn-cli/docs/developer/releases.md`: documented npm publishing step, prerequisites, troubleshooting
+- [x] `website/src/content/docs/cli/overview.mdx`: already had npm tab (no change needed)
+- [x] `tdn-claude-plugin/README.md`: updated Cowork section to list npm as primary install method
 
 ## Testing
 

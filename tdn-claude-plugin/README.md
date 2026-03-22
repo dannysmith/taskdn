@@ -115,16 +115,17 @@ You must **share/mount your vault folders** with the Cowork session:
 When you run `/tdn:prime` (or ask about your tasks), Claude will:
 
 1. Detect that `tdn` isn't installed
-2. Download and install it automatically from GitHub Releases
-3. Discover your mounted vault directories
-4. Create a local config file pointing to them
-5. Proceed normally
+2. Install it via `npm install -g @taskdn/cli` (preferred — npm registry is on the Cowork allowlist)
+3. If npm fails, fall back to downloading from GitHub Releases
+4. Discover your mounted vault directories
+5. Create a local config file pointing to them
+6. Proceed normally
 
-If the download fails (e.g. no internet), Claude will look for a `tdn` binary you've placed in one of your mounted folders. If no binary is available at all, Claude falls back to working with your task files directly.
+If both install methods fail, Claude will look for a `tdn` binary you've placed in one of your mounted folders. If no binary is available at all, Claude falls back to working with your task files directly.
 
-### Pre-downloading the Binary (Optional)
+### Pre-placing the Binary (Optional)
 
-If your Cowork sessions don't have internet access, download the Linux ARM64 binary from [GitHub Releases](https://github.com/taskdn/taskdn/releases) and place it in one of the folders you share with Cowork.
+If neither npm nor the install script works, download the Linux ARM64 binary from [GitHub Releases](https://github.com/dannysmith/taskdn/releases) and place it in one of the folders you share with Cowork.
 
 ### Notes
 
