@@ -93,17 +93,16 @@ struct ParsedTask: Sendable {
     @Guide(description: "Additional context or notes, empty string if none")
     let body: String
 
-    @Guide(description: "Task status: inbox, ready, in-progress, or icebox. Default inbox.")
-    let status: String
+    let status: ParsedStatus
 
-    @Guide(description: "Relative date expression for due date, e.g. 'in 3 weeks', empty string if none")
-    let dueExpression: String
+    @Guide(description: "Due date in YYYY-MM-DD format, empty string if none")
+    let due: String
 
-    @Guide(description: "Relative date expression for scheduled date, empty string if none")
-    let scheduledExpression: String
+    @Guide(description: "Scheduled date in YYYY-MM-DD format, empty string if none")
+    let scheduled: String
 
-    @Guide(description: "Relative date expression for defer-until date, empty string if none")
-    let deferUntilExpression: String
+    @Guide(description: "Defer-until date in YYYY-MM-DD format, empty string if none")
+    let deferUntil: String
 
     @Guide(description: "Exact project name from the available list, empty string if none")
     let project: String
@@ -111,11 +110,22 @@ struct ParsedTask: Sendable {
     @Guide(description: "Exact area name from the available list, empty string if none")
     let area: String
 }
+
+@Generable
+enum ParsedStatus {
+    case inbox
+    case icebox
+    case ready
+    case inProgress
+    case blocked
+}
 ```
 
-**Key design detail — date handling:** The ~3B model is unreliable at date arithmetic. Have the LLM extract the *relative date expression* (e.g. "three weeks from now", "next Tuesday", "end of April") and do the actual date resolution in Rust. This avoids wrong dates, which would be the most user-visible error.
+**Key design detail — status as enum:** Task statuses are known at compile time, so using a `@Generable enum` gives us constrained decoding for free — the model literally cannot output an invalid status. The enum omits `done` and `dropped` since those don't make sense for newly-created tasks.
 
-**Key design detail — project/area matching:** The `@Guide(.anyOf([...]))` constraint requires compile-time values, but project/area names are dynamic per-user. Instead: list valid names in the system prompt instructions, use `@Guide(description:)` for guidance, and validate/fuzzy-match the returned name against the actual list in Rust. If no match, leave the field empty for the user to set manually.
+**Key design detail — date handling:** The system prompt includes today's date and day of week. The LLM outputs dates directly in `YYYY-MM-DD` format. The ~3B model should handle common relative date arithmetic ("in 3 weeks", "next Tuesday", "end of April") well enough given today's date as context. If it occasionally gets a date wrong, the user corrects it during the review step — this is no worse than an empty field. Rust validates that returned date strings are valid `YYYY-MM-DD` and discards any that aren't.
+
+**Key design detail — project/area matching:** The `@Guide(.anyOf([...]))` constraint requires compile-time values, but project/area names are dynamic per-user. Instead: list valid names in the system prompt instructions and use `@Guide(description:)` for guidance. In Rust, validate the returned name against the actual list using case-insensitive exact match. If no match, leave the field empty for the user to set manually.
 
 ### Phase 2: Rust Layer (command, prompt building, response handling)
 
@@ -128,11 +138,11 @@ struct ParsedTask: Sendable {
 
 **The Tauri command should:**
 1. Accept: raw text, list of area names+IDs, list of project names+IDs
-2. Build system prompt: role description, today's date, available project/area names, formatting rules
+2. Build system prompt: role description, today's date + day of week, available project/area names, formatting rules
 3. Call Swift FFI with system prompt + raw text
 4. Deserialize the `ParsedTask` response (JSON)
-5. Resolve relative date expressions to `YYYY-MM-DD` dates
-6. Match returned project/area names to actual IDs (exact match first, then fuzzy)
+5. Validate date strings are valid `YYYY-MM-DD` (discard invalid ones)
+6. Match returned project/area names to actual IDs (case-insensitive exact match; no match = empty)
 7. Return a typed result struct with all resolved fields
 
 **System prompt template (built in Rust):**
@@ -147,12 +157,10 @@ Available areas: {comma-separated names}
 Rules:
 - Create a concise, actionable title (not the raw input verbatim)
 - Match project/area names exactly from the lists above, or return empty
-- For dates, extract the relative expression as spoken (e.g. "in 3 weeks")
+- Convert any relative dates to YYYY-MM-DD format based on today's date
 - Default status to inbox unless clearly stated otherwise
 - Put any detail beyond the title into the body field
 ```
-
-**Date resolution in Rust:** Parse natural language date expressions like "next Tuesday", "in 3 weeks", "end of April" relative to today's date. Consider using a crate like `chrono` with simple pattern matching, or a lightweight NLP date parser. This can be basic at first — cover common patterns and fall back to empty if unparseable.
 
 ### Phase 3: Frontend Integration
 
