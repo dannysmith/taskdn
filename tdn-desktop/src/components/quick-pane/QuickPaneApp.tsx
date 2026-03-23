@@ -33,6 +33,7 @@ const SHORTCUTS = {
   openDue: parseShortcut('Shift+CmdOrCtrl+D'),
   openDefer: parseShortcut('Ctrl+Shift+CmdOrCtrl+D'),
   openStatus: parseShortcut('CmdOrCtrl+S'),
+  processWithAI: parseShortcut('Shift+CmdOrCtrl+A'),
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -117,6 +118,8 @@ export default function QuickPaneApp() {
 
   const [exiting, setExiting] = React.useState(false)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
+  const [isProcessingAI, setIsProcessingAI] = React.useState(false)
+  const [aiAvailable, setAiAvailable] = React.useState(false)
   const [openPopover, setOpenPopover] = React.useState<PopoverType>(null)
   const [restoreFocusTo, setRestoreFocusTo] = React.useState<FocusTarget>(null)
 
@@ -235,6 +238,71 @@ export default function QuickPaneApp() {
   ])
 
   // ─────────────────────────────────────────────────────────────────────────
+  // AI Processing Handler
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const handleProcessWithAI = React.useCallback(async () => {
+    const trimmedTitle = title.trim()
+    if (!trimmedTitle || isProcessingAI) return
+
+    setIsProcessingAI(true)
+
+    try {
+      // Build name/ID pairs for context
+      const projectPairs = projects.map(p => ({ id: p.id, name: p.title }))
+      const areaPairs = areas.map(a => ({ id: a.id, name: a.title }))
+
+      const result = await commands.processQuickEntryText(
+        trimmedTitle,
+        projectPairs,
+        areaPairs
+      )
+
+      if (result.status === 'error') {
+        logger.warn('AI processing failed', { error: result.error })
+        setIsProcessingAI(false)
+        return
+      }
+
+      const parsed = result.data
+
+      // Populate form fields from AI result
+      setTitle(parsed.title)
+
+      if (parsed.body) {
+        setBody(parsed.body)
+        setShowBody(true)
+      }
+
+      // Map status string to TaskStatus
+      const validStatuses: TaskStatus[] = [
+        'inbox',
+        'icebox',
+        'ready',
+        'in-progress',
+        'blocked',
+        'dropped',
+        'done',
+      ]
+      if (validStatuses.includes(parsed.status as TaskStatus)) {
+        setStatus(parsed.status as TaskStatus)
+      }
+
+      if (parsed.due) setDue(parsed.due)
+      if (parsed.scheduled) setScheduled(parsed.scheduled)
+      if (parsed.deferUntil) setDeferUntil(parsed.deferUntil)
+      if (parsed.projectId) setProjectId(parsed.projectId)
+      if (parsed.areaId) setAreaId(parsed.areaId)
+
+      logger.info('AI processing complete')
+    } catch (error) {
+      logger.error('Unexpected error during AI processing', { error })
+    }
+
+    setIsProcessingAI(false)
+  }, [title, projects, areas, isProcessingAI])
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Theme Sync
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -265,10 +333,11 @@ export default function QuickPaneApp() {
           // Reset form on focus (fresh start)
           resetForm()
 
-          // Load areas and projects
-          const [areasResult, projectsResult] = await Promise.all([
+          // Load areas, projects, and check AI availability
+          const [areasResult, projectsResult, aiResult] = await Promise.all([
             commands.listAreas(),
             commands.listProjects(),
+            commands.checkAppleIntelligenceAvailable(),
           ])
 
           if (areasResult.status === 'ok') {
@@ -277,6 +346,8 @@ export default function QuickPaneApp() {
           if (projectsResult.status === 'ok') {
             setProjects(projectsResult.data)
           }
+
+          setAiAvailable(aiResult)
 
           // Focus title input
           setTimeout(() => titleRef.current?.focus(), FOCUS_DELAY_MS)
@@ -339,6 +410,7 @@ export default function QuickPaneApp() {
       setOpenPopover(popover)
     },
     onClosePopover: () => setOpenPopover(null),
+    onProcessWithAI: aiAvailable ? handleProcessWithAI : undefined,
     captureCurrentFocus,
     openPopover,
     showBody,
@@ -373,6 +445,9 @@ export default function QuickPaneApp() {
         onChange={setTitle}
         onKeyDown={handleTitleKeyDown}
         inputRef={titleRef}
+        aiAvailable={aiAvailable}
+        aiProcessing={isProcessingAI}
+        onProcessWithAI={handleProcessWithAI}
       />
 
       <QuickPaneBody

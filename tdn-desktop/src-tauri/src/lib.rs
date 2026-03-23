@@ -10,6 +10,9 @@ mod types;
 mod utils;
 pub mod vault;
 
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+mod apple_intelligence;
+
 use std::error::Error;
 use tauri::{App, AppHandle, Manager, RunEvent, WindowEvent};
 use vault::VaultManager;

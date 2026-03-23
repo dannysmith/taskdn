@@ -353,6 +353,26 @@ async getEntityRawContent(entityType: string, id: string) : Promise<Result<strin
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Check if Apple Intelligence is available on this device.
+ */
+async checkAppleIntelligenceAvailable() : Promise<boolean> {
+    return await TAURI_INVOKE("check_apple_intelligence_available");
+},
+/**
+ * Process free-form text input using Apple Intelligence to extract structured task fields.
+ * 
+ * Takes the raw text from the quick entry title field, plus lists of available
+ * projects and areas for context, and returns a parsed result with all fields populated.
+ */
+async processQuickEntryText(text: string, projects: NameIdPair[], areas: NameIdPair[]) : Promise<Result<ParsedQuickEntry, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("process_quick_entry_text", { text, projects, areas }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -483,6 +503,22 @@ export type CreateTaskOptions = { title: string | null; status: TaskStatus | nul
  */
 export type DummyVaultPaths = { tasksDir: string; areasDir: string; projectsDir: string }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
+/**
+ * A name+ID pair for passing project/area context to the AI processor.
+ */
+export type NameIdPair = { id: string; name: string }
+/**
+ * Result of AI-processing free-form text into structured task fields.
+ */
+export type ParsedQuickEntry = { title: string; body: string; status: string; due: string | null; scheduled: string | null; deferUntil: string | null; 
+/**
+ * Matched project ID (if a project name was recognised)
+ */
+projectId: string | null; 
+/**
+ * Matched area ID (if an area name was recognised)
+ */
+areaId: string | null }
 /**
  * Public project struct exposed to TypeScript via tauri-specta.
  */
