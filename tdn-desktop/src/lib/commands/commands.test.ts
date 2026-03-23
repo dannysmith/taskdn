@@ -131,6 +131,7 @@ const createMockContext = (): CommandContext => ({
   goForward: vi.fn(),
   canGoBack: vi.fn(() => false),
   canGoForward: vi.fn(() => false),
+  getTasks: vi.fn(() => []),
   getAreas: vi.fn(() => []),
   getProjects: vi.fn(() => []),
   collapseAllAreas: vi.fn(),
@@ -971,6 +972,182 @@ describe('Task Commands', () => {
 
       expect(result.success).toBe(true)
       expect(commands.deleteTask).toHaveBeenCalledWith('task-123', false)
+    })
+  })
+
+  describe('move-incomplete-to-today', () => {
+    it('reschedules overdue tasks to today', async () => {
+      const overdueTask1 = createTestTask({
+        id: 'overdue-1',
+        status: 'ready',
+        scheduled: '2025-01-10',
+      })
+      const overdueTask2 = createTestTask({
+        id: 'overdue-2',
+        status: 'in-progress',
+        scheduled: '2025-01-12',
+      })
+      vi.mocked(mockContext.getTasks).mockReturnValue([
+        overdueTask1,
+        overdueTask2,
+      ])
+
+      vi.mocked(commands.updateTask)
+        .mockResolvedValueOnce({
+          status: 'ok',
+          data: { ...overdueTask1, scheduled: '2025-01-15' },
+        } as never)
+        .mockResolvedValueOnce({
+          status: 'ok',
+          data: { ...overdueTask2, scheduled: '2025-01-15' },
+        } as never)
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(commands.updateTask).toHaveBeenCalledTimes(2)
+      expect(mockContext.updateTaskInCache).toHaveBeenCalledTimes(2)
+      expect(mockContext.showToast).toHaveBeenCalledWith(
+        expect.any(String),
+        'success'
+      )
+    })
+
+    it('shows info toast when no overdue tasks exist', async () => {
+      vi.mocked(mockContext.getTasks).mockReturnValue([
+        createTestTask({ status: 'ready', scheduled: null }),
+        createTestTask({ status: 'done', scheduled: '2025-01-10' }),
+      ])
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(commands.updateTask).not.toHaveBeenCalled()
+      expect(mockContext.showToast).toHaveBeenCalledWith(
+        expect.any(String),
+        'info'
+      )
+    })
+
+    it('skips done and dropped tasks', async () => {
+      vi.mocked(mockContext.getTasks).mockReturnValue([
+        createTestTask({
+          status: 'done',
+          scheduled: '2025-01-10',
+        }),
+        createTestTask({
+          status: 'dropped',
+          scheduled: '2025-01-10',
+        }),
+      ])
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(commands.updateTask).not.toHaveBeenCalled()
+      expect(mockContext.showToast).toHaveBeenCalledWith(
+        expect.any(String),
+        'info'
+      )
+    })
+
+    it('skips tasks without scheduled dates', async () => {
+      vi.mocked(mockContext.getTasks).mockReturnValue([
+        createTestTask({ status: 'ready', scheduled: null }),
+      ])
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(commands.updateTask).not.toHaveBeenCalled()
+    })
+
+    it('skips tasks scheduled today or in the future', async () => {
+      vi.mocked(mockContext.getTasks).mockReturnValue([
+        createTestTask({ status: 'ready', scheduled: '2099-12-31' }),
+      ])
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(commands.updateTask).not.toHaveBeenCalled()
+    })
+
+    it('handles partial failure gracefully', async () => {
+      const task1 = createTestTask({
+        id: 'task-1',
+        status: 'ready',
+        scheduled: '2025-01-10',
+      })
+      const task2 = createTestTask({
+        id: 'task-2',
+        status: 'ready',
+        scheduled: '2025-01-10',
+      })
+      vi.mocked(mockContext.getTasks).mockReturnValue([task1, task2])
+
+      vi.mocked(commands.updateTask)
+        .mockResolvedValueOnce({
+          status: 'ok',
+          data: { ...task1, scheduled: '2025-01-15' },
+        } as never)
+        .mockResolvedValueOnce({
+          status: 'error',
+          error: { type: 'internal', message: 'Write failed' },
+        } as never)
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(mockContext.updateTaskInCache).toHaveBeenCalledTimes(1)
+      expect(mockContext.showToast).toHaveBeenCalledWith(
+        expect.any(String),
+        'success'
+      )
+    })
+
+    it('shows error toast when all updates fail', async () => {
+      const task = createTestTask({
+        id: 'task-1',
+        status: 'ready',
+        scheduled: '2025-01-10',
+      })
+      vi.mocked(mockContext.getTasks).mockReturnValue([task])
+
+      vi.mocked(commands.updateTask).mockResolvedValueOnce({
+        status: 'error',
+        error: { type: 'internal', message: 'Write failed' },
+      } as never)
+
+      const result = await executeCommand(
+        'move-incomplete-to-today',
+        mockContext
+      )
+
+      expect(result.success).toBe(true)
+      expect(mockContext.updateTaskInCache).not.toHaveBeenCalled()
+      expect(mockContext.showToast).toHaveBeenCalledWith(
+        expect.any(String),
+        'error'
+      )
     })
   })
 })

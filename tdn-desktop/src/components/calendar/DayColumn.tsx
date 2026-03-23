@@ -1,9 +1,15 @@
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { format, isToday, isWeekend } from 'date-fns'
-import { Flag, Plus } from 'lucide-react'
+import { CalendarArrowUp, Flag, Plus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { cn } from '@/lib/utils'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { getCalendarTaskDragId } from '@/types/calendar-order'
 import { SortableTaskCard } from './DraggableTaskCard'
@@ -48,6 +54,8 @@ interface DayColumnProps {
   onTaskContextMenu?: (task: Task) => void
   /** Called when + button is clicked to create a task */
   onCreateTask?: () => void
+  /** Called when the "move incomplete to today" button is clicked (only shown for today) */
+  onMoveIncompleteToToday?: () => void
   /** ID of task currently being edited (for auto-focus) */
   editingTaskId?: string | null
   /** Whether this column is being dragged over */
@@ -73,9 +81,11 @@ export function DayColumn({
   onNavigateToArea,
   onTaskContextMenu,
   onCreateTask,
+  onMoveIncompleteToToday,
   editingTaskId,
   isDropTarget = false,
 }: DayColumnProps) {
+  const { t } = useTranslation()
   const dateString = format(date, 'yyyy-MM-dd')
   const isCurrentDay = isToday(date)
   const isWeekendDay = isWeekend(date)
@@ -108,16 +118,32 @@ export function DayColumn({
           <span className="text-xs font-medium text-muted-foreground uppercase">
             {format(date, 'EEE')}
           </span>
-          <span
-            className={cn(
-              'size-6 flex items-center justify-center text-sm font-semibold tabular-nums rounded-full',
-              isCurrentDay
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-transparent'
+          <div className="flex items-center gap-1">
+            {isCurrentDay && onMoveIncompleteToToday && (
+              <Tooltip>
+                <TooltipTrigger
+                  onClick={onMoveIncompleteToToday}
+                  aria-label={t('commands.moveIncompleteToToday.label')}
+                  className="size-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <CalendarArrowUp className="size-3.5" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  {t('commands.moveIncompleteToToday.label')}
+                </TooltipContent>
+              </Tooltip>
             )}
-          >
-            {format(date, 'd')}
-          </span>
+            <span
+              className={cn(
+                'size-6 flex items-center justify-center text-sm font-semibold tabular-nums rounded-full',
+                isCurrentDay
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-transparent'
+              )}
+            >
+              {format(date, 'd')}
+            </span>
+          </div>
         </div>
       </div>
 

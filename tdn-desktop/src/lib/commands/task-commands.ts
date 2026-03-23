@@ -7,6 +7,7 @@
  */
 import {
   Calendar,
+  CalendarArrowUp,
   Copy,
   CopyPlus,
   Flag,
@@ -264,6 +265,95 @@ export const taskCommands: AppCommand[] = [
       context.deleteTaskFromCache(task.id)
 
       context.showToast(t('commands.deleteTask.success'), 'success')
+    },
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // Bulk Operations
+  // ─────────────────────────────────────────────────────────────────────────────
+
+  {
+    id: 'move-incomplete-to-today',
+    labelKey: 'commands.moveIncompleteToToday.label',
+    descriptionKey: 'commands.moveIncompleteToToday.description',
+    icon: CalendarArrowUp,
+    group: 'tasks',
+    keywords: [
+      'move',
+      'incomplete',
+      'overdue',
+      'reschedule',
+      'today',
+      'catch up',
+      'past',
+    ],
+    surfaces: { commandPalette: true, appMenu: 'Edit' },
+
+    execute: async context => {
+      const today = getTodayISO()
+      const tasks = context.getTasks()
+
+      const overdueTasks = tasks.filter(
+        task =>
+          task.scheduled &&
+          task.scheduled < today &&
+          task.status !== 'done' &&
+          task.status !== 'dropped'
+      )
+
+      if (overdueTasks.length === 0) {
+        context.showToast(t('commands.moveIncompleteToToday.noTasks'), 'info')
+        return
+      }
+
+      markMutationStart()
+
+      let results: Awaited<ReturnType<typeof commands.updateTask>>[]
+      try {
+        results = await Promise.all(
+          overdueTasks.map(task =>
+            commands.updateTask({
+              id: task.id,
+              title: null,
+              status: null,
+              project: null,
+              area: null,
+              scheduled: today,
+              due: null,
+              deferUntil: null,
+              body: null,
+            })
+          )
+        )
+      } finally {
+        markMutationComplete()
+      }
+
+      let successCount = 0
+      for (const [i, task] of overdueTasks.entries()) {
+        const result = results[i]
+        if (!result) continue
+        if (result.status === 'ok') {
+          context.updateTaskInCache(task.id, result.data)
+          successCount++
+        } else {
+          logger.error('Failed to reschedule task', {
+            taskId: task.id,
+            error: result.error,
+          })
+        }
+      }
+
+      if (successCount === 0) {
+        context.showToast(t('commands.moveIncompleteToToday.error'), 'error')
+      } else {
+        context.showToast(
+          t('commands.moveIncompleteToToday.success', {
+            count: successCount,
+          }),
+          'success'
+        )
+      }
     },
   },
 ]

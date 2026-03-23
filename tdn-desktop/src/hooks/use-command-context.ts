@@ -51,6 +51,10 @@ export const commandContext: CommandContext = {
   canGoForward: () => useNavigationStore.getState().canGoForward(),
 
   // Data access (reads from TanStack Query cache)
+  getTasks: () => {
+    const tasks = queryClient.getQueryData<Task[]>(vaultQueryKeys.tasks())
+    return tasks ?? []
+  },
   getAreas: () => {
     const areas = queryClient.getQueryData<Area[]>(vaultQueryKeys.areas())
     return areas ?? []
