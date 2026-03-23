@@ -10,24 +10,24 @@ private struct ParsedTask: Sendable {
     @Guide(description: "A concise task title summarizing the request")
     let title: String
 
-    @Guide(description: "Additional context or notes, empty string if none")
+    @Guide(description: "Empty string unless the input contains extra detail beyond the title")
     let body: String
 
     let status: ParsedStatus
 
-    @Guide(description: "Due date in YYYY-MM-DD format, empty string if none")
+    @Guide(description: "ONLY if a due date is explicitly mentioned in the input. YYYY-MM-DD format. Empty string if no due date mentioned.")
     let due: String
 
-    @Guide(description: "Scheduled date in YYYY-MM-DD format, empty string if none")
+    @Guide(description: "ONLY if a scheduled date is explicitly mentioned in the input. YYYY-MM-DD format. Empty string if no scheduled date mentioned.")
     let scheduled: String
 
-    @Guide(description: "Defer-until date in YYYY-MM-DD format, empty string if none")
+    @Guide(description: "ONLY if a defer-until date is explicitly mentioned in the input. YYYY-MM-DD format. Empty string if no defer date mentioned.")
     let deferUntil: String
 
-    @Guide(description: "Exact project name from the available list, empty string if none")
+    @Guide(description: "ONLY if the input explicitly mentions a project from the available list. Empty string if no project mentioned.")
     let project: String
 
-    @Guide(description: "Exact area name from the available list, empty string if none")
+    @Guide(description: "ONLY if the input explicitly mentions an area from the available list. Empty string if no area mentioned.")
     let area: String
 }
 

@@ -105,10 +105,14 @@ fn build_system_prompt(projects: &[NameIdPair], areas: &[NameIdPair]) -> String 
          \n\
          Rules:\n\
          - Create a concise, actionable title (not the raw input verbatim)\n\
-         - Match project/area names exactly from the lists above, or return empty string\n\
-         - Convert any relative dates to YYYY-MM-DD format based on today's date\n\
+         - ONLY set a date field if the input EXPLICITLY mentions a date or deadline. \
+         Do NOT invent or guess dates. Leave as empty string if no date is mentioned.\n\
+         - ONLY set project/area if the input EXPLICITLY names one from the lists above. \
+         Do NOT guess or infer. Leave as empty string if not mentioned.\n\
+         - If a date is mentioned, convert it to YYYY-MM-DD format based on today's date\n\
          - Default status to inbox unless clearly stated otherwise\n\
-         - Put any detail beyond the title into the body field"
+         - Body should be empty string unless the input contains meaningful detail beyond the title. \
+         Do NOT repeat the title in the body. Do NOT add information that was not in the input."
     )
 }
 
@@ -133,10 +137,18 @@ fn parse_ai_response(
         // Determine body: include original text unless title is identical to input
         let body = if title.eq_ignore_ascii_case(original_text.trim()) {
             // Title is the same as input — no need to duplicate in body
-            body_from_ai
+            // But only use AI body if it adds new information
+            if is_essentially_same(&body_from_ai, original_text.trim()) {
+                String::new()
+            } else {
+                body_from_ai
+            }
         } else {
             // Title was transformed — preserve original text in body
-            if body_from_ai.is_empty() {
+            // Don't append AI body if it's just parroting the input
+            if body_from_ai.is_empty()
+                || is_essentially_same(&body_from_ai, original_text.trim())
+            {
                 original_text.trim().to_string()
             } else {
                 format!("{}\n\n{}", original_text.trim(), body_from_ai)
@@ -208,6 +220,21 @@ fn non_empty_date(s: Option<&str>) -> Option<String> {
         log::warn!("AI returned invalid date format: {s}");
         None
     }
+}
+
+/// Check if two strings are essentially the same (ignoring case, trailing punctuation, whitespace).
+/// Used to avoid duplicating content when the AI parrots back the input.
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+fn is_essentially_same(a: &str, b: &str) -> bool {
+    if a.is_empty() || b.is_empty() {
+        return a.is_empty() && b.is_empty();
+    }
+    let normalize = |s: &str| {
+        s.trim()
+            .trim_end_matches(|c: char| c == '.' || c == '!' || c == '?')
+            .to_lowercase()
+    };
+    normalize(a) == normalize(b)
 }
 
 /// Case-insensitive exact match of a name to an ID from a list of name/ID pairs.
