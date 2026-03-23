@@ -14,6 +14,8 @@ import {
 } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
+import { executeCommand } from '@/lib/commands/registry'
+import { commandContext } from '@/hooks/use-command-context'
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useCalendarOrder } from '@/hooks/use-calendar-order'
@@ -331,6 +333,15 @@ export function WeekCalendar({
                   onTaskContextMenu={onTaskContextMenu}
                   onCreateTask={
                     onCreateTask ? () => handleCreateTask(dateKey) : undefined
+                  }
+                  onMoveIncompleteToToday={
+                    isToday(day)
+                      ? () =>
+                          executeCommand(
+                            'move-incomplete-to-today',
+                            commandContext
+                          )
+                      : undefined
                   }
                   editingTaskId={editingTaskId}
                   isDropTarget={isDropTarget}

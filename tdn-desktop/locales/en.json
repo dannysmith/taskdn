@@ -205,6 +205,12 @@
   "commands.deleteTask.success": "Task deleted",
   "commands.deleteTask.error": "Failed to delete task",
 
+  "commands.moveIncompleteToToday.label": "Move Incomplete Tasks to Today",
+  "commands.moveIncompleteToToday.description": "Reschedule all overdue incomplete tasks to today",
+  "commands.moveIncompleteToToday.success": "Moved {{count}} task(s) to today",
+  "commands.moveIncompleteToToday.noTasks": "No overdue tasks to reschedule",
+  "commands.moveIncompleteToToday.error": "Failed to reschedule tasks",
+
   "commands.editScheduledDate.label": "Edit Scheduled Date",
   "commands.editScheduledDate.description": "Open the scheduled date picker",
   "commands.editDueDate.label": "Edit Due Date",

@@ -90,6 +90,7 @@ export interface CommandContext {
   canGoForward: () => boolean
 
   // Data access (for dynamic commands)
+  getTasks: () => Task[]
   getAreas: () => Area[]
   getProjects: () => Project[]
 
