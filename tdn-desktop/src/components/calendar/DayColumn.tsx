@@ -123,6 +123,7 @@ export function DayColumn({
               <Tooltip>
                 <TooltipTrigger
                   onClick={onMoveIncompleteToToday}
+                  aria-label={t('commands.moveIncompleteToToday.label')}
                   className="size-6 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                 >
                   <CalendarArrowUp className="size-3.5" />

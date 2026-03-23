@@ -308,23 +308,26 @@ export const taskCommands: AppCommand[] = [
 
       markMutationStart()
 
-      const results = await Promise.all(
-        overdueTasks.map(task =>
-          commands.updateTask({
-            id: task.id,
-            title: null,
-            status: null,
-            project: null,
-            area: null,
-            scheduled: today,
-            due: null,
-            deferUntil: null,
-            body: null,
-          })
+      let results: Awaited<ReturnType<typeof commands.updateTask>>[]
+      try {
+        results = await Promise.all(
+          overdueTasks.map(task =>
+            commands.updateTask({
+              id: task.id,
+              title: null,
+              status: null,
+              project: null,
+              area: null,
+              scheduled: today,
+              due: null,
+              deferUntil: null,
+              body: null,
+            })
+          )
         )
-      )
-
-      markMutationComplete()
+      } finally {
+        markMutationComplete()
+      }
 
       let successCount = 0
       for (const [i, task] of overdueTasks.entries()) {
