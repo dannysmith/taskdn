@@ -426,13 +426,29 @@ impl VaultManager {
             options.title.as_deref().unwrap_or("(untitled)")
         );
 
-        let tasks_dir = {
+        let (tasks_dir, options) = {
             let inner = self.inner.read();
-            inner
+            let tasks_dir = inner
                 .config
                 .as_ref()
                 .map(|c| c.tasks_dir.clone())
-                .ok_or_else(|| VaultError::not_configured("Vault not initialized"))?
+                .ok_or_else(|| VaultError::not_configured("Vault not initialized"))?;
+
+            // Resolve project/area IDs to titles for wikilinks.
+            // The writer expects titles (e.g. "Q1 Planning"), not hash IDs.
+            let mut options = options;
+            if let Some(ref id) = options.project_id {
+                if let Some(project) = inner.index.get_project(id) {
+                    options.project_id = Some(project.title.clone());
+                }
+            }
+            if let Some(ref id) = options.area_id {
+                if let Some(area) = inner.index.get_area(id) {
+                    options.area_id = Some(area.title.clone());
+                }
+            }
+
+            (tasks_dir, options)
         };
 
         // Use RAII guard to ensure write flag is always reset, even on panic
@@ -454,13 +470,23 @@ impl VaultManager {
         self.ensure_configured()?;
         debug!("Creating project: {}", options.title);
 
-        let projects_dir = {
+        let (projects_dir, options) = {
             let inner = self.inner.read();
-            inner
+            let projects_dir = inner
                 .config
                 .as_ref()
                 .map(|c| c.projects_dir.clone())
-                .ok_or_else(|| VaultError::not_configured("Vault not initialized"))?
+                .ok_or_else(|| VaultError::not_configured("Vault not initialized"))?;
+
+            // Resolve area ID to title for wikilinks
+            let mut options = options;
+            if let Some(ref id) = options.area_id {
+                if let Some(area) = inner.index.get_area(id) {
+                    options.area_id = Some(area.title.clone());
+                }
+            }
+
+            (projects_dir, options)
         };
 
         let _guard = WriteFlagGuard::new(self);
@@ -482,6 +508,25 @@ impl VaultManager {
 
         let task = self.get_task(&update.id)?;
 
+        // Resolve project/area IDs to titles for wikilinks
+        let mut update = update;
+        if let Some(ref value) = update.project {
+            if !value.is_empty() {
+                let inner = self.inner.read();
+                if let Some(project) = inner.index.get_project(value) {
+                    update.project = Some(project.title.clone());
+                }
+            }
+        }
+        if let Some(ref value) = update.area {
+            if !value.is_empty() {
+                let inner = self.inner.read();
+                if let Some(area) = inner.index.get_area(value) {
+                    update.area = Some(area.title.clone());
+                }
+            }
+        }
+
         let _guard = WriteFlagGuard::new(self);
         let updated_task = crate::vault::update_task(&task, update.clone())?;
 
@@ -500,6 +545,17 @@ impl VaultManager {
         debug!("Updating project: {}", update.id);
 
         let project = self.get_project(&update.id)?;
+
+        // Resolve area ID to title for wikilinks
+        let mut update = update;
+        if let Some(ref value) = update.area {
+            if !value.is_empty() {
+                let inner = self.inner.read();
+                if let Some(area) = inner.index.get_area(value) {
+                    update.area = Some(area.title.clone());
+                }
+            }
+        }
 
         let _guard = WriteFlagGuard::new(self);
         let updated_project = crate::vault::update_project(&project, update.clone())?;
