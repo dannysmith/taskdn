@@ -364,9 +364,9 @@ async checkAppleIntelligenceAvailable() : Promise<boolean> {
  * Process free-form text input using Apple Intelligence to extract structured task fields.
  * 
  * Takes the raw text from the quick entry title field, plus lists of available
- * projects and areas for context, and returns a parsed result with all fields populated.
+ * projects (with area relationships) and areas for context.
  */
-async processQuickEntryText(text: string, projects: NameIdPair[], areas: NameIdPair[]) : Promise<Result<ParsedQuickEntry, string>> {
+async processQuickEntryText(text: string, projects: ProjectContext[], areas: NameIdPair[]) : Promise<Result<ParsedQuickEntry, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("process_quick_entry_text", { text, projects, areas }) };
 } catch (e) {
@@ -563,6 +563,14 @@ blockedBy: string[] | null;
  * Markdown body content (after frontmatter)
  */
 body: string }
+/**
+ * A project with its area relationship for richer AI context.
+ */
+export type ProjectContext = { id: string; name: string; 
+/**
+ * The area name this project belongs to (if any)
+ */
+areaName: string | null }
 /**
  * Project status enum matching S1 spec Section 4.5
  */

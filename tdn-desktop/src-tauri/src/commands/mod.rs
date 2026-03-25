@@ -4,6 +4,7 @@
 //! Import specific commands via their submodule (e.g., `commands::preferences::greet`).
 
 pub mod ai;
+pub mod ai_prompts;
 pub mod config;
 pub mod notifications;
 pub mod preferences;

@@ -248,13 +248,19 @@ export default function QuickPaneApp() {
     setIsProcessingAI(true)
 
     try {
-      // Build name/ID pairs for context
-      const projectPairs = projects.map(p => ({ id: p.id, name: p.title }))
+      // Build context with project→area relationships
+      const stripWikilink = (s: string) =>
+        s.startsWith('[[') && s.endsWith(']]') ? s.slice(2, -2) : s
+      const projectContexts = projects.map(p => ({
+        id: p.id,
+        name: p.title,
+        areaName: p.area ? stripWikilink(p.area) : null,
+      }))
       const areaPairs = areas.map(a => ({ id: a.id, name: a.title }))
 
       const result = await commands.processQuickEntryText(
         trimmedTitle,
-        projectPairs,
+        projectContexts,
         areaPairs
       )
 

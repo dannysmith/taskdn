@@ -30,6 +30,16 @@ pub struct NameIdPair {
     pub name: String,
 }
 
+/// A project with its area relationship for richer AI context.
+#[derive(Debug, Clone, Deserialize, Type)]
+#[serde(rename_all = "camelCase")]
+pub struct ProjectContext {
+    pub id: String,
+    pub name: String,
+    /// The area name this project belongs to (if any)
+    pub area_name: Option<String>,
+}
+
 /// Check if Apple Intelligence is available on this device.
 #[tauri::command]
 #[specta::specta]
@@ -47,12 +57,12 @@ pub fn check_apple_intelligence_available() -> bool {
 /// Process free-form text input using Apple Intelligence to extract structured task fields.
 ///
 /// Takes the raw text from the quick entry title field, plus lists of available
-/// projects and areas for context, and returns a parsed result with all fields populated.
+/// projects (with area relationships) and areas for context.
 #[tauri::command]
 #[specta::specta]
 pub fn process_quick_entry_text(
     text: String,
-    projects: Vec<NameIdPair>,
+    projects: Vec<ProjectContext>,
     areas: Vec<NameIdPair>,
 ) -> Result<ParsedQuickEntry, String> {
     let trimmed = text.trim();
@@ -62,9 +72,50 @@ pub fn process_quick_entry_text(
 
     #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
     {
-        let system_prompt = build_system_prompt(&projects, &areas);
+        let today = chrono::Local::now();
+        let date_str = today.format("%Y-%m-%d").to_string();
+        let day_of_week = today.format("%A").to_string();
+
+        let projects_with_areas: Vec<super::ai_prompts::ProjectWithArea> = projects
+            .iter()
+            .map(|p| super::ai_prompts::ProjectWithArea {
+                name: p.name.clone(),
+                area_name: p.area_name.clone(),
+            })
+            .collect();
+
+        let system_prompt =
+            super::ai_prompts::build_system_prompt(&projects_with_areas, &areas, &date_str, &day_of_week);
+
+        log::info!("── AI Quick Entry ──────────────────────────────────");
+        log::info!("Input: {trimmed:?}");
+        log::debug!("System prompt:\n{system_prompt}");
+
         let response = crate::apple_intelligence::process_text(&system_prompt, trimmed, 0)?;
-        parse_ai_response(&response, trimmed, &projects, &areas)
+
+        log::info!("Raw response: {response}");
+
+        let result = parse_ai_response(&response, trimmed, &projects, &areas)?;
+
+        log::info!("Mapped result:");
+        log::info!("  title:     {:?}", result.title);
+        log::info!(
+            "  body:      {:?}",
+            if result.body.is_empty() {
+                "(empty)"
+            } else {
+                &result.body
+            }
+        );
+        log::info!("  status:    {:?}", result.status);
+        log::info!("  due:       {:?}", result.due);
+        log::info!("  scheduled: {:?}", result.scheduled);
+        log::info!("  defer:     {:?}", result.defer_until);
+        log::info!("  project:   {:?}", result.project_id);
+        log::info!("  area:      {:?}", result.area_id);
+        log::info!("────────────────────────────────────────────────────");
+
+        Ok(result)
     }
 
     #[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
@@ -74,54 +125,12 @@ pub fn process_quick_entry_text(
     }
 }
 
-/// Build the system prompt with today's date and available projects/areas.
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-fn build_system_prompt(projects: &[NameIdPair], areas: &[NameIdPair]) -> String {
-    let today = chrono::Local::now();
-    let date_str = today.format("%Y-%m-%d").to_string();
-    let day_of_week = today.format("%A").to_string();
-
-    let project_names: Vec<&str> = projects.iter().map(|p| p.name.as_str()).collect();
-    let area_names: Vec<&str> = areas.iter().map(|a| a.name.as_str()).collect();
-
-    let projects_list = if project_names.is_empty() {
-        "(none)".to_string()
-    } else {
-        project_names.join(", ")
-    };
-
-    let areas_list = if area_names.is_empty() {
-        "(none)".to_string()
-    } else {
-        area_names.join(", ")
-    };
-
-    format!(
-        "You are a task parser. Extract structured task fields from free-form input.\n\
-         Today is {date_str} ({day_of_week}).\n\
-         \n\
-         Available projects: {projects_list}\n\
-         Available areas: {areas_list}\n\
-         \n\
-         Rules:\n\
-         - Create a concise, actionable title (not the raw input verbatim)\n\
-         - ONLY set a date field if the input EXPLICITLY mentions a date or deadline. \
-         Do NOT invent or guess dates. Leave as empty string if no date is mentioned.\n\
-         - ONLY set project/area if the input EXPLICITLY names one from the lists above. \
-         Do NOT guess or infer. Leave as empty string if not mentioned.\n\
-         - If a date is mentioned, convert it to YYYY-MM-DD format based on today's date\n\
-         - Default status to inbox unless clearly stated otherwise\n\
-         - Body should be empty string unless the input contains meaningful detail beyond the title. \
-         Do NOT repeat the title in the body. Do NOT add information that was not in the input."
-    )
-}
-
 /// Parse the AI response JSON into a `ParsedQuickEntry`, resolving project/area names to IDs.
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 fn parse_ai_response(
     response: &str,
     original_text: &str,
-    projects: &[NameIdPair],
+    projects: &[ProjectContext],
     areas: &[NameIdPair],
 ) -> Result<ParsedQuickEntry, String> {
     // Try to parse as JSON (structured output from @Generable)
@@ -173,7 +182,7 @@ fn parse_ai_response(
 
         // Match project name to ID (case-insensitive exact match)
         let project_name = parsed["project"].as_str().unwrap_or("").trim();
-        let project_id = match_name_to_id(project_name, projects);
+        let project_id = match_project_name_to_id(project_name, projects);
 
         // Match area name to ID (case-insensitive exact match)
         let area_name = parsed["area"].as_str().unwrap_or("").trim();
@@ -235,6 +244,18 @@ fn is_essentially_same(a: &str, b: &str) -> bool {
             .to_lowercase()
     };
     normalize(a) == normalize(b)
+}
+
+/// Case-insensitive exact match of a project name to its ID.
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+fn match_project_name_to_id(name: &str, projects: &[ProjectContext]) -> Option<String> {
+    if name.is_empty() {
+        return None;
+    }
+    projects
+        .iter()
+        .find(|p| p.name.eq_ignore_ascii_case(name))
+        .map(|p| p.id.clone())
 }
 
 /// Case-insensitive exact match of a name to an ID from a list of name/ID pairs.

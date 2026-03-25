@@ -7,27 +7,27 @@ import FoundationModels
 @available(macOS 26.0, *)
 @Generable
 private struct ParsedTask: Sendable {
-    @Guide(description: "A concise task title summarizing the request")
+    @Guide(description: "Concise task title")
     let title: String
 
-    @Guide(description: "Empty string unless the input contains extra detail beyond the title")
+    @Guide(description: "Extra detail, or empty string")
     let body: String
 
     let status: ParsedStatus
 
-    @Guide(description: "ONLY if a due date is explicitly mentioned in the input. YYYY-MM-DD format. Empty string if no due date mentioned.")
+    @Guide(description: "YYYY-MM-DD or empty string")
     let due: String
 
-    @Guide(description: "ONLY if a scheduled date is explicitly mentioned in the input. YYYY-MM-DD format. Empty string if no scheduled date mentioned.")
+    @Guide(description: "YYYY-MM-DD or empty string")
     let scheduled: String
 
-    @Guide(description: "ONLY if a defer-until date is explicitly mentioned in the input. YYYY-MM-DD format. Empty string if no defer date mentioned.")
+    @Guide(description: "YYYY-MM-DD or empty string")
     let deferUntil: String
 
-    @Guide(description: "ONLY if the input explicitly mentions a project from the available list. Empty string if no project mentioned.")
+    @Guide(description: "Project name or empty string")
     let project: String
 
-    @Guide(description: "ONLY if the input explicitly mentions an area from the available list. Empty string if no area mentioned.")
+    @Guide(description: "Area name or empty string")
     let area: String
 }
 
