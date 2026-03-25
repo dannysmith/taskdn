@@ -1,8 +1,7 @@
 //! AI prompt templates for Apple Intelligence quick entry processing.
 //!
 //! All prompt text is centralized here for easy iteration.
-//! The system prompt guides the ~3B on-device model through step-by-step
-//! decision-making for each task field.
+//! Edit this file to refine how the on-device model parses task input.
 
 use super::ai::NameIdPair;
 
@@ -20,79 +19,88 @@ pub fn build_system_prompt(
     day_of_week: &str,
 ) -> String {
     let context_block = build_context_block(projects_with_areas, areas);
+    let examples_block = build_examples_block(today);
 
     format!(
-        "{ROLE_AND_CONTEXT}\n\
+        "{ROLE}\n\
          \n\
          Today is {today} ({day_of_week}).\n\
          \n\
          {context_block}\n\
          \n\
-         {STEP_BY_STEP_INSTRUCTIONS}"
+         {FIELD_INSTRUCTIONS}\n\
+         \n\
+         {examples_block}"
     )
 }
 
-const ROLE_AND_CONTEXT: &str = "\
-You are a task parser. You take free-form text (often dictated speech) and extract \
-structured task fields. You MUST only extract information that is ACTUALLY PRESENT \
-in the input. Do NOT invent, guess, or infer information that isn't there.";
+// ─────────────────────────────────────────────────────────────────────────────
+// Prompt constants
+// ─────────────────────────────────────────────────────────────────────────────
 
-const STEP_BY_STEP_INSTRUCTIONS: &str = "\
-Follow these steps IN ORDER to decide each field. For every field, if the input does \
-not clearly indicate a value, you MUST return an empty string.
+const ROLE: &str = "\
+You are a task field extractor. Given free-form text, populate structured task fields. \
+Return empty string for any field where the input provides no clear value. \
+Empty string is always the safe choice.";
 
-STEP 1 — Title:
-Create a concise, actionable task title from the input. Keep it short. \
-Do not just copy the input verbatim — clean it up and make it scannable. \
-Examples: 'I need to call the dentist about that appointment' → 'Call dentist about appointment'
+const FIELD_INSTRUCTIONS: &str = "\
+Field instructions:
 
-STEP 2 — Body:
-If the input contains meaningful detail BEYOND what the title captures, put it here. \
-Otherwise return empty string. NEVER repeat or paraphrase the title. NEVER add \
-information that was not in the original input.
+title: Rewrite the input as a concise, actionable task title.
 
-STEP 3 — Project and Area:
-ONLY set these if the input EXPLICITLY names or clearly references a specific project \
-or area from the available lists. 'upgrading the database' does NOT imply any project \
-unless the input says which project. 'Buy groceries' does NOT imply any area. \
-If unsure, return empty string. It is MUCH better to leave these empty than to guess wrong.
+body: Include only if the input has meaningful detail beyond what the title captures. \
+Otherwise empty string.
 
-STEP 4 — Status:
-Default to 'inbox' unless the input gives a clear signal:
-- 'blocked' → input says something is blocked or waiting on someone
-- 'ready' → input implies immediate action ('today', 'this afternoon', 'right now', 'need to')
-- 'icebox' → input suggests maybe/someday ('might', 'eventually', 'one day', 'consider')
-- 'inProgress' → input says already started or underway
-If ambiguous, use 'inbox'. Most tasks should be 'inbox'.
+status: Use 'inbox' unless the input clearly indicates otherwise. \
+Use 'ready' only for explicit immediacy ('today', 'this afternoon', 'right now'). \
+Use 'blocked' only if the input says something is blocked or waiting. \
+Use 'icebox' only for explicit maybe/someday language. \
+Use 'inProgress' only if the input says work has already started.
 
-STEP 5 — Due date:
-ONLY set if the input EXPLICITLY mentions a deadline or due date. \
-Look for words like: 'due', 'deadline', 'by [date]', 'must be done by', 'no later than'. \
-'Buy groceries for the week' has NO due date. 'Submit report by Friday' has a due date. \
-If no deadline language is present, return empty string.
+project: Set only if the input explicitly names a project from the list above. \
+Empty string if no project is mentioned by name.
 
-STEP 6 — Scheduled date:
-ONLY set if the input implies WHEN to do the task. \
-Look for: 'today', 'tomorrow', 'on Monday', 'this Friday', 'next week', 'in two weeks', \
-a specific date reference. \
-'Buy groceries for the week' could mean today but is NOT certain — return empty string. \
-'Call the dentist tomorrow' → set to tomorrow's date. \
-The further away the implied date, the less likely it's a scheduled date (unless the \
-input explicitly says 'schedule for').
-If no timing language is present, return empty string.
+area: Set only if the input explicitly names an area from the list above. \
+Empty string if no area is mentioned by name.
 
-STEP 7 — Defer-until date:
-ONLY set if the input EXPLICITLY mentions deferring or delaying. \
-Look for: 'defer', 'not until', 'starting from', 'becomes available', 'actionable on', \
-'don't start until', 'after [date]'. \
-This is rare. Most tasks will NOT have a defer date. Return empty string unless very clear.
+due: Set only if the input contains deadline language ('due by', 'deadline', \
+'must be done by', 'no later than'). YYYY-MM-DD format. Empty string otherwise.
 
-CRITICAL REMINDERS:
-- Empty string is ALWAYS the safe default for optional fields.
-- Guessing wrong is WORSE than leaving a field empty.
-- The user will review your output and can easily add missing fields.
-- The user CANNOT easily know which fields you invented vs extracted.
-- When in doubt: empty string.";
+scheduled: Set only if the input specifies when to do the task ('tomorrow', \
+'on Monday', 'this Friday', 'schedule for next week'). YYYY-MM-DD format. \
+Empty string otherwise. Vague time references ('for the week', 'soon') are \
+NOT scheduled dates — use empty string.
+
+deferUntil: Set only if the input explicitly mentions deferring ('not until', \
+'defer until', 'start after'). This is rare. YYYY-MM-DD format. \
+Empty string otherwise.";
+
+/// Build few-shot examples. These are the highest-impact technique for small models.
+fn build_examples_block(today: &str) -> String {
+    // Compute tomorrow for the example
+    let tomorrow = chrono::NaiveDate::parse_from_str(today, "%Y-%m-%d")
+        .ok()
+        .and_then(|d| d.succ_opt())
+        .map(|d| d.format("%Y-%m-%d").to_string())
+        .unwrap_or_else(|| "tomorrow".to_string());
+
+    format!(
+        "Examples:\n\
+         \n\
+         Input: \"Buy groceries for the week\"\n\
+         Output: {{\"title\":\"Buy groceries\",\"body\":\"\",\"status\":\"inbox\",\
+         \"due\":\"\",\"scheduled\":\"\",\"deferUntil\":\"\",\"project\":\"\",\"area\":\"\"}}\n\
+         \n\
+         Input: \"Call the dentist tomorrow about that crown\"\n\
+         Output: {{\"title\":\"Call dentist about crown\",\"body\":\"\",\"status\":\"ready\",\
+         \"due\":\"\",\"scheduled\":\"{tomorrow}\",\"deferUntil\":\"\",\"project\":\"\",\"area\":\"\"}}\n\
+         \n\
+         Input: \"I need to submit the Q1 tax return by April 15th, gather all the receipts first\"\n\
+         Output: {{\"title\":\"Submit Q1 tax return\",\"body\":\"Gather all receipts first.\",\
+         \"status\":\"inbox\",\"due\":\"2026-04-15\",\"scheduled\":\"\",\"deferUntil\":\"\",\
+         \"project\":\"Q1 Tax Preparation\",\"area\":\"\"}}"
+    )
+}
 
 /// Build the structured context block showing areas and their projects.
 fn build_context_block(
@@ -115,16 +123,16 @@ fn build_context_block(
         }
     }
 
-    let mut lines = vec!["Available areas and their projects:".to_string()];
+    let mut lines = vec!["Areas and projects:".to_string()];
 
     for area in areas {
         let projects = area_projects.get(&area.name);
         match projects {
             Some(p) if !p.is_empty() => {
-                lines.push(format!("- {} (area): {}", area.name, p.join(", ")));
+                lines.push(format!("- {}: {}", area.name, p.join(", ")));
             }
             _ => {
-                lines.push(format!("- {} (area): (no projects)", area.name));
+                lines.push(format!("- {}", area.name));
             }
         }
     }

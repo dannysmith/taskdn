@@ -1,7 +1,6 @@
 import Dispatch
 import Foundation
 import FoundationModels
-
 // MARK: - Generable types for structured task parsing
 
 @available(macOS 26.0, *)
@@ -137,6 +136,7 @@ public func processTextWithSystemPrompt(
         return responsePtr
     }
 
+    // Use contentTagging adapter — optimized for extraction and classification tasks
     let model = SystemLanguageModel.default
     guard model.availability == .available else {
         responsePtr.pointee.error_message = duplicateCString(

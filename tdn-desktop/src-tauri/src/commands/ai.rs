@@ -125,6 +125,23 @@ pub fn process_quick_entry_text(
     }
 }
 
+/// Strip markdown code fences from a response (e.g. ```json\n{...}\n```)
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+fn strip_code_fences(s: &str) -> &str {
+    let trimmed = s.trim();
+    if let Some(rest) = trimmed.strip_prefix("```") {
+        // Skip the language tag (e.g. "json") on the first line
+        let after_tag = rest.find('\n').map(|i| &rest[i + 1..]).unwrap_or(rest);
+        // Strip trailing fence
+        after_tag
+            .strip_suffix("```")
+            .unwrap_or(after_tag)
+            .trim()
+    } else {
+        trimmed
+    }
+}
+
 /// Parse the AI response JSON into a `ParsedQuickEntry`, resolving project/area names to IDs.
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 fn parse_ai_response(
@@ -133,8 +150,10 @@ fn parse_ai_response(
     projects: &[ProjectContext],
     areas: &[NameIdPair],
 ) -> Result<ParsedQuickEntry, String> {
-    // Try to parse as JSON (structured output from @Generable)
-    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(response) {
+    // Try to parse as JSON (structured output from @Generable).
+    // Also handles fallback where model returns JSON wrapped in markdown code fences.
+    let clean_response = strip_code_fences(response);
+    if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(clean_response) {
         let title = parsed["title"]
             .as_str()
             .unwrap_or(original_text)
