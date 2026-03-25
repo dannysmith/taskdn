@@ -32,156 +32,147 @@ This does not involve voice-to-text transcription — we assume users have a tra
 
 The quick entry pane is a compact floating card with: title input (top), metadata row with status/dates (middle), footer with project/area selectors + cancel/save (bottom). The AI processing button should sit adjacent to the title input area since that's where the action happens.
 
-## Background: How Handy Does This
+## Background: Handy Reference Implementation
 
-The Handy codebase (`~/dev/handy`) has a production-grade Apple Intelligence integration for post-processing transcriptions. It provides a proven Tauri ↔ Swift bridge pattern that we should follow closely.
+The Handy codebase (`~/dev/handy`) has a production-grade Apple Intelligence integration. Our Swift bridge is adapted from it.
 
-### Architecture
+Key files in Handy for reference: `src-tauri/swift/apple_intelligence.swift`, `src-tauri/swift/apple_intelligence_bridge.h`, `src-tauri/src/apple_intelligence.rs`, `src-tauri/build.rs`.
 
+Critical gotchas discovered via Handy: SIGABRT if accessing `SystemLanguageModel.default` during app init (defer to runtime); async→sync bridge via `DispatchSemaphore`; weak-link FoundationModels for older macOS compatibility; LLMs insert invisible Unicode chars (strip them); `@Generable` can fail (always have plain-text fallback).
+
+## Current Implementation Status
+
+### Completed (Phases 1-3)
+
+**Swift bridge:** `@Generable ParsedTask` struct with `ParsedStatus` enum, `LanguageModelSession` with structured output + plain-text fallback, availability check. Build script with SDK detection, stub compilation, weak linking. All adapted from Handy.
+
+**Rust layer:** Safe FFI wrapper (`apple_intelligence.rs`), Tauri commands (`commands/ai.rs`), centralized prompt templates (`commands/ai_prompts.rs`). System prompt with step-by-step field instructions, few-shot examples, and structured area→project context. Response parsing with date validation, project/area name→ID matching, body deduplication logic.
+
+**Frontend:** Sparkles button in title row (conditionally rendered when AI available + text entered), `Cmd+Shift+A` shortcut (active only when pane open), loading spinner, form field population from AI result. Feature is completely invisible when Apple Intelligence is unavailable.
+
+**Bug fix (pre-existing):** Fixed wikilinks using hash IDs instead of entity titles in all four write paths (create_task, create_project, update_task, update_project).
+
+### Key files
+
+| File | Purpose |
+|------|---------|
+| `src-tauri/swift/apple_intelligence.swift` | `@Generable` struct, LLM session, FFI functions |
+| `src-tauri/swift/apple_intelligence_stub.swift` | Stub for builds without FoundationModels SDK |
+| `src-tauri/swift/apple_intelligence_bridge.h` | C header for Swift ↔ Rust FFI |
+| `src-tauri/src/apple_intelligence.rs` | Safe Rust wrapper over C FFI |
+| `src-tauri/src/commands/ai.rs` | Tauri commands, response parsing, field validation |
+| `src-tauri/src/commands/ai_prompts.rs` | All prompt text centralized for iteration |
+| `src/components/quick-pane/QuickPaneApp.tsx` | AI processing handler, availability state |
+| `src/components/quick-pane/QuickPaneTitle.tsx` | Sparkles button, loading state |
+| `src/components/quick-pane/useQuickPaneKeyboard.ts` | `Cmd+Shift+A` shortcut |
+
+## Learnings About Apple Intelligence (~3B Model)
+
+These findings are from hands-on testing and WWDC25 research. They should inform all future prompt work.
+
+### What works well
+
+- **`@Generable` with `@Guide(description:)` for structured output.** The model reliably produces valid JSON matching the struct. `ParsedStatus` enum gives constrained decoding for free.
+- **Few-shot examples are the single highest-impact technique.** Adding 2-3 input→output examples dramatically improved field accuracy vs. instructions alone.
+- **"Empty string is the safe default" framing works.** Combined with few-shot examples showing empty fields, the model stopped hallucinating dates for simple inputs.
+- **Project/area name validation in Rust catches hallucinations.** The model sometimes invents project/area names that don't exist; case-insensitive exact matching in Rust silently drops them.
+- **Title generation is reliable.** The model consistently produces clean, concise titles.
+
+### What doesn't work
+
+- **Date arithmetic is unreliable.** "This Friday" from Wednesday March 25 → model returned March 30 (Monday, wrong). "Next Monday" → April 2 (Thursday, wrong). "End of the month" → October 31 (wrong month entirely). Apple explicitly says "avoid asking the model to act as a calculator."
+- **Few-shot contamination.** When an input is similar to a few-shot example, the model copies fields from the example. "Submit Q1 tax return by April 15th" copied the body "Gather all receipts first" from the similar example — the input never mentioned receipts.
+- **Project name fuzzy matching.** "Japan Trip" in the input didn't match "Japan Trip 2025" in the project list. The model returned empty rather than approximate-matching. Our Rust validation uses exact match only.
+- **`@Guide(Regex{...})` breaks `@Generable`.** Regex constraints on date fields caused structured output to fail entirely, falling back to plain text. The `.default` model doesn't support regex-constrained generation well. Removed in favour of description-only guides.
+- **`contentTagging` adapter is wrong for this task.** It's optimized for tag generation, not instruction-following. Produced topic tags ("task management, shopping") instead of following our field instructions.
+- **Body generation for complex inputs.** The model sometimes fabricates body content not present in the input.
+
+### Key principles for prompt iteration
+
+1. **Positive framing outperforms negative.** "Set only if X is present" beats "Do NOT set unless X."
+2. **Short instructions beat long ones.** Every token adds latency. Use `@Guide` for per-field constraints, prompt for high-level guidance.
+3. **Chain-of-thought HURTS models under ~10B.** Don't ask the model to reason step-by-step.
+4. **Few-shot examples need to be distinct from likely inputs** to avoid contamination.
+5. **Structural constraints (enums, `@Guide(.anyOf)`) are stronger than description text** — but `.anyOf` needs compile-time values, limiting use for dynamic lists.
+
+## Next Steps
+
+### Phase 5: Evaluation Harness
+
+Build a development tool for rapid prompt iteration. This is NOT part of the normal test suite — it requires a live Apple Intelligence model on the device.
+
+**Approach:** Rust `#[ignore]` integration test that:
+- Uses the real Swift FFI bridge (same code path as production)
+- Has a fixed set of ~15 test cases with input text + expected field values
+- Uses fixed context (hardcoded projects, areas, date) for reproducibility
+- Calls `build_system_prompt` and `process_text` directly (no Tauri/frontend)
+- Outputs a per-field pass/fail summary table
+- Runnable via `cargo test eval_ai -- --ignored` (or a `bun run` alias)
+
+**Test case structure:**
+```rust
+EvalCase {
+    input: "Email James about the Japan Trip, schedule for next Monday",
+    expected_title_contains: "Email James",  // substring match, not exact
+    expected_status: "inbox",
+    expected_project: Some("Japan Trip 2025"),
+    expected_area: None,
+    expected_scheduled: Some("2026-03-30"),  // next Monday
+    expected_due: None,
+    expected_defer: None,
+}
 ```
-React frontend
-  → Tauri command (Rust)
-    → C FFI (unsafe)
-      → Swift FoundationModels API
-        → On-device ~3B model inference
-      ← Structured response (@Generable)
-    ← Result<String, String>
-  ← Populate form fields
-```
 
-### Key Files to Reference in Handy
+Field matching should be flexible: substring for titles, exact for status/dates, optional for project/area (Some = must match, None = must be empty). This lets us measure regression when changing prompts.
 
-| File | What it does |
-|------|-------------|
-| `src-tauri/swift/apple_intelligence.swift` | Real implementation (~144 lines). `@Generable` struct, `LanguageModelSession`, structured output with plain-text fallback, `DispatchSemaphore` for async→sync bridge |
-| `src-tauri/swift/apple_intelligence_stub.swift` | Stub compiled when SDK lacks FoundationModels (~46 lines) |
-| `src-tauri/swift/apple_intelligence_bridge.h` | C header defining `AppleLLMResponse` struct and FFI function signatures |
-| `src-tauri/src/apple_intelligence.rs` | Rust wrapper with safe abstractions over the C FFI |
-| `src-tauri/build.rs` | `build_apple_intelligence_bridge()` — SDK detection via `xcrun`, `swiftc` compilation, `libtool` for static lib, weak framework linking |
+### Phase 6: Fix Few-Shot Contamination
 
-### Critical Gotchas Discovered by Handy
+Remove or redesign the third few-shot example (Q1 tax return) to avoid body contamination. Options:
+- Make the example input much more distinct from likely real inputs
+- Use a fictional project/area name that doesn't appear in real data
+- Remove body content from all examples (always show `"body":""`)
 
-1. **SIGABRT on init:** Cannot access `SystemLanguageModel.default` during app initialization on macOS 26 — must defer the availability check to runtime (when the user actually tries to use the feature).
-2. **Async→sync bridge:** Swift `async/await` called from synchronous Rust FFI. Uses `DispatchSemaphore` + `Task.detached(priority: .userInitiated)` with a thread-safe `ResultBox`.
-3. **Weak linking:** Must use `-weak_framework FoundationModels` so the app launches on older macOS. Deployment target is macOS 11.0 with `@available(macOS 26.0, *)` runtime checks.
-4. **Invisible Unicode:** LLMs sometimes insert zero-width spaces (`\u{200B}`, `\u{200C}`, `\u{200D}`, `\u{FEFF}`) — strip them from output.
-5. **Structured output fallback:** `@Generable` can fail — always have a plain-text fallback path.
-6. **Build-time SDK detection:** Check for `FoundationModels.framework` in the SDK path. If absent, compile the stub instead.
+This is a quick prompt-only change in `ai_prompts.rs`, testable via the eval harness.
 
-## Implementation Plan
+### Phase 7: Deterministic Date and Project/Area Resolution
 
-### Phase 1: Swift Bridge (Apple Intelligence integration layer)
+Split the work into what the LLM is good at (language understanding, intent classification) and what deterministic code is good at (date arithmetic, fuzzy string matching).
 
-Set up the Tauri ↔ Swift FFI bridge, closely following Handy's pattern.
+**Date resolution:**
 
-**Files to create:**
-- `src-tauri/swift/apple_intelligence.swift` — The `@Generable` struct for parsed tasks, inference function, availability check
-- `src-tauri/swift/apple_intelligence_stub.swift` — Fallback for builds without FoundationModels SDK
-- `src-tauri/swift/apple_intelligence_bridge.h` — C-compatible struct and function declarations
-
-**Files to modify:**
-- `src-tauri/build.rs` — Add `build_apple_intelligence_bridge()` (can adapt directly from Handy's `build.rs`)
-
-**Key design detail — the `@Generable` struct:**
+Change the `@Generable` struct so date fields capture the *raw reference and intent* rather than computed YYYY-MM-DD dates:
 
 ```swift
-@Generable
-struct ParsedTask: Sendable {
-    @Guide(description: "A concise task title summarizing the request")
-    let title: String
+@Guide(description: "Raw date/time reference for scheduling intent, or empty string")
+let scheduledRef: String  // e.g. "tomorrow", "next Monday", "this Friday"
 
-    @Guide(description: "Additional context or notes, empty string if none")
-    let body: String
-
-    let status: ParsedStatus
-
-    @Guide(description: "Due date in YYYY-MM-DD format, empty string if none")
-    let due: String
-
-    @Guide(description: "Scheduled date in YYYY-MM-DD format, empty string if none")
-    let scheduled: String
-
-    @Guide(description: "Defer-until date in YYYY-MM-DD format, empty string if none")
-    let deferUntil: String
-
-    @Guide(description: "Exact project name from the available list, empty string if none")
-    let project: String
-
-    @Guide(description: "Exact area name from the available list, empty string if none")
-    let area: String
-}
-
-@Generable
-enum ParsedStatus {
-    case inbox
-    case icebox
-    case ready
-    case inProgress
-    case blocked
-}
+@Guide(description: "Raw date/time reference for deadline intent, or empty string")
+let dueRef: String  // e.g. "by April 15th", "by end of next week"
 ```
 
-**Key design detail — status as enum:** Task statuses are known at compile time, so using a `@Generable enum` gives us constrained decoding for free — the model literally cannot output an invalid status. The enum omits `done` and `dropped` since those don't make sense for newly-created tasks.
+The LLM's job becomes: (1) identify whether a date reference exists, (2) classify it as scheduled vs. due vs. defer intent, (3) extract the reference text. Crucially, the LLM still decides whether "this Friday" is a scheduling intent for *this task* vs. just contextual information about something else — that's a language understanding judgment the LLM should make.
 
-**Key design detail — date handling:** The system prompt includes today's date and day of week. The LLM outputs dates directly in `YYYY-MM-DD` format. The ~3B model should handle common relative date arithmetic ("in 3 weeks", "next Tuesday", "end of April") well enough given today's date as context. If it occasionally gets a date wrong, the user corrects it during the review step — this is no worse than an empty field. Rust validates that returned date strings are valid `YYYY-MM-DD` and discards any that aren't.
+Rust then resolves the expression to a date deterministically. Options for date parsing in Rust:
+- `chrono` with hand-written pattern matching for common expressions
+- A crate like `dateparser` or `chrono-english` (evaluate coverage)
+- Simple keyword-based resolution ("tomorrow" → +1 day, "next Monday" → find next Monday, "April 15th" → parse month+day)
 
-**Key design detail — project/area matching:** The `@Guide(.anyOf([...]))` constraint requires compile-time values, but project/area names are dynamic per-user. Instead: list valid names in the system prompt instructions and use `@Guide(description:)` for guidance. In Rust, validate the returned name against the actual list using case-insensitive exact match. If no match, leave the field empty for the user to set manually.
+Start with a small set of common patterns and fall back to empty if unparseable. The eval harness will show which patterns are most needed.
 
-### Phase 2: Rust Layer (command, prompt building, response handling)
+**Project/area matching:**
 
-**Files to create:**
-- `src-tauri/src/apple_intelligence.rs` — Safe Rust wrapper over the C FFI (adapt from Handy)
+Add fuzzy matching in Rust alongside the existing exact match. "Japan Trip" should match "Japan Trip 2025". Options:
+- Case-insensitive substring matching (simplest)
+- Levenshtein distance with a threshold
+- Token overlap (split on spaces, check how many words match)
 
-**Files to modify:**
-- `src-tauri/src/commands/` — New Tauri command `process_quick_entry_text`
-- `src-tauri/src/lib.rs` or `mod.rs` — Register the new module and command
+Start with case-insensitive substring (covers the "Japan Trip" case) and evaluate via the harness.
 
-**The Tauri command should:**
-1. Accept: raw text, list of area names+IDs, list of project names+IDs
-2. Build system prompt: role description, today's date + day of week, available project/area names, formatting rules
-3. Call Swift FFI with system prompt + raw text
-4. Deserialize the `ParsedTask` response (JSON)
-5. Validate date strings are valid `YYYY-MM-DD` (discard invalid ones)
-6. Match returned project/area names to actual IDs (case-insensitive exact match; no match = empty)
-7. Return a typed result struct with all resolved fields
+### Phase 8: Polish and Edge Cases
 
-**System prompt template (built in Rust):**
-
-```
-You are a task parser. Extract structured task fields from free-form input.
-Today is {date} ({day_of_week}).
-
-Available projects: {comma-separated names}
-Available areas: {comma-separated names}
-
-Rules:
-- Create a concise, actionable title (not the raw input verbatim)
-- Match project/area names exactly from the lists above, or return empty
-- Convert any relative dates to YYYY-MM-DD format based on today's date
-- Default status to inbox unless clearly stated otherwise
-- Put any detail beyond the title into the body field
-```
-
-### Phase 3: Frontend Integration
-
-**Files to modify:**
-- `src/components/quick-pane/QuickPaneApp.tsx` — Add AI processing state, handler, availability check on pane open
-- `src/components/quick-pane/QuickPaneTitle.tsx` — Add the AI button adjacent to the title input (conditionally rendered)
-- `src/components/quick-pane/useQuickPaneKeyboard.ts` — Add `Cmd+Shift+A` shortcut
-
-**Behaviour:**
-1. On pane open (focus event), also call `commands.checkAppleIntelligenceAvailable()`. Store result in state. If unavailable, skip rendering button and registering shortcut.
-2. When triggered (button or `Cmd+Shift+A`): grab current title text, show loading state (e.g. subtle spinner on the button, disable form briefly), call `commands.processQuickEntryText(...)`.
-3. On success: populate title, body (with show-body toggled on), status, dates, project, area from the response. The body should contain the original raw text.
-4. On error: leave form unchanged, optionally log the error. No toast or disruptive error UI.
-5. User reviews populated fields and saves normally with `Cmd+Enter`.
-
-**Loading state:** Keep it minimal — a spinner or pulse animation on the AI button, lasting ~1-5 seconds. Don't disable the entire form (the user might want to cancel with Escape during processing).
-
-### Phase 4: Testing and Polish
-
-- Test with various dictation styles: short commands, long rambling input, ambiguous dates, misspelled project names, non-English input
-- Test availability detection: verify feature is invisible on Intel Macs, older macOS, Apple Intelligence disabled
-- Test the build on machines without the FoundationModels SDK (stub compilation)
-- Test edge cases: empty input, very long input (context window), input that's already a clean title
-- Consider whether re-processing should be supported (user processes, edits, processes again)
+- Re-processing support (user processes, edits title, processes again)
+- Cancellation during processing (Escape while LLM is running)
+- Very long input handling (context window limits)
+- Non-English input behaviour
+- Test on machines without FoundationModels SDK (stub build)
+- Test availability detection on Intel Macs / older macOS
