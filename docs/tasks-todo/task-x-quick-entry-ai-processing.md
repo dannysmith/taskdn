@@ -111,49 +111,14 @@ Current baseline: **11/31 passing**. Most failures are date arithmetic and proje
 
 Done. `useEffect` in `QuickPaneApp.tsx` watches `[projectId, areaId, scheduled, deferUntil]` and promotes `inbox` → `ready` when `(project OR area) AND (scheduled OR defer)` are set. Standalone commit, cherry-pickable.
 
-### Phase 7: Deterministic Status for AI Processing
+### Phase 7: Deterministic Status for AI Processing ✅
 
-Remove status from Apple Intelligence. Status is better handled by deterministic rules.
+Done. Status removed from `@Generable` struct (8→7 fields) and prompt. Status now determined by:
+- Keyword detection in Rust: `blocked` / `waiting on` / `waitingon` → blocked; `icebox` / `ice box` / `ice-box` → icebox; `in progress` / `in-progress` / `inprogress` → in-progress; everything else → inbox
+- Auto-ready Rule 2 in frontend: if AI sets scheduled within 7 days and status is inbox → ready
+- 8 unit tests for keyword detection in the normal test suite
 
-**Background:** The LLM is inconsistent with status (sometimes "ready" for "tomorrow", sometimes not). The cases where it adds value (icebox, blocked) are rare and can be detected via keyword matching.
-
-**Step 1: Remove status from the LLM**
-- Remove `ParsedStatus` enum and `status` field from `ParsedTask` in `apple_intelligence.swift`
-- Remove `parsedTaskToJSON` status handling
-- Remove status from the prompt in `ai_prompts.rs` (both field instructions and few-shot examples)
-- Always return `inbox` as status from `ParsedQuickEntry`
-- This simplifies the `@Generable` struct from 8 fields to 7, giving the model more capacity
-
-**Step 2: Keyword-based status detection in Rust**
-- New function in `ai.rs`: `detect_status_from_keywords(input: &str) -> &str`
-- Scans the original input text (not the AI response) for explicit, unambiguous status phrases:
-  - `icebox` / `ice box` → `icebox`
-  - `blocked` / `waiting on` / `can't proceed` / `stuck on` → `blocked`
-  - `in progress` / `already started` / `working on` → `in-progress`
-- Narrow keywords only. "Maybe" alone is NOT icebox. "Might" is NOT icebox.
-- Returns `inbox` if no keywords found
-- **Write unit tests** — deterministic, part of the normal test suite
-
-**Step 3: Auto-ready Rule 2 (AI only, near-term scheduled)**
-- In `handleProcessWithAI` in `QuickPaneApp.tsx`, after all AI fields are populated
-- If status is still `inbox` (keyword detection didn't override) AND `scheduled` is within 7 days of today → set to `ready`
-- Catches "call Dave this afternoon" and "pick up laundry tomorrow"
-- Note: Phase 6's Rule 1 (useEffect) will also fire if project/area + dates are set, so both rules complement each other
-
-**Step 4: Update eval harness and tests**
-- Remove status expectations from eval cases where status was tested as LLM output
-- Eval harness should test the *final* status after keyword detection + auto-ready rules, not the raw LLM output
-- Add unit tests for `detect_status_from_keywords`
-- Re-run eval harness to measure improvement
-
-### Phase 7: Fix Few-Shot Contamination
-
-Remove or redesign the third few-shot example (Q1 tax return) to avoid body contamination (model copies "Gather all receipts first" from the example into real responses). Options:
-- Make example inputs much more distinct from likely real inputs
-- Use a fictional project/area name that doesn't appear in real data
-- Remove body content from all examples (always show `"body":""`)
-
-Quick prompt-only change in `ai_prompts.rs`, testable via the eval harness.
+Also fixed few-shot contamination: replaced Q1 tax return example (which leaked "Gather all receipts first" into responses) with Newsletter Setup example.
 
 ### Phase 8: Deterministic Date and Project/Area Resolution
 
