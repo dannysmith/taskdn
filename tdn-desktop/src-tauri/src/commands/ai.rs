@@ -288,3 +288,420 @@ fn match_name_to_id(name: &str, pairs: &[NameIdPair]) -> Option<String> {
         .find(|p| p.name.eq_ignore_ascii_case(name))
         .map(|p| p.id.clone())
 }
+
+// =============================================================================
+// Evaluation Harness
+// =============================================================================
+//
+// A development tool for iterating on prompt quality. NOT part of the normal
+// test suite — requires a live Apple Intelligence model on the device.
+//
+// Run with: cargo test -p taskdn-desktop eval_ai -- --ignored --nocapture
+//
+// Each test case sends real text through the full pipeline (prompt building →
+// Apple Intelligence → response parsing) and compares against expectations.
+
+#[cfg(test)]
+#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+mod eval {
+    use super::*;
+
+    // ── Fixed context for reproducible evaluation ────────────────────────
+
+    const EVAL_DATE: &str = "2026-03-25";
+    const EVAL_DAY: &str = "Wednesday";
+
+    fn eval_projects() -> Vec<ProjectContext> {
+        vec![
+            ProjectContext { id: "p-japan".into(), name: "Japan Trip 2025".into(), area_name: Some("Travel".into()) },
+            ProjectContext { id: "p-acme".into(), name: "Acme Dashboard Redesign".into(), area_name: Some("Acme Corp".into()) },
+            ProjectContext { id: "p-tax".into(), name: "Q1 Tax Preparation".into(), area_name: Some("Finance".into()) },
+            ProjectContext { id: "p-blog".into(), name: "Tech Blog Relaunch".into(), area_name: Some("Writing".into()) },
+            ProjectContext { id: "p-cli".into(), name: "Open Source CLI Tool".into(), area_name: Some("Coding".into()) },
+            ProjectContext { id: "p-marathon".into(), name: "Half Marathon Training".into(), area_name: Some("Health".into()) },
+            ProjectContext { id: "p-office".into(), name: "Home Office Setup".into(), area_name: Some("Home".into()) },
+            ProjectContext { id: "p-garden".into(), name: "Garden Renovation".into(), area_name: Some("Home".into()) },
+            ProjectContext { id: "p-newsletter".into(), name: "Newsletter Setup".into(), area_name: Some("Writing".into()) },
+            ProjectContext { id: "p-rust".into(), name: "Learn Rust".into(), area_name: Some("Learning".into()) },
+        ]
+    }
+
+    fn eval_areas() -> Vec<NameIdPair> {
+        vec![
+            NameIdPair { id: "a-travel".into(), name: "Travel".into() },
+            NameIdPair { id: "a-acme".into(), name: "Acme Corp".into() },
+            NameIdPair { id: "a-finance".into(), name: "Finance".into() },
+            NameIdPair { id: "a-writing".into(), name: "Writing".into() },
+            NameIdPair { id: "a-coding".into(), name: "Coding".into() },
+            NameIdPair { id: "a-health".into(), name: "Health".into() },
+            NameIdPair { id: "a-home".into(), name: "Home".into() },
+            NameIdPair { id: "a-learning".into(), name: "Learning".into() },
+            NameIdPair { id: "a-marketing".into(), name: "Marketing".into() },
+        ]
+    }
+
+    // ── Expected output specification ────────────────────────────────────
+
+    struct Expected {
+        /// Substring that must appear in the title (case-insensitive)
+        title_contains: &'static str,
+        /// Expected status value
+        status: &'static str,
+        /// Expected project ID (None = must be empty)
+        project: Option<&'static str>,
+        /// Expected area ID (None = must be empty)
+        area: Option<&'static str>,
+        /// Expected scheduled date (None = must be empty)
+        scheduled: Option<&'static str>,
+        /// Expected due date (None = must be empty)
+        due: Option<&'static str>,
+        /// Expected defer date (None = must be empty)
+        defer: Option<&'static str>,
+        /// If true, body must be empty
+        body_empty: bool,
+    }
+
+    // ── Test runner ──────────────────────────────────────────────────────
+
+    fn run_eval(input: &str, expected: &Expected) -> (ParsedQuickEntry, Vec<String>) {
+        let projects = eval_projects();
+        let areas = eval_areas();
+
+        let projects_with_areas: Vec<super::super::ai_prompts::ProjectWithArea> = projects
+            .iter()
+            .map(|p| super::super::ai_prompts::ProjectWithArea {
+                name: p.name.clone(),
+                area_name: p.area_name.clone(),
+            })
+            .collect();
+
+        let system_prompt = super::super::ai_prompts::build_system_prompt(
+            &projects_with_areas,
+            &areas,
+            EVAL_DATE,
+            EVAL_DAY,
+        );
+
+        let response = crate::apple_intelligence::process_text(&system_prompt, input, 0)
+            .expect("Apple Intelligence call failed");
+
+        let result = parse_ai_response(&response, input, &projects, &areas)
+            .expect("Response parsing failed");
+
+        let mut failures = Vec::new();
+
+        // Check title
+        if !result.title.to_lowercase().contains(&expected.title_contains.to_lowercase()) {
+            failures.push(format!(
+                "title: expected to contain {:?}, got {:?}",
+                expected.title_contains, result.title
+            ));
+        }
+
+        // Check status
+        if result.status != expected.status {
+            failures.push(format!(
+                "status: expected {:?}, got {:?}",
+                expected.status, result.status
+            ));
+        }
+
+        // Check project
+        match expected.project {
+            Some(id) => {
+                if result.project_id.as_deref() != Some(id) {
+                    failures.push(format!(
+                        "project: expected Some({:?}), got {:?}",
+                        id, result.project_id
+                    ));
+                }
+            }
+            None => {
+                if result.project_id.is_some() {
+                    failures.push(format!(
+                        "project: expected None, got {:?}",
+                        result.project_id
+                    ));
+                }
+            }
+        }
+
+        // Check area
+        match expected.area {
+            Some(id) => {
+                if result.area_id.as_deref() != Some(id) {
+                    failures.push(format!(
+                        "area: expected Some({:?}), got {:?}",
+                        id, result.area_id
+                    ));
+                }
+            }
+            None => {
+                if result.area_id.is_some() {
+                    failures.push(format!(
+                        "area: expected None, got {:?}",
+                        result.area_id
+                    ));
+                }
+            }
+        }
+
+        // Check dates
+        check_date_field("scheduled", &result.scheduled, expected.scheduled, &mut failures);
+        check_date_field("due", &result.due, expected.due, &mut failures);
+        check_date_field("defer", &result.defer_until, expected.defer, &mut failures);
+
+        // Check body
+        if expected.body_empty && !result.body.is_empty() {
+            failures.push(format!("body: expected empty, got {:?}", result.body));
+        }
+
+        (result, failures)
+    }
+
+    fn check_date_field(
+        name: &str,
+        actual: &Option<String>,
+        expected: Option<&str>,
+        failures: &mut Vec<String>,
+    ) {
+        match expected {
+            Some(date) => {
+                if actual.as_deref() != Some(date) {
+                    failures.push(format!(
+                        "{name}: expected Some({date:?}), got {actual:?}"
+                    ));
+                }
+            }
+            None => {
+                if actual.is_some() {
+                    failures.push(format!(
+                        "{name}: expected None, got {actual:?}"
+                    ));
+                }
+            }
+        }
+    }
+
+    // ── The eval suite ───────────────────────────────────────────────────
+
+    #[test]
+    #[ignore]
+    fn eval_ai() {
+        let cases: Vec<(&str, Expected)> = vec![
+            // ── Simple inputs (should leave most fields empty) ───────
+            (
+                "Buy groceries for the week",
+                Expected {
+                    title_contains: "groceries",
+                    status: "inbox",
+                    project: None,
+                    area: None,
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: true,
+                },
+            ),
+            (
+                "Look into upgrading the database",
+                Expected {
+                    title_contains: "database",
+                    status: "inbox",
+                    project: None,
+                    area: None,
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: true,
+                },
+            ),
+            (
+                "Remember to water the plants",
+                Expected {
+                    title_contains: "water",
+                    status: "inbox",
+                    project: None,
+                    area: None,
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: true,
+                },
+            ),
+            // ── Project/area matching ────────────────────────────────
+            (
+                "Review the Acme Dashboard Redesign mockups",
+                Expected {
+                    title_contains: "mockup",
+                    status: "inbox",
+                    project: Some("p-acme"),
+                    area: None,   // area should come from project, not be set separately
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Write a blog post for the Tech Blog Relaunch",
+                Expected {
+                    title_contains: "blog",
+                    status: "inbox",
+                    project: Some("p-blog"),
+                    area: None,
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            // ── Date extraction ──────────────────────────────────────
+            (
+                "Call the dentist tomorrow about that crown",
+                Expected {
+                    title_contains: "dentist",
+                    status: "ready",
+                    project: None,
+                    area: None,
+                    scheduled: Some("2026-03-26"),
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Submit the Q1 tax return by April 15th",
+                Expected {
+                    title_contains: "tax",
+                    status: "inbox",
+                    project: Some("p-tax"),
+                    area: None,
+                    scheduled: None,
+                    due: Some("2026-04-15"),
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Schedule a team meeting for this Friday",
+                Expected {
+                    title_contains: "meeting",
+                    status: "inbox",
+                    project: None,
+                    area: None,
+                    scheduled: Some("2026-03-27"),
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            // ── Status detection ─────────────────────────────────────
+            (
+                "Buy milk this afternoon",
+                Expected {
+                    title_contains: "milk",
+                    status: "ready",
+                    project: None,
+                    area: None,
+                    scheduled: Some("2026-03-25"), // today
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Maybe one day learn to play guitar",
+                Expected {
+                    title_contains: "guitar",
+                    status: "icebox",
+                    project: None,
+                    area: None,
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: true,
+                },
+            ),
+            (
+                "The API refactor is blocked waiting on the security review",
+                Expected {
+                    title_contains: "API",
+                    status: "blocked",
+                    project: None,
+                    area: None,
+                    scheduled: None,
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            // ── Complex / dictation-style ────────────────────────────
+            (
+                "Email James about the Japan Trip, schedule for next Monday",
+                Expected {
+                    title_contains: "James",
+                    status: "inbox",
+                    project: Some("p-japan"),
+                    area: None,
+                    scheduled: Some("2026-03-30"),
+                    due: None,
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Book flights by the end of next week",
+                Expected {
+                    title_contains: "flight",
+                    status: "inbox",
+                    project: None,
+                    area: None,
+                    scheduled: None,
+                    due: Some("2026-04-03"),
+                    defer: None,
+                    body_empty: false,
+                },
+            ),
+        ];
+
+        println!("\n======================================================================");
+        println!("AI Quick Entry Evaluation — {} cases", cases.len());
+        println!("Context date: {EVAL_DATE} ({EVAL_DAY})");
+        println!("======================================================================\n");
+
+        let mut total_pass = 0;
+        let mut total_fail = 0;
+
+        for (input, expected) in &cases {
+            let (result, failures) = run_eval(input, expected);
+
+            if failures.is_empty() {
+                total_pass += 1;
+                println!("  ✓ {input:?}");
+            } else {
+                total_fail += 1;
+                println!("  ✗ {input:?}");
+                println!("    Raw: title={:?} status={:?} project={:?} area={:?}",
+                    result.title, result.status, result.project_id, result.area_id);
+                println!("         due={:?} sched={:?} defer={:?}",
+                    result.due, result.scheduled, result.defer_until);
+                for f in &failures {
+                    println!("    FAIL: {f}");
+                }
+            }
+        }
+
+        println!("\n----------------------------------------------------------------------");
+        println!("Results: {total_pass} passed, {total_fail} failed out of {} cases",
+            cases.len());
+        println!("----------------------------------------------------------------------\n");
+
+        // Don't assert — this is an eval tool, not a hard test.
+        // Some failures are expected while iterating on prompts.
+        if total_fail > 0 {
+            println!("NOTE: {total_fail} cases failed. This is expected while iterating.");
+            println!("      Review failures above and adjust ai_prompts.rs as needed.");
+        }
+    }
+}
