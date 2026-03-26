@@ -10,7 +10,69 @@ The quick entry pane supports AI-powered processing of free-form text input usin
 - App weak-links FoundationModels so it launches on older macOS
 - Build falls back to a stub implementation when the SDK lacks FoundationModels
 
-## Architecture
+## How It Works (Step by Step)
+
+### 1. User opens the quick pane
+
+User presses `Cmd+Shift+.` (global shortcut). The quick pane React app receives a focus event and loads areas, projects, and checks AI availability in parallel. The availability check goes through Rust → Swift FFI → `SystemLanguageModel.default.availability`. If Apple Intelligence is available, the sparkles button becomes visible once the user types something.
+
+### 2. User types and triggers AI processing
+
+User types or dictates free-form text into the title field (e.g. "Email James about the Japan Trip, schedule for next Monday") and clicks the sparkles button or presses `Cmd+Shift+A`.
+
+The frontend builds context from the loaded vault data: each project as a name + ID + parent area name (stripping wikilink brackets from the area reference), and each area as a name + ID. This context tells the LLM what projects and areas exist so it can match against them.
+
+### 3. Rust builds the system prompt
+
+The Tauri command `process_quick_entry_text` receives the raw text and context. It gets today's date and day of week, then calls `ai_prompts::build_system_prompt()` which assembles the complete prompt from:
+
+- A short role statement ("You are a task field extractor...")
+- Today's date and day of week
+- A structured list of areas and their projects (e.g. "Acme Corp: Acme Dashboard Redesign")
+- Per-field instructions explaining when to set each field and when to leave it empty
+- 2-3 few-shot examples showing input text → expected JSON output, including an example where most fields are empty
+
+The few-shot examples are the single highest-impact part of the prompt. They teach the model the expected output format and, critically, that leaving fields empty is the right thing to do when information isn't present.
+
+### 4. Rust calls Swift via C FFI
+
+The system prompt and user text are converted to C strings and passed through the FFI boundary to Swift. The Rust side handles all memory management — it converts to `CString` for the call and frees the response via `free_apple_llm_response` afterwards.
+
+### 5. Swift runs on-device inference
+
+The Swift function creates a `LanguageModelSession` with the system prompt as `instructions` (which the model is trained to prioritise over user input). It then calls `session.respond(to: userText, generating: ParsedTask.self)`.
+
+`ParsedTask` is a `@Generable` struct — this is Apple's constrained decoding system. The model's token generation is structurally constrained to produce valid output matching the struct's fields. The `ParsedStatus` enum means the model literally cannot output an invalid status value.
+
+If `@Generable` succeeds (the normal path), the typed `ParsedTask` struct is manually serialized to a JSON string. If it fails (rare), the function falls back to a plain `session.respond()` call — the model typically returns a JSON code block in this case.
+
+Because the Swift call is `async` but the C FFI is synchronous, a `DispatchSemaphore` bridges the two. A detached task runs the inference, signals the semaphore on completion, and the calling thread blocks until it's done. This takes ~2-3 seconds on Apple Silicon.
+
+### 6. Rust parses and validates the response
+
+Back in Rust, `parse_ai_response()` processes the JSON string through several stages:
+
+**Code fence stripping:** If the fallback path produced a markdown-wrapped JSON block (`` ```json...``` ``), the fences are stripped so `serde_json` can parse it.
+
+**Title extraction:** The model's title is used. If JSON parsing failed entirely, the original input text becomes the title.
+
+**Body logic:** If the model transformed the title (it differs from the original input), the original text is preserved in the body — this ensures no context from dictation is lost. If the model also generated body text, it's only appended if it contains genuinely new information. A normalisation check (`is_essentially_same`) catches cases where the model just parrots the input back with minor punctuation changes.
+
+**Date validation:** Each date string is parsed with `chrono::NaiveDate`. Valid YYYY-MM-DD is kept. Empty strings become `None`. Anything else (malformed dates, random text) is silently discarded.
+
+**Project/area matching:** The model returns a project or area name as a string. Rust does case-insensitive exact match against the provided list of names. A match returns the entity's hash ID (which the frontend uses for the dropdown selectors). No match → the field is left empty for the user to set manually. This is a deliberate safety net — the model sometimes hallucinates project/area names that don't exist, and the exact matching silently drops them.
+
+**Status validation:** Must be one of `inbox`, `icebox`, `ready`, `in-progress`, `blocked`. Anything else defaults to `inbox`.
+
+### 7. Frontend populates the form
+
+The React handler receives the `ParsedQuickEntry` result and sets each piece of form state: title, body (with the body section auto-expanding if populated), status, dates, project ID, and area ID. The UI updates immediately — the user sees fields filled in and can adjust anything before saving.
+
+### 8. User reviews and saves
+
+The user presses `Cmd+Enter` to save. From here the flow is identical to a manually-entered task: `createTask` writes the file to disk with the appropriate frontmatter, and `updateTask` adds the body content. The vault index is updated and the main window receives a `task-created` event.
+
+## Architecture Diagram
 
 ```
 React (QuickPaneApp)
