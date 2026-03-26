@@ -978,4 +978,117 @@ updated-at: 2025-01-15
         assert_eq!(manager.list_projects().unwrap().len(), 2);
         assert!(manager.list_areas().unwrap().is_empty());
     }
+
+    // -------------------------------------------------------------------------
+    // ID-to-Title Resolution Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn create_task_resolves_project_id_to_title() {
+        let temp_dir = create_test_vault();
+        let manager = create_test_manager(&temp_dir);
+
+        // Create a project first
+        let project = manager
+            .create_project(CreateProjectOptions {
+                title: "My Project".to_string(),
+                status: None,
+                area_id: None,
+                start_date: None,
+                end_date: None,
+                description: None,
+            })
+            .unwrap();
+
+        // Create a task using the project's hash ID
+        let task = manager
+            .create_task(CreateTaskOptions {
+                title: Some("Test Task".to_string()),
+                project_id: Some(project.id.clone()),
+                ..Default::default()
+            })
+            .unwrap();
+
+        // The wikilink should contain the title, not the hash ID
+        assert!(task.project.is_some());
+        let project_ref = task.project.unwrap();
+        assert!(
+            project_ref.contains("My Project"),
+            "Expected wikilink with title, got: {project_ref}"
+        );
+        assert!(
+            !project_ref.contains(&project.id),
+            "Wikilink should not contain hash ID"
+        );
+    }
+
+    #[test]
+    fn create_task_preserves_unknown_project_id() {
+        let temp_dir = create_test_vault();
+        let manager = create_test_manager(&temp_dir);
+
+        // Use an ID that doesn't match any project — should be preserved as-is
+        let task = manager
+            .create_task(CreateTaskOptions {
+                title: Some("Test Task".to_string()),
+                project_id: Some("nonexistent-id".to_string()),
+                ..Default::default()
+            })
+            .unwrap();
+
+        // The original string is preserved since it didn't resolve
+        assert!(task.project.is_some());
+        let project_ref = task.project.unwrap();
+        assert!(
+            project_ref.contains("nonexistent-id"),
+            "Unknown ID should be preserved: {project_ref}"
+        );
+    }
+
+    #[test]
+    fn update_task_resolves_project_id_to_title() {
+        let temp_dir = create_test_vault();
+        let manager = create_test_manager(&temp_dir);
+
+        // Create project and task
+        let project = manager
+            .create_project(CreateProjectOptions {
+                title: "Update Project".to_string(),
+                status: None,
+                area_id: None,
+                start_date: None,
+                end_date: None,
+                description: None,
+            })
+            .unwrap();
+
+        let task = manager
+            .create_task(CreateTaskOptions {
+                title: Some("Task".to_string()),
+                ..Default::default()
+            })
+            .unwrap();
+
+        // Update task with project hash ID
+        let updated = manager
+            .update_task(TaskUpdate {
+                id: task.id,
+                project: Some(project.id.clone()),
+                title: None,
+                status: None,
+                area: None,
+                scheduled: None,
+                due: None,
+                defer_until: None,
+                body: None,
+            })
+            .unwrap();
+
+        assert!(updated.project.is_some());
+        let project_ref = updated.project.unwrap();
+        assert!(
+            project_ref.contains("Update Project"),
+            "Expected resolved title, got: {project_ref}"
+        );
+    }
 }

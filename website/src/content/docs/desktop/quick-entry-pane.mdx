@@ -36,3 +36,17 @@ While the majority of tasks created this way probably won't have a body, pressin
 <Center>
 <Image src={quickEntryWithBody} alt="Quick entry pane with body expanded" />
 </Center>
+
+## Auto-ready status
+
+When you set a project or area **and** a scheduled or defer-until date, the status automatically changes from `inbox` to `ready`. A task with both a project/area and a date has been processed enough that it doesn't need to sit in the inbox.
+
+## AI processing (macOS)
+
+On Macs with Apple Intelligence enabled, a sparkle button appears next to the title when you've typed something. Clicking it (or pressing <Kbd mac="Command+Shift+A" />) uses on-device AI to clean up your text into a concise task title and fill in the appropriate project, area, dates and other fields based on what you typed or dictated.
+
+This works entirely on-device — no data is sent to any server. The AI pre-fills the form fields for you to review and adjust before saving.
+
+<Aside type="note">
+AI processing requires an Apple Silicon Mac running macOS Tahoe (26.0) or later with Apple Intelligence enabled in System Settings. The feature is not visible on other platforms.
+</Aside>

@@ -84,7 +84,7 @@ src/components/quick-pane/
 | ----------------- | -------------------------------------------------------------------- |
 | QuickPaneApp      | Form state, submission logic, popover coordination, focus management |
 | QuickPaneCard     | Visual container, CSS animations for show/hide                       |
-| QuickPaneTitle    | Title input with auto-resize                                         |
+| QuickPaneTitle    | Title input with auto-resize, AI sparkle button                      |
 | QuickPaneBody     | Collapsible notes with expand/collapse animation                     |
 | QuickPaneMetadata | Status and date selection (controlled popovers)                      |
 | QuickPaneFooter   | Project/area selection, action buttons                               |
@@ -109,8 +109,17 @@ src/components/quick-pane/
 | `⌘ ⇧ D`     | Open due date picker                    |
 | `⌃ ⇧ ⌘ D`   | Open defer date picker                  |
 | `⌘ S`       | Open status picker                      |
+| `⌘ ⇧ A`     | Process with AI (macOS only)            |
 
 The `useQuickPaneKeyboard` hook handles all shortcuts using capture phase to intercept events before popovers receive them.
+
+## Auto-Ready Status
+
+A `useEffect` in `QuickPaneApp` watches `[projectId, areaId, scheduled, deferUntil]`. When `(project OR area) AND (scheduled OR defer-until)` are set and status is `inbox`, it auto-promotes to `ready`. This applies to all quick entry (manual and AI-assisted).
+
+## Apple Intelligence Integration
+
+On macOS with Apple Intelligence, a sparkle button appears in the title row when the user has typed text. Pressing it (or `⌘⇧A`) sends the text through on-device AI processing to extract structured task fields. See `docs/developer/apple-intelligence.md` for the full architecture.
 
 ## Platform Behavior
 
