@@ -129,6 +129,7 @@ export default function QuickPaneApp() {
 
   const titleRef = React.useRef<HTMLTextAreaElement>(null)
   const bodyRef = React.useRef<HTMLTextAreaElement>(null)
+  const aiSessionRef = React.useRef(0)
 
   // ─────────────────────────────────────────────────────────────────────────
   // Reset Form
@@ -260,6 +261,8 @@ export default function QuickPaneApp() {
     const trimmedTitle = title.trim()
     if (!trimmedTitle || isProcessingAI) return
 
+    // Session token to ignore late completions (e.g. if pane was dismissed and reopened)
+    const sessionId = ++aiSessionRef.current
     setIsProcessingAI(true)
 
     try {
@@ -279,6 +282,9 @@ export default function QuickPaneApp() {
         areaPairs
       )
 
+      // Ignore late result if a new session started or pane was reset
+      if (aiSessionRef.current !== sessionId) return
+
       if (result.status === 'error') {
         logger.warn('AI processing failed', { error: result.error })
         setIsProcessingAI(false)
@@ -287,13 +293,15 @@ export default function QuickPaneApp() {
 
       const parsed = result.data
 
-      // Populate form fields from AI result
+      // Populate ALL form fields from AI result (clear fields not set by AI)
       setTitle(parsed.title)
-
-      if (parsed.body) {
-        setBody(parsed.body)
-        setShowBody(true)
-      }
+      setBody(parsed.body || '')
+      setShowBody(!!parsed.body)
+      setDue(parsed.due ?? null)
+      setScheduled(parsed.scheduled ?? null)
+      setDeferUntil(parsed.deferUntil ?? null)
+      setProjectId(parsed.projectId ?? null)
+      setAreaId(parsed.areaId ?? null)
 
       // Set status from keyword detection (Rust handles this, not the LLM)
       const validStatuses: TaskStatus[] = [
@@ -306,12 +314,6 @@ export default function QuickPaneApp() {
       if (validStatuses.includes(parsed.status as TaskStatus)) {
         setStatus(parsed.status as TaskStatus)
       }
-
-      if (parsed.due) setDue(parsed.due)
-      if (parsed.scheduled) setScheduled(parsed.scheduled)
-      if (parsed.deferUntil) setDeferUntil(parsed.deferUntil)
-      if (parsed.projectId) setProjectId(parsed.projectId)
-      if (parsed.areaId) setAreaId(parsed.areaId)
 
       // Auto-ready Rule 2 (AI only): if scheduled within 7 days and status
       // is still inbox (keyword detection didn't override), promote to ready.

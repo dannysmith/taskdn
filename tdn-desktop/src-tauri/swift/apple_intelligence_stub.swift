@@ -15,7 +15,7 @@ public func isAppleIntelligenceAvailable() -> Int32 {
 public func processTextWithSystemPrompt(
     _ systemPrompt: UnsafePointer<CChar>,
     _ userContent: UnsafePointer<CChar>,
-    maxTokens: Int32
+    _maxTokens: Int32
 ) -> UnsafeMutablePointer<AppleLLMResponse> {
     let responsePtr = ResponsePointer.allocate(capacity: 1)
     responsePtr.initialize(to: AppleLLMResponse(response: nil, success: 0, error_message: nil))

@@ -51,28 +51,22 @@ private func stripInvisibleChars(_ text: String) -> String {
 
 @available(macOS 26.0, *)
 private func parsedTaskToJSON(_ task: ParsedTask) -> String {
-    // Build JSON manually to avoid Codable complexity with @Generable
-    let fields: [(String, String)] = [
-        ("title", task.title),
-        ("body", task.body),
-        ("project", task.project),
-        ("area", task.area),
-        ("scheduledRef", task.scheduledRef),
-        ("dueRef", task.dueRef),
-        ("deferUntilRef", task.deferUntilRef),
+    let dict: [String: String] = [
+        "title": task.title,
+        "body": task.body,
+        "project": task.project,
+        "area": task.area,
+        "scheduledRef": task.scheduledRef,
+        "dueRef": task.dueRef,
+        "deferUntilRef": task.deferUntilRef,
     ]
 
-    let pairs = fields.map { (key, value) in
-        let escaped = value
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-            .replacingOccurrences(of: "\n", with: "\\n")
-            .replacingOccurrences(of: "\r", with: "\\r")
-            .replacingOccurrences(of: "\t", with: "\\t")
-        return "\"\(key)\":\"\(escaped)\""
+    guard let data = try? JSONSerialization.data(withJSONObject: dict, options: []),
+          let json = String(data: data, encoding: .utf8) else {
+        // Fallback: return minimal valid JSON on serialization failure
+        return "{\"title\":\"\",\"body\":\"\",\"project\":\"\",\"area\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"\",\"deferUntilRef\":\"\"}"
     }
-
-    return "{\(pairs.joined(separator: ","))}"
+    return json
 }
 
 // MARK: - Public C-callable functions
@@ -96,7 +90,7 @@ public func isAppleIntelligenceAvailable() -> Int32 {
 public func processTextWithSystemPrompt(
     _ systemPrompt: UnsafePointer<CChar>,
     _ userContent: UnsafePointer<CChar>,
-    maxTokens: Int32
+    _maxTokens: Int32  // unused, kept for ABI compatibility
 ) -> UnsafeMutablePointer<AppleLLMResponse> {
     let swiftSystemPrompt = String(cString: systemPrompt)
     let swiftUserContent = String(cString: userContent)
@@ -126,7 +120,7 @@ public func processTextWithSystemPrompt(
     }
     let box = ResultBox()
 
-    Task.detached(priority: .userInitiated) {
+    let task = Task.detached(priority: .userInitiated) {
         defer { semaphore.signal() }
         do {
             let session = LanguageModelSession(
@@ -155,6 +149,7 @@ public func processTextWithSystemPrompt(
     let timeout = semaphore.wait(timeout: .now() + 30.0)
 
     if timeout == .timedOut {
+        task.cancel()
         responsePtr.pointee.error_message = duplicateCString(
             "Apple Intelligence timed out after 30 seconds."
         )
