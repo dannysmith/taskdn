@@ -58,12 +58,29 @@ pub fn check_apple_intelligence_available() -> bool {
 ///
 /// Takes the raw text from the quick entry title field, plus lists of available
 /// projects (with area relationships) and areas for context.
+///
+/// This command is async to avoid blocking the main thread — the Swift FFI call
+/// uses a DispatchSemaphore which blocks for 2-3 seconds during inference.
 #[tauri::command]
 #[specta::specta]
-pub fn process_quick_entry_text(
+pub async fn process_quick_entry_text(
     text: String,
     projects: Vec<ProjectContext>,
     areas: Vec<NameIdPair>,
+) -> Result<ParsedQuickEntry, String> {
+    // Move the blocking FFI work off the main thread
+    tauri::async_runtime::spawn_blocking(move || {
+        process_quick_entry_text_sync(&text, &projects, &areas)
+    })
+    .await
+    .map_err(|e| format!("Task join error: {e}"))?
+}
+
+/// Synchronous implementation — called from spawn_blocking and from the eval harness.
+pub(crate) fn process_quick_entry_text_sync(
+    text: &str,
+    projects: &[ProjectContext],
+    areas: &[NameIdPair],
 ) -> Result<ParsedQuickEntry, String> {
     let trimmed = text.trim();
     if trimmed.is_empty() {
@@ -95,7 +112,7 @@ pub fn process_quick_entry_text(
 
         log::info!("Raw response: {response}");
 
-        let mut result = parse_ai_response(&response, trimmed, &projects, &areas, today.date_naive())?;
+        let mut result = parse_ai_response(&response, trimmed, projects, areas, today.date_naive())?;
 
         // Determine status via keyword detection (not LLM)
         result.status = detect_status_from_keywords(trimmed).to_string();

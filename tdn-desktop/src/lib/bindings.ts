@@ -365,6 +365,9 @@ async checkAppleIntelligenceAvailable() : Promise<boolean> {
  * 
  * Takes the raw text from the quick entry title field, plus lists of available
  * projects (with area relationships) and areas for context.
+ * 
+ * This command is async to avoid blocking the main thread — the Swift FFI call
+ * uses a DispatchSemaphore which blocks for 2-3 seconds during inference.
  */
 async processQuickEntryText(text: string, projects: ProjectContext[], areas: NameIdPair[]) : Promise<Result<ParsedQuickEntry, string>> {
     try {
