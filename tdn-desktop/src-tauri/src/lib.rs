@@ -260,6 +260,13 @@ fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
                 log::info!("App reopen requested - showing main window");
                 if let Some(window) = app_handle.get_webview_window("main") {
                     let _ = window.show();
+                    // Restore saved position/size — the window-state plugin only
+                    // auto-restores on startup, not after a hide/show cycle.
+                    #[cfg(desktop)]
+                    {
+                        use tauri_plugin_window_state::{StateFlags, WindowExt};
+                        let _ = window.restore_state(StateFlags::all());
+                    }
                     let _ = window.set_focus();
                 }
             }
