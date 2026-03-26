@@ -357,8 +357,10 @@ mod eval {
         due: Option<&'static str>,
         /// Expected defer date (None = must be empty)
         defer: Option<&'static str>,
-        /// If true, body must be empty
-        body_empty: bool,
+        /// Body check: Some(true) = must be empty, Some(false) = must have content, None = don't check.
+        /// Note: body is populated by deterministic Rust code (original text preserved when title
+        /// is transformed), so this mostly tests our code, not the LLM. Use None for most cases.
+        body_empty: Option<bool>,
     }
 
     // ── Test runner ──────────────────────────────────────────────────────
@@ -452,8 +454,14 @@ mod eval {
         check_date_field("defer", &result.defer_until, expected.defer, &mut failures);
 
         // Check body
-        if expected.body_empty && !result.body.is_empty() {
-            failures.push(format!("body: expected empty, got {:?}", result.body));
+        match expected.body_empty {
+            Some(true) if !result.body.is_empty() => {
+                failures.push(format!("body: expected empty, got {:?}", result.body));
+            }
+            Some(false) if result.body.is_empty() => {
+                failures.push("body: expected content, got empty".to_string());
+            }
+            _ => {} // None = don't check
         }
 
         (result, failures)
@@ -490,6 +498,11 @@ mod eval {
     fn eval_ai() {
         // Note: EVAL_DATE is 2026-03-25, a Wednesday.
         // Thu=26, Fri=27, Sat=28, Sun=29, Mon=30, Tue=31, Wed Apr 1, Thu=2, Fri=3
+        //
+        // body_empty: None means "don't check body" — body content is determined by
+        // deterministic Rust code (if title differs from input, original text goes in
+        // body), so it's not testing LLM quality. Use Some(true) only when the title
+        // is very likely to be identical to input (i.e. input is already a clean title).
         let cases: Vec<(&str, Expected)> = vec![
 
             // =============================================================
@@ -502,7 +515,7 @@ mod eval {
                     title_contains: "groceries", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,  // title may or may not be shortened
                 },
             ),
             (
@@ -511,7 +524,7 @@ mod eval {
                     title_contains: "database", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,
                 },
             ),
             (
@@ -520,7 +533,7 @@ mod eval {
                     title_contains: "water", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,
                 },
             ),
             (
@@ -529,7 +542,7 @@ mod eval {
                     title_contains: "mum", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,
                 },
             ),
 
@@ -543,7 +556,7 @@ mod eval {
                     title_contains: "mockup", status: "inbox",
                     project: Some("p-acme"), area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -552,7 +565,7 @@ mod eval {
                     title_contains: "blog", status: "inbox",
                     project: Some("p-blog"), area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -561,7 +574,7 @@ mod eval {
                     title_contains: "CLI", status: "inbox",
                     project: Some("p-cli"), area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             // Partial name — "Japan Trip" should match "Japan Trip 2025"
@@ -572,7 +585,7 @@ mod eval {
                     title_contains: "James", status: "inbox",
                     project: Some("p-japan"), area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -586,7 +599,7 @@ mod eval {
                     title_contains: "invoice", status: "inbox",
                     project: None, area: Some("a-acme"),
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -600,7 +613,7 @@ mod eval {
                     title_contains: "dentist", status: "ready",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -609,7 +622,7 @@ mod eval {
                     title_contains: "dry cleaning", status: "ready",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -618,7 +631,7 @@ mod eval {
                     title_contains: "Sarah", status: "ready",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -632,7 +645,7 @@ mod eval {
                     title_contains: "meeting", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-27"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -641,7 +654,7 @@ mod eval {
                     title_contains: "Tom", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -650,7 +663,7 @@ mod eval {
                     title_contains: "run", status: "inbox",
                     project: Some("p-marathon"), area: None,
                     scheduled: Some("2026-03-30"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -664,7 +677,7 @@ mod eval {
                     title_contains: "milk", status: "ready",
                     project: None, area: None,
                     scheduled: Some("2026-03-25"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -673,7 +686,7 @@ mod eval {
                     title_contains: "bank", status: "ready",
                     project: None, area: None,
                     scheduled: Some("2026-03-25"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -687,7 +700,7 @@ mod eval {
                     title_contains: "tax", status: "inbox",
                     project: Some("p-tax"), area: None,
                     scheduled: None, due: Some("2026-04-15"), defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -696,7 +709,7 @@ mod eval {
                     title_contains: "report", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: Some("2026-03-27"), defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -705,7 +718,7 @@ mod eval {
                     title_contains: "flight", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: Some("2026-04-03"), defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -714,19 +727,9 @@ mod eval {
                     title_contains: "passport", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: Some("2026-06-01"), defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
-
-            // =============================================================
-            // STATUS — inbox (default, no signal)
-            // =============================================================
-            // (covered by the simple inputs above)
-
-            // =============================================================
-            // STATUS — ready (immediate action)
-            // =============================================================
-            // (covered by "this afternoon" and "today" cases above)
 
             // =============================================================
             // STATUS — icebox (someday/maybe)
@@ -738,7 +741,7 @@ mod eval {
                     title_contains: "guitar", status: "icebox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,
                 },
             ),
             (
@@ -747,7 +750,7 @@ mod eval {
                     title_contains: "motorbike", status: "icebox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -761,7 +764,7 @@ mod eval {
                     title_contains: "API", status: "blocked",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -770,7 +773,7 @@ mod eval {
                     title_contains: "Garden", status: "blocked",
                     project: Some("p-garden"), area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
@@ -784,7 +787,7 @@ mod eval {
                     title_contains: "James", status: "inbox",
                     project: Some("p-japan"), area: None,
                     scheduled: Some("2026-03-30"), due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -793,7 +796,7 @@ mod eval {
                     title_contains: "invoice", status: "inbox",
                     project: None, area: Some("a-acme"),
                     scheduled: None, due: Some("2026-03-31"), defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
             (
@@ -802,42 +805,39 @@ mod eval {
                     title_contains: "Newsletter", status: "inbox",
                     project: Some("p-newsletter"), area: None,
                     scheduled: Some("2026-03-26"), due: Some("2026-03-31"), defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
 
             // =============================================================
-            // NO HALLUCINATION — inputs that might trick the model
+            // NO HALLUCINATION — words that look like area names but aren't
             // =============================================================
 
-            // Mentions "health" but not as an area reference
             (
                 "Check if my health insurance covers this procedure",
                 Expected {
                     title_contains: "insurance", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: false,
+                    body_empty: None,
                 },
             ),
-            // Mentions "home" but not as an area reference
             (
                 "Pick up something on the way home",
                 Expected {
                     title_contains: "home", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,
                 },
             ),
-            // Mentions "learning" but not as an area reference
             (
                 "I'm learning a lot from this course",
                 Expected {
                     title_contains: "course", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
-                    body_empty: true,
+                    body_empty: None,
                 },
             ),
         ];
