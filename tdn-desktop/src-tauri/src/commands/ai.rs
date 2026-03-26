@@ -299,22 +299,23 @@ pub fn detect_status_from_keywords(input: &str) -> &'static str {
     // Check for blocked — explicit blocking language
     if lower.contains("blocked")
         || lower.contains("waiting on")
-        || lower.contains("can't proceed")
-        || lower.contains("stuck on")
+        || lower.contains("waitingon")
     {
         return "blocked";
     }
 
-    // Check for icebox — only very explicit icebox/ice box mentions
-    if lower.contains("icebox") || lower.contains("ice box") {
+    // Check for icebox — only very explicit mentions
+    if lower.contains("icebox")
+        || lower.contains("ice box")
+        || lower.contains("ice-box")
+    {
         return "icebox";
     }
 
-    // Check for in-progress — explicit "already doing" language
+    // Check for in-progress — explicit mentions only
     if lower.contains("in progress")
         || lower.contains("in-progress")
-        || lower.contains("already started")
-        || lower.contains("working on")
+        || lower.contains("inprogress")
     {
         return "in-progress";
     }
@@ -341,19 +342,24 @@ mod tests {
     fn keyword_detects_blocked() {
         assert_eq!(detect_status_from_keywords("This is blocked by the security review"), "blocked");
         assert_eq!(detect_status_from_keywords("Waiting on the client to respond"), "blocked");
-        assert_eq!(detect_status_from_keywords("Can't proceed until we get approval"), "blocked");
-        assert_eq!(detect_status_from_keywords("Stuck on the API migration"), "blocked");
+        assert_eq!(detect_status_from_keywords("waitingon client response"), "blocked");
+    }
+
+    #[test]
+    fn keyword_blocked_is_narrow() {
+        assert_eq!(detect_status_from_keywords("Can't proceed until we get approval"), "inbox");
+        assert_eq!(detect_status_from_keywords("Stuck on the API migration"), "inbox");
     }
 
     #[test]
     fn keyword_detects_icebox() {
         assert_eq!(detect_status_from_keywords("Icebox task to learn piano"), "icebox");
         assert_eq!(detect_status_from_keywords("Put this in the ice box"), "icebox");
+        assert_eq!(detect_status_from_keywords("ice-box this for later"), "icebox");
     }
 
     #[test]
     fn keyword_icebox_is_narrow() {
-        // "maybe" and "might" alone should NOT trigger icebox
         assert_eq!(detect_status_from_keywords("Maybe call the bank"), "inbox");
         assert_eq!(detect_status_from_keywords("I might need to do this"), "inbox");
         assert_eq!(detect_status_from_keywords("One day learn guitar"), "inbox");
@@ -363,8 +369,14 @@ mod tests {
     #[test]
     fn keyword_detects_in_progress() {
         assert_eq!(detect_status_from_keywords("This is in progress"), "in-progress");
-        assert_eq!(detect_status_from_keywords("Already started the refactor"), "in-progress");
-        assert_eq!(detect_status_from_keywords("Working on the dashboard"), "in-progress");
+        assert_eq!(detect_status_from_keywords("Mark as in-progress"), "in-progress");
+        assert_eq!(detect_status_from_keywords("inprogress task"), "in-progress");
+    }
+
+    #[test]
+    fn keyword_in_progress_is_narrow() {
+        assert_eq!(detect_status_from_keywords("Already started the refactor"), "inbox");
+        assert_eq!(detect_status_from_keywords("Working on the dashboard"), "inbox");
     }
 
     #[test]
