@@ -57,43 +57,34 @@ Empty string if no project is mentioned by name.
 area: Set only if the input explicitly names an area from the list above. \
 Empty string if no area is mentioned by name.
 
-due: Set only if the input contains deadline language ('due by', 'deadline', \
-'must be done by', 'no later than'). YYYY-MM-DD format. Empty string otherwise.
+dueRef: If the input contains deadline language ('due by', 'deadline', 'must be done by', \
+'no later than', 'by [date]'), extract the date reference exactly as stated. \
+Examples: 'Friday', 'April 15th', 'end of March', 'end of next week'. \
+Empty string if no deadline is mentioned.
 
-scheduled: Set only if the input specifies when to do the task ('tomorrow', \
-'on Monday', 'this Friday', 'schedule for next week'). YYYY-MM-DD format. \
-Empty string otherwise. Vague time references ('for the week', 'soon') are \
-NOT scheduled dates — use empty string.
+scheduledRef: If the input says when to do the task, extract the date reference exactly \
+as stated. Examples: 'today', 'tomorrow', 'Monday', 'this Friday', 'next week'. \
+Empty string if no timing is mentioned. Vague references ('for the week', 'soon') \
+are NOT scheduled dates — use empty string.
 
-deferUntil: Set only if the input explicitly mentions deferring ('not until', \
-'defer until', 'start after'). This is rare. YYYY-MM-DD format. \
-Empty string otherwise.";
+deferUntilRef: If the input explicitly mentions deferring, extract the date reference. \
+Examples: 'after Monday', 'not until April'. This is rare. Empty string otherwise.";
 
 /// Build few-shot examples. These are the highest-impact technique for small models.
-fn build_examples_block(today: &str) -> String {
-    // Compute tomorrow for the example
-    let tomorrow = chrono::NaiveDate::parse_from_str(today, "%Y-%m-%d")
-        .ok()
-        .and_then(|d| d.succ_opt())
-        .map(|d| d.format("%Y-%m-%d").to_string())
-        .unwrap_or_else(|| "tomorrow".to_string());
+/// Examples use raw date expressions (not YYYY-MM-DD) — Rust resolves them later.
+fn build_examples_block(_today: &str) -> String {
+    "\
+Examples:
 
-    format!(
-        "Examples:\n\
-         \n\
-         Input: \"Buy groceries for the week\"\n\
-         Output: {{\"title\":\"Buy groceries\",\"body\":\"\",\
-         \"due\":\"\",\"scheduled\":\"\",\"deferUntil\":\"\",\"project\":\"\",\"area\":\"\"}}\n\
-         \n\
-         Input: \"Call the dentist tomorrow about that crown\"\n\
-         Output: {{\"title\":\"Call dentist about crown\",\"body\":\"\",\
-         \"due\":\"\",\"scheduled\":\"{tomorrow}\",\"deferUntil\":\"\",\"project\":\"\",\"area\":\"\"}}\n\
-         \n\
-         Input: \"Finish the Newsletter Setup landing page by end of March\"\n\
-         Output: {{\"title\":\"Finish Newsletter Setup landing page\",\"body\":\"\",\
-         \"due\":\"2026-03-31\",\"scheduled\":\"\",\"deferUntil\":\"\",\
-         \"project\":\"Newsletter Setup\",\"area\":\"\"}}"
-    )
+Input: \"Buy groceries for the week\"
+Output: {\"title\":\"Buy groceries\",\"body\":\"\",\"dueRef\":\"\",\"scheduledRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
+
+Input: \"Call the dentist tomorrow about that crown\"
+Output: {\"title\":\"Call dentist about crown\",\"body\":\"\",\"dueRef\":\"\",\"scheduledRef\":\"tomorrow\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
+
+Input: \"Finish the Newsletter Setup landing page by end of March\"
+Output: {\"title\":\"Finish Newsletter Setup landing page\",\"body\":\"\",\"dueRef\":\"end of March\",\"scheduledRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"Newsletter Setup\",\"area\":\"\"}"
+        .to_string()
 }
 
 /// Build the structured context block showing areas and their projects.

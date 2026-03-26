@@ -95,7 +95,7 @@ pub fn process_quick_entry_text(
 
         log::info!("Raw response: {response}");
 
-        let mut result = parse_ai_response(&response, trimmed, &projects, &areas)?;
+        let mut result = parse_ai_response(&response, trimmed, &projects, &areas, today.date_naive())?;
 
         // Determine status via keyword detection (not LLM)
         result.status = detect_status_from_keywords(trimmed).to_string();
@@ -146,12 +146,14 @@ fn strip_code_fences(s: &str) -> &str {
 }
 
 /// Parse the AI response JSON into a `ParsedQuickEntry`, resolving project/area names to IDs.
+/// `today` is used for resolving relative date expressions.
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 fn parse_ai_response(
     response: &str,
     original_text: &str,
     projects: &[ProjectContext],
     areas: &[NameIdPair],
+    today: chrono::NaiveDate,
 ) -> Result<ParsedQuickEntry, String> {
     // Try to parse as JSON (structured output from @Generable).
     // Also handles fallback where model returns JSON wrapped in markdown code fences.
@@ -189,17 +191,21 @@ fn parse_ai_response(
         // Status is determined by keyword detection, not the LLM
         let status = "inbox".to_string();
 
-        let due = non_empty_date(parsed["due"].as_str());
-        let scheduled = non_empty_date(parsed["scheduled"].as_str());
-        let defer_until = non_empty_date(parsed["deferUntil"].as_str());
+        // Resolve date expressions deterministically
+        let due_ref = parsed["dueRef"].as_str().unwrap_or("").trim();
+        let scheduled_ref = parsed["scheduledRef"].as_str().unwrap_or("").trim();
+        let defer_ref = parsed["deferUntilRef"].as_str().unwrap_or("").trim();
 
-        // Match project name to ID (case-insensitive exact match)
+        let due = super::ai_resolve::resolve_date_expression(due_ref, today);
+        let scheduled = super::ai_resolve::resolve_date_expression(scheduled_ref, today);
+        let defer_until = super::ai_resolve::resolve_date_expression(defer_ref, today);
+
+        // Match project/area names with fuzzy (substring) matching
         let project_name = parsed["project"].as_str().unwrap_or("").trim();
-        let project_id = match_project_name_to_id(project_name, projects);
+        let project_id = super::ai_resolve::match_project_fuzzy(project_name, projects);
 
-        // Match area name to ID (case-insensitive exact match)
         let area_name = parsed["area"].as_str().unwrap_or("").trim();
-        let area_id = match_name_to_id(area_name, areas);
+        let area_id = super::ai_resolve::match_area_fuzzy(area_name, areas);
 
         Ok(ParsedQuickEntry {
             title,
@@ -228,22 +234,6 @@ fn parse_ai_response(
     }
 }
 
-/// Validate a date string is in YYYY-MM-DD format and return Some, or None if empty/invalid.
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-fn non_empty_date(s: Option<&str>) -> Option<String> {
-    let s = s?.trim();
-    if s.is_empty() {
-        return None;
-    }
-    // Validate YYYY-MM-DD format
-    if chrono::NaiveDate::parse_from_str(s, "%Y-%m-%d").is_ok() {
-        Some(s.to_string())
-    } else {
-        log::warn!("AI returned invalid date format: {s}");
-        None
-    }
-}
-
 /// Check if two strings are essentially the same (ignoring case, trailing punctuation, whitespace).
 /// Used to avoid duplicating content when the AI parrots back the input.
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
@@ -257,30 +247,6 @@ fn is_essentially_same(a: &str, b: &str) -> bool {
             .to_lowercase()
     };
     normalize(a) == normalize(b)
-}
-
-/// Case-insensitive exact match of a project name to its ID.
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-fn match_project_name_to_id(name: &str, projects: &[ProjectContext]) -> Option<String> {
-    if name.is_empty() {
-        return None;
-    }
-    projects
-        .iter()
-        .find(|p| p.name.eq_ignore_ascii_case(name))
-        .map(|p| p.id.clone())
-}
-
-/// Case-insensitive exact match of a name to an ID from a list of name/ID pairs.
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
-fn match_name_to_id(name: &str, pairs: &[NameIdPair]) -> Option<String> {
-    if name.is_empty() {
-        return None;
-    }
-    pairs
-        .iter()
-        .find(|p| p.name.eq_ignore_ascii_case(name))
-        .map(|p| p.id.clone())
 }
 
 // =============================================================================
@@ -485,7 +451,8 @@ mod eval {
         let response = crate::apple_intelligence::process_text(&system_prompt, input, 0)
             .expect("Apple Intelligence call failed");
 
-        let mut result = parse_ai_response(&response, input, &projects, &areas)
+        let eval_today = chrono::NaiveDate::parse_from_str(EVAL_DATE, "%Y-%m-%d").unwrap();
+        let mut result = parse_ai_response(&response, input, &projects, &areas, eval_today)
             .expect("Response parsing failed");
 
         // Apply keyword detection (same as production code path)

@@ -5,6 +5,7 @@
 
 pub mod ai;
 pub mod ai_prompts;
+pub mod ai_resolve;
 pub mod config;
 pub mod notifications;
 pub mod preferences;
