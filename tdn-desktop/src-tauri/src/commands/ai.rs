@@ -108,13 +108,14 @@ pub(crate) fn process_quick_entry_text_sync(
             &day_of_week,
         );
 
-        log::info!("── AI Quick Entry ──────────────────────────────────");
-        log::info!("Input: {trimmed:?}");
+        log::info!("AI Quick Entry: processing input");
+        log::debug!("── AI Quick Entry ──────────────────────────────────");
+        log::debug!("Input: {trimmed:?}");
         log::debug!("System prompt:\n{system_prompt}");
 
         let response = crate::apple_intelligence::process_text(&system_prompt, trimmed, 0)?;
 
-        log::info!("Raw response: {response}");
+        log::debug!("Raw response: {response}");
 
         let mut result =
             parse_ai_response(&response, trimmed, projects, areas, today.date_naive())?;
@@ -122,23 +123,16 @@ pub(crate) fn process_quick_entry_text_sync(
         // Determine status via keyword detection (not LLM)
         result.status = detect_status_from_keywords(trimmed).to_string();
 
-        log::info!("Mapped result:");
-        log::info!("  title:     {:?}", result.title);
-        log::info!(
-            "  body:      {:?}",
-            if result.body.is_empty() {
-                "(empty)"
-            } else {
-                &result.body
-            }
-        );
-        log::info!("  status:    {:?}", result.status);
-        log::info!("  due:       {:?}", result.due);
-        log::info!("  scheduled: {:?}", result.scheduled);
-        log::info!("  defer:     {:?}", result.defer_until);
-        log::info!("  project:   {:?}", result.project_id);
-        log::info!("  area:      {:?}", result.area_id);
-        log::info!("────────────────────────────────────────────────────");
+        log::debug!("Mapped result:");
+        log::debug!("  title:     {:?}", result.title);
+        log::debug!("  status:    {:?}", result.status);
+        log::debug!("  due:       {:?}", result.due);
+        log::debug!("  scheduled: {:?}", result.scheduled);
+        log::debug!("  defer:     {:?}", result.defer_until);
+        log::debug!("  project:   {:?}", result.project_id);
+        log::debug!("  area:      {:?}", result.area_id);
+        log::debug!("────────────────────────────────────────────────────");
+        log::info!("AI Quick Entry: complete");
 
         Ok(result)
     }
@@ -200,7 +194,8 @@ fn parse_ai_response(
             if body_from_ai.is_empty() || is_essentially_same(&body_from_ai, original_text.trim()) {
                 original_text.trim().to_string()
             } else {
-                format!("{}\n\n{}", original_text.trim(), body_from_ai)
+                let original_trimmed = original_text.trim();
+                format!("{original_trimmed}\n\n{body_from_ai}")
             }
         };
 

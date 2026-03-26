@@ -110,7 +110,6 @@ public func processTextWithSystemPrompt(
         return responsePtr
     }
 
-    // Use contentTagging adapter — optimized for extraction and classification tasks
     let model = SystemLanguageModel.default
     guard model.availability == .available else {
         responsePtr.pointee.error_message = duplicateCString(
@@ -153,9 +152,13 @@ public func processTextWithSystemPrompt(
         }
     }
 
-    semaphore.wait()
+    let timeout = semaphore.wait(timeout: .now() + 30.0)
 
-    if let response = box.response {
+    if timeout == .timedOut {
+        responsePtr.pointee.error_message = duplicateCString(
+            "Apple Intelligence timed out after 30 seconds."
+        )
+    } else if let response = box.response {
         responsePtr.pointee.response = duplicateCString(response)
         responsePtr.pointee.success = 1
     } else {

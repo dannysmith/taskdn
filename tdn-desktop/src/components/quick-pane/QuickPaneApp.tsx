@@ -256,7 +256,7 @@ export default function QuickPaneApp() {
   // AI Processing Handler
   // ─────────────────────────────────────────────────────────────────────────
 
-  const handleProcessWithAI = React.useCallback(async () => {
+  const handleProcessWithAI = async () => {
     const trimmedTitle = title.trim()
     if (!trimmedTitle || isProcessingAI) return
 
@@ -335,7 +335,7 @@ export default function QuickPaneApp() {
     }
 
     setIsProcessingAI(false)
-  }, [title, projects, areas, isProcessingAI])
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Theme Sync
