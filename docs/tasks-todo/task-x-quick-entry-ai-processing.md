@@ -97,44 +97,75 @@ These findings are from hands-on testing and WWDC25 research. They should inform
 
 ## Next Steps
 
-### Phase 5: Evaluation Harness
+### Phase 5: Evaluation Harness ✅
 
-Build a development tool for rapid prompt iteration. This is NOT part of the normal test suite — it requires a live Apple Intelligence model on the device.
+Done. 31 test cases in `commands/ai.rs` covering simple inputs, project/area matching, date extraction, status detection, complex dictation, and hallucination traps. Run with:
 
-**Approach:** Rust `#[ignore]` integration test that:
-- Uses the real Swift FFI bridge (same code path as production)
-- Has a fixed set of ~15 test cases with input text + expected field values
-- Uses fixed context (hardcoded projects, areas, date) for reproducibility
-- Calls `build_system_prompt` and `process_text` directly (no Tauri/frontend)
-- Outputs a per-field pass/fail summary table
-- Runnable via `cargo test eval_ai -- --ignored` (or a `bun run` alias)
-
-**Test case structure:**
-```rust
-EvalCase {
-    input: "Email James about the Japan Trip, schedule for next Monday",
-    expected_title_contains: "Email James",  // substring match, not exact
-    expected_status: "inbox",
-    expected_project: Some("Japan Trip 2025"),
-    expected_area: None,
-    expected_scheduled: Some("2026-03-30"),  // next Monday
-    expected_due: None,
-    expected_defer: None,
-}
+```
+cd tdn-desktop/src-tauri && cargo test eval_ai --lib -- --ignored --nocapture
 ```
 
-Field matching should be flexible: substring for titles, exact for status/dates, optional for project/area (Some = must match, None = must be empty). This lets us measure regression when changing prompts.
+Current baseline: **11/31 passing**. Most failures are date arithmetic and project matching — addressed in Phases 7 and 8.
 
-### Phase 6: Fix Few-Shot Contamination
+### Phase 6: Deterministic Status and Auto-Ready Rules
 
-Remove or redesign the third few-shot example (Q1 tax return) to avoid body contamination. Options:
-- Make the example input much more distinct from likely real inputs
+Remove status from Apple Intelligence entirely. Status is better handled by deterministic rules.
+
+**Background:** The LLM is inconsistent with status (sometimes "ready" for "tomorrow", sometimes not). The cases where it adds value (icebox, blocked) are rare and can be detected via keyword matching. Meanwhile, the most common and impactful status decision — inbox vs ready — follows clear rules based on what other fields are populated.
+
+**The status model:**
+
+1. **Default:** All tasks start as `inbox`.
+2. **Keyword detection (Rust, post-AI):** Scan the original input text for explicit status language. Only match unambiguous phrases:
+   - `icebox` / `ice box` → `icebox`
+   - `blocked` / `waiting on` / `can't proceed` / `stuck on` → `blocked`
+   - `in progress` / `already started` / `working on` → `in-progress`
+   - Narrow keywords only. "Maybe" alone is NOT icebox. "Might" is NOT icebox. Only "icebox"/"ice box" and similar explicit phrases.
+3. **Auto-ready Rule 1 (all quick entry, not just AI):** If status is `inbox` AND `(projectId OR areaId) is set` AND `(scheduled OR deferUntil) is set` → change to `ready`. Reasoning: a task with both a project/area and a when-to-do-it date has been "processed" — it doesn't need the inbox.
+4. **Auto-ready Rule 2 (AI-processed entries only):** If status is `inbox` (keyword detection didn't set something else) AND `scheduled` date is within 7 days of today → change to `ready`. Catches "call Dave this afternoon" and "pick up laundry tomorrow" style tasks that are clearly actionable now.
+
+**Implementation plan:**
+
+**Step 1: Remove status from the LLM**
+- Remove `ParsedStatus` enum and `status` field from `ParsedTask` in `apple_intelligence.swift`
+- Remove `parsedTaskToJSON` status handling
+- Remove status from the prompt in `ai_prompts.rs` (both field instructions and few-shot examples)
+- Remove status from the `ParsedQuickEntry` response (or always return "inbox")
+- This simplifies the `@Generable` struct from 8 fields to 7, giving the model more capacity for the remaining fields
+
+**Step 2: Keyword-based status detection in Rust**
+- New function in `ai.rs`: `detect_status_from_keywords(input: &str) -> TaskStatus`
+- Scans the original input text (not the AI response) for explicit status phrases
+- Returns `inbox` if no keywords found
+- Called during `process_quick_entry_text`, result included in `ParsedQuickEntry`
+- **Write unit tests** for this function — it's deterministic and easily testable without the LLM
+
+**Step 3: Auto-ready Rule 1 in QuickPaneApp.tsx**
+- Runs in `handleSubmit` for ALL quick entry saves (not just AI)
+- Before creating the task: if status is `inbox` and the auto-ready conditions are met, change to `ready`
+- This improves UX for manual quick entry too
+
+**Step 4: Auto-ready Rule 2 in QuickPaneApp.tsx**
+- Runs only after AI processing populates fields (in `handleProcessWithAI`)
+- After all fields are populated: if status is still `inbox` and scheduled is within 7 days → change to `ready`
+- Only triggers when keyword detection didn't already set a different status
+
+**Step 5: Update eval harness**
+- Remove status expectations from cases where it was being tested as an LLM output
+- Add new unit tests for keyword detection (deterministic, runs in normal test suite)
+- Add tests for auto-ready rules
+- Re-run eval harness to measure improvement from removing status from the LLM
+
+### Phase 7: Fix Few-Shot Contamination
+
+Remove or redesign the third few-shot example (Q1 tax return) to avoid body contamination (model copies "Gather all receipts first" from the example into real responses). Options:
+- Make example inputs much more distinct from likely real inputs
 - Use a fictional project/area name that doesn't appear in real data
 - Remove body content from all examples (always show `"body":""`)
 
-This is a quick prompt-only change in `ai_prompts.rs`, testable via the eval harness.
+Quick prompt-only change in `ai_prompts.rs`, testable via the eval harness.
 
-### Phase 7: Deterministic Date and Project/Area Resolution
+### Phase 8: Deterministic Date and Project/Area Resolution
 
 Split the work into what the LLM is good at (language understanding, intent classification) and what deterministic code is good at (date arithmetic, fuzzy string matching).
 
@@ -168,7 +199,7 @@ Add fuzzy matching in Rust alongside the existing exact match. "Japan Trip" shou
 
 Start with case-insensitive substring (covers the "Japan Trip" case) and evaluate via the harness.
 
-### Phase 8: Polish and Edge Cases
+### Phase 9: Polish and Edge Cases
 
 - Re-processing support (user processes, edits title, processes again)
 - Cancellation during processing (Escape while LLM is running)
