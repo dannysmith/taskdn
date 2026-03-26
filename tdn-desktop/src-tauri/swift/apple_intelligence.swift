@@ -12,6 +12,12 @@ private struct ParsedTask: Sendable {
     @Guide(description: "Extra detail, or empty string")
     let body: String
 
+    @Guide(description: "Project name or empty string")
+    let project: String
+
+    @Guide(description: "Area name or empty string")
+    let area: String
+
     @Guide(description: "When to do this task, e.g. 'today' or 'next Monday', or empty string")
     let scheduledRef: String
 
@@ -20,12 +26,6 @@ private struct ParsedTask: Sendable {
 
     @Guide(description: "When task becomes available, e.g. 'after Monday', or empty string")
     let deferUntilRef: String
-
-    @Guide(description: "Project name or empty string")
-    let project: String
-
-    @Guide(description: "Area name or empty string")
-    let area: String
 }
 
 // MARK: - Helpers
@@ -55,11 +55,11 @@ private func parsedTaskToJSON(_ task: ParsedTask) -> String {
     let fields: [(String, String)] = [
         ("title", task.title),
         ("body", task.body),
+        ("project", task.project),
+        ("area", task.area),
         ("scheduledRef", task.scheduledRef),
         ("dueRef", task.dueRef),
         ("deferUntilRef", task.deferUntilRef),
-        ("project", task.project),
-        ("area", task.area),
     ]
 
     let pairs = fields.map { (key, value) in

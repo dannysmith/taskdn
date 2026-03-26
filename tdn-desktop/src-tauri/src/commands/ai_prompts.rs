@@ -55,37 +55,40 @@ Set ONLY if the input explicitly names a project. Empty string otherwise.
 
 area: An area name from the areas list above. \
 Set ONLY if the input explicitly names an area AND no project was matched. \
-When a project is set, leave area as empty string — the app handles the relationship.
+When a project is set, leave area as empty string.
 
-scheduledRef: A date or time reference for WHEN to do this task. \
-Extract the reference exactly as stated: 'today', 'tomorrow', 'this afternoon', \
-'Monday', 'this Friday', 'next week'. \
-Empty string if the input does not say when to do the task.
+scheduledRef: WHEN to do this task. Extract the date reference as stated: \
+'today', 'tomorrow', 'this afternoon', 'Monday', 'this Friday', 'next week'. \
+Empty string if no timing is mentioned.
 
-dueRef: A date or time reference for a DEADLINE. \
-Look for: 'by Friday', 'due April 15th', 'deadline is June 1st', 'end of March'. \
+dueRef: A DEADLINE. Extract the date reference as stated: \
+'by Friday', 'April 15th', 'end of March', 'end of next week'. \
 Empty string if no deadline is mentioned.
 
-deferUntilRef: A date reference for when this task BECOMES AVAILABLE. \
-Look for: 'not until Monday', 'defer until April', 'start after next week'. \
+deferUntilRef: When this task BECOMES AVAILABLE. \
+'not until Monday', 'defer until April', 'start after next week'. \
 This is rare. Empty string unless explicitly mentioned.";
 
-/// Build few-shot examples.
+/// Build few-shot examples. Apple guidance: <5 examples, written directly into the prompt.
+/// Field order matches @Generable: title, body, project, area, scheduledRef, dueRef, deferUntilRef
 fn build_examples_block() -> String {
     "\
 Examples:
 
 Input: \"Buy groceries for the week\"
-Output: {\"title\":\"Buy groceries\",\"body\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
+Output: {\"title\":\"Buy groceries\",\"body\":\"\",\"project\":\"\",\"area\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"\",\"deferUntilRef\":\"\"}
 
 Input: \"Call the dentist tomorrow about that crown\"
-Output: {\"title\":\"Call dentist about crown\",\"body\":\"\",\"scheduledRef\":\"tomorrow\",\"dueRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
+Output: {\"title\":\"Call dentist about crown\",\"body\":\"\",\"project\":\"\",\"area\":\"\",\"scheduledRef\":\"tomorrow\",\"dueRef\":\"\",\"deferUntilRef\":\"\"}
 
-Input: \"Finish the Newsletter Setup landing page by end of March\"
-Output: {\"title\":\"Finish Newsletter Setup landing page\",\"body\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"end of March\",\"deferUntilRef\":\"\",\"project\":\"Newsletter Setup\",\"area\":\"\"}
+Input: \"Review the Garden Renovation plans with the contractor\"
+Output: {\"title\":\"Review Garden Renovation plans with contractor\",\"body\":\"\",\"project\":\"Garden Renovation\",\"area\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"\",\"deferUntilRef\":\"\"}
+
+Input: \"Submit the report by next Friday\"
+Output: {\"title\":\"Submit report\",\"body\":\"\",\"project\":\"\",\"area\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"next Friday\",\"deferUntilRef\":\"\"}
 
 Input: \"Buy milk this afternoon\"
-Output: {\"title\":\"Buy milk\",\"body\":\"\",\"scheduledRef\":\"today\",\"dueRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}"
+Output: {\"title\":\"Buy milk\",\"body\":\"\",\"project\":\"\",\"area\":\"\",\"scheduledRef\":\"today\",\"dueRef\":\"\",\"deferUntilRef\":\"\"}"
         .to_string()
 }
 
