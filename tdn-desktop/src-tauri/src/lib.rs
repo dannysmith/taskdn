@@ -237,15 +237,16 @@ fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
             log::info!("Main window close requested");
             save_window_state(app_handle);
 
-            // On macOS, hide the app instead of closing — standard macOS behavior.
-            // The app stays running for dock icon reopen and global shortcuts.
-            // Cmd+Q and the Quit menu item bypass CloseRequested entirely,
-            // so they still quit the app normally.
+            // On macOS, hide the main window instead of closing — standard macOS behavior.
+            // We hide the window (not the app) so the quick pane can be shown independently
+            // without triggering a system-level app unhide. Cmd+H still hides the whole app
+            // via NSApplication.hide() as normal. Cmd+Q and the Quit menu item bypass
+            // CloseRequested entirely, so they still quit the app normally.
             #[cfg(target_os = "macos")]
             {
                 api.prevent_close();
-                if let Err(e) = app_handle.hide() {
-                    log::warn!("Failed to hide app: {e}");
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.hide();
                 }
             }
 
