@@ -16,6 +16,8 @@ interface UseQuickPaneKeyboardOptions {
   onOpenPopover: (popover: PopoverType) => void
   /** Called when Escape pressed with a popover open */
   onClosePopover: () => void
+  /** Called when Cmd+Shift+A pressed (only if AI is available) */
+  onProcessWithAI?: () => void
   /** Called before opening a popover to capture current focus */
   captureCurrentFocus: () => void
   /** Current open popover (null if none) */
@@ -29,6 +31,7 @@ interface UseQuickPaneKeyboardOptions {
     openDue: ParsedShortcut
     openDefer: ParsedShortcut
     openStatus: ParsedShortcut
+    processWithAI: ParsedShortcut
   }
 }
 
@@ -43,6 +46,7 @@ export function useQuickPaneKeyboard({
   onSetScheduledToday,
   onOpenPopover,
   onClosePopover,
+  onProcessWithAI,
   captureCurrentFocus,
   openPopover,
   showBody,
@@ -102,6 +106,13 @@ export function useQuickPaneKeyboard({
         return
       }
 
+      // Cmd+Shift+A - process with AI (only when available)
+      if (onProcessWithAI && matchesKeyboardEvent(shortcuts.processWithAI, e)) {
+        e.preventDefault()
+        onProcessWithAI()
+        return
+      }
+
       // Cmd+Shift+Enter - toggle body
       if (e.key === 'Enter' && e.metaKey && e.shiftKey) {
         e.preventDefault()
@@ -127,6 +138,7 @@ export function useQuickPaneKeyboard({
     onSetScheduledToday,
     onOpenPopover,
     onClosePopover,
+    onProcessWithAI,
     captureCurrentFocus,
     openPopover,
     showBody,

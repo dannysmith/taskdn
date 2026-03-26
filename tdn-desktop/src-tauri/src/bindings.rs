@@ -1,7 +1,7 @@
 use tauri_specta::{collect_commands, Builder};
 
 pub fn generate_bindings() -> Builder<tauri::Wry> {
-    use crate::commands::{config, notifications, preferences, quick_pane, recovery, vault};
+    use crate::commands::{ai, config, notifications, preferences, quick_pane, recovery, vault};
 
     Builder::<tauri::Wry>::new().commands(collect_commands![
         preferences::greet,
@@ -37,6 +37,9 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         vault::update_project,
         vault::delete_task,
         vault::get_entity_raw_content,
+        // AI commands
+        ai::check_apple_intelligence_available,
+        ai::process_quick_entry_text,
     ])
 }
 
