@@ -12,13 +12,13 @@ private struct ParsedTask: Sendable {
     @Guide(description: "Extra detail, or empty string")
     let body: String
 
-    @Guide(description: "Date reference for deadline, or empty string")
-    let dueRef: String
-
-    @Guide(description: "Date reference for when to do this, or empty string")
+    @Guide(description: "When to do this task, e.g. 'today' or 'next Monday', or empty string")
     let scheduledRef: String
 
-    @Guide(description: "Date reference for deferral, or empty string")
+    @Guide(description: "Deadline date reference, e.g. 'by Friday' or 'April 15th', or empty string")
+    let dueRef: String
+
+    @Guide(description: "When task becomes available, e.g. 'after Monday', or empty string")
     let deferUntilRef: String
 
     @Guide(description: "Project name or empty string")
@@ -55,8 +55,8 @@ private func parsedTaskToJSON(_ task: ParsedTask) -> String {
     let fields: [(String, String)] = [
         ("title", task.title),
         ("body", task.body),
-        ("dueRef", task.dueRef),
         ("scheduledRef", task.scheduledRef),
+        ("dueRef", task.dueRef),
         ("deferUntilRef", task.deferUntilRef),
         ("project", task.project),
         ("area", task.area),

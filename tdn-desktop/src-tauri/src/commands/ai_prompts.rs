@@ -19,7 +19,7 @@ pub fn build_system_prompt(
     day_of_week: &str,
 ) -> String {
     let context_block = build_context_block(projects_with_areas, areas);
-    let examples_block = build_examples_block(today);
+    let examples_block = build_examples_block();
 
     format!(
         "{ROLE}\n\
@@ -28,7 +28,7 @@ pub fn build_system_prompt(
          \n\
          {context_block}\n\
          \n\
-         {FIELD_INSTRUCTIONS}\n\
+         {FIELD_DEFINITIONS}\n\
          \n\
          {examples_block}"
     )
@@ -39,95 +39,75 @@ pub fn build_system_prompt(
 // ─────────────────────────────────────────────────────────────────────────────
 
 const ROLE: &str = "\
-You are a task field extractor. Given free-form text, populate structured task fields. \
+Extract structured task fields from free-form text. \
 Return empty string for any field where the input provides no clear value. \
 Empty string is always the safe choice.";
 
-const FIELD_INSTRUCTIONS: &str = "\
-Field instructions:
+const FIELD_DEFINITIONS: &str = "\
+Fields:
 
-title: Rewrite the input as a concise, actionable task title.
+title: A concise, actionable task title. Rewrite the input to be short and scannable.
 
-body: Include only if the input has meaningful detail beyond what the title captures. \
-Otherwise empty string.
+body: Extra detail from the input beyond the title. Empty string if the input is simple.
 
-project: Set only if the input explicitly names a project from the list above. \
-Empty string if no project is mentioned by name.
+project: A project name from the projects list above. \
+Set ONLY if the input explicitly names a project. Empty string otherwise.
 
-area: Set only if the input explicitly names an area from the list above. \
-Empty string if no area is mentioned by name.
+area: An area name from the areas list above. \
+Set ONLY if the input explicitly names an area AND no project was matched. \
+When a project is set, leave area as empty string — the app handles the relationship.
 
-dueRef: If the input contains deadline language ('due by', 'deadline', 'must be done by', \
-'no later than', 'by [date]'), extract the date reference exactly as stated. \
-Examples: 'Friday', 'April 15th', 'end of March', 'end of next week'. \
+scheduledRef: A date or time reference for WHEN to do this task. \
+Extract the reference exactly as stated: 'today', 'tomorrow', 'this afternoon', \
+'Monday', 'this Friday', 'next week'. \
+Empty string if the input does not say when to do the task.
+
+dueRef: A date or time reference for a DEADLINE. \
+Look for: 'by Friday', 'due April 15th', 'deadline is June 1st', 'end of March'. \
 Empty string if no deadline is mentioned.
 
-scheduledRef: If the input says when to do the task, extract the date reference exactly \
-as stated. Examples: 'today', 'tomorrow', 'Monday', 'this Friday', 'next week'. \
-Empty string if no timing is mentioned. Vague references ('for the week', 'soon') \
-are NOT scheduled dates — use empty string.
+deferUntilRef: A date reference for when this task BECOMES AVAILABLE. \
+Look for: 'not until Monday', 'defer until April', 'start after next week'. \
+This is rare. Empty string unless explicitly mentioned.";
 
-deferUntilRef: If the input explicitly mentions deferring, extract the date reference. \
-Examples: 'after Monday', 'not until April'. This is rare. Empty string otherwise.";
-
-/// Build few-shot examples. These are the highest-impact technique for small models.
-/// Examples use raw date expressions (not YYYY-MM-DD) — Rust resolves them later.
-fn build_examples_block(_today: &str) -> String {
+/// Build few-shot examples.
+fn build_examples_block() -> String {
     "\
 Examples:
 
 Input: \"Buy groceries for the week\"
-Output: {\"title\":\"Buy groceries\",\"body\":\"\",\"dueRef\":\"\",\"scheduledRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
+Output: {\"title\":\"Buy groceries\",\"body\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
 
 Input: \"Call the dentist tomorrow about that crown\"
-Output: {\"title\":\"Call dentist about crown\",\"body\":\"\",\"dueRef\":\"\",\"scheduledRef\":\"tomorrow\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
+Output: {\"title\":\"Call dentist about crown\",\"body\":\"\",\"scheduledRef\":\"tomorrow\",\"dueRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}
 
 Input: \"Finish the Newsletter Setup landing page by end of March\"
-Output: {\"title\":\"Finish Newsletter Setup landing page\",\"body\":\"\",\"dueRef\":\"end of March\",\"scheduledRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"Newsletter Setup\",\"area\":\"\"}"
+Output: {\"title\":\"Finish Newsletter Setup landing page\",\"body\":\"\",\"scheduledRef\":\"\",\"dueRef\":\"end of March\",\"deferUntilRef\":\"\",\"project\":\"Newsletter Setup\",\"area\":\"\"}
+
+Input: \"Buy milk this afternoon\"
+Output: {\"title\":\"Buy milk\",\"body\":\"\",\"scheduledRef\":\"today\",\"dueRef\":\"\",\"deferUntilRef\":\"\",\"project\":\"\",\"area\":\"\"}"
         .to_string()
 }
 
-/// Build the structured context block showing areas and their projects.
+/// Build the context block with separate area and project lists.
 fn build_context_block(
     projects_with_areas: &[ProjectWithArea],
     areas: &[NameIdPair],
 ) -> String {
-    // Group projects by area
-    let mut area_projects: std::collections::HashMap<String, Vec<String>> =
-        std::collections::HashMap::new();
-    let mut unassigned_projects: Vec<String> = Vec::new();
+    let area_names: Vec<&str> = areas.iter().map(|a| a.name.as_str()).collect();
+    let project_names: Vec<&str> = projects_with_areas.iter().map(|p| p.name.as_str()).collect();
 
-    for project in projects_with_areas {
-        if let Some(area_name) = &project.area_name {
-            area_projects
-                .entry(area_name.clone())
-                .or_default()
-                .push(project.name.clone());
-        } else {
-            unassigned_projects.push(project.name.clone());
-        }
-    }
+    let areas_str = if area_names.is_empty() {
+        "(none)".to_string()
+    } else {
+        area_names.join(", ")
+    };
 
-    let mut lines = vec!["Areas and projects:".to_string()];
+    let projects_str = if project_names.is_empty() {
+        "(none)".to_string()
+    } else {
+        project_names.join(", ")
+    };
 
-    for area in areas {
-        let projects = area_projects.get(&area.name);
-        match projects {
-            Some(p) if !p.is_empty() => {
-                lines.push(format!("- {}: {}", area.name, p.join(", ")));
-            }
-            _ => {
-                lines.push(format!("- {}", area.name));
-            }
-        }
-    }
-
-    if !unassigned_projects.is_empty() {
-        lines.push(format!(
-            "- (no area): {}",
-            unassigned_projects.join(", ")
-        ));
-    }
-
-    lines.join("\n")
+    format!("Areas: {areas_str}\nProjects: {projects_str}")
 }
