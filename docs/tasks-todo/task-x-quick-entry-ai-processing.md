@@ -107,54 +107,54 @@ cd tdn-desktop/src-tauri && cargo test eval_ai --lib -- --ignored --nocapture
 
 Current baseline: **11/31 passing**. Most failures are date arithmetic and project matching — addressed in Phases 7 and 8.
 
-### Phase 6: Deterministic Status and Auto-Ready Rules
+### Phase 6: Auto-Ready on Quick Entry (non-AI, cherry-pickable)
 
-Remove status from Apple Intelligence entirely. Status is better handled by deterministic rules.
+**This is a standalone UX improvement, not AI-specific.** Should be implemented as its own commit so it can be cherry-picked onto main independently of the AI feature branch.
 
-**Background:** The LLM is inconsistent with status (sometimes "ready" for "tomorrow", sometimes not). The cases where it adds value (icebox, blocked) are rare and can be detected via keyword matching. Meanwhile, the most common and impactful status decision — inbox vs ready — follows clear rules based on what other fields are populated.
+**Rule:** If a task's status is `inbox` and the user has set `(projectId OR areaId) AND (scheduled OR deferUntil)`, auto-promote to `ready`. A task with both a project/area and a when-to-do-it date has been "processed" — it doesn't need the inbox.
 
-**The status model:**
+**Implementation:** A `useEffect` in `QuickPaneApp.tsx` that:
+- Watches `[projectId, areaId, scheduled, deferUntil]` (NOT `status` — avoids feedback loops)
+- When conditions are met, calls `setStatus(prev => prev === 'inbox' ? 'ready' : prev)`
+- Only promotes `inbox` → `ready`, never touches any other status
+- If the user manually changes status back to `inbox` and then modifies another triggering field, the effect re-fires — this is correct behaviour (conditions are met again)
 
-1. **Default:** All tasks start as `inbox`.
-2. **Keyword detection (Rust, post-AI):** Scan the original input text for explicit status language. Only match unambiguous phrases:
-   - `icebox` / `ice box` → `icebox`
-   - `blocked` / `waiting on` / `can't proceed` / `stuck on` → `blocked`
-   - `in progress` / `already started` / `working on` → `in-progress`
-   - Narrow keywords only. "Maybe" alone is NOT icebox. "Might" is NOT icebox. Only "icebox"/"ice box" and similar explicit phrases.
-3. **Auto-ready Rule 1 (all quick entry, not just AI):** If status is `inbox` AND `(projectId OR areaId) is set` AND `(scheduled OR deferUntil) is set` → change to `ready`. Reasoning: a task with both a project/area and a when-to-do-it date has been "processed" — it doesn't need the inbox.
-4. **Auto-ready Rule 2 (AI-processed entries only):** If status is `inbox` (keyword detection didn't set something else) AND `scheduled` date is within 7 days of today → change to `ready`. Catches "call Dave this afternoon" and "pick up laundry tomorrow" style tasks that are clearly actionable now.
+This is a few lines of React, zero performance concern (watches 4 state variables that change on dropdown/picker selection, not keystrokes), and gives immediate visual feedback via the status pill.
 
-**Implementation plan:**
+### Phase 7: Deterministic Status for AI Processing
+
+Remove status from Apple Intelligence. Status is better handled by deterministic rules.
+
+**Background:** The LLM is inconsistent with status (sometimes "ready" for "tomorrow", sometimes not). The cases where it adds value (icebox, blocked) are rare and can be detected via keyword matching.
 
 **Step 1: Remove status from the LLM**
 - Remove `ParsedStatus` enum and `status` field from `ParsedTask` in `apple_intelligence.swift`
 - Remove `parsedTaskToJSON` status handling
 - Remove status from the prompt in `ai_prompts.rs` (both field instructions and few-shot examples)
-- Remove status from the `ParsedQuickEntry` response (or always return "inbox")
-- This simplifies the `@Generable` struct from 8 fields to 7, giving the model more capacity for the remaining fields
+- Always return `inbox` as status from `ParsedQuickEntry`
+- This simplifies the `@Generable` struct from 8 fields to 7, giving the model more capacity
 
 **Step 2: Keyword-based status detection in Rust**
-- New function in `ai.rs`: `detect_status_from_keywords(input: &str) -> TaskStatus`
-- Scans the original input text (not the AI response) for explicit status phrases
+- New function in `ai.rs`: `detect_status_from_keywords(input: &str) -> &str`
+- Scans the original input text (not the AI response) for explicit, unambiguous status phrases:
+  - `icebox` / `ice box` → `icebox`
+  - `blocked` / `waiting on` / `can't proceed` / `stuck on` → `blocked`
+  - `in progress` / `already started` / `working on` → `in-progress`
+- Narrow keywords only. "Maybe" alone is NOT icebox. "Might" is NOT icebox.
 - Returns `inbox` if no keywords found
-- Called during `process_quick_entry_text`, result included in `ParsedQuickEntry`
-- **Write unit tests** for this function — it's deterministic and easily testable without the LLM
+- **Write unit tests** — deterministic, part of the normal test suite
 
-**Step 3: Auto-ready Rule 1 in QuickPaneApp.tsx**
-- Runs in `handleSubmit` for ALL quick entry saves (not just AI)
-- Before creating the task: if status is `inbox` and the auto-ready conditions are met, change to `ready`
-- This improves UX for manual quick entry too
+**Step 3: Auto-ready Rule 2 (AI only, near-term scheduled)**
+- In `handleProcessWithAI` in `QuickPaneApp.tsx`, after all AI fields are populated
+- If status is still `inbox` (keyword detection didn't override) AND `scheduled` is within 7 days of today → set to `ready`
+- Catches "call Dave this afternoon" and "pick up laundry tomorrow"
+- Note: Phase 6's Rule 1 (useEffect) will also fire if project/area + dates are set, so both rules complement each other
 
-**Step 4: Auto-ready Rule 2 in QuickPaneApp.tsx**
-- Runs only after AI processing populates fields (in `handleProcessWithAI`)
-- After all fields are populated: if status is still `inbox` and scheduled is within 7 days → change to `ready`
-- Only triggers when keyword detection didn't already set a different status
-
-**Step 5: Update eval harness**
-- Remove status expectations from cases where it was being tested as an LLM output
-- Add new unit tests for keyword detection (deterministic, runs in normal test suite)
-- Add tests for auto-ready rules
-- Re-run eval harness to measure improvement from removing status from the LLM
+**Step 4: Update eval harness and tests**
+- Remove status expectations from eval cases where status was tested as LLM output
+- Eval harness should test the *final* status after keyword detection + auto-ready rules, not the raw LLM output
+- Add unit tests for `detect_status_from_keywords`
+- Re-run eval harness to measure improvement
 
 ### Phase 7: Fix Few-Shot Contamination
 
