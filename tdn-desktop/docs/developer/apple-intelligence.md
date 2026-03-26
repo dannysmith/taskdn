@@ -42,13 +42,15 @@ The system prompt and user text are converted to C strings and passed through th
 
 The Swift function creates a `LanguageModelSession` with the system prompt as `instructions` (which the model is trained to prioritise over user input). It then calls `session.respond(to: userText, generating: ParsedTask.self)`.
 
-`ParsedTask` is a `@Generable` struct — this is Apple's constrained decoding system. The model's token generation is structurally constrained to produce valid output matching the struct's fields. The `ParsedStatus` enum means the model literally cannot output an invalid status value.
+`ParsedTask` is a `@Generable` struct — this is Apple's constrained decoding system. The model's token generation is structurally constrained to produce valid output matching the struct's fields. The struct has 7 fields: title, body, dueRef, scheduledRef, deferUntilRef, project, area. Note: status is NOT included — it's handled deterministically (see step 6).
+
+The date fields are `*Ref` fields — the model extracts raw date expressions ("tomorrow", "next Monday", "end of March") rather than computing YYYY-MM-DD dates. Date arithmetic is done in Rust.
 
 If `@Generable` succeeds (the normal path), the typed `ParsedTask` struct is manually serialized to a JSON string. If it fails (rare), the function falls back to a plain `session.respond()` call — the model typically returns a JSON code block in this case.
 
 Because the Swift call is `async` but the C FFI is synchronous, a `DispatchSemaphore` bridges the two. A detached task runs the inference, signals the semaphore on completion, and the calling thread blocks until it's done. This takes ~2-3 seconds on Apple Silicon.
 
-### 6. Rust parses and validates the response
+### 6. Rust parses, resolves, and validates the response
 
 Back in Rust, `parse_ai_response()` processes the JSON string through several stages:
 
@@ -58,15 +60,23 @@ Back in Rust, `parse_ai_response()` processes the JSON string through several st
 
 **Body logic:** If the model transformed the title (it differs from the original input), the original text is preserved in the body — this ensures no context from dictation is lost. If the model also generated body text, it's only appended if it contains genuinely new information. A normalisation check (`is_essentially_same`) catches cases where the model just parrots the input back with minor punctuation changes.
 
-**Date validation:** Each date string is parsed with `chrono::NaiveDate`. Valid YYYY-MM-DD is kept. Empty strings become `None`. Anything else (malformed dates, random text) is silently discarded.
+**Date resolution (`ai_resolve.rs`):** The model returns raw date expressions (e.g. "tomorrow", "next Monday", "end of March"). Rust resolves these deterministically using the `fuzzydate` crate with custom handlers for patterns it doesn't support natively (ordinal suffixes, "end of [month]", "in N weeks", "on/by [day]" prefixes). Invalid or unparseable expressions become `None`.
 
-**Project/area matching:** The model returns a project or area name as a string. Rust does case-insensitive exact match against the provided list of names. A match returns the entity's hash ID (which the frontend uses for the dropdown selectors). No match → the field is left empty for the user to set manually. This is a deliberate safety net — the model sometimes hallucinates project/area names that don't exist, and the exact matching silently drops them.
+**Project/area matching (`ai_resolve.rs`):** The model returns a name string. Rust first tries case-insensitive exact match, then falls back to case-insensitive substring match (minimum 3 characters). This handles the common case where the model returns a truncated name ("Japan Trip" matches "Japan Trip 2025"). No match → field is left empty.
 
-**Status validation:** Must be one of `inbox`, `icebox`, `ready`, `in-progress`, `blocked`. Anything else defaults to `inbox`.
+**Status determination:** Status is NOT set by the LLM. Instead:
+1. `detect_status_from_keywords()` scans the original input text for explicit status phrases: `blocked` / `waiting on` → blocked, `icebox` / `ice box` → icebox, `in progress` / `in-progress` → in-progress. Everything else → inbox.
+2. The frontend applies auto-ready rules after (see step 7).
 
-### 7. Frontend populates the form
+### 7. Frontend populates the form and applies auto-ready rules
 
-The React handler receives the `ParsedQuickEntry` result and sets each piece of form state: title, body (with the body section auto-expanding if populated), status, dates, project ID, and area ID. The UI updates immediately — the user sees fields filled in and can adjust anything before saving.
+The React handler receives the `ParsedQuickEntry` result and sets each piece of form state: title, body (with the body section auto-expanding if populated), status, dates, project ID, and area ID. The UI updates immediately.
+
+Two auto-ready rules then apply:
+
+**Rule 1 (all quick entry, not just AI):** A `useEffect` watches projectId, areaId, scheduled, and deferUntil. If `(project OR area) AND (scheduled OR defer)` are set and status is `inbox`, it auto-promotes to `ready`. A task with both a project/area and a when-to-do-it date has been "processed" — it doesn't need the inbox.
+
+**Rule 2 (AI only):** After AI processing, if the scheduled date is within 7 days of today and status is still `inbox` (keyword detection didn't override), promote to `ready`. Catches "call Dave tomorrow" style tasks.
 
 ### 8. User reviews and saves
 
@@ -100,16 +110,17 @@ Swift: processTextWithSystemPrompt()
   │  serializes to JSON, strips invisible Unicode chars
   │
   ▼
-Rust: parse_ai_response()
+Rust: parse_ai_response() + ai_resolve
   │  strips markdown code fences (fallback path)
   │  parses JSON
-  │  validates dates (YYYY-MM-DD or discard)
-  │  matches project/area names → IDs (case-insensitive exact)
+  │  resolves date expressions → YYYY-MM-DD (fuzzydate + custom)
+  │  matches project/area names → IDs (substring fuzzy match)
   │  applies body logic (preserve original text, deduplicate)
-  │  validates status against known values
+  │  detects status from keywords (not LLM)
   │
   ▼
 React: populates form fields
+  applies auto-ready rules (Rule 1 + Rule 2)
   user reviews and saves normally
 ```
 
@@ -119,7 +130,7 @@ React: populates form fields
 
 Three files in `src-tauri/swift/`:
 
-- `apple_intelligence.swift` — The real implementation. Contains the `@Generable ParsedTask` struct with `ParsedStatus` enum, the `LanguageModelSession` call, JSON serialization, and availability check.
+- `apple_intelligence.swift` — The real implementation. Contains the `@Generable ParsedTask` struct (7 fields, no status), the `LanguageModelSession` call, JSON serialization, and availability check.
 - `apple_intelligence_stub.swift` — Compiled instead when the build SDK lacks FoundationModels. All functions return errors.
 - `apple_intelligence_bridge.h` — C header defining the `AppleLLMResponse` struct and function signatures shared between Swift and Rust.
 
@@ -141,7 +152,7 @@ The Swift code bridges async/await to synchronous C using `DispatchSemaphore` + 
 - `check_apple_intelligence_available()` → `bool`
 - `process_quick_entry_text(text, projects, areas)` → `Result<ParsedQuickEntry, String>`
 
-The command builds the system prompt, calls the FFI, parses the response, validates fields, and resolves project/area names to IDs.
+The command builds the system prompt, calls the FFI, parses the response, resolves dates and project/area names, and applies keyword-based status detection.
 
 ### Prompt Templates
 
@@ -149,48 +160,38 @@ The command builds the system prompt, calls the FFI, parses the response, valida
 
 - `build_system_prompt()` — Assembles the complete prompt from role text, context, field instructions, and few-shot examples
 - `build_context_block()` — Formats areas and their projects as a structured list
-- `build_examples_block()` — Generates few-shot input→output pairs (dynamically computes "tomorrow" from today's date)
+- `build_examples_block()` — Few-shot input→output pairs showing raw date expression extraction
+
+### Date Resolution and Fuzzy Matching
+
+`src/commands/ai_resolve.rs` handles the deterministic parts of processing:
+
+- `resolve_date_expression(expr, today)` — Resolves natural language dates ("tomorrow", "next Monday", "end of March") to YYYY-MM-DD strings using the `fuzzydate` crate with custom handlers for ordinal suffixes, "end of [month]", "in N weeks", and "on/by" prefixes
+- `match_project_fuzzy(name, projects)` — Case-insensitive exact match, then substring match (min 3 chars)
+- `match_area_fuzzy(name, areas)` — Same approach for areas
 
 ## The @Generable Struct
 
 ```swift
 @Generable
 struct ParsedTask: Sendable {
-    let title: String       // concise task title
-    let body: String        // extra detail, or empty string
-    let status: ParsedStatus  // constrained enum
-    let due: String         // YYYY-MM-DD or empty string
-    let scheduled: String   // YYYY-MM-DD or empty string
-    let deferUntil: String  // YYYY-MM-DD or empty string
-    let project: String     // project name or empty string
-    let area: String        // area name or empty string
-}
-
-@Generable
-enum ParsedStatus: Sendable {
-    case inbox, icebox, ready, inProgress, blocked
+    let title: String           // concise task title
+    let body: String            // extra detail, or empty string
+    let dueRef: String          // raw deadline expression, or empty string
+    let scheduledRef: String    // raw scheduling expression, or empty string
+    let deferUntilRef: String   // raw deferral expression, or empty string
+    let project: String         // project name or empty string
+    let area: String            // area name or empty string
 }
 ```
 
-`@Generable` uses constrained decoding — the model's token generation is structurally constrained to produce valid output matching the struct. The `ParsedStatus` enum means the model literally cannot output an invalid status.
+`@Generable` uses constrained decoding — the model's token generation is structurally constrained to produce valid output matching the struct.
 
-Each field has a `@Guide(description:)` annotation providing a short hint. The system prompt carries the detailed decision-making instructions.
+Note: **status is not in the struct** — it was removed because the model was inconsistent with it. Status is now determined by keyword detection in Rust and auto-ready rules in the frontend.
 
-Properties generate in declaration order. Later properties can be influenced by earlier ones. Title is first (most important), optional fields are last.
+Date fields are `*Ref` fields containing raw expressions ("tomorrow", "next Monday", "end of March") rather than YYYY-MM-DD dates. The model is good at text extraction but bad at date arithmetic, so date computation is done deterministically in Rust.
 
-## Response Parsing Pipeline
-
-After receiving the JSON from Swift, Rust applies several transformations:
-
-**Code fence stripping:** If `@Generable` fails and the fallback produces a markdown-wrapped JSON block (`` ```json...``` ``), the fences are stripped before parsing.
-
-**Body logic:** The raw dictated text is preserved in the body when the title was transformed (title != original input). If the AI also generated body text, it's appended only if it adds genuinely new content — checked via `is_essentially_same()` which normalises case and trailing punctuation to avoid duplication.
-
-**Date validation:** Each date string is parsed with `chrono::NaiveDate`. Valid YYYY-MM-DD is kept, anything else is silently discarded.
-
-**Project/area matching:** The model returns a name string. Rust does case-insensitive exact match against the provided list. No match → field is left empty. (Fuzzy matching is a planned improvement.)
-
-**Status validation:** Must be one of `inbox`, `icebox`, `ready`, `in-progress`, `blocked`. Anything else defaults to `inbox`.
+Each field has a `@Guide(description:)` annotation providing a short hint. The system prompt carries the detailed decision-making instructions. Properties generate in declaration order.
 
 ## Frontend Integration
 
@@ -199,6 +200,14 @@ The sparkles button in `QuickPaneTitle` is conditionally rendered: `aiAvailable 
 The `Cmd+Shift+A` shortcut is registered in `useQuickPaneKeyboard` only when `onProcessWithAI` is provided (which only happens when AI is available).
 
 On successful processing, the handler populates all form state setters. The body section auto-expands if body content was generated.
+
+### Auto-Ready Rules
+
+Two rules automatically promote `inbox` → `ready`:
+
+**Rule 1 (all quick entry):** A `useEffect` watches `[projectId, areaId, scheduled, deferUntil]`. When `(project OR area) AND (scheduled OR defer-until)` are set and status is `inbox`, it promotes to `ready`. This applies to manual entry too — it's not AI-specific.
+
+**Rule 2 (AI only):** After AI processing, if the scheduled date is within 7 days of today and status is still `inbox`, promote to `ready`. Catches "call Dave tomorrow" style tasks.
 
 ## Logging
 
@@ -221,6 +230,8 @@ The full system prompt is logged at DEBUG level. To see it, check the Tauri dev 
 
 ## Iterating on Prompts
 
+### Manual testing
+
 1. Edit `src/commands/ai_prompts.rs` — all prompt text is here
 2. Restart the dev server (`bun run tauri:dev`)
 3. Test with the quick pane
@@ -229,11 +240,35 @@ The full system prompt is logged at DEBUG level. To see it, check the Tauri dev 
 
 The few-shot examples in `build_examples_block()` are the highest-impact thing to change. Keep examples distinct from likely real inputs to avoid contamination (the model copying example content into real responses).
 
+### Evaluation harness
+
+A faster feedback loop for prompt iteration. 31 test cases covering simple inputs, project/area matching, date extraction, status detection, complex dictation, and hallucination traps.
+
+```
+cd tdn-desktop/src-tauri && cargo test eval_ai --lib -- --ignored --nocapture
+```
+
+Takes ~50 seconds (31 LLM calls). Prints a per-case pass/fail summary with raw values and failure details. Uses fixed context (hardcoded projects, areas, date=2026-03-25 Wednesday) for reproducibility.
+
+The harness does NOT assert on failure — it's a measurement tool, not a hard test. Some failures are expected while iterating on prompts.
+
+Current baseline: **16/31 passing**.
+
+### Unit tests
+
+Deterministic logic (date resolution, fuzzy matching, keyword status detection) has standard unit tests that run in the normal test suite:
+
+```
+cd tdn-desktop/src-tauri && cargo test --lib
+```
+
+Currently 263+ tests including 19 for date resolution/fuzzy matching and 8 for keyword status detection.
+
 ## Known Limitations
 
-- **Date arithmetic is unreliable.** The 3B model frequently gets relative date calculations wrong ("this Friday" off by days, "end of the month" wrong month). Planned fix: have the LLM extract raw date expressions and resolve them deterministically in Rust.
-- **Project name matching is exact only.** "Japan Trip" won't match "Japan Trip 2025". Planned fix: fuzzy matching in Rust.
-- **Few-shot contamination.** If an input is similar to a few-shot example, the model may copy fields from the example rather than generating from the actual input.
-- **Body generation for complex inputs.** The model sometimes fabricates body content not present in the input.
+- **LLM sometimes misses date expressions.** The model inconsistently extracts date references — "buy milk tomorrow" sometimes returns `scheduledRef: "tomorrow"`, sometimes returns empty. When it does extract, deterministic resolution handles it correctly.
+- **LLM sometimes misses project names.** Even when a project name is explicitly in the input, the model may return empty. Fuzzy matching helps when the model returns a close-but-not-exact name, but can't help when it returns nothing.
+- **Area hallucination.** When the model correctly identifies a project, it sometimes also fills in the parent area. This is harmless (both get set) but unexpected.
+- **Body fabrication.** The model sometimes generates body content not present in the input. The `is_essentially_same` check catches parroting but not fabrication.
 - **`@Guide(Regex{...})` is incompatible with `.default` model.** Regex constraints cause `@Generable` to fail, falling back to plain text. Use `@Guide(description:)` only.
 - **`contentTagging` adapter is wrong for this task.** It produces topic tags instead of following structured extraction instructions. Use `.default`.

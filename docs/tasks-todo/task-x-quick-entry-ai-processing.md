@@ -105,7 +105,7 @@ Done. 31 test cases in `commands/ai.rs` covering simple inputs, project/area mat
 cd tdn-desktop/src-tauri && cargo test eval_ai --lib -- --ignored --nocapture
 ```
 
-Current baseline: **11/31 passing**. Most failures are date arithmetic and project matching — addressed in Phases 7 and 8.
+Current baseline: **16/31 passing**.
 
 ### Phase 6: Auto-Ready on Quick Entry (non-AI, cherry-pickable) ✅
 
@@ -115,55 +115,59 @@ Done. `useEffect` in `QuickPaneApp.tsx` watches `[projectId, areaId, scheduled, 
 
 Done. Status removed from `@Generable` struct (8→7 fields) and prompt. Status now determined by:
 - Keyword detection in Rust: `blocked` / `waiting on` / `waitingon` → blocked; `icebox` / `ice box` / `ice-box` → icebox; `in progress` / `in-progress` / `inprogress` → in-progress; everything else → inbox
-- Auto-ready Rule 2 in frontend: if AI sets scheduled within 7 days and status is inbox → ready
+- Auto-ready Rule 1 (all quick entry): `useEffect` promotes inbox → ready when (project OR area) AND (scheduled OR defer) are set
+- Auto-ready Rule 2 (AI only): if scheduled within 7 days and status is inbox → ready
 - 8 unit tests for keyword detection in the normal test suite
 
 Also fixed few-shot contamination: replaced Q1 tax return example (which leaked "Gather all receipts first" into responses) with Newsletter Setup example.
 
-### Phase 8: Deterministic Date and Project/Area Resolution
+### Phase 8: Deterministic Date and Project/Area Resolution ✅
 
-Split the work into what the LLM is good at (language understanding, intent classification) and what deterministic code is good at (date arithmetic, fuzzy string matching).
+Done. The LLM now extracts raw date expressions ("tomorrow", "next Monday", "end of March") instead of computing YYYY-MM-DD dates. Rust resolves them deterministically via the `fuzzydate` crate with custom handlers for patterns fuzzydate doesn't support natively.
 
-**Date resolution:**
+**Date resolution (`ai_resolve.rs`):**
+- `fuzzydate::parse_relative_to()` handles: today, tomorrow, day names, "this/next [day]", "Month Day" format
+- Custom handlers for: "end of [month]", "end of the month", "in N weeks/days", ordinal suffixes ("15th" → "15"), "on/by [day]" prefix stripping
+- Falls back to None if unparseable — user sets date manually
+- 19 unit tests (deterministic, normal test suite)
 
-Change the `@Generable` struct so date fields capture the *raw reference and intent* rather than computed YYYY-MM-DD dates:
+**Project/area matching (`ai_resolve.rs`):**
+- Case-insensitive exact match first, then substring match (min 3 chars)
+- "Japan Trip" now matches "Japan Trip 2025" via substring
+- Bidirectional: checks if query is in name AND if name is in query
 
-```swift
-@Guide(description: "Raw date/time reference for scheduling intent, or empty string")
-let scheduledRef: String  // e.g. "tomorrow", "next Monday", "this Friday"
+**What works well now:**
+- Relative dates: "tomorrow" ✓, "this Friday" ✓, "next Monday" ✓
+- Absolute dates: "April 15th" ✓, "June 1st" ✓
+- End-of-month: "end of March" ✓, "end of the month" ✓
+- Deadline detection: "due by Friday" ✓, "deadline is June 1st" ✓
 
-@Guide(description: "Raw date/time reference for deadline intent, or empty string")
-let dueRef: String  // e.g. "by April 15th", "by end of next week"
-```
+**Remaining failures (15/31):**
+- LLM sometimes returns empty for date refs despite clear language ("this afternoon", "tomorrow morning", "end of next week") — the model inconsistently extracts expressions
+- LLM sometimes returns empty for project names even when explicitly mentioned — fuzzy matching helps when the LLM returns a name, but can't help when it returns empty
+- LLM fills in parent area when only project should be set (hallucination)
+- These are prompt refinement problems, not resolution problems
 
-The LLM's job becomes: (1) identify whether a date reference exists, (2) classify it as scheduled vs. due vs. defer intent, (3) extract the reference text. Crucially, the LLM still decides whether "this Friday" is a scheduling intent for *this task* vs. just contextual information about something else — that's a language understanding judgment the LLM should make.
+### Phase 9: Prompt Refinement
 
-Rust then resolves the expression to a date deterministically. Options for date parsing in Rust:
-- `chrono` with hand-written pattern matching for common expressions
-- A crate like `dateparser` or `chrono-english` (evaluate coverage)
-- Simple keyword-based resolution ("tomorrow" → +1 day, "next Monday" → find next Monday, "April 15th" → parse month+day)
+Iterate on the system prompt and few-shot examples to improve the LLM's extraction reliability. The eval harness (`cargo test eval_ai --lib -- --ignored --nocapture` from `src-tauri/`) makes this a fast feedback loop — edit `ai_prompts.rs`, rebuild, run eval, compare results.
 
-Start with a small set of common patterns and fall back to empty if unparseable. The eval harness will show which patterns are most needed.
+Key areas to improve:
+- LLM not extracting date refs when they're present ("this afternoon" → empty, "tomorrow morning" → empty)
+- LLM not returning project names even when explicitly mentioned in input
+- LLM hallucinating area when only project is referenced (fills in parent area)
+- Consider whether additional few-shot examples showing date ref extraction would help
 
-**Project/area matching:**
-
-Add fuzzy matching in Rust alongside the existing exact match. "Japan Trip" should match "Japan Trip 2025". Options:
-- Case-insensitive substring matching (simplest)
-- Levenshtein distance with a threshold
-- Token overlap (split on spaces, check how many words match)
-
-Start with case-insensitive substring (covers the "Japan Trip" case) and evaluate via the harness.
-
-### Phase 9: Polish and Edge Cases
+### Phase 10: Polish and Edge Cases
 
 - Re-processing support (user processes, edits title, processes again)
 - Cancellation during processing (Escape while LLM is running)
 - Very long input handling (context window limits?)
 
-### Phase 10: Docs
+### Phase 11: Docs
 
-- Update develper quick-entry pane docs as needed
-- Update userguide page on Quick Entry pane to mention
-  A) Auto-setting of status to Ready when (project || area ) && (scheduled || defer-until) are set.
-  B) Basic explanation of how the sparkle button works and what it's for, and when it's available.
-- Update apple-intelligence.md developer doc as needed so it's accurate about how things currently work. Include a brief mention of how to use the eval test to iterate on prompts etc.
+- Update developer quick-entry pane docs as needed
+- Update userguide page on Quick Entry pane to mention:
+  A) Auto-setting of status to Ready when (project || area) && (scheduled || defer-until) are set
+  B) Basic explanation of how the sparkle button works and what it's for, and when it's available
+- Update apple-intelligence.md developer doc so it's accurate about how things currently work, including the eval harness
