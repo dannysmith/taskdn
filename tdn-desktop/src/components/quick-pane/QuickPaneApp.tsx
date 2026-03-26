@@ -315,11 +315,13 @@ export default function QuickPaneApp() {
 
       // Auto-ready Rule 2 (AI only): if scheduled within 7 days and status
       // is still inbox (keyword detection didn't override), promote to ready.
+      // Compare date strings (YYYY-MM-DD) to avoid time-of-day issues.
       if (parsed.status === 'inbox' && parsed.scheduled) {
+        const todayStr = getTodayISO()
+        const todayDate = new Date(todayStr + 'T00:00:00')
         const scheduledDate = new Date(parsed.scheduled + 'T00:00:00')
-        const now = new Date()
-        const daysUntil = Math.floor(
-          (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        const daysUntil = Math.round(
+          (scheduledDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
         )
         if (daysUntil >= 0 && daysUntil <= 7) {
           setStatus('ready')
