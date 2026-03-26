@@ -151,7 +151,6 @@ pub(crate) fn process_quick_entry_text_sync(
 }
 
 /// Strip markdown code fences from a response (e.g. ```json\n{...}\n```)
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 fn strip_code_fences(s: &str) -> &str {
     let trimmed = s.trim();
     if let Some(rest) = trimmed.strip_prefix("```") {
@@ -166,7 +165,6 @@ fn strip_code_fences(s: &str) -> &str {
 
 /// Parse the AI response JSON into a `ParsedQuickEntry`, resolving project/area names to IDs.
 /// `today` is used for resolving relative date expressions.
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 fn parse_ai_response(
     response: &str,
     original_text: &str,
@@ -178,11 +176,12 @@ fn parse_ai_response(
     // Also handles fallback where model returns JSON wrapped in markdown code fences.
     let clean_response = strip_code_fences(response);
     if let Ok(parsed) = serde_json::from_str::<serde_json::Value>(clean_response) {
-        let title = parsed["title"]
-            .as_str()
-            .unwrap_or(original_text)
-            .trim()
-            .to_string();
+        let raw_title = parsed["title"].as_str().unwrap_or("").trim();
+        let title = if raw_title.is_empty() {
+            original_text.trim().to_string()
+        } else {
+            raw_title.to_string()
+        };
 
         let body_from_ai = parsed["body"].as_str().unwrap_or("").trim().to_string();
 
@@ -253,7 +252,6 @@ fn parse_ai_response(
 
 /// Check if two strings are essentially the same (ignoring case, trailing punctuation, whitespace).
 /// Used to avoid duplicating content when the AI parrots back the input.
-#[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 fn is_essentially_same(a: &str, b: &str) -> bool {
     if a.is_empty() || b.is_empty() {
         return a.is_empty() && b.is_empty();
@@ -275,13 +273,34 @@ fn is_essentially_same(a: &str, b: &str) -> bool {
 pub fn detect_status_from_keywords(input: &str) -> &'static str {
     let lower = input.to_lowercase();
 
+    // Use word-boundary matching to avoid false positives like "unblocked"
+    let has_word = |word: &str| {
+        lower
+            .find(word)
+            .map(|pos| {
+                let before = if pos == 0 {
+                    true
+                } else {
+                    !lower.as_bytes()[pos - 1].is_ascii_alphanumeric()
+                };
+                let after_pos = pos + word.len();
+                let after = if after_pos >= lower.len() {
+                    true
+                } else {
+                    !lower.as_bytes()[after_pos].is_ascii_alphanumeric()
+                };
+                before && after
+            })
+            .unwrap_or(false)
+    };
+
     // Check for blocked — explicit blocking language
-    if lower.contains("blocked") || lower.contains("waiting on") || lower.contains("waitingon") {
+    if has_word("blocked") || lower.contains("waiting on") || lower.contains("waitingon") {
         return "blocked";
     }
 
     // Check for icebox — only very explicit mentions
-    if lower.contains("icebox") || lower.contains("ice box") || lower.contains("ice-box") {
+    if has_word("icebox") || lower.contains("ice box") || lower.contains("ice-box") {
         return "icebox";
     }
 
@@ -408,6 +427,67 @@ mod tests {
             detect_status_from_keywords("IN PROGRESS refactor"),
             "in-progress"
         );
+    }
+
+    #[test]
+    fn keyword_no_false_positive_on_unblocked() {
+        assert_eq!(
+            detect_status_from_keywords("This task is now unblocked"),
+            "inbox"
+        );
+    }
+
+    // ── Parsing helper tests ─────────────────────────────────────────────
+
+    #[test]
+    fn strip_code_fences_plain_json() {
+        let json = r#"{"title":"Buy milk"}"#;
+        assert_eq!(strip_code_fences(json), json);
+    }
+
+    #[test]
+    fn strip_code_fences_markdown_wrapped() {
+        let input = "```json\n{\"title\":\"Buy milk\"}\n```";
+        assert_eq!(strip_code_fences(input), r#"{"title":"Buy milk"}"#);
+    }
+
+    #[test]
+    fn strip_code_fences_no_language_tag() {
+        let input = "```\n{\"title\":\"Buy milk\"}\n```";
+        assert_eq!(strip_code_fences(input), r#"{"title":"Buy milk"}"#);
+    }
+
+    #[test]
+    fn is_essentially_same_basic() {
+        assert!(is_essentially_same("hello", "hello"));
+        assert!(is_essentially_same("Hello", "hello"));
+        assert!(is_essentially_same("hello.", "hello"));
+        assert!(is_essentially_same("hello!", "Hello"));
+        assert!(!is_essentially_same("hello", "world"));
+    }
+
+    #[test]
+    fn is_essentially_same_empty() {
+        assert!(is_essentially_same("", ""));
+        assert!(!is_essentially_same("hello", ""));
+        assert!(!is_essentially_same("", "hello"));
+    }
+
+    #[test]
+    fn parse_ai_response_empty_title_falls_back() {
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 3, 25).unwrap();
+        let response = r#"{"title":"","body":"","project":"","area":"","scheduledRef":"","dueRef":"","deferUntilRef":""}"#;
+        let result = parse_ai_response(response, "Buy milk", &[], &[], today).unwrap();
+        assert_eq!(result.title, "Buy milk");
+    }
+
+    #[test]
+    fn parse_ai_response_non_json_fallback() {
+        let today = chrono::NaiveDate::from_ymd_opt(2026, 3, 25).unwrap();
+        let response = "This is not JSON at all";
+        let result = parse_ai_response(response, "Buy milk", &[], &[], today).unwrap();
+        assert_eq!(result.title, "Buy milk");
+        assert_eq!(result.body, "This is not JSON at all");
     }
 }
 

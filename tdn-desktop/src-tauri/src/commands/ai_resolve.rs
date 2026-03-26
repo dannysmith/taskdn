@@ -36,16 +36,16 @@ pub fn resolve_date_expression(expr: &str, today: NaiveDate) -> Option<String> {
         return Some(trimmed.to_string());
     }
 
-    // Try custom handlers first for patterns fuzzydate doesn't support
-    if let Some(date) = resolve_end_of_month(trimmed, today) {
-        return Some(date.format("%Y-%m-%d").to_string());
-    }
-    if let Some(date) = resolve_in_n_weeks(trimmed, today) {
-        return Some(date.format("%Y-%m-%d").to_string());
-    }
-
-    // Preprocess: strip ordinal suffixes and "on" prefix that fuzzydate doesn't handle
+    // Preprocess: strip ordinal suffixes and "on"/"by" prefixes
     let cleaned = preprocess_date_expr(trimmed);
+
+    // Try custom handlers for patterns fuzzydate doesn't support
+    if let Some(date) = resolve_end_of_month(&cleaned, today) {
+        return Some(date.format("%Y-%m-%d").to_string());
+    }
+    if let Some(date) = resolve_in_n_weeks(&cleaned, today) {
+        return Some(date.format("%Y-%m-%d").to_string());
+    }
 
     // Use fuzzydate to parse the expression relative to today
     let reference = today.and_hms_opt(12, 0, 0)?; // noon to avoid edge cases
@@ -153,8 +153,17 @@ fn resolve_in_n_weeks(expr: &str, today: NaiveDate) -> Option<NaiveDate> {
                     return Some(today + chrono::Duration::days(n));
                 }
                 if parts[1].starts_with("month") {
-                    // Approximate: 30 days per month
-                    return Some(today + chrono::Duration::days(n * 30));
+                    // Proper calendar month arithmetic
+                    let new_month = today.month() as i64 + n;
+                    let year_offset = (new_month - 1) / 12;
+                    let month = ((new_month - 1) % 12 + 1) as u32;
+                    let year = today.year() + year_offset as i32;
+                    // Clamp day to month end (e.g. Jan 31 + 1 month → Feb 28)
+                    let max_day = last_day_of_month(year, month)
+                        .map(|d| d.day())
+                        .unwrap_or(28);
+                    let day = today.day().min(max_day);
+                    return NaiveDate::from_ymd_opt(year, month, day);
                 }
             }
         }
@@ -332,6 +341,34 @@ mod tests {
     #[test]
     fn date_nonsense_returns_none() {
         assert_eq!(resolve_date_expression("banana", test_date()), None);
+    }
+
+    #[test]
+    fn date_in_one_month() {
+        // March 25 + 1 month = April 25 (proper calendar arithmetic, not 30 days)
+        assert_eq!(
+            resolve_date_expression("in 1 month", test_date()),
+            Some("2026-04-25".into())
+        );
+    }
+
+    #[test]
+    fn date_in_month_clamps_to_month_end() {
+        // Jan 31 + 1 month should be Feb 28 (not March 3)
+        let jan31 = NaiveDate::from_ymd_opt(2026, 1, 31).unwrap();
+        assert_eq!(
+            resolve_date_expression("in 1 month", jan31),
+            Some("2026-02-28".into())
+        );
+    }
+
+    #[test]
+    fn date_by_end_of_march() {
+        // "by end of March" — preprocessing strips "by", then resolves "end of March"
+        assert_eq!(
+            resolve_date_expression("by end of March", test_date()),
+            Some("2026-03-31".into())
+        );
     }
 
     // ── Project fuzzy matching tests ─────────────────────────────────────

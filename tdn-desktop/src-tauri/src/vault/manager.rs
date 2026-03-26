@@ -508,21 +508,22 @@ impl VaultManager {
 
         let task = self.get_task(&update.id)?;
 
-        // Resolve project/area IDs to titles for wikilinks
+        // Resolve project/area IDs to titles for wikilinks (single lock)
         let mut update = update;
-        if let Some(ref value) = update.project {
-            if !value.is_empty() {
-                let inner = self.inner.read();
-                if let Some(project) = inner.index.get_project(value) {
-                    update.project = Some(project.title.clone());
+        {
+            let inner = self.inner.read();
+            if let Some(ref value) = update.project {
+                if !value.is_empty() {
+                    if let Some(project) = inner.index.get_project(value) {
+                        update.project = Some(project.title.clone());
+                    }
                 }
             }
-        }
-        if let Some(ref value) = update.area {
-            if !value.is_empty() {
-                let inner = self.inner.read();
-                if let Some(area) = inner.index.get_area(value) {
-                    update.area = Some(area.title.clone());
+            if let Some(ref value) = update.area {
+                if !value.is_empty() {
+                    if let Some(area) = inner.index.get_area(value) {
+                        update.area = Some(area.title.clone());
+                    }
                 }
             }
         }

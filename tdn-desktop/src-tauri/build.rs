@@ -30,16 +30,18 @@ fn build_apple_intelligence_bridge() {
     let object_path = out_dir.join("apple_intelligence.o");
     let static_lib_path = out_dir.join("libapple_intelligence.a");
 
-    let sdk_path = String::from_utf8(
-        Command::new("xcrun")
-            .args(["--sdk", "macosx", "--show-sdk-path"])
-            .output()
-            .expect("Failed to locate macOS SDK")
-            .stdout,
-    )
-    .expect("SDK path is not valid UTF-8")
-    .trim()
-    .to_string();
+    let sdk_output = Command::new("xcrun")
+        .args(["--sdk", "macosx", "--show-sdk-path"])
+        .output()
+        .expect("Failed to run xcrun");
+    if !sdk_output.status.success() {
+        let stderr = String::from_utf8_lossy(&sdk_output.stderr);
+        panic!("xcrun --show-sdk-path failed: {stderr}");
+    }
+    let sdk_path = String::from_utf8(sdk_output.stdout)
+        .expect("SDK path is not valid UTF-8")
+        .trim()
+        .to_string();
 
     // Check if the SDK supports FoundationModels (required for Apple Intelligence)
     let framework_path =
@@ -58,16 +60,18 @@ fn build_apple_intelligence_bridge() {
         panic!("Source file {source_file} is missing!");
     }
 
-    let swiftc_path = String::from_utf8(
-        Command::new("xcrun")
-            .args(["--find", "swiftc"])
-            .output()
-            .expect("Failed to locate swiftc")
-            .stdout,
-    )
-    .expect("swiftc path is not valid UTF-8")
-    .trim()
-    .to_string();
+    let swiftc_output = Command::new("xcrun")
+        .args(["--find", "swiftc"])
+        .output()
+        .expect("Failed to run xcrun --find swiftc");
+    if !swiftc_output.status.success() {
+        let stderr = String::from_utf8_lossy(&swiftc_output.stderr);
+        panic!("xcrun --find swiftc failed: {stderr}");
+    }
+    let swiftc_path = String::from_utf8(swiftc_output.stdout)
+        .expect("swiftc path is not valid UTF-8")
+        .trim()
+        .to_string();
 
     let toolchain_swift_lib = Path::new(&swiftc_path)
         .parent()

@@ -368,11 +368,10 @@ export default function QuickPaneApp() {
           // Reset form on focus (fresh start)
           resetForm()
 
-          // Load areas, projects, and check AI availability
-          const [areasResult, projectsResult, aiResult] = await Promise.all([
+          // Load areas and projects (required for the pane to work)
+          const [areasResult, projectsResult] = await Promise.all([
             commands.listAreas(),
             commands.listProjects(),
-            commands.checkAppleIntelligenceAvailable(),
           ])
 
           if (areasResult.status === 'ok') {
@@ -382,7 +381,12 @@ export default function QuickPaneApp() {
             setProjects(projectsResult.data)
           }
 
-          setAiAvailable(aiResult)
+          // Check AI availability separately so failures don't block init
+          try {
+            setAiAvailable(await commands.checkAppleIntelligenceAvailable())
+          } catch {
+            setAiAvailable(false)
+          }
 
           // Focus title input
           setTimeout(() => titleRef.current?.focus(), FOCUS_DELAY_MS)
