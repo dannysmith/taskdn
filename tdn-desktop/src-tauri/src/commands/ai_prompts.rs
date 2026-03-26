@@ -5,7 +5,8 @@
 
 use super::ai::NameIdPair;
 
-/// A project with its area relationship, for richer context in the prompt.
+/// A project for the prompt context.
+#[allow(dead_code)] // area_name reserved for potential grouped context display
 pub struct ProjectWithArea {
     pub name: String,
     pub area_name: Option<String>,
@@ -93,12 +94,12 @@ Output: {\"title\":\"Buy milk\",\"body\":\"\",\"project\":\"\",\"area\":\"\",\"s
 }
 
 /// Build the context block with separate area and project lists.
-fn build_context_block(
-    projects_with_areas: &[ProjectWithArea],
-    areas: &[NameIdPair],
-) -> String {
+fn build_context_block(projects_with_areas: &[ProjectWithArea], areas: &[NameIdPair]) -> String {
     let area_names: Vec<&str> = areas.iter().map(|a| a.name.as_str()).collect();
-    let project_names: Vec<&str> = projects_with_areas.iter().map(|p| p.name.as_str()).collect();
+    let project_names: Vec<&str> = projects_with_areas
+        .iter()
+        .map(|p| p.name.as_str())
+        .collect();
 
     let areas_str = if area_names.is_empty() {
         "(none)".to_string()

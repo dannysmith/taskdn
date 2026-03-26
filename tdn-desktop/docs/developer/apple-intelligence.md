@@ -56,7 +56,7 @@ The Tauri command is `async` and wraps the blocking FFI call in `tauri::async_ru
 
 Back in Rust, `parse_ai_response()` processes the JSON string through several stages:
 
-**Code fence stripping:** If the fallback path produced a markdown-wrapped JSON block (`` ```json...``` ``), the fences are stripped so `serde_json` can parse it.
+**Code fence stripping:** If the fallback path produced a markdown-wrapped JSON block (` ```json...``` `), the fences are stripped so `serde_json` can parse it.
 
 **Title extraction:** The model's title is used. If JSON parsing failed entirely, the original input text becomes the title.
 
@@ -67,6 +67,7 @@ Back in Rust, `parse_ai_response()` processes the JSON string through several st
 **Project/area matching (`ai_resolve.rs`):** The model returns a name string. Rust first tries case-insensitive exact match, then falls back to case-insensitive substring match (minimum 3 characters). This handles the common case where the model returns a truncated name ("Japan Trip" matches "Japan Trip 2025"). No match → field is left empty.
 
 **Status determination:** Status is NOT set by the LLM. Instead:
+
 1. `detect_status_from_keywords()` scans the original input text for explicit status phrases: `blocked` / `waiting on` → blocked, `icebox` / `ice box` → icebox, `in progress` / `in-progress` → in-progress. Everything else → inbox.
 2. The frontend applies auto-ready rules after (see step 7).
 
@@ -145,12 +146,14 @@ The Swift code bridges async/await to synchronous C using `DispatchSemaphore` + 
 ### Rust FFI Wrapper
 
 `src/apple_intelligence.rs` provides safe Rust functions over the unsafe C FFI:
+
 - `check_availability()` → `bool`
 - `process_text(system_prompt, user_content, max_tokens)` → `Result<String, String>`
 
 ### Tauri Commands
 
 `src/commands/ai.rs` exposes two commands to the frontend:
+
 - `check_apple_intelligence_available()` → `bool`
 - `process_quick_entry_text(text, projects, areas)` → `Result<ParsedQuickEntry, String>`
 

@@ -101,8 +101,12 @@ pub(crate) fn process_quick_entry_text_sync(
             })
             .collect();
 
-        let system_prompt =
-            super::ai_prompts::build_system_prompt(&projects_with_areas, &areas, &date_str, &day_of_week);
+        let system_prompt = super::ai_prompts::build_system_prompt(
+            &projects_with_areas,
+            areas,
+            &date_str,
+            &day_of_week,
+        );
 
         log::info!("── AI Quick Entry ──────────────────────────────────");
         log::info!("Input: {trimmed:?}");
@@ -112,7 +116,8 @@ pub(crate) fn process_quick_entry_text_sync(
 
         log::info!("Raw response: {response}");
 
-        let mut result = parse_ai_response(&response, trimmed, projects, areas, today.date_naive())?;
+        let mut result =
+            parse_ai_response(&response, trimmed, projects, areas, today.date_naive())?;
 
         // Determine status via keyword detection (not LLM)
         result.status = detect_status_from_keywords(trimmed).to_string();
@@ -153,10 +158,7 @@ fn strip_code_fences(s: &str) -> &str {
         // Skip the language tag (e.g. "json") on the first line
         let after_tag = rest.find('\n').map(|i| &rest[i + 1..]).unwrap_or(rest);
         // Strip trailing fence
-        after_tag
-            .strip_suffix("```")
-            .unwrap_or(after_tag)
-            .trim()
+        after_tag.strip_suffix("```").unwrap_or(after_tag).trim()
     } else {
         trimmed
     }
@@ -196,9 +198,7 @@ fn parse_ai_response(
         } else {
             // Title was transformed — preserve original text in body
             // Don't append AI body if it's just parroting the input
-            if body_from_ai.is_empty()
-                || is_essentially_same(&body_from_ai, original_text.trim())
-            {
+            if body_from_ai.is_empty() || is_essentially_same(&body_from_ai, original_text.trim()) {
                 original_text.trim().to_string()
             } else {
                 format!("{}\n\n{}", original_text.trim(), body_from_ai)
@@ -258,11 +258,7 @@ fn is_essentially_same(a: &str, b: &str) -> bool {
     if a.is_empty() || b.is_empty() {
         return a.is_empty() && b.is_empty();
     }
-    let normalize = |s: &str| {
-        s.trim()
-            .trim_end_matches(|c: char| c == '.' || c == '!' || c == '?')
-            .to_lowercase()
-    };
+    let normalize = |s: &str| s.trim().trim_end_matches(['.', '!', '?']).to_lowercase();
     normalize(a) == normalize(b)
 }
 
@@ -280,18 +276,12 @@ pub fn detect_status_from_keywords(input: &str) -> &'static str {
     let lower = input.to_lowercase();
 
     // Check for blocked — explicit blocking language
-    if lower.contains("blocked")
-        || lower.contains("waiting on")
-        || lower.contains("waitingon")
-    {
+    if lower.contains("blocked") || lower.contains("waiting on") || lower.contains("waitingon") {
         return "blocked";
     }
 
     // Check for icebox — only very explicit mentions
-    if lower.contains("icebox")
-        || lower.contains("ice box")
-        || lower.contains("ice-box")
-    {
+    if lower.contains("icebox") || lower.contains("ice box") || lower.contains("ice-box") {
         return "icebox";
     }
 
@@ -317,56 +307,107 @@ mod tests {
     #[test]
     fn keyword_default_is_inbox() {
         assert_eq!(detect_status_from_keywords("Buy groceries"), "inbox");
-        assert_eq!(detect_status_from_keywords("Call the dentist tomorrow"), "inbox");
+        assert_eq!(
+            detect_status_from_keywords("Call the dentist tomorrow"),
+            "inbox"
+        );
         assert_eq!(detect_status_from_keywords("Review the mockups"), "inbox");
     }
 
     #[test]
     fn keyword_detects_blocked() {
-        assert_eq!(detect_status_from_keywords("This is blocked by the security review"), "blocked");
-        assert_eq!(detect_status_from_keywords("Waiting on the client to respond"), "blocked");
-        assert_eq!(detect_status_from_keywords("waitingon client response"), "blocked");
+        assert_eq!(
+            detect_status_from_keywords("This is blocked by the security review"),
+            "blocked"
+        );
+        assert_eq!(
+            detect_status_from_keywords("Waiting on the client to respond"),
+            "blocked"
+        );
+        assert_eq!(
+            detect_status_from_keywords("waitingon client response"),
+            "blocked"
+        );
     }
 
     #[test]
     fn keyword_blocked_is_narrow() {
-        assert_eq!(detect_status_from_keywords("Can't proceed until we get approval"), "inbox");
-        assert_eq!(detect_status_from_keywords("Stuck on the API migration"), "inbox");
+        assert_eq!(
+            detect_status_from_keywords("Can't proceed until we get approval"),
+            "inbox"
+        );
+        assert_eq!(
+            detect_status_from_keywords("Stuck on the API migration"),
+            "inbox"
+        );
     }
 
     #[test]
     fn keyword_detects_icebox() {
-        assert_eq!(detect_status_from_keywords("Icebox task to learn piano"), "icebox");
-        assert_eq!(detect_status_from_keywords("Put this in the ice box"), "icebox");
-        assert_eq!(detect_status_from_keywords("ice-box this for later"), "icebox");
+        assert_eq!(
+            detect_status_from_keywords("Icebox task to learn piano"),
+            "icebox"
+        );
+        assert_eq!(
+            detect_status_from_keywords("Put this in the ice box"),
+            "icebox"
+        );
+        assert_eq!(
+            detect_status_from_keywords("ice-box this for later"),
+            "icebox"
+        );
     }
 
     #[test]
     fn keyword_icebox_is_narrow() {
         assert_eq!(detect_status_from_keywords("Maybe call the bank"), "inbox");
-        assert_eq!(detect_status_from_keywords("I might need to do this"), "inbox");
+        assert_eq!(
+            detect_status_from_keywords("I might need to do this"),
+            "inbox"
+        );
         assert_eq!(detect_status_from_keywords("One day learn guitar"), "inbox");
-        assert_eq!(detect_status_from_keywords("Eventually get around to it"), "inbox");
+        assert_eq!(
+            detect_status_from_keywords("Eventually get around to it"),
+            "inbox"
+        );
     }
 
     #[test]
     fn keyword_detects_in_progress() {
-        assert_eq!(detect_status_from_keywords("This is in progress"), "in-progress");
-        assert_eq!(detect_status_from_keywords("Mark as in-progress"), "in-progress");
-        assert_eq!(detect_status_from_keywords("inprogress task"), "in-progress");
+        assert_eq!(
+            detect_status_from_keywords("This is in progress"),
+            "in-progress"
+        );
+        assert_eq!(
+            detect_status_from_keywords("Mark as in-progress"),
+            "in-progress"
+        );
+        assert_eq!(
+            detect_status_from_keywords("inprogress task"),
+            "in-progress"
+        );
     }
 
     #[test]
     fn keyword_in_progress_is_narrow() {
-        assert_eq!(detect_status_from_keywords("Already started the refactor"), "inbox");
-        assert_eq!(detect_status_from_keywords("Working on the dashboard"), "inbox");
+        assert_eq!(
+            detect_status_from_keywords("Already started the refactor"),
+            "inbox"
+        );
+        assert_eq!(
+            detect_status_from_keywords("Working on the dashboard"),
+            "inbox"
+        );
     }
 
     #[test]
     fn keyword_case_insensitive() {
         assert_eq!(detect_status_from_keywords("This is BLOCKED"), "blocked");
         assert_eq!(detect_status_from_keywords("ICEBOX this task"), "icebox");
-        assert_eq!(detect_status_from_keywords("IN PROGRESS refactor"), "in-progress");
+        assert_eq!(
+            detect_status_from_keywords("IN PROGRESS refactor"),
+            "in-progress"
+        );
     }
 }
 
@@ -394,30 +435,97 @@ mod eval {
 
     fn eval_projects() -> Vec<ProjectContext> {
         vec![
-            ProjectContext { id: "p-japan".into(), name: "Japan Trip 2025".into(), area_name: Some("Travel".into()) },
-            ProjectContext { id: "p-acme".into(), name: "Acme Dashboard Redesign".into(), area_name: Some("Acme Corp".into()) },
-            ProjectContext { id: "p-tax".into(), name: "Q1 Tax Preparation".into(), area_name: Some("Finance".into()) },
-            ProjectContext { id: "p-blog".into(), name: "Tech Blog Relaunch".into(), area_name: Some("Writing".into()) },
-            ProjectContext { id: "p-cli".into(), name: "Open Source CLI Tool".into(), area_name: Some("Coding".into()) },
-            ProjectContext { id: "p-marathon".into(), name: "Half Marathon Training".into(), area_name: Some("Health".into()) },
-            ProjectContext { id: "p-office".into(), name: "Home Office Setup".into(), area_name: Some("Home".into()) },
-            ProjectContext { id: "p-garden".into(), name: "Garden Renovation".into(), area_name: Some("Home".into()) },
-            ProjectContext { id: "p-newsletter".into(), name: "Newsletter Setup".into(), area_name: Some("Writing".into()) },
-            ProjectContext { id: "p-rust".into(), name: "Learn Rust".into(), area_name: Some("Learning".into()) },
+            ProjectContext {
+                id: "p-japan".into(),
+                name: "Japan Trip 2025".into(),
+                area_name: Some("Travel".into()),
+            },
+            ProjectContext {
+                id: "p-acme".into(),
+                name: "Acme Dashboard Redesign".into(),
+                area_name: Some("Acme Corp".into()),
+            },
+            ProjectContext {
+                id: "p-tax".into(),
+                name: "Q1 Tax Preparation".into(),
+                area_name: Some("Finance".into()),
+            },
+            ProjectContext {
+                id: "p-blog".into(),
+                name: "Tech Blog Relaunch".into(),
+                area_name: Some("Writing".into()),
+            },
+            ProjectContext {
+                id: "p-cli".into(),
+                name: "Open Source CLI Tool".into(),
+                area_name: Some("Coding".into()),
+            },
+            ProjectContext {
+                id: "p-marathon".into(),
+                name: "Half Marathon Training".into(),
+                area_name: Some("Health".into()),
+            },
+            ProjectContext {
+                id: "p-office".into(),
+                name: "Home Office Setup".into(),
+                area_name: Some("Home".into()),
+            },
+            ProjectContext {
+                id: "p-garden".into(),
+                name: "Garden Renovation".into(),
+                area_name: Some("Home".into()),
+            },
+            ProjectContext {
+                id: "p-newsletter".into(),
+                name: "Newsletter Setup".into(),
+                area_name: Some("Writing".into()),
+            },
+            ProjectContext {
+                id: "p-rust".into(),
+                name: "Learn Rust".into(),
+                area_name: Some("Learning".into()),
+            },
         ]
     }
 
     fn eval_areas() -> Vec<NameIdPair> {
         vec![
-            NameIdPair { id: "a-travel".into(), name: "Travel".into() },
-            NameIdPair { id: "a-acme".into(), name: "Acme Corp".into() },
-            NameIdPair { id: "a-finance".into(), name: "Finance".into() },
-            NameIdPair { id: "a-writing".into(), name: "Writing".into() },
-            NameIdPair { id: "a-coding".into(), name: "Coding".into() },
-            NameIdPair { id: "a-health".into(), name: "Health".into() },
-            NameIdPair { id: "a-home".into(), name: "Home".into() },
-            NameIdPair { id: "a-learning".into(), name: "Learning".into() },
-            NameIdPair { id: "a-marketing".into(), name: "Marketing".into() },
+            NameIdPair {
+                id: "a-travel".into(),
+                name: "Travel".into(),
+            },
+            NameIdPair {
+                id: "a-acme".into(),
+                name: "Acme Corp".into(),
+            },
+            NameIdPair {
+                id: "a-finance".into(),
+                name: "Finance".into(),
+            },
+            NameIdPair {
+                id: "a-writing".into(),
+                name: "Writing".into(),
+            },
+            NameIdPair {
+                id: "a-coding".into(),
+                name: "Coding".into(),
+            },
+            NameIdPair {
+                id: "a-health".into(),
+                name: "Health".into(),
+            },
+            NameIdPair {
+                id: "a-home".into(),
+                name: "Home".into(),
+            },
+            NameIdPair {
+                id: "a-learning".into(),
+                name: "Learning".into(),
+            },
+            NameIdPair {
+                id: "a-marketing".into(),
+                name: "Marketing".into(),
+            },
         ]
     }
 
@@ -478,7 +586,11 @@ mod eval {
         let mut failures = Vec::new();
 
         // Check title
-        if !result.title.to_lowercase().contains(&expected.title_contains.to_lowercase()) {
+        if !result
+            .title
+            .to_lowercase()
+            .contains(&expected.title_contains.to_lowercase())
+        {
             failures.push(format!(
                 "title: expected to contain {:?}, got {:?}",
                 expected.title_contains, result.title
@@ -525,16 +637,18 @@ mod eval {
             }
             None => {
                 if result.area_id.is_some() {
-                    failures.push(format!(
-                        "area: expected None, got {:?}",
-                        result.area_id
-                    ));
+                    failures.push(format!("area: expected None, got {:?}", result.area_id));
                 }
             }
         }
 
         // Check dates
-        check_date_field("scheduled", &result.scheduled, expected.scheduled, &mut failures);
+        check_date_field(
+            "scheduled",
+            &result.scheduled,
+            expected.scheduled,
+            &mut failures,
+        );
         check_date_field("due", &result.due, expected.due, &mut failures);
         check_date_field("defer", &result.defer_until, expected.defer, &mut failures);
 
@@ -561,16 +675,12 @@ mod eval {
         match expected {
             Some(date) => {
                 if actual.as_deref() != Some(date) {
-                    failures.push(format!(
-                        "{name}: expected Some({date:?}), got {actual:?}"
-                    ));
+                    failures.push(format!("{name}: expected Some({date:?}), got {actual:?}"));
                 }
             }
             None => {
                 if actual.is_some() {
-                    failures.push(format!(
-                        "{name}: expected None, got {actual:?}"
-                    ));
+                    failures.push(format!("{name}: expected None, got {actual:?}"));
                 }
             }
         }
@@ -588,7 +698,8 @@ mod eval {
         // deterministic Rust code (if title differs from input, original text goes in
         // body), so it's not testing LLM quality. Use Some(true) only when the title
         // is very likely to be identical to input (i.e. input is already a clean title).
-        let cases: Vec<(&str, Expected)> = vec![
+        let cases: Vec<(&str, Expected)> =
+            vec![
 
             // =============================================================
             // SIMPLE INPUTS — no metadata expected
@@ -944,10 +1055,14 @@ mod eval {
             } else {
                 total_fail += 1;
                 println!("  ✗ {input:?}");
-                println!("    Raw: title={:?} status={:?} project={:?} area={:?}",
-                    result.title, result.status, result.project_id, result.area_id);
-                println!("         due={:?} sched={:?} defer={:?}",
-                    result.due, result.scheduled, result.defer_until);
+                println!(
+                    "    Raw: title={:?} status={:?} project={:?} area={:?}",
+                    result.title, result.status, result.project_id, result.area_id
+                );
+                println!(
+                    "         due={:?} sched={:?} defer={:?}",
+                    result.due, result.scheduled, result.defer_until
+                );
                 for f in &failures {
                     println!("    FAIL: {f}");
                 }
@@ -955,8 +1070,10 @@ mod eval {
         }
 
         println!("\n----------------------------------------------------------------------");
-        println!("Results: {total_pass} passed, {total_fail} failed out of {} cases",
-            cases.len());
+        println!(
+            "Results: {total_pass} passed, {total_fail} failed out of {} cases",
+            cases.len()
+        );
         println!("----------------------------------------------------------------------\n");
 
         // Don't assert — this is an eval tool, not a hard test.

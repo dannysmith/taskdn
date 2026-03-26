@@ -321,7 +321,8 @@ export default function QuickPaneApp() {
         const todayDate = new Date(todayStr + 'T00:00:00')
         const scheduledDate = new Date(parsed.scheduled + 'T00:00:00')
         const daysUntil = Math.round(
-          (scheduledDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
+          (scheduledDate.getTime() - todayDate.getTime()) /
+            (1000 * 60 * 60 * 24)
         )
         if (daysUntil >= 0 && daysUntil <= 7) {
           setStatus('ready')

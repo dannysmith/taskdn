@@ -91,9 +91,18 @@ fn resolve_end_of_month(expr: &str, today: NaiveDate) -> Option<NaiveDate> {
 
     // "end of March", "end of April", etc.
     let months = [
-        ("january", 1), ("february", 2), ("march", 3), ("april", 4),
-        ("may", 5), ("june", 6), ("july", 7), ("august", 8),
-        ("september", 9), ("october", 10), ("november", 11), ("december", 12),
+        ("january", 1),
+        ("february", 2),
+        ("march", 3),
+        ("april", 4),
+        ("may", 5),
+        ("june", 6),
+        ("july", 7),
+        ("august", 8),
+        ("september", 9),
+        ("october", 10),
+        ("november", 11),
+        ("december", 12),
     ];
 
     if let Some(rest) = lower.strip_prefix("end of ") {
@@ -134,7 +143,7 @@ fn resolve_in_n_weeks(expr: &str, today: NaiveDate) -> Option<NaiveDate> {
 
     // "in N weeks" / "in N week"
     if let Some(rest) = lower.strip_prefix("in ") {
-        let parts: Vec<&str> = rest.trim().split_whitespace().collect();
+        let parts: Vec<&str> = rest.split_whitespace().collect();
         if parts.len() == 2 {
             if let Some(n) = word_to_num(parts[0]) {
                 if parts[1].starts_with("week") {
@@ -157,11 +166,9 @@ fn resolve_in_n_weeks(expr: &str, today: NaiveDate) -> Option<NaiveDate> {
 /// Get the last day of a given month.
 fn last_day_of_month(year: i32, month: u32) -> Option<NaiveDate> {
     if month == 12 {
-        NaiveDate::from_ymd_opt(year + 1, 1, 1)
-            .and_then(|d| d.pred_opt())
+        NaiveDate::from_ymd_opt(year + 1, 1, 1).and_then(|d| d.pred_opt())
     } else {
-        NaiveDate::from_ymd_opt(year, month + 1, 1)
-            .and_then(|d| d.pred_opt())
+        NaiveDate::from_ymd_opt(year, month + 1, 1).and_then(|d| d.pred_opt())
     }
 }
 
@@ -327,23 +334,6 @@ mod tests {
         assert_eq!(resolve_date_expression("banana", test_date()), None);
     }
 
-    #[test]
-    #[ignore]
-    fn date_explore_fuzzydate() {
-        let today = test_date();
-        let cases = vec![
-            "April 15", "April 15th", "15 April", "15th April",
-            "March 31", "March 31st", "end of March", "end of the month",
-            "Friday", "this Friday", "next Friday",
-            "in 3 weeks", "in two weeks", "in 2 weeks",
-            "Thursday", "on Thursday",
-        ];
-        for c in cases {
-            let result = resolve_date_expression(c, today);
-            println!("  {:30} → {:?}", c, result);
-        }
-    }
-
     // ── Project fuzzy matching tests ─────────────────────────────────────
 
     fn test_projects() -> Vec<ProjectContext> {
@@ -426,28 +416,31 @@ mod tests {
 
     fn test_areas() -> Vec<NameIdPair> {
         vec![
-            NameIdPair { id: "a-acme".into(), name: "Acme Corp".into() },
-            NameIdPair { id: "a-finance".into(), name: "Finance".into() },
-            NameIdPair { id: "a-home".into(), name: "Home".into() },
+            NameIdPair {
+                id: "a-acme".into(),
+                name: "Acme Corp".into(),
+            },
+            NameIdPair {
+                id: "a-finance".into(),
+                name: "Finance".into(),
+            },
+            NameIdPair {
+                id: "a-home".into(),
+                name: "Home".into(),
+            },
         ]
     }
 
     #[test]
     fn area_exact_match() {
         let areas = test_areas();
-        assert_eq!(
-            match_area_fuzzy("Acme Corp", &areas),
-            Some("a-acme".into())
-        );
+        assert_eq!(match_area_fuzzy("Acme Corp", &areas), Some("a-acme".into()));
     }
 
     #[test]
     fn area_substring_match() {
         let areas = test_areas();
-        assert_eq!(
-            match_area_fuzzy("Acme", &areas),
-            Some("a-acme".into())
-        );
+        assert_eq!(match_area_fuzzy("Acme", &areas), Some("a-acme".into()));
     }
 
     #[test]
