@@ -148,7 +148,7 @@ Done. The LLM now extracts raw date expressions ("tomorrow", "next Monday", "end
 - LLM fills in parent area when only project should be set (hallucination)
 - These are prompt refinement problems, not resolution problems
 
-### Phase 9: Prompt Refinement
+### Phase 9: Prompt Refinement ✅
 
 Iterate on the system prompt and few-shot examples to improve the LLM's extraction reliability. The eval harness (`cargo test eval_ai --lib -- --ignored --nocapture` from `src-tauri/`) makes this a fast feedback loop — edit `ai_prompts.rs`, rebuild, run eval, compare results.
 
@@ -158,7 +158,7 @@ Key areas to improve:
 - LLM hallucinating area when only project is referenced (fills in parent area)
 - Consider whether additional few-shot examples showing date ref extraction would help
 
-### Phase 10: Polish and Edge Cases
+### Phase 10: Polish and Edge Cases ✅
 
 - Re-processing support (user processes, edits title, processes again)
 - Cancellation during processing (Escape while LLM is running)
