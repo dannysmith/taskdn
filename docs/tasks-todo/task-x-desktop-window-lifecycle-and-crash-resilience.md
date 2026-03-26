@@ -9,27 +9,56 @@ Closing the Desktop app's main window kills the entire process, making it imposs
 
 ## Phased Approach
 
-### Phase 1: Fix macOS window close behavior (Issue #48)
+### Phase 1: Fix macOS window close behavior (Issue #48) — DONE
 
-**Goal:** Closing the main window hides the app instead of quitting. Dock icon click reopens it. Cmd+Q and Quit menu item still quit properly.
+**Goal:** Closing the main window hides it instead of quitting. Dock icon click reopens it. Quick pane works independently. Cmd+Q and Quit menu item still quit properly.
 
-**Changes in `src-tauri/src/lib.rs`:**
+**What was implemented in `src-tauri/src/lib.rs`:**
 
-- In `on_window_event` / `handle_run_event`: intercept `CloseRequested` for the main window, call `api.prevent_close()`, then `app_handle.hide()` (uses `NSApplication.hide()` which integrates with dock reshow)
-- Add `RunEvent::Reopen` handler: show and focus the main window when `has_visible_windows` is false
-- **Do NOT call `unregister_global_shortcuts()` on window close** — only on actual app quit. Quick pane shortcut must keep working while the app is hidden
-- Move cleanup logic (save window state, hide quick pane, unregister shortcuts) to actual quit path
-- Ensure Cmd+Q and the Quit menu item call `app_handle.exit(0)` so the app actually terminates (workaround for `ExitRequested` not firing reliably on macOS — see tauri-apps/tauri#9198)
+1. **Intercept `CloseRequested` for the main window on macOS:**
+   - Call `api.prevent_close()` so the window isn't destroyed
+   - Call `window.hide()` on the main window (NOT `app_handle.hide()` — see below)
+   - Call `save_window_state()` to persist position/size before hiding
 
-**Watch out for:**
-- `tauri_plugin_window_state` + `prevent_exit()` can cause infinite `windowDidMove` loop (tauri-apps/tauri discussions#11489) — test this carefully
-- The quick-pane NSPanel is already denylisted from window-state plugin due to `is_maximized()` crash (plugins-workspace#1546)
+2. **Hide the window, not the app:**
+   - We use `window.hide()` (hides only the main window) rather than `app_handle.hide()` (which calls `NSApplication.hide()` and sets the system-level hidden state)
+   - This is critical because showing an NSPanel while the app is in the system "hidden" state causes macOS to unhide the entire app, including the main window
+   - With `window.hide()`, the app is still "running" but not "hidden" — the quick pane can be shown independently without the main window reappearing
+   - Cmd+H still works normally (it calls `NSApplication.hide()` at the system level, and interacting with the app after Cmd+H naturally brings everything back — standard macOS behavior)
+
+3. **Add `RunEvent::Reopen` handler:**
+   - When the dock icon is clicked and there are no visible windows, show the main window
+   - Explicitly call `window.restore_state(StateFlags::all())` after showing — the `tauri-plugin-window-state` plugin only auto-restores on app startup, not after a hide/show cycle. Without this, the window could appear at stale/off-screen coordinates and jump when dragged.
+   - Focus the window after restoring
+
+4. **Move cleanup to `RunEvent::Exit`:**
+   - `hide_quick_pane()` and `unregister_global_shortcuts()` now run in `RunEvent::Exit` instead of on window close
+   - This ensures cleanup happens on actual quit (Cmd+Q, menu Quit) regardless of how the quit was initiated
+   - These cleanup functions exist to prevent known crashes during app teardown — removing them causes crashes on quit
+   - `RunEvent::Exit` fires reliably before the process exits, unlike `RunEvent::ExitRequested` which doesn't fire for Cmd+Q on macOS (tauri-apps/tauri#9198)
+   - We do NOT use `prevent_exit()` anywhere, which avoids the infinite `windowDidMove` loop issue with `tauri_plugin_window_state` (tauri-apps/tauri discussions#11489)
+
+5. **Non-macOS behavior unchanged:** On other platforms, closing the main window still quits the app after running cleanup.
 
 **Key references:**
 - tauri-apps/tauri#3084 — `RunEvent::Reopen` feature
 - tauri-apps/tauri PR#4865 — implementation
 - tauri-apps/tauri#9198 — `ExitRequested` unreliable on macOS
 - tauri-apps/tauri#13511 — `prevent_exit()` blocks normal termination
+- tauri-apps/tauri discussions#11489 — `window-state` + `prevent_exit()` infinite loop
+- plugins-workspace#1546 — quick-pane NSPanel denylisted from window-state plugin
+
+**Behavior summary:**
+
+| Action | Result |
+|--------|--------|
+| Red X (close button) | Main window hides. App stays running. Quick pane shortcut works. |
+| Dock icon click (window hidden) | Main window shows at saved position. |
+| Quick pane shortcut (window hidden) | Only the quick pane appears. Main window stays hidden. |
+| Cmd+H | macOS hides entire app (system-level). Standard behavior. |
+| Dock icon click (after Cmd+H) | macOS unhides the app. Main window reappears. |
+| Quick pane shortcut (after Cmd+H) | macOS unhides entire app. Both main window and quick pane appear. |
+| Cmd+Q / menu Quit | Cleanup runs via `RunEvent::Exit`, then app exits. |
 
 ### Phase 2: File watcher error recovery & periodic rescan
 
