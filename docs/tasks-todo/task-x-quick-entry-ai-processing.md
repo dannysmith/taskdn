@@ -107,19 +107,9 @@ cd tdn-desktop/src-tauri && cargo test eval_ai --lib -- --ignored --nocapture
 
 Current baseline: **11/31 passing**. Most failures are date arithmetic and project matching — addressed in Phases 7 and 8.
 
-### Phase 6: Auto-Ready on Quick Entry (non-AI, cherry-pickable)
+### Phase 6: Auto-Ready on Quick Entry (non-AI, cherry-pickable) ✅
 
-**This is a standalone UX improvement, not AI-specific.** Should be implemented as its own commit so it can be cherry-picked onto main independently of the AI feature branch.
-
-**Rule:** If a task's status is `inbox` and the user has set `(projectId OR areaId) AND (scheduled OR deferUntil)`, auto-promote to `ready`. A task with both a project/area and a when-to-do-it date has been "processed" — it doesn't need the inbox.
-
-**Implementation:** A `useEffect` in `QuickPaneApp.tsx` that:
-- Watches `[projectId, areaId, scheduled, deferUntil]` (NOT `status` — avoids feedback loops)
-- When conditions are met, calls `setStatus(prev => prev === 'inbox' ? 'ready' : prev)`
-- Only promotes `inbox` → `ready`, never touches any other status
-- If the user manually changes status back to `inbox` and then modifies another triggering field, the effect re-fires — this is correct behaviour (conditions are met again)
-
-This is a few lines of React, zero performance concern (watches 4 state variables that change on dropdown/picker selection, not keystrokes), and gives immediate visual feedback via the status pill.
+Done. `useEffect` in `QuickPaneApp.tsx` watches `[projectId, areaId, scheduled, deferUntil]` and promotes `inbox` → `ready` when `(project OR area) AND (scheduled OR defer)` are set. Standalone commit, cherry-pickable.
 
 ### Phase 7: Deterministic Status for AI Processing
 
@@ -204,3 +194,11 @@ Start with case-insensitive substring (covers the "Japan Trip" case) and evaluat
 - Re-processing support (user processes, edits title, processes again)
 - Cancellation during processing (Escape while LLM is running)
 - Very long input handling (context window limits?)
+
+### Phase 10: Docs
+
+- Update develper quick-entry pane docs as needed
+- Update userguide page on Quick Entry pane to mention
+  A) Auto-setting of status to Ready when (project || area ) && (scheduled || defer-until) are set.
+  B) Basic explanation of how the sparkle button works and what it's for, and when it's available.
+- Update apple-intelligence.md developer doc as needed so it's accurate about how things currently work. Include a brief mention of how to use the eval test to iterate on prompts etc.

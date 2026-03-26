@@ -12,8 +12,6 @@ private struct ParsedTask: Sendable {
     @Guide(description: "Extra detail, or empty string")
     let body: String
 
-    let status: ParsedStatus
-
     @Guide(description: "YYYY-MM-DD or empty string")
     let due: String
 
@@ -28,16 +26,6 @@ private struct ParsedTask: Sendable {
 
     @Guide(description: "Area name or empty string")
     let area: String
-}
-
-@available(macOS 26.0, *)
-@Generable
-private enum ParsedStatus: Sendable {
-    case inbox
-    case icebox
-    case ready
-    case inProgress
-    case blocked
 }
 
 // MARK: - Helpers
@@ -59,19 +47,6 @@ private func stripInvisibleChars(_ text: String) -> String {
         .replacingOccurrences(of: "\u{FEFF}", with: "")         // BOM
 }
 
-// MARK: - Convert ParsedStatus to string
-
-@available(macOS 26.0, *)
-private func statusToString(_ status: ParsedStatus) -> String {
-    switch status {
-    case .inbox: return "inbox"
-    case .icebox: return "icebox"
-    case .ready: return "ready"
-    case .inProgress: return "in-progress"
-    case .blocked: return "blocked"
-    }
-}
-
 // MARK: - Convert ParsedTask to JSON string
 
 @available(macOS 26.0, *)
@@ -80,7 +55,6 @@ private func parsedTaskToJSON(_ task: ParsedTask) -> String {
     let fields: [(String, String)] = [
         ("title", task.title),
         ("body", task.body),
-        ("status", statusToString(task.status)),
         ("due", task.due),
         ("scheduled", task.scheduled),
         ("deferUntil", task.deferUntil),

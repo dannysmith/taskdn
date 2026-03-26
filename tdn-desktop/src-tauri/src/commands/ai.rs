@@ -95,7 +95,10 @@ pub fn process_quick_entry_text(
 
         log::info!("Raw response: {response}");
 
-        let result = parse_ai_response(&response, trimmed, &projects, &areas)?;
+        let mut result = parse_ai_response(&response, trimmed, &projects, &areas)?;
+
+        // Determine status via keyword detection (not LLM)
+        result.status = detect_status_from_keywords(trimmed).to_string();
 
         log::info!("Mapped result:");
         log::info!("  title:     {:?}", result.title);
@@ -183,17 +186,8 @@ fn parse_ai_response(
             }
         };
 
-        let status = parsed["status"]
-            .as_str()
-            .unwrap_or("inbox")
-            .trim()
-            .to_string();
-
-        // Validate status is a known value
-        let status = match status.as_str() {
-            "inbox" | "icebox" | "ready" | "in-progress" | "blocked" => status,
-            _ => "inbox".to_string(),
-        };
+        // Status is determined by keyword detection, not the LLM
+        let status = "inbox".to_string();
 
         let due = non_empty_date(parsed["due"].as_str());
         let scheduled = non_empty_date(parsed["scheduled"].as_str());
@@ -287,6 +281,98 @@ fn match_name_to_id(name: &str, pairs: &[NameIdPair]) -> Option<String> {
         .iter()
         .find(|p| p.name.eq_ignore_ascii_case(name))
         .map(|p| p.id.clone())
+}
+
+// =============================================================================
+// Keyword-Based Status Detection
+// =============================================================================
+
+/// Detect task status from explicit keywords in the input text.
+/// Only matches unambiguous, explicit status language. Returns "inbox" by default.
+///
+/// This is intentionally narrow — false negatives (missing an icebox intent) are
+/// harmless since the user can change the status dropdown in half a second.
+/// False positives (wrongly setting blocked/icebox) are more disruptive.
+pub fn detect_status_from_keywords(input: &str) -> &'static str {
+    let lower = input.to_lowercase();
+
+    // Check for blocked — explicit blocking language
+    if lower.contains("blocked")
+        || lower.contains("waiting on")
+        || lower.contains("can't proceed")
+        || lower.contains("stuck on")
+    {
+        return "blocked";
+    }
+
+    // Check for icebox — only very explicit icebox/ice box mentions
+    if lower.contains("icebox") || lower.contains("ice box") {
+        return "icebox";
+    }
+
+    // Check for in-progress — explicit "already doing" language
+    if lower.contains("in progress")
+        || lower.contains("in-progress")
+        || lower.contains("already started")
+        || lower.contains("working on")
+    {
+        return "in-progress";
+    }
+
+    "inbox"
+}
+
+// =============================================================================
+// Unit Tests (deterministic, runs in normal test suite)
+// =============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn keyword_default_is_inbox() {
+        assert_eq!(detect_status_from_keywords("Buy groceries"), "inbox");
+        assert_eq!(detect_status_from_keywords("Call the dentist tomorrow"), "inbox");
+        assert_eq!(detect_status_from_keywords("Review the mockups"), "inbox");
+    }
+
+    #[test]
+    fn keyword_detects_blocked() {
+        assert_eq!(detect_status_from_keywords("This is blocked by the security review"), "blocked");
+        assert_eq!(detect_status_from_keywords("Waiting on the client to respond"), "blocked");
+        assert_eq!(detect_status_from_keywords("Can't proceed until we get approval"), "blocked");
+        assert_eq!(detect_status_from_keywords("Stuck on the API migration"), "blocked");
+    }
+
+    #[test]
+    fn keyword_detects_icebox() {
+        assert_eq!(detect_status_from_keywords("Icebox task to learn piano"), "icebox");
+        assert_eq!(detect_status_from_keywords("Put this in the ice box"), "icebox");
+    }
+
+    #[test]
+    fn keyword_icebox_is_narrow() {
+        // "maybe" and "might" alone should NOT trigger icebox
+        assert_eq!(detect_status_from_keywords("Maybe call the bank"), "inbox");
+        assert_eq!(detect_status_from_keywords("I might need to do this"), "inbox");
+        assert_eq!(detect_status_from_keywords("One day learn guitar"), "inbox");
+        assert_eq!(detect_status_from_keywords("Eventually get around to it"), "inbox");
+    }
+
+    #[test]
+    fn keyword_detects_in_progress() {
+        assert_eq!(detect_status_from_keywords("This is in progress"), "in-progress");
+        assert_eq!(detect_status_from_keywords("Already started the refactor"), "in-progress");
+        assert_eq!(detect_status_from_keywords("Working on the dashboard"), "in-progress");
+    }
+
+    #[test]
+    fn keyword_case_insensitive() {
+        assert_eq!(detect_status_from_keywords("This is BLOCKED"), "blocked");
+        assert_eq!(detect_status_from_keywords("ICEBOX this task"), "icebox");
+        assert_eq!(detect_status_from_keywords("IN PROGRESS refactor"), "in-progress");
+    }
 }
 
 // =============================================================================
@@ -387,8 +473,11 @@ mod eval {
         let response = crate::apple_intelligence::process_text(&system_prompt, input, 0)
             .expect("Apple Intelligence call failed");
 
-        let result = parse_ai_response(&response, input, &projects, &areas)
+        let mut result = parse_ai_response(&response, input, &projects, &areas)
             .expect("Response parsing failed");
+
+        // Apply keyword detection (same as production code path)
+        result.status = detect_status_from_keywords(input).to_string();
 
         let mut failures = Vec::new();
 
@@ -610,7 +699,7 @@ mod eval {
             (
                 "Call the dentist tomorrow about that crown",
                 Expected {
-                    title_contains: "dentist", status: "ready",
+                    title_contains: "dentist", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
                     body_empty: None,
@@ -619,7 +708,7 @@ mod eval {
             (
                 "Pick up the dry cleaning tomorrow",
                 Expected {
-                    title_contains: "dry cleaning", status: "ready",
+                    title_contains: "dry cleaning", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
                     body_empty: None,
@@ -628,7 +717,7 @@ mod eval {
             (
                 "Send that email to Sarah tomorrow morning",
                 Expected {
-                    title_contains: "Sarah", status: "ready",
+                    title_contains: "Sarah", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-26"), due: None, defer: None,
                     body_empty: None,
@@ -674,7 +763,7 @@ mod eval {
             (
                 "Buy milk this afternoon",
                 Expected {
-                    title_contains: "milk", status: "ready",
+                    title_contains: "milk", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-25"), due: None, defer: None,
                     body_empty: None,
@@ -683,7 +772,7 @@ mod eval {
             (
                 "Call the bank today about that charge",
                 Expected {
-                    title_contains: "bank", status: "ready",
+                    title_contains: "bank", status: "inbox",
                     project: None, area: None,
                     scheduled: Some("2026-03-25"), due: None, defer: None,
                     body_empty: None,
@@ -738,7 +827,7 @@ mod eval {
             (
                 "Maybe one day learn to play guitar",
                 Expected {
-                    title_contains: "guitar", status: "icebox",
+                    title_contains: "guitar", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
                     body_empty: None,
@@ -747,7 +836,7 @@ mod eval {
             (
                 "I might eventually look into getting a motorbike licence",
                 Expected {
-                    title_contains: "motorbike", status: "icebox",
+                    title_contains: "motorbike", status: "inbox",
                     project: None, area: None,
                     scheduled: None, due: None, defer: None,
                     body_empty: None,
@@ -770,7 +859,7 @@ mod eval {
             (
                 "Can't finish the Garden Renovation until the quote comes back",
                 Expected {
-                    title_contains: "Garden", status: "blocked",
+                    title_contains: "Garden", status: "inbox",  // no explicit "blocked" keyword
                     project: Some("p-garden"), area: None,
                     scheduled: None, due: None, defer: None,
                     body_empty: None,

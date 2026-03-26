@@ -51,12 +51,6 @@ title: Rewrite the input as a concise, actionable task title.
 body: Include only if the input has meaningful detail beyond what the title captures. \
 Otherwise empty string.
 
-status: Use 'inbox' unless the input clearly indicates otherwise. \
-Use 'ready' only for explicit immediacy ('today', 'this afternoon', 'right now'). \
-Use 'blocked' only if the input says something is blocked or waiting. \
-Use 'icebox' only for explicit maybe/someday language. \
-Use 'inProgress' only if the input says work has already started.
-
 project: Set only if the input explicitly names a project from the list above. \
 Empty string if no project is mentioned by name.
 
@@ -88,17 +82,17 @@ fn build_examples_block(today: &str) -> String {
         "Examples:\n\
          \n\
          Input: \"Buy groceries for the week\"\n\
-         Output: {{\"title\":\"Buy groceries\",\"body\":\"\",\"status\":\"inbox\",\
+         Output: {{\"title\":\"Buy groceries\",\"body\":\"\",\
          \"due\":\"\",\"scheduled\":\"\",\"deferUntil\":\"\",\"project\":\"\",\"area\":\"\"}}\n\
          \n\
          Input: \"Call the dentist tomorrow about that crown\"\n\
-         Output: {{\"title\":\"Call dentist about crown\",\"body\":\"\",\"status\":\"ready\",\
+         Output: {{\"title\":\"Call dentist about crown\",\"body\":\"\",\
          \"due\":\"\",\"scheduled\":\"{tomorrow}\",\"deferUntil\":\"\",\"project\":\"\",\"area\":\"\"}}\n\
          \n\
-         Input: \"I need to submit the Q1 tax return by April 15th, gather all the receipts first\"\n\
-         Output: {{\"title\":\"Submit Q1 tax return\",\"body\":\"Gather all receipts first.\",\
-         \"status\":\"inbox\",\"due\":\"2026-04-15\",\"scheduled\":\"\",\"deferUntil\":\"\",\
-         \"project\":\"Q1 Tax Preparation\",\"area\":\"\"}}"
+         Input: \"Finish the Newsletter Setup landing page by end of March\"\n\
+         Output: {{\"title\":\"Finish Newsletter Setup landing page\",\"body\":\"\",\
+         \"due\":\"2026-03-31\",\"scheduled\":\"\",\"deferUntil\":\"\",\
+         \"project\":\"Newsletter Setup\",\"area\":\"\"}}"
     )
 }
 

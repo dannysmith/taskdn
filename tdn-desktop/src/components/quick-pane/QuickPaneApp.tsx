@@ -295,15 +295,13 @@ export default function QuickPaneApp() {
         setShowBody(true)
       }
 
-      // Map status string to TaskStatus
+      // Set status from keyword detection (Rust handles this, not the LLM)
       const validStatuses: TaskStatus[] = [
         'inbox',
         'icebox',
         'ready',
         'in-progress',
         'blocked',
-        'dropped',
-        'done',
       ]
       if (validStatuses.includes(parsed.status as TaskStatus)) {
         setStatus(parsed.status as TaskStatus)
@@ -314,6 +312,19 @@ export default function QuickPaneApp() {
       if (parsed.deferUntil) setDeferUntil(parsed.deferUntil)
       if (parsed.projectId) setProjectId(parsed.projectId)
       if (parsed.areaId) setAreaId(parsed.areaId)
+
+      // Auto-ready Rule 2 (AI only): if scheduled within 7 days and status
+      // is still inbox (keyword detection didn't override), promote to ready.
+      if (parsed.status === 'inbox' && parsed.scheduled) {
+        const scheduledDate = new Date(parsed.scheduled + 'T00:00:00')
+        const now = new Date()
+        const daysUntil = Math.floor(
+          (scheduledDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+        )
+        if (daysUntil >= 0 && daysUntil <= 7) {
+          setStatus('ready')
+        }
+      }
 
       logger.info('AI processing complete')
     } catch (error) {
