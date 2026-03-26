@@ -162,12 +162,11 @@ Key areas to improve:
 
 - Re-processing support (user processes, edits title, processes again)
 - Cancellation during processing (Escape while LLM is running)
-- Very long input handling (context window limits?)
 
-### Phase 11: Docs
+### Phase 11: Docs ✅
 
-- Update developer quick-entry pane docs as needed
-- Update userguide page on Quick Entry pane to mention:
-  A) Auto-setting of status to Ready when (project || area) && (scheduled || defer-until) are set
-  B) Basic explanation of how the sparkle button works and what it's for, and when it's available
-- Update apple-intelligence.md developer doc so it's accurate about how things currently work, including the eval harness
+Done. Updated:
+- `tdn-desktop/docs/developer/quick-panes.md` — added AI shortcut, auto-ready, and Apple Intelligence integration sections
+- `tdn-desktop/docs/developer/apple-intelligence.md` — updated eval baseline, added async/spawn_blocking note
+- `website/src/content/docs/desktop/quick-entry-pane.mdx` — added auto-ready and AI processing sections
+- `website/src/content/docs/reference/desktop-reference/keyboard-shortcuts.mdx` — added `Cmd+Shift+A` shortcut

@@ -30,7 +30,7 @@ The Tauri command `process_quick_entry_text` receives the raw text and context. 
 - Today's date and day of week
 - A structured list of areas and their projects (e.g. "Acme Corp: Acme Dashboard Redesign")
 - Per-field instructions explaining when to set each field and when to leave it empty
-- 2-3 few-shot examples showing input text → expected JSON output, including an example where most fields are empty
+- Few-shot examples showing input text → expected JSON output, including examples with empty fields
 
 The few-shot examples are the single highest-impact part of the prompt. They teach the model the expected output format and, critically, that leaving fields empty is the right thing to do when information isn't present.
 
@@ -49,6 +49,8 @@ The date fields are `*Ref` fields — the model extracts raw date expressions ("
 If `@Generable` succeeds (the normal path), the typed `ParsedTask` struct is manually serialized to a JSON string. If it fails (rare), the function falls back to a plain `session.respond()` call — the model typically returns a JSON code block in this case.
 
 Because the Swift call is `async` but the C FFI is synchronous, a `DispatchSemaphore` bridges the two. A detached task runs the inference, signals the semaphore on completion, and the calling thread blocks until it's done. This takes ~2-3 seconds on Apple Silicon.
+
+The Tauri command is `async` and wraps the blocking FFI call in `tauri::async_runtime::spawn_blocking` to keep the main thread free (avoiding the beach ball cursor and allowing React to render the loading spinner).
 
 ### 6. Rust parses, resolves, and validates the response
 
@@ -159,7 +161,7 @@ The command builds the system prompt, calls the FFI, parses the response, resolv
 `src/commands/ai_prompts.rs` centralizes all prompt text. This is the primary file to edit when iterating on prompt quality. It contains:
 
 - `build_system_prompt()` — Assembles the complete prompt from role text, context, field instructions, and few-shot examples
-- `build_context_block()` — Formats areas and their projects as a structured list
+- `build_context_block()` — Formats areas and projects as separate lists for the prompt
 - `build_examples_block()` — Few-shot input→output pairs showing raw date expression extraction
 
 ### Date Resolution and Fuzzy Matching
@@ -177,13 +179,15 @@ The command builds the system prompt, calls the FFI, parses the response, resolv
 struct ParsedTask: Sendable {
     let title: String           // concise task title
     let body: String            // extra detail, or empty string
-    let dueRef: String          // raw deadline expression, or empty string
-    let scheduledRef: String    // raw scheduling expression, or empty string
-    let deferUntilRef: String   // raw deferral expression, or empty string
     let project: String         // project name or empty string
     let area: String            // area name or empty string
+    let scheduledRef: String    // raw scheduling expression, or empty string
+    let dueRef: String          // raw deadline expression, or empty string
+    let deferUntilRef: String   // raw deferral expression, or empty string
 }
 ```
+
+Properties generate in declaration order. Project/area are placed before dates so the model considers them while the input is still fresh in context.
 
 `@Generable` uses constrained decoding — the model's token generation is structurally constrained to produce valid output matching the struct.
 
@@ -191,7 +195,7 @@ Note: **status is not in the struct** — it was removed because the model was i
 
 Date fields are `*Ref` fields containing raw expressions ("tomorrow", "next Monday", "end of March") rather than YYYY-MM-DD dates. The model is good at text extraction but bad at date arithmetic, so date computation is done deterministically in Rust.
 
-Each field has a `@Guide(description:)` annotation providing a short hint. The system prompt carries the detailed decision-making instructions. Properties generate in declaration order.
+Each field has a `@Guide(description:)` annotation providing a short hint. The system prompt carries the detailed decision-making instructions.
 
 ## Frontend Integration
 
@@ -252,7 +256,7 @@ Takes ~50 seconds (31 LLM calls). Prints a per-case pass/fail summary with raw v
 
 The harness does NOT assert on failure — it's a measurement tool, not a hard test. Some failures are expected while iterating on prompts.
 
-Current baseline: **16/31 passing**.
+As of March 2026, **~18/31 eval tests pass** — the remaining failures are mostly the model inconsistently extracting date expressions and project names from input. Run the eval across multiple runs to account for non-determinism.
 
 ### Unit tests
 
@@ -262,7 +266,7 @@ Deterministic logic (date resolution, fuzzy matching, keyword status detection) 
 cd tdn-desktop/src-tauri && cargo test --lib
 ```
 
-Currently 263+ tests including 19 for date resolution/fuzzy matching and 8 for keyword status detection.
+These cover date resolution patterns, fuzzy project/area matching, and keyword-based status detection.
 
 ## Known Limitations
 
