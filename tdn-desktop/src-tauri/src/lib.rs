@@ -222,29 +222,55 @@ fn setup_vault(app: &mut App) {
     }
 }
 
-/// Handle application run events, particularly window close cleanup.
+/// Handle application run events.
+///
+/// On macOS, closing the main window hides the app instead of quitting,
+/// following standard macOS behavior. The app can be reopened via the dock icon.
+/// On other platforms, closing the main window quits the app normally.
 fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
-    if let RunEvent::WindowEvent {
-        label,
-        event: WindowEvent::CloseRequested { .. },
-        ..
-    } = &event
-    {
-        if label == "main" {
-            handle_main_window_close(app_handle);
+    match &event {
+        RunEvent::WindowEvent {
+            label,
+            event: WindowEvent::CloseRequested { api, .. },
+            ..
+        } if label == "main" => {
+            log::info!("Main window close requested");
+            save_window_state(app_handle);
+
+            // On macOS, hide the app instead of closing — standard macOS behavior.
+            // The app stays running for dock icon reopen and global shortcuts.
+            // Cmd+Q and the Quit menu item bypass CloseRequested entirely,
+            // so they still quit the app normally.
+            #[cfg(target_os = "macos")]
+            {
+                api.prevent_close();
+                if let Err(e) = app_handle.hide() {
+                    log::warn!("Failed to hide app: {e}");
+                }
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            { _ = api; }
         }
+        RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
+            if !*has_visible_windows {
+                log::info!("App reopen requested - showing main window");
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        }
+        RunEvent::Exit => {
+            log::info!("Application exiting - performing cleanup");
+            hide_quick_pane(app_handle);
+            unregister_global_shortcuts(app_handle);
+        }
+        _ => {}
     }
-}
-
-/// Perform cleanup when the main window is closed.
-fn handle_main_window_close(app_handle: &AppHandle) {
-    log::info!("Main window close requested - performing cleanup");
-
-    save_window_state(app_handle);
-    hide_quick_pane(app_handle);
-    unregister_global_shortcuts(app_handle);
-
-    log::info!("Cleanup complete, allowing close to proceed");
 }
 
 /// Save window state before closing.
@@ -262,13 +288,13 @@ fn save_window_state(app_handle: &AppHandle) {
 #[cfg(not(desktop))]
 fn save_window_state(_app_handle: &AppHandle) {}
 
-/// Hide the quick-pane panel before main window closes.
+/// Hide the quick-pane panel during app cleanup.
 #[cfg(target_os = "macos")]
 fn hide_quick_pane(app_handle: &AppHandle) {
     use tauri_nspanel::ManagerExt;
 
     if let Ok(panel) = app_handle.get_webview_panel("quick-pane") {
-        log::debug!("Hiding quick-pane panel before close");
+        log::debug!("Hiding quick-pane panel");
         panel.hide();
     }
 }
@@ -276,7 +302,7 @@ fn hide_quick_pane(app_handle: &AppHandle) {
 #[cfg(not(target_os = "macos"))]
 fn hide_quick_pane(_app_handle: &AppHandle) {}
 
-/// Unregister all global shortcuts.
+/// Unregister all global shortcuts during app cleanup.
 #[cfg(desktop)]
 fn unregister_global_shortcuts(app_handle: &AppHandle) {
     use tauri_plugin_global_shortcut::GlobalShortcutExt;
