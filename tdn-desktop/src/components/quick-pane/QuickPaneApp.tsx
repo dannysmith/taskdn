@@ -149,6 +149,21 @@ export default function QuickPaneApp() {
   }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Auto-Ready: promote inbox → ready when task appears "processed"
+  // A task with (project or area) AND (scheduled or defer-until) has enough
+  // context that it doesn't need to sit in the inbox for manual processing.
+  // ─────────────────────────────────────────────────────────────────────────
+
+  React.useEffect(() => {
+    const hasProjectOrArea = projectId !== null || areaId !== null
+    const hasScheduleOrDefer = scheduled !== null || deferUntil !== null
+
+    if (hasProjectOrArea && hasScheduleOrDefer) {
+      setStatus(prev => (prev === 'inbox' ? 'ready' : prev))
+    }
+  }, [projectId, areaId, scheduled, deferUntil])
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Dismiss with Animation
   // ─────────────────────────────────────────────────────────────────────────
 
