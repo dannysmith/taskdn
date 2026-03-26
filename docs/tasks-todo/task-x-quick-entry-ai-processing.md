@@ -172,7 +172,4 @@ Start with case-insensitive substring (covers the "Japan Trip" case) and evaluat
 
 - Re-processing support (user processes, edits title, processes again)
 - Cancellation during processing (Escape while LLM is running)
-- Very long input handling (context window limits)
-- Non-English input behaviour
-- Test on machines without FoundationModels SDK (stub build)
-- Test availability detection on Intel Macs / older macOS
+- Very long input handling (context window limits?)
