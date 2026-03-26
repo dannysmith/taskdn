@@ -488,179 +488,356 @@ mod eval {
     #[test]
     #[ignore]
     fn eval_ai() {
+        // Note: EVAL_DATE is 2026-03-25, a Wednesday.
+        // Thu=26, Fri=27, Sat=28, Sun=29, Mon=30, Tue=31, Wed Apr 1, Thu=2, Fri=3
         let cases: Vec<(&str, Expected)> = vec![
-            // ── Simple inputs (should leave most fields empty) ───────
+
+            // =============================================================
+            // SIMPLE INPUTS — no metadata expected
+            // =============================================================
+
             (
                 "Buy groceries for the week",
                 Expected {
-                    title_contains: "groceries",
-                    status: "inbox",
-                    project: None,
-                    area: None,
-                    scheduled: None,
-                    due: None,
-                    defer: None,
+                    title_contains: "groceries", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
                     body_empty: true,
                 },
             ),
             (
                 "Look into upgrading the database",
                 Expected {
-                    title_contains: "database",
-                    status: "inbox",
-                    project: None,
-                    area: None,
-                    scheduled: None,
-                    due: None,
-                    defer: None,
+                    title_contains: "database", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
                     body_empty: true,
                 },
             ),
             (
                 "Remember to water the plants",
                 Expected {
-                    title_contains: "water",
-                    status: "inbox",
-                    project: None,
-                    area: None,
-                    scheduled: None,
-                    due: None,
-                    defer: None,
+                    title_contains: "water", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
                     body_empty: true,
                 },
             ),
-            // ── Project/area matching ────────────────────────────────
+            (
+                "Think about what to get mum for her birthday",
+                Expected {
+                    title_contains: "mum", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: true,
+                },
+            ),
+
+            // =============================================================
+            // PROJECT MATCHING — explicit project names in input
+            // =============================================================
+
             (
                 "Review the Acme Dashboard Redesign mockups",
                 Expected {
-                    title_contains: "mockup",
-                    status: "inbox",
-                    project: Some("p-acme"),
-                    area: None,   // area should come from project, not be set separately
-                    scheduled: None,
-                    due: None,
-                    defer: None,
+                    title_contains: "mockup", status: "inbox",
+                    project: Some("p-acme"), area: None,
+                    scheduled: None, due: None, defer: None,
                     body_empty: false,
                 },
             ),
             (
                 "Write a blog post for the Tech Blog Relaunch",
                 Expected {
-                    title_contains: "blog",
-                    status: "inbox",
-                    project: Some("p-blog"),
-                    area: None,
-                    scheduled: None,
-                    due: None,
-                    defer: None,
+                    title_contains: "blog", status: "inbox",
+                    project: Some("p-blog"), area: None,
+                    scheduled: None, due: None, defer: None,
                     body_empty: false,
                 },
             ),
-            // ── Date extraction ──────────────────────────────────────
+            (
+                "Check the Open Source CLI Tool issue tracker",
+                Expected {
+                    title_contains: "CLI", status: "inbox",
+                    project: Some("p-cli"), area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+            // Partial name — "Japan Trip" should match "Japan Trip 2025"
+            // (currently fails with exact matching — tests fuzzy matching improvement)
+            (
+                "Email James about the Japan Trip",
+                Expected {
+                    title_contains: "James", status: "inbox",
+                    project: Some("p-japan"), area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // AREA MATCHING — explicit area names in input
+            // =============================================================
+
+            (
+                "Send the January invoice to Acme Corp",
+                Expected {
+                    title_contains: "invoice", status: "inbox",
+                    project: None, area: Some("a-acme"),
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // SCHEDULED DATES — "tomorrow" variations
+            // =============================================================
+
             (
                 "Call the dentist tomorrow about that crown",
                 Expected {
-                    title_contains: "dentist",
-                    status: "ready",
-                    project: None,
-                    area: None,
-                    scheduled: Some("2026-03-26"),
-                    due: None,
-                    defer: None,
+                    title_contains: "dentist", status: "ready",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-26"), due: None, defer: None,
                     body_empty: false,
                 },
             ),
             (
-                "Submit the Q1 tax return by April 15th",
+                "Pick up the dry cleaning tomorrow",
                 Expected {
-                    title_contains: "tax",
-                    status: "inbox",
-                    project: Some("p-tax"),
-                    area: None,
-                    scheduled: None,
-                    due: Some("2026-04-15"),
-                    defer: None,
+                    title_contains: "dry cleaning", status: "ready",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-26"), due: None, defer: None,
                     body_empty: false,
                 },
             ),
+            (
+                "Send that email to Sarah tomorrow morning",
+                Expected {
+                    title_contains: "Sarah", status: "ready",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-26"), due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // SCHEDULED DATES — "this Friday" / "next Monday" / specific days
+            // =============================================================
+
             (
                 "Schedule a team meeting for this Friday",
                 Expected {
-                    title_contains: "meeting",
-                    status: "inbox",
-                    project: None,
-                    area: None,
-                    scheduled: Some("2026-03-27"),
-                    due: None,
-                    defer: None,
+                    title_contains: "meeting", status: "inbox",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-27"), due: None, defer: None,
                     body_empty: false,
                 },
             ),
-            // ── Status detection ─────────────────────────────────────
+            (
+                "Lunch with Tom on Thursday",
+                Expected {
+                    title_contains: "Tom", status: "inbox",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-26"), due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Schedule the Half Marathon Training run for next Monday",
+                Expected {
+                    title_contains: "run", status: "inbox",
+                    project: Some("p-marathon"), area: None,
+                    scheduled: Some("2026-03-30"), due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // SCHEDULED DATES — "today" / "this afternoon"
+            // =============================================================
+
             (
                 "Buy milk this afternoon",
                 Expected {
-                    title_contains: "milk",
-                    status: "ready",
-                    project: None,
-                    area: None,
-                    scheduled: Some("2026-03-25"), // today
-                    due: None,
-                    defer: None,
+                    title_contains: "milk", status: "ready",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-25"), due: None, defer: None,
                     body_empty: false,
                 },
             ),
             (
-                "Maybe one day learn to play guitar",
+                "Call the bank today about that charge",
                 Expected {
-                    title_contains: "guitar",
-                    status: "icebox",
-                    project: None,
-                    area: None,
-                    scheduled: None,
-                    due: None,
-                    defer: None,
-                    body_empty: true,
-                },
-            ),
-            (
-                "The API refactor is blocked waiting on the security review",
-                Expected {
-                    title_contains: "API",
-                    status: "blocked",
-                    project: None,
-                    area: None,
-                    scheduled: None,
-                    due: None,
-                    defer: None,
+                    title_contains: "bank", status: "ready",
+                    project: None, area: None,
+                    scheduled: Some("2026-03-25"), due: None, defer: None,
                     body_empty: false,
                 },
             ),
-            // ── Complex / dictation-style ────────────────────────────
+
+            // =============================================================
+            // DUE DATES — deadline language
+            // =============================================================
+
             (
-                "Email James about the Japan Trip, schedule for next Monday",
+                "Submit the Q1 tax return by April 15th",
                 Expected {
-                    title_contains: "James",
-                    status: "inbox",
-                    project: Some("p-japan"),
-                    area: None,
-                    scheduled: Some("2026-03-30"),
-                    due: None,
-                    defer: None,
+                    title_contains: "tax", status: "inbox",
+                    project: Some("p-tax"), area: None,
+                    scheduled: None, due: Some("2026-04-15"), defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "The report is due by Friday",
+                Expected {
+                    title_contains: "report", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: Some("2026-03-27"), defer: None,
                     body_empty: false,
                 },
             ),
             (
                 "Book flights by the end of next week",
                 Expected {
-                    title_contains: "flight",
-                    status: "inbox",
-                    project: None,
-                    area: None,
-                    scheduled: None,
-                    due: Some("2026-04-03"),
-                    defer: None,
+                    title_contains: "flight", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: Some("2026-04-03"), defer: None,
                     body_empty: false,
+                },
+            ),
+            (
+                "Renew passport, deadline is June 1st",
+                Expected {
+                    title_contains: "passport", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: Some("2026-06-01"), defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // STATUS — inbox (default, no signal)
+            // =============================================================
+            // (covered by the simple inputs above)
+
+            // =============================================================
+            // STATUS — ready (immediate action)
+            // =============================================================
+            // (covered by "this afternoon" and "today" cases above)
+
+            // =============================================================
+            // STATUS — icebox (someday/maybe)
+            // =============================================================
+
+            (
+                "Maybe one day learn to play guitar",
+                Expected {
+                    title_contains: "guitar", status: "icebox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: true,
+                },
+            ),
+            (
+                "I might eventually look into getting a motorbike licence",
+                Expected {
+                    title_contains: "motorbike", status: "icebox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // STATUS — blocked
+            // =============================================================
+
+            (
+                "The API refactor is blocked waiting on the security review",
+                Expected {
+                    title_contains: "API", status: "blocked",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Can't finish the Garden Renovation until the quote comes back",
+                Expected {
+                    title_contains: "Garden", status: "blocked",
+                    project: Some("p-garden"), area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // COMPLEX / DICTATION — multiple fields
+            // =============================================================
+
+            (
+                "Email James about the Japan Trip, schedule for next Monday",
+                Expected {
+                    title_contains: "James", status: "inbox",
+                    project: Some("p-japan"), area: None,
+                    scheduled: Some("2026-03-30"), due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "I need to send that invoice to Acme Corp by the end of the month",
+                Expected {
+                    title_contains: "invoice", status: "inbox",
+                    project: None, area: Some("a-acme"),
+                    scheduled: None, due: Some("2026-03-31"), defer: None,
+                    body_empty: false,
+                },
+            ),
+            (
+                "Review the Newsletter Setup project tomorrow, we need to get it done before April",
+                Expected {
+                    title_contains: "Newsletter", status: "inbox",
+                    project: Some("p-newsletter"), area: None,
+                    scheduled: Some("2026-03-26"), due: Some("2026-03-31"), defer: None,
+                    body_empty: false,
+                },
+            ),
+
+            // =============================================================
+            // NO HALLUCINATION — inputs that might trick the model
+            // =============================================================
+
+            // Mentions "health" but not as an area reference
+            (
+                "Check if my health insurance covers this procedure",
+                Expected {
+                    title_contains: "insurance", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: false,
+                },
+            ),
+            // Mentions "home" but not as an area reference
+            (
+                "Pick up something on the way home",
+                Expected {
+                    title_contains: "home", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: true,
+                },
+            ),
+            // Mentions "learning" but not as an area reference
+            (
+                "I'm learning a lot from this course",
+                Expected {
+                    title_contains: "course", status: "inbox",
+                    project: None, area: None,
+                    scheduled: None, due: None, defer: None,
+                    body_empty: true,
                 },
             ),
         ];
