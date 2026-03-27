@@ -14,7 +14,8 @@ pub mod vault;
 mod apple_intelligence;
 
 use std::error::Error;
-use tauri::{App, AppHandle, Manager, RunEvent, WindowEvent};
+use std::time::Duration;
+use tauri::{App, AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 use vault::VaultManager;
 
 // Re-export only what's needed externally
@@ -220,31 +221,100 @@ fn setup_vault(app: &mut App) {
     } else {
         log::info!("Vault not configured - user needs to set directory paths in preferences");
     }
+
+    // Start periodic rescan as a safety net for missed file watcher events
+    start_periodic_rescan(app.handle().clone());
 }
 
-/// Handle application run events, particularly window close cleanup.
-fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
-    if let RunEvent::WindowEvent {
-        label,
-        event: WindowEvent::CloseRequested { .. },
-        ..
-    } = &event
-    {
-        if label == "main" {
-            handle_main_window_close(app_handle);
+/// Interval between periodic vault rescans.
+const RESCAN_INTERVAL: Duration = Duration::from_secs(5 * 60);
+
+/// Periodically rescan the vault to catch any changes the file watcher may have missed.
+///
+/// This handles cases where the watcher dies silently, events are lost during
+/// macOS App Nap / Screen Time suspension, or FSEvents coalesces events.
+fn start_periodic_rescan(app_handle: AppHandle) {
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(RESCAN_INTERVAL);
+
+            let vault_manager = app_handle.state::<VaultManager>();
+            if !vault_manager.is_configured() {
+                continue;
+            }
+
+            log::debug!("Periodic vault rescan running");
+            match vault_manager.refresh() {
+                Ok(()) => {
+                    if let Err(e) = app_handle.emit(vault::VAULT_CHANGED_EVENT, ()) {
+                        log::error!("Failed to emit vault-changed event after rescan: {e}");
+                    }
+                }
+                Err(e) => {
+                    log::warn!("Periodic vault rescan failed: {e:?}");
+                }
+            }
         }
-    }
+    });
 }
 
-/// Perform cleanup when the main window is closed.
-fn handle_main_window_close(app_handle: &AppHandle) {
-    log::info!("Main window close requested - performing cleanup");
+/// Handle application run events.
+///
+/// On macOS, closing the main window hides the app instead of quitting,
+/// following standard macOS behavior. The app can be reopened via the dock icon.
+/// On other platforms, closing the main window quits the app normally.
+fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
+    match &event {
+        RunEvent::WindowEvent {
+            label,
+            event: WindowEvent::CloseRequested { api, .. },
+            ..
+        } if label == "main" => {
+            log::info!("Main window close requested");
+            save_window_state(app_handle);
 
-    save_window_state(app_handle);
-    hide_quick_pane(app_handle);
-    unregister_global_shortcuts(app_handle);
+            // On macOS, hide the main window instead of closing — standard macOS behavior.
+            // We hide the window (not the app) so the quick pane can be shown independently
+            // without triggering a system-level app unhide. Cmd+H still hides the whole app
+            // via NSApplication.hide() as normal. Cmd+Q and the Quit menu item bypass
+            // CloseRequested entirely, so they still quit the app normally.
+            #[cfg(target_os = "macos")]
+            {
+                api.prevent_close();
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.hide();
+                }
+            }
 
-    log::info!("Cleanup complete, allowing close to proceed");
+            #[cfg(not(target_os = "macos"))]
+            { _ = api; }
+        }
+        RunEvent::Reopen {
+            has_visible_windows,
+            ..
+        } => {
+            if !*has_visible_windows {
+                log::info!("App reopen requested - showing main window");
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.show();
+                    // Restore saved position/size — the window-state plugin only
+                    // auto-restores on startup, not after a hide/show cycle.
+                    #[cfg(desktop)]
+                    {
+                        use tauri_plugin_window_state::{StateFlags, WindowExt};
+                        let _ = window.restore_state(StateFlags::all());
+                    }
+                    let _ = window.set_focus();
+                }
+            }
+        }
+        RunEvent::Exit => {
+            log::info!("Application exiting - performing cleanup");
+            hide_quick_pane(app_handle);
+            unregister_global_shortcuts(app_handle);
+        }
+        _ => {}
+    }
 }
 
 /// Save window state before closing.
@@ -262,13 +332,13 @@ fn save_window_state(app_handle: &AppHandle) {
 #[cfg(not(desktop))]
 fn save_window_state(_app_handle: &AppHandle) {}
 
-/// Hide the quick-pane panel before main window closes.
+/// Hide the quick-pane panel during app cleanup.
 #[cfg(target_os = "macos")]
 fn hide_quick_pane(app_handle: &AppHandle) {
     use tauri_nspanel::ManagerExt;
 
     if let Ok(panel) = app_handle.get_webview_panel("quick-pane") {
-        log::debug!("Hiding quick-pane panel before close");
+        log::debug!("Hiding quick-pane panel");
         panel.hide();
     }
 }
@@ -276,7 +346,7 @@ fn hide_quick_pane(app_handle: &AppHandle) {
 #[cfg(not(target_os = "macos"))]
 fn hide_quick_pane(_app_handle: &AppHandle) {}
 
-/// Unregister all global shortcuts.
+/// Unregister all global shortcuts during app cleanup.
 #[cfg(desktop)]
 fn unregister_global_shortcuts(app_handle: &AppHandle) {
     use tauri_plugin_global_shortcut::GlobalShortcutExt;

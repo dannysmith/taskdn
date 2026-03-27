@@ -25,7 +25,7 @@ pub use entities::{
     ProjectUpdate, Task, TaskStatus, TaskUpdate,
 };
 pub use error::VaultError;
-pub use manager::{VaultIndex, VaultManager};
+pub use manager::{VaultIndex, VaultManager, VAULT_CHANGED_EVENT};
 pub use scanner::{
     parse_area_file, parse_project_file, parse_task_file, scan_areas, scan_projects, scan_tasks,
     VaultConfig,
