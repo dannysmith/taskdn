@@ -27,7 +27,7 @@ use crate::vault::{
 };
 
 /// Event emitted when vault data changes (for frontend cache invalidation)
-const VAULT_CHANGED_EVENT: &str = "vault-changed";
+pub const VAULT_CHANGED_EVENT: &str = "vault-changed";
 
 /// Debounce interval for file watcher
 const DEBOUNCE_DURATION: Duration = Duration::from_millis(100);
@@ -264,8 +264,16 @@ impl VaultManager {
                         }
                     }
                     Err(errors) => {
-                        for e in errors {
+                        for e in &errors {
                             warn!("File watcher error: {e}");
+                        }
+                        // Emit vault-changed so the frontend triggers a refresh,
+                        // picking up any events the watcher may have missed.
+                        if !errors.is_empty() {
+                            warn!("Triggering vault refresh due to watcher errors");
+                            if let Err(e) = app_handle.emit(VAULT_CHANGED_EVENT, ()) {
+                                error!("Failed to emit vault-changed event after watcher error: {e}");
+                            }
                         }
                     }
                 }

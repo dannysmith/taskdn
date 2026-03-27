@@ -14,7 +14,8 @@ pub mod vault;
 mod apple_intelligence;
 
 use std::error::Error;
-use tauri::{App, AppHandle, Manager, RunEvent, WindowEvent};
+use std::time::Duration;
+use tauri::{App, AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 use vault::VaultManager;
 
 // Re-export only what's needed externally
@@ -220,6 +221,41 @@ fn setup_vault(app: &mut App) {
     } else {
         log::info!("Vault not configured - user needs to set directory paths in preferences");
     }
+
+    // Start periodic rescan as a safety net for missed file watcher events
+    start_periodic_rescan(app.handle().clone());
+}
+
+/// Interval between periodic vault rescans.
+const RESCAN_INTERVAL: Duration = Duration::from_secs(5 * 60);
+
+/// Periodically rescan the vault to catch any changes the file watcher may have missed.
+///
+/// This handles cases where the watcher dies silently, events are lost during
+/// macOS App Nap / Screen Time suspension, or FSEvents coalesces events.
+fn start_periodic_rescan(app_handle: AppHandle) {
+    std::thread::spawn(move || {
+        loop {
+            std::thread::sleep(RESCAN_INTERVAL);
+
+            let vault_manager = app_handle.state::<VaultManager>();
+            if !vault_manager.is_configured() {
+                continue;
+            }
+
+            log::debug!("Periodic vault rescan running");
+            match vault_manager.refresh() {
+                Ok(()) => {
+                    if let Err(e) = app_handle.emit(vault::VAULT_CHANGED_EVENT, ()) {
+                        log::error!("Failed to emit vault-changed event after rescan: {e}");
+                    }
+                }
+                Err(e) => {
+                    log::warn!("Periodic vault rescan failed: {e:?}");
+                }
+            }
+        }
+    });
 }
 
 /// Handle application run events.
