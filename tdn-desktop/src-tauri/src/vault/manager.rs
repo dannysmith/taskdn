@@ -95,19 +95,25 @@ impl VaultIndex {
         self.areas.get(id)
     }
 
-    /// Get all tasks
+    /// Get all tasks, sorted alphabetically by title for deterministic ordering.
     pub fn all_tasks(&self) -> Vec<Task> {
-        self.tasks.values().cloned().collect()
+        let mut tasks: Vec<Task> = self.tasks.values().cloned().collect();
+        tasks.sort_by_cached_key(|t| t.title.to_lowercase());
+        tasks
     }
 
-    /// Get all projects
+    /// Get all projects, sorted alphabetically by title for deterministic ordering.
     pub fn all_projects(&self) -> Vec<Project> {
-        self.projects.values().cloned().collect()
+        let mut projects: Vec<Project> = self.projects.values().cloned().collect();
+        projects.sort_by_cached_key(|p| p.title.to_lowercase());
+        projects
     }
 
-    /// Get all areas
+    /// Get all areas, sorted alphabetically by title for deterministic ordering.
     pub fn all_areas(&self) -> Vec<Area> {
-        self.areas.values().cloned().collect()
+        let mut areas: Vec<Area> = self.areas.values().cloned().collect();
+        areas.sort_by_cached_key(|a| a.title.to_lowercase());
+        areas
     }
 
     /// Update a task in the index

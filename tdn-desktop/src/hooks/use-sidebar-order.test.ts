@@ -126,15 +126,17 @@ describe('useSidebarOrder', () => {
       expect(result.current.orderedAreas[1]!.id).toBe('area-1')
     })
 
-    it('filters out deleted areas from stored order', () => {
+    it('filters out deleted areas and appends new areas', () => {
       useDisplayOrderStore.setState({
         sidebarAreaOrder: ['area-nonexistent', 'area-1'],
       })
 
       const { result } = renderHook(() => useSidebarOrder())
 
-      expect(result.current.orderedAreas).toHaveLength(1)
+      // area-nonexistent is removed, area-1 keeps its position, area-2 is appended
+      expect(result.current.orderedAreas).toHaveLength(2)
       expect(result.current.orderedAreas[0]!.id).toBe('area-1')
+      expect(result.current.orderedAreas[1]!.id).toBe('area-2')
     })
 
     it('excludes archived areas', () => {
@@ -190,7 +192,7 @@ describe('useSidebarOrder', () => {
       expect(projects.map(p => p.id)).toEqual(['project-2', 'project-1'])
     })
 
-    it('filters out deleted projects', () => {
+    it('filters out deleted projects and appends new projects', () => {
       useDisplayOrderStore.setState({
         sidebarProjectOrder: {
           'area-1': ['project-nonexistent', 'project-1'],
@@ -200,7 +202,8 @@ describe('useSidebarOrder', () => {
       const { result } = renderHook(() => useSidebarOrder())
 
       const projects = result.current.getOrderedProjects('area-1')
-      expect(projects.map(p => p.id)).toEqual(['project-1'])
+      // project-nonexistent is removed, project-1 keeps position, project-2 is appended
+      expect(projects.map(p => p.id)).toEqual(['project-1', 'project-2'])
     })
   })
 
