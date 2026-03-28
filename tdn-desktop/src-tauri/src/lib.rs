@@ -234,25 +234,23 @@ const RESCAN_INTERVAL: Duration = Duration::from_secs(5 * 60);
 /// This handles cases where the watcher dies silently, events are lost during
 /// macOS App Nap / Screen Time suspension, or FSEvents coalesces events.
 fn start_periodic_rescan(app_handle: AppHandle) {
-    std::thread::spawn(move || {
-        loop {
-            std::thread::sleep(RESCAN_INTERVAL);
+    std::thread::spawn(move || loop {
+        std::thread::sleep(RESCAN_INTERVAL);
 
-            let vault_manager = app_handle.state::<VaultManager>();
-            if !vault_manager.is_configured() {
-                continue;
+        let vault_manager = app_handle.state::<VaultManager>();
+        if !vault_manager.is_configured() {
+            continue;
+        }
+
+        log::debug!("Periodic vault rescan running");
+        match vault_manager.refresh() {
+            Ok(()) => {
+                if let Err(e) = app_handle.emit(vault::VAULT_CHANGED_EVENT, ()) {
+                    log::error!("Failed to emit vault-changed event after rescan: {e}");
+                }
             }
-
-            log::debug!("Periodic vault rescan running");
-            match vault_manager.refresh() {
-                Ok(()) => {
-                    if let Err(e) = app_handle.emit(vault::VAULT_CHANGED_EVENT, ()) {
-                        log::error!("Failed to emit vault-changed event after rescan: {e}");
-                    }
-                }
-                Err(e) => {
-                    log::warn!("Periodic vault rescan failed: {e:?}");
-                }
+            Err(e) => {
+                log::warn!("Periodic vault rescan failed: {e:?}");
             }
         }
     });
@@ -287,7 +285,9 @@ fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
             }
 
             #[cfg(not(target_os = "macos"))]
-            { _ = api; }
+            {
+                _ = api;
+            }
         }
         RunEvent::Reopen {
             has_visible_windows,
