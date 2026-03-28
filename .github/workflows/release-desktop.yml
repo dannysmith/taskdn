@@ -225,8 +225,15 @@ jobs:
 
   deploy-website:
     needs: update-website
-    uses: ./.github/workflows/deploy-website.yml
-    permissions:
-      contents: read
-      pages: write
-      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger website deploy
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy-website.yml',
+              ref: 'main'
+            })
