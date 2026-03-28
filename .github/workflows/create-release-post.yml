@@ -99,3 +99,11 @@ jobs:
               exit 1
             fi
           fi
+
+  deploy-website:
+    needs: create-post
+    uses: ./.github/workflows/deploy-website.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

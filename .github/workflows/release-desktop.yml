@@ -222,3 +222,11 @@ jobs:
           git add website/public/taskdn-desktop-latest.dmg website/public/taskdn-desktop-latest.msi website/public/taskdn-desktop-latest.AppImage
           git commit -m "chore(website): update desktop installers for ${{ needs.publish-tauri.outputs.tag || github.ref_name }}" || echo "No changes to commit"
           git push origin main || echo "Failed to push, continuing..."
+
+  deploy-website:
+    needs: update-website
+    uses: ./.github/workflows/deploy-website.yml
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
