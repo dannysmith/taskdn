@@ -881,39 +881,48 @@ mod tests {
     // ------------------------------------------------------------------------
 
     #[test]
-    fn vault_index_all_tasks() {
+    fn vault_index_all_tasks_sorted_alphabetically() {
         let tasks = vec![
-            test_task("task-1", "/tasks/task-1.md"),
-            test_task("task-2", "/tasks/task-2.md"),
+            test_task("z", "/tasks/z.md"),
+            test_task("a", "/tasks/a.md"),
+            test_task("m", "/tasks/m.md"),
         ];
         let index = VaultIndex::from_scans(tasks, vec![], vec![]);
 
         let all = index.all_tasks();
-        assert_eq!(all.len(), 2);
+        assert_eq!(all.len(), 3);
+        let titles: Vec<&str> = all.iter().map(|t| t.title.as_str()).collect();
+        assert_eq!(titles, vec!["Task a", "Task m", "Task z"]);
     }
 
     #[test]
-    fn vault_index_all_projects() {
+    fn vault_index_all_projects_sorted_alphabetically() {
         let projects = vec![
-            test_project("proj-1", "/projects/proj-1.md"),
-            test_project("proj-2", "/projects/proj-2.md"),
+            test_project("z", "/projects/z.md"),
+            test_project("a", "/projects/a.md"),
+            test_project("m", "/projects/m.md"),
         ];
         let index = VaultIndex::from_scans(vec![], projects, vec![]);
 
         let all = index.all_projects();
-        assert_eq!(all.len(), 2);
+        assert_eq!(all.len(), 3);
+        let titles: Vec<&str> = all.iter().map(|p| p.title.as_str()).collect();
+        assert_eq!(titles, vec!["Project a", "Project m", "Project z"]);
     }
 
     #[test]
-    fn vault_index_all_areas() {
+    fn vault_index_all_areas_sorted_alphabetically() {
         let areas = vec![
-            test_area("area-1", "/areas/area-1.md"),
-            test_area("area-2", "/areas/area-2.md"),
+            test_area("z", "/areas/z.md"),
+            test_area("a", "/areas/a.md"),
+            test_area("m", "/areas/m.md"),
         ];
         let index = VaultIndex::from_scans(vec![], vec![], areas);
 
         let all = index.all_areas();
-        assert_eq!(all.len(), 2);
+        assert_eq!(all.len(), 3);
+        let titles: Vec<&str> = all.iter().map(|a| a.title.as_str()).collect();
+        assert_eq!(titles, vec!["Area a", "Area m", "Area z"]);
     }
 
     // ------------------------------------------------------------------------
