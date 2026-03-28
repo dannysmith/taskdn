@@ -289,6 +289,7 @@ fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
                 _ = api;
             }
         }
+        #[cfg(target_os = "macos")]
         RunEvent::Reopen {
             has_visible_windows,
             ..
