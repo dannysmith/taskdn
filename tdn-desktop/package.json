@@ -2,7 +2,7 @@
   "name": "taskdn-desktop",
   "description": "A desktop application for managing tasks",
   "private": true,
-  "version": "0.1.2",
+  "version": "0.1.3",
   "type": "module",
   "author": "Danny Smith",
   "copyright": "Copyright © 2025 Danny Smith. All rights reserved.",
