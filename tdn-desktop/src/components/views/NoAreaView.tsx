@@ -8,6 +8,7 @@ import {
   useCreateTask,
   useDeleteTask,
 } from '@/services/vault'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import { useDisplayOrderStore } from '@/store/display-order-store'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
@@ -133,7 +134,7 @@ export function NoAreaView() {
     // Add regular project tasks with stored order applied
     for (const project of orphanProjects) {
       const rawProjectTasks = tasks.filter(t =>
-        t.project?.includes(project.title)
+        matchesWikilinkTitle(t.project, project.title)
       )
       const storedOrder = projectTaskOrder?.[project.id] ?? null
       const orderedProjectTasks = applyStoredOrder(rawProjectTasks, storedOrder)
@@ -154,7 +155,9 @@ export function NoAreaView() {
     // Collect all tasks from projects and orphan tasks
     const allTasks = [...orderedOrphanTasks]
     for (const project of orphanProjects) {
-      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
+      const projectTasks = tasks.filter(t =>
+        matchesWikilinkTitle(t.project, project.title)
+      )
       allTasks.push(...projectTasks)
     }
     for (const task of allTasks) {

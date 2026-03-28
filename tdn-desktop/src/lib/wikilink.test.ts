@@ -3,6 +3,7 @@ import {
   extractWikilinkTitle,
   isWikilink,
   ensureWikilink,
+  matchesWikilinkTitle,
   stripWikilink,
 } from './wikilink'
 
@@ -108,6 +109,32 @@ describe('wikilink', () => {
     it('trims whitespace', () => {
       expect(ensureWikilink('  Work  ')).toBe('[[Work]]')
       expect(ensureWikilink('  [[Work]]  ')).toBe('[[Work]]')
+    })
+  })
+
+  describe('matchesWikilinkTitle', () => {
+    it('matches exact wikilink title', () => {
+      expect(matchesWikilinkTitle('[[Work]]', 'Work')).toBe(true)
+      expect(matchesWikilinkTitle('[[My Project]]', 'My Project')).toBe(true)
+    })
+
+    it('matches wikilinks with alias or heading', () => {
+      expect(matchesWikilinkTitle('[[Work|My Job]]', 'Work')).toBe(true)
+      expect(matchesWikilinkTitle('[[Work#Section]]', 'Work')).toBe(true)
+    })
+
+    it('rejects substring matches', () => {
+      expect(matchesWikilinkTitle('[[Homework]]', 'Work')).toBe(false)
+      expect(matchesWikilinkTitle('[[Networking]]', 'Net')).toBe(false)
+    })
+
+    it('handles null and undefined', () => {
+      expect(matchesWikilinkTitle(null, 'Work')).toBe(false)
+      expect(matchesWikilinkTitle(undefined, 'Work')).toBe(false)
+    })
+
+    it('returns false for non-wikilinks', () => {
+      expect(matchesWikilinkTitle('Work', 'Work')).toBe(false)
     })
   })
 

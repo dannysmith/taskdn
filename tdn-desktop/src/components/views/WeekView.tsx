@@ -2,7 +2,7 @@ import * as React from 'react'
 import { startOfWeek, endOfWeek, isWithinInterval, parseISO } from 'date-fns'
 
 import { useVaultData, useUpdateTask, useCreateTask } from '@/services/vault'
-import { stripWikilink } from '@/lib/wikilink'
+import { matchesWikilinkTitle, stripWikilink } from '@/lib/wikilink'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useCommandContext } from '@/hooks/use-command-context'
@@ -128,13 +128,17 @@ export function WeekView() {
       let areaId: string | undefined
 
       if (task.project) {
-        const project = projects.find(p => task.project?.includes(p.title))
+        const project = projects.find(p =>
+          matchesWikilinkTitle(task.project, p.title)
+        )
         if (project) {
           projectName = project.title
           projectId = project.id
           // Get area from project if not directly set on task
           if (project.area) {
-            const area = areas.find(a => project.area?.includes(a.title))
+            const area = areas.find(a =>
+              matchesWikilinkTitle(project.area, a.title)
+            )
             if (area) {
               areaName = area.title
               areaId = area.id
@@ -145,7 +149,7 @@ export function WeekView() {
 
       // Direct area on task overrides project's area
       if (task.area) {
-        const area = areas.find(a => task.area?.includes(a.title))
+        const area = areas.find(a => matchesWikilinkTitle(task.area, a.title))
         if (area) {
           areaName = area.title
           areaId = area.id

@@ -12,6 +12,7 @@ import { useDisplayOrderStore } from '@/store/display-order-store'
 import type { Task, TaskStatus, Project } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useCommandContext } from '@/hooks/use-command-context'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import { showTaskContextMenu, showProjectContextMenu } from '@/lib/context-menu'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { useNavigationStore } from '@/store/navigation-store'
@@ -167,7 +168,7 @@ export function AreaView({ areaId }: AreaViewProps) {
     // Add regular project tasks with stored order applied
     for (const project of areaProjects) {
       const rawProjectTasks = tasks.filter(t =>
-        t.project?.includes(project.title)
+        matchesWikilinkTitle(t.project, project.title)
       )
       const storedOrder = projectTaskOrder?.[project.id] ?? null
       const orderedProjectTasks = applyStoredOrder(rawProjectTasks, storedOrder)
@@ -188,7 +189,9 @@ export function AreaView({ areaId }: AreaViewProps) {
     // Collect all tasks from projects and loose tasks
     const allTasks = [...orderedLooseTasks]
     for (const project of areaProjects) {
-      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
+      const projectTasks = tasks.filter(t =>
+        matchesWikilinkTitle(t.project, project.title)
+      )
       allTasks.push(...projectTasks)
     }
     for (const task of allTasks) {

@@ -6,7 +6,7 @@ import {
   useCreateTask,
   useDeleteTask,
 } from '@/services/vault'
-import { stripWikilink } from '@/lib/wikilink'
+import { matchesWikilinkTitle, stripWikilink } from '@/lib/wikilink'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useCommandContext } from '@/hooks/use-command-context'
@@ -70,7 +70,7 @@ export function ProjectView({ projectId }: ProjectViewProps) {
   // So we match using the project's title, not its ID
   const projectTasks = React.useMemo(() => {
     if (!project) return []
-    return tasks.filter(t => t.project?.includes(project.title))
+    return tasks.filter(t => matchesWikilinkTitle(t.project, project.title))
   }, [tasks, project])
 
   // Build tasksByStatus map for kanban view
