@@ -6,6 +6,7 @@ import {
   useUpdateProject,
 } from '@/services/vault'
 import { useDisplayOrderStore } from '@/store/display-order-store'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import type { SidebarOrder } from '@/types/sidebar-order'
 import { ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
 
@@ -41,8 +42,14 @@ export function useSidebarOrder() {
   // Compute effective area order
   const effectiveAreaOrder = useMemo(() => {
     if (sidebarAreaOrder) {
-      // Filter to only include IDs that still exist in data
-      return sidebarAreaOrder.filter(id => activeAreas.some(a => a.id === id))
+      // Keep stored order (minus deleted), then append any new items at the end
+      const kept = sidebarAreaOrder.filter(id =>
+        activeAreas.some(a => a.id === id)
+      )
+      const newIds = activeAreas
+        .filter(a => !sidebarAreaOrder.includes(a.id))
+        .map(a => a.id)
+      return [...kept, ...newIds]
     }
     return activeAreas.map(a => a.id)
   }, [sidebarAreaOrder, activeAreas])
@@ -50,21 +57,27 @@ export function useSidebarOrder() {
   // Compute effective project order for a container
   const getEffectiveProjectOrder = useCallback(
     (containerId: string): string[] => {
+      // Get the natural order for this container (used as fallback and for new items)
+      const naturalOrder = (() => {
+        if (containerId === ORPHAN_CONTAINER_ID) {
+          return projects.filter(p => !p.area).map(p => p.id)
+        }
+        const area = areas.find(a => a.id === containerId)
+        if (!area) return []
+        return projects
+          .filter(p => matchesWikilinkTitle(p.area, area.title))
+          .map(p => p.id)
+      })()
+
       if (sidebarProjectOrder?.[containerId]) {
-        // Filter to only include IDs that still exist
-        return sidebarProjectOrder[containerId].filter(id =>
-          projects.some(p => p.id === id)
-        )
+        // Keep stored order (minus deleted), then append any new items at the end
+        const storedOrder = sidebarProjectOrder[containerId]
+        const kept = storedOrder.filter(id => naturalOrder.includes(id))
+        const newIds = naturalOrder.filter(id => !storedOrder.includes(id))
+        return [...kept, ...newIds]
       }
-      // Default: projects in natural order
-      if (containerId === ORPHAN_CONTAINER_ID) {
-        return projects.filter(p => !p.area).map(p => p.id)
-      }
-      // Find area by ID to get its title for wikilink matching
-      // Project.area is a wikilink like "[[Finance]]", not an ID
-      const area = areas.find(a => a.id === containerId)
-      if (!area) return []
-      return projects.filter(p => p.area?.includes(area.title)).map(p => p.id)
+
+      return naturalOrder
     },
     [sidebarProjectOrder, projects, areas]
   )

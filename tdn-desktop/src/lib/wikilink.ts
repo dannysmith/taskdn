@@ -57,6 +57,27 @@ export function ensureWikilink(value: string): string {
 }
 
 /**
+ * Check if a wikilink reference matches a given title.
+ * Extracts the title from the wikilink and compares it exactly.
+ *
+ * This avoids false positives from substring matching — e.g.,
+ * matchesWikilinkTitle('[[Homework]]', 'Work') returns false.
+ *
+ * @example
+ * matchesWikilinkTitle('[[Work]]', 'Work') // true
+ * matchesWikilinkTitle('[[Work|My Job]]', 'Work') // true
+ * matchesWikilinkTitle('[[Homework]]', 'Work') // false
+ * matchesWikilinkTitle(null, 'Work') // false
+ */
+export function matchesWikilinkTitle(
+  reference: string | null | undefined,
+  title: string
+): boolean {
+  if (!reference) return false
+  return extractWikilinkTitle(reference) === title
+}
+
+/**
  * Strip wikilink brackets from a value if present.
  * Returns the title if it's a wikilink, otherwise returns the trimmed input.
  *

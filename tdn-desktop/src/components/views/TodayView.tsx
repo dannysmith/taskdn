@@ -11,6 +11,7 @@ import {
 import type { Task } from '@/lib/tauri-bindings'
 import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useTaskCreationStore } from '@/store/task-creation-store'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import { useTodayOrder, type TodaySectionId } from '@/hooks/use-today-order'
 import { SectionTaskGroup } from '@/components/tasks/SectionTaskGroup'
 import { TaskDndContext } from '@/components/tasks/TaskDndContext'
@@ -118,16 +119,16 @@ export function TodayView() {
   )
 
   // Get context name (project/area) for a task
-  // Note: task.project and task.area are WikiLink format (e.g., "[[My Project]]")
-  // so we match against the title using includes()
   const getTaskContextName = React.useCallback(
     (task: Task): string | undefined => {
       if (task.project) {
-        const project = projects.find(p => task.project?.includes(p.title))
+        const project = projects.find(p =>
+          matchesWikilinkTitle(task.project, p.title)
+        )
         return project?.title
       }
       if (task.area) {
-        const area = areas.find(a => task.area?.includes(a.title))
+        const area = areas.find(a => matchesWikilinkTitle(task.area, a.title))
         return area?.title
       }
       return undefined
