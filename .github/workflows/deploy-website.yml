@@ -7,6 +7,7 @@ on:
       - 'website/**'
       - '.github/workflows/deploy-website.yml'
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
@@ -24,6 +25,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Install, build, and upload site
