@@ -64,9 +64,7 @@
   "plugins": {
     "deep-link": {
       "desktop": {
-        "schemes": [
-          "taskdn"
-        ]
+        "schemes": ["taskdn"]
       }
     },
     "updater": {
