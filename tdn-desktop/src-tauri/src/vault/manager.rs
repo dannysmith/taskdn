@@ -278,7 +278,9 @@ impl VaultManager {
                         if !errors.is_empty() {
                             warn!("Triggering vault refresh due to watcher errors");
                             if let Err(e) = app_handle.emit(VAULT_CHANGED_EVENT, ()) {
-                                error!("Failed to emit vault-changed event after watcher error: {e}");
+                                error!(
+                                    "Failed to emit vault-changed event after watcher error: {e}"
+                                );
                             }
                         }
                     }
