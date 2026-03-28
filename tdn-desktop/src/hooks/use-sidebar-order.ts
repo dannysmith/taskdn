@@ -6,6 +6,7 @@ import {
   useUpdateProject,
 } from '@/services/vault'
 import { useDisplayOrderStore } from '@/store/display-order-store'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import type { SidebarOrder } from '@/types/sidebar-order'
 import { ORPHAN_CONTAINER_ID } from '@/types/sidebar-order'
 
@@ -63,7 +64,9 @@ export function useSidebarOrder() {
         }
         const area = areas.find(a => a.id === containerId)
         if (!area) return []
-        return projects.filter(p => p.area?.includes(area.title)).map(p => p.id)
+        return projects
+          .filter(p => matchesWikilinkTitle(p.area, area.title))
+          .map(p => p.id)
       })()
 
       if (sidebarProjectOrder?.[containerId]) {

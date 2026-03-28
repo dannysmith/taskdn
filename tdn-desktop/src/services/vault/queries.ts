@@ -5,6 +5,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { logger } from '@/lib/logger'
 import { filterActiveAreas, filterActiveProjects } from '@/lib/entity-filters'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import {
   commands,
   type Task,
@@ -181,11 +182,10 @@ export function useVaultHelpers() {
 
     // Relationship helpers
     // Note: Wikilinks use TITLES (e.g., "[[Finance]]"), not hash IDs.
-    // To match, look up the entity by ID, then use its title in includes().
     getProjectsByAreaId: (areaId: string) => {
       const area = areasById.get(areaId)
       if (!area) return []
-      return projects.filter(p => p.area?.includes(area.title))
+      return projects.filter(p => matchesWikilinkTitle(p.area, area.title))
     },
 
     getOrphanProjects: () => projects.filter(p => !p.area),
@@ -193,13 +193,15 @@ export function useVaultHelpers() {
     getTasksByProjectId: (projectId: string) => {
       const project = projectsById.get(projectId)
       if (!project) return []
-      return tasks.filter(t => t.project?.includes(project.title))
+      return tasks.filter(t => matchesWikilinkTitle(t.project, project.title))
     },
 
     getAreaDirectTasks: (areaId: string) => {
       const area = areasById.get(areaId)
       if (!area) return []
-      return tasks.filter(t => t.area?.includes(area.title) && !t.project)
+      return tasks.filter(
+        t => matchesWikilinkTitle(t.area, area.title) && !t.project
+      )
     },
 
     getOrphanTasks: () => tasks.filter(t => !t.project && !t.area),
@@ -212,7 +214,9 @@ export function useVaultHelpers() {
     getProjectCompletion: (projectId: string) => {
       const project = projectsById.get(projectId)
       if (!project) return 0
-      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
+      const projectTasks = tasks.filter(t =>
+        matchesWikilinkTitle(t.project, project.title)
+      )
       if (projectTasks.length === 0) return 0
 
       const completedCount = projectTasks.filter(
@@ -225,7 +229,9 @@ export function useVaultHelpers() {
     getTaskCounts: (projectId: string) => {
       const project = projectsById.get(projectId)
       if (!project) return { taskCount: 0, completedTaskCount: 0 }
-      const projectTasks = tasks.filter(t => t.project?.includes(project.title))
+      const projectTasks = tasks.filter(t =>
+        matchesWikilinkTitle(t.project, project.title)
+      )
       const completedCount = projectTasks.filter(
         t => t.status === 'done' || t.status === 'dropped'
       ).length

@@ -4,6 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 
 import { cn } from '@/lib/utils'
+import { matchesWikilinkTitle } from '@/lib/wikilink'
 import type { Task, TaskStatus, Project } from '@/lib/tauri-bindings'
 import { taskStatusConfig } from '@/config/status'
 import { SortableKanbanCard } from './KanbanColumn'
@@ -168,7 +169,7 @@ export function AreaKanbanBoard({
             }
             // swimlaneId is a project ID - find the project and check if task.project matches
             const project = projects.find(p => p.id === swimlaneId)
-            return project && t.project?.includes(project.title)
+            return project && matchesWikilinkTitle(t.project, project.title)
           })
           onTasksReorder(swimlaneId, status, swimlaneTasks)
         }
