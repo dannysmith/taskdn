@@ -7,14 +7,7 @@
  */
 
 export type HeadingColor =
-  | 'default'
-  | 'blue'
-  | 'teal'
-  | 'purple'
-  | 'amber'
-  | 'pink'
-  | 'green'
-  | 'red'
+  'default' | 'blue' | 'teal' | 'purple' | 'amber' | 'pink' | 'green' | 'red'
 
 export interface Heading {
   id: string
@@ -42,5 +35,4 @@ export function toHeadingId(id: string): string {
 
 /** Ordered item in a mixed task/heading list */
 export type OrderedItem =
-  | { type: 'task'; id: string }
-  | { type: 'heading'; id: string }
+  { type: 'task'; id: string } | { type: 'heading'; id: string }

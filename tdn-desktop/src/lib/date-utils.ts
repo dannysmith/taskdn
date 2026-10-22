@@ -76,18 +76,7 @@ export function formatShortDate(dateString: string): string {
 
   const today = new Date()
   const monthIndex = date.getMonth() as
-    | 0
-    | 1
-    | 2
-    | 3
-    | 4
-    | 5
-    | 6
-    | 7
-    | 8
-    | 9
-    | 10
-    | 11
+    0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11
   const monthName = t(monthKeys[monthIndex])
   const day = date.getDate()
 
