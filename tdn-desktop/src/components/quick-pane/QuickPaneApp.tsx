@@ -42,13 +42,7 @@ const SHORTCUTS = {
 
 /** Tracks which popover is currently open (only one at a time) */
 export type PopoverType =
-  | 'status'
-  | 'project'
-  | 'area'
-  | 'scheduled'
-  | 'due'
-  | 'defer'
-  | null
+  'status' | 'project' | 'area' | 'scheduled' | 'due' | 'defer' | null
 
 /** Tracks which textarea to restore focus to after popover closes */
 type FocusTarget = 'title' | 'body' | null

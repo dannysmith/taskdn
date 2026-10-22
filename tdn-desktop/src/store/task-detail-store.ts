@@ -17,12 +17,7 @@ import { useUIStore } from './ui-store'
 
 /** Fields that can be focused when opening a task */
 export type FocusableField =
-  | 'title'
-  | 'scheduled'
-  | 'due'
-  | 'defer'
-  | 'status'
-  | null
+  'title' | 'scheduled' | 'due' | 'defer' | 'status' | null
 
 interface TaskDetailState {
   /** The ID of the task currently open in the detail panel, or null if closed */

@@ -115,9 +115,7 @@ export function useCalendarDnd({
     }
 
     const overData = over.data.current as
-      | DayDropData
-      | CalendarTaskDragData
-      | undefined
+      DayDropData | CalendarTaskDragData | undefined
     if (!overData) return
 
     // Determine which date we're over
@@ -147,9 +145,7 @@ export function useCalendarDnd({
     }
 
     const overData = over.data.current as
-      | DayDropData
-      | CalendarTaskDragData
-      | undefined
+      DayDropData | CalendarTaskDragData | undefined
     if (!overData) {
       setDragState(null)
       return
