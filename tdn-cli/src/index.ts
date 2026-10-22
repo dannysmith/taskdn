@@ -17,11 +17,13 @@ import {
   doctorCommand,
   completionCommand,
 } from '@/commands/index.ts';
+// Bundled into the compiled binary, so --version always matches the release
+import packageJson from '../package.json' with { type: 'json' };
 
 const program = new Command()
   .name('tdn')
   .description('Task management CLI for humans and AI agents')
-  .version('0.1.0')
+  .version(packageJson.version)
   // Global options available to all commands
   .option('--ai', 'AI mode: structured Markdown output, no prompts')
   .option('--json', 'JSON output format');
