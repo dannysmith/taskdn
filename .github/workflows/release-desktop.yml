@@ -226,6 +226,8 @@ jobs:
   deploy-website:
     needs: update-website
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - name: Trigger website deploy
         uses: actions/github-script@v7
