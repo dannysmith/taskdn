@@ -40,25 +40,23 @@ function formatDate(date: Date): string {
   <p>All releases across Taskdn products.</p>
 
   <ul class="release-list">
-    {
-      sortedReleases.map((release) => (
-        <li>
-          <a href={`/${release.id.replace(/\.mdx?$/, '')}/`}>
-            {release.data.title}
-          </a>
-          <span class="release-meta">
-            <time datetime={release.data.date!.toISOString()}>
-              {formatDate(release.data.date!)}
-            </time>
-            {release.data.product && (
-              <span class="release-product">
-                {productLabels[release.data.product] || release.data.product}
-              </span>
-            )}
-          </span>
-        </li>
-      ))
-    }
+    {sortedReleases.map((release) => (
+      <li>
+        <a href={`/${release.id.replace(/\.mdx?$/, '')}/`}>
+          {release.data.title}
+        </a>
+        <span class="release-meta">
+          <time datetime={release.data.date!.toISOString()}>
+            {formatDate(release.data.date!)}
+          </time>
+          {release.data.product && (
+            <span class="release-product">
+              {productLabels[release.data.product] || release.data.product}
+            </span>
+          )}
+        </span>
+      </li>
+    ))}
   </ul>
 </StarlightPage>
 
