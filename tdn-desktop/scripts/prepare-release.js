@@ -95,6 +95,8 @@ async function prepareRelease() {
       tauriConfigPath,
       JSON.stringify(tauriConfig, null, 2) + '\n'
     )
+    // JSON.stringify expands short arrays that Prettier keeps inline
+    exec(`bunx prettier --write ${tauriConfigPath}`, { silent: true })
     console.log(`   ${oldTauriVersion} → ${cleanVersion}`)
 
     // Run bun install to update lock files
