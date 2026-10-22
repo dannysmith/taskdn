@@ -13,9 +13,54 @@ on:
 env:
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
+  # desktop-v1.0.0 from a tag push, or built from the workflow_dispatch input
+  RELEASE_TAG: ${{ inputs.version && format('desktop-v{0}', inputs.version) || github.ref_name }}
 
 jobs:
+  # Create a single draft release up front so the parallel build matrix all
+  # uploads to one shared release. Without this, each matrix job runs
+  # find-or-create and a tauri-action race (issue #914) can split assets
+  # across multiple drafts, each with an incomplete latest.json.
+  create-release:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create-release.outputs.result }}
+    steps:
+      - name: Create draft release
+        id: create-release
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const tag = process.env.RELEASE_TAG
+            const version = tag.replace(/^desktop-v/, '')
+            const { owner, repo } = context.repo
+            const { data } = await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: tag,
+              name: `Taskdn Desktop v${version}`,
+              body: [
+                `## Taskdn Desktop v${version}`,
+                '',
+                '### Installation Instructions',
+                '- **macOS**: Download the `.dmg` file and drag to Applications folder',
+                '- **Windows**: Download the `.msi` file and run the installer',
+                '- **Linux**: Download the `.AppImage` file, make it executable (`chmod +x`), and run',
+                '',
+                '### Auto-Updates',
+                'Existing users will receive automatic update notifications.',
+                '',
+                `**Full Changelog**: https://github.com/${owner}/${repo}/commits/${tag}`,
+              ].join('\n'),
+              draft: true,
+              prerelease: false,
+            })
+            return data.id
+
   publish-tauri:
+    needs: create-release
     permissions:
       contents: write
     strategy:
@@ -35,27 +80,10 @@ jobs:
         working-directory: tdn-desktop
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Get version
-        id: version
-        shell: bash
-        run: |
-          if [ -n "${{ inputs.version }}" ]; then
-            # workflow_dispatch: use input directly
-            echo "clean=${{ inputs.version }}" >> $GITHUB_OUTPUT
-            echo "tag=desktop-v${{ inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            # push trigger: extract from tag (desktop-v1.0.0 -> 1.0.0)
-            TAG="${{ github.ref_name }}"
-            CLEAN="${TAG#desktop-v}"
-            echo "clean=$CLEAN" >> $GITHUB_OUTPUT
-            echo "tag=$TAG" >> $GITHUB_OUTPUT
-          fi
-        working-directory: .
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 'lts/*'
 
@@ -87,7 +115,7 @@ jobs:
 
       - name: Import Code-Signing Certificates
         if: matrix.platform == 'macos-26'
-        uses: apple-actions/import-codesign-certs@v3
+        uses: apple-actions/import-codesign-certs@v7
         with:
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
@@ -100,7 +128,7 @@ jobs:
           chmod 600 ~/private_keys/AuthKey_${{ secrets.APPLE_API_KEY }}.p8
 
       - name: Build and release
-        uses: tauri-apps/tauri-action@v0.5.22
+        uses: tauri-apps/tauri-action@v1.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CI: true
@@ -115,43 +143,30 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           projectPath: tdn-desktop
-          tagName: ${{ steps.version.outputs.tag }}
-          releaseName: 'Taskdn Desktop v${{ steps.version.outputs.clean }}'
-          releaseBody: |
-            ## Taskdn Desktop v${{ steps.version.outputs.clean }}
-
-            ### Installation Instructions
-            - **macOS**: Download the `.dmg` file and drag to Applications folder
-            - **Windows**: Download the `.msi` file and run the installer
-            - **Linux**: Download the `.AppImage` file, make it executable (`chmod +x`), and run
-
-            ### Auto-Updates
-            Existing users will receive automatic update notifications.
-
-            **Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.tag }}
-          releaseDraft: true
-          prerelease: false
-          includeUpdaterJson: true
-          updaterJsonKeepUniversal: true
+          # Upload to the shared draft from create-release instead of
+          # finding-or-creating per matrix job. The release name, body and
+          # draft state are set there.
+          releaseId: ${{ needs.create-release.outputs.release_id }}
+          uploadUpdaterJson: true
           args: ${{ matrix.args }}
 
       - name: Upload macOS artifact for website
         if: matrix.platform == 'macos-26'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: website-macos
           path: tdn-desktop/src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
 
       - name: Upload Windows artifact for website
         if: matrix.platform == 'windows-latest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: website-windows
           path: tdn-desktop/src-tauri/target/release/bundle/msi/*.msi
 
       - name: Upload Linux artifact for website
         if: matrix.platform == 'ubuntu-22.04'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: website-linux
           path: tdn-desktop/src-tauri/target/release/bundle/appimage/*.AppImage
@@ -163,25 +178,25 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
 
       - name: Download macOS artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: website-macos
           path: /tmp/artifacts
 
       - name: Download Windows artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: website-windows
           path: /tmp/artifacts
 
       - name: Download Linux artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: website-linux
           path: /tmp/artifacts
@@ -220,7 +235,7 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add website/public/taskdn-desktop-latest.dmg website/public/taskdn-desktop-latest.msi website/public/taskdn-desktop-latest.AppImage
-          git commit -m "chore(website): update desktop installers for ${{ needs.publish-tauri.outputs.tag || github.ref_name }}" || echo "No changes to commit"
+          git commit -m "chore(website): update desktop installers for $RELEASE_TAG" || echo "No changes to commit"
           git push origin main || echo "Failed to push, continuing..."
 
   deploy-website:
@@ -230,7 +245,7 @@ jobs:
       actions: write
     steps:
       - name: Trigger website deploy
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           script: |
             await github.rest.actions.createWorkflowDispatch({

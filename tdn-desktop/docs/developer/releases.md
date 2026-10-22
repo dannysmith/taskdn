@@ -33,10 +33,10 @@ This will:
 
 Then GitHub Actions will:
 
-1. Build the app for all platforms (macOS, Windows, Linux)
-2. Sign and notarize macOS builds
-3. Create a **draft** release with all artifacts
-4. Commit latest installers to `website/public/`
+1. Create a single **draft** release for the tag (`create-release`)
+2. Build the app for all platforms (macOS, Windows, Linux) in parallel, uploading each platform's installers and `latest.json` entries to that draft by its ID. Creating the draft first stops the parallel builds racing to create separate drafts
+3. Sign and notarize macOS builds
+4. Commit latest installers to `website/public/` and trigger a website deploy
 
 Finally, manually publish the draft release on GitHub.
 
@@ -47,7 +47,7 @@ Finally, manually publish the draft release on GitHub.
 bun run check:all
 git add .
 git commit -m "chore(desktop): release desktop-v1.0.0"
-git tag desktop-v1.0.0
+git tag -m "Release desktop-v1.0.0" desktop-v1.0.0
 git push && git push origin desktop-v1.0.0
 ```
 
