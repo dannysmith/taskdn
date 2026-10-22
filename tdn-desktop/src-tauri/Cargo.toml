@@ -1,6 +1,6 @@
 [package]
 name = "taskdn-desktop"
-version = "0.1.6"
+version = "0.1.7"
 description = "A desktop application for managing tasks"
 authors = ["dannysmith"]
 license = "AGPL-3.0-only"
