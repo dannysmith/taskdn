@@ -122,7 +122,7 @@ async function prepareRelease() {
     console.log('\nGit commands to execute:')
     console.log(`   git add .`)
     console.log(`   git commit -m "chore(cli): release ${tagVersion}"`)
-    console.log(`   git tag ${tagVersion}`)
+    console.log(`   git tag -m "Release ${tagVersion}" ${tagVersion}`)
     console.log(`   git push && git push origin ${tagVersion}`)
 
     console.log('\nAfter pushing:')
@@ -146,7 +146,7 @@ async function prepareRelease() {
       exec(`git commit -m "chore(cli): release ${tagVersion}"`)
 
       console.log('Creating tag...')
-      exec(`git tag ${tagVersion}`)
+      exec(`git tag -m "Release ${tagVersion}" ${tagVersion}`)
 
       console.log('Pushing to remote...')
       exec('git push')
