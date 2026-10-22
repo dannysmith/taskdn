@@ -1,6 +1,6 @@
 {
   "name": "@taskdn/cli-linux-arm64",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "tdn CLI binary for Linux ARM64",
   "license": "MIT",
   "repository": {
@@ -8,7 +8,11 @@
     "url": "https://github.com/dannysmith/taskdn.git",
     "directory": "tdn-cli"
   },
-  "os": ["linux"],
-  "cpu": ["arm64"],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
   "preferUnplugged": true
 }

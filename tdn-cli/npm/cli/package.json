@@ -1,6 +1,6 @@
 {
   "name": "@taskdn/cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Taskdn CLI — task management from the command line",
   "license": "MIT",
   "repository": {
@@ -15,10 +15,10 @@
     "node": ">=18"
   },
   "optionalDependencies": {
-    "@taskdn/cli-darwin-arm64": "1.0.0",
-    "@taskdn/cli-darwin-x64": "1.0.0",
-    "@taskdn/cli-linux-arm64": "1.0.0",
-    "@taskdn/cli-linux-x64": "1.0.0",
-    "@taskdn/cli-win32-x64": "1.0.0"
+    "@taskdn/cli-darwin-arm64": "1.0.1",
+    "@taskdn/cli-darwin-x64": "1.0.1",
+    "@taskdn/cli-linux-arm64": "1.0.1",
+    "@taskdn/cli-linux-x64": "1.0.1",
+    "@taskdn/cli-win32-x64": "1.0.1"
   }
 }
