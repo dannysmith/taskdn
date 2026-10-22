@@ -30,28 +30,28 @@
     "release:prepare": "node scripts/prepare-release.js"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.2",
-    "@napi-rs/cli": "^3.5.0",
+    "@eslint/js": "^9.39.5",
+    "@napi-rs/cli": "^3.10.9",
     "@types/bun": "latest",
-    "@types/node": "^22",
-    "eslint": "^9.39.2",
+    "@types/node": "^22.20.5",
+    "eslint": "^9.39.5",
     "eslint-config-prettier": "^10.1.8",
-    "prettier": "^3.7.4",
-    "typescript-eslint": "^8.50.1"
+    "prettier": "^3.9.10",
+    "typescript-eslint": "^8.72.0"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
     "@bomb.sh/tab": "^0.0.11",
     "@clack/prompts": "^0.11.0",
     "@commander-js/extra-typings": "^14.0.0",
-    "ansis": "^4.2.0",
+    "ansis": "^4.4.0",
     "boxen": "^8.0.1",
-    "commander": "^14.0.2",
-    "marked": "^17.0.1",
+    "commander": "^14.0.3",
+    "marked": "^17.0.6",
     "marked-terminal": "^7.3.0",
-    "minimatch": "^10.1.1"
+    "minimatch": "^10.2.6"
   },
   "napi": {
     "binaryName": "tdn-core",
