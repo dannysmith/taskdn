@@ -53,7 +53,9 @@ trash = "5"                                  # Cross-platform trash/recycle bin
 specta = { version = "=2.0.0-rc.22", features = ["derive", "serde_json"] }
 tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript"] }
 specta-typescript = "=0.0.9"
-tauri-plugin-deep-link = "2"
+# 2.6.2 doesn't compile on Linux against rust-ini 0.21.3
+# (tauri-apps/plugins-workspace#3710). Unpin once a fixed 2.6.x is released.
+tauri-plugin-deep-link = "=2.6.1"
 fuzzydate = "0.4.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
