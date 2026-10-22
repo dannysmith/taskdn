@@ -22,16 +22,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: main
           fetch-depth: 0
 
       - name: Install, build, and upload site
-        uses: withastro/action@v3
+        uses: withastro/action@v6
         with:
           path: ./website
           package-manager: bun@latest
+          # Astro 7 needs Node 22.23.4+
+          node-version: 24
 
   deploy:
     needs: build
@@ -42,4 +44,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
