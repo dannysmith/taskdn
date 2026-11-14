@@ -16,3 +16,4 @@ dummy-demo-vault/
 
 # Local taskdn config (points to test fixtures during development)
 .taskdn.json
+docs/tasks-todo/temporary/
