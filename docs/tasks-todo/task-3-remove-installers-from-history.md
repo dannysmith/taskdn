@@ -10,7 +10,7 @@ Rewrite history to drop the desktop installers that the release workflow used to
 
 - [ ] Task 2 is merged and no workflow commits installers any more.
 - [ ] No open PRs (`gh pr list`). Close or merge anything Dependabot has opened since task 1.
-- [ ] No other local branches, worktrees or stashes that matter: `git branch -a`, `git worktree list`, `git stash list`. List the remote's branches too.
+- [ ] No other local branches, worktrees or stashes that matter: `git branch -a`, `git worktree list`, `git stash list`. As of 2026-11-15 the main checkout has 15 old local branches that git reports as unmerged (most were probably squash-merged), and the remote has one besides `main`: `fix/desktop-window-lifecycle-crash-resilience`. Check each with Danny and delete what's no longer needed. Old branches kept after the rewrite would keep the installer blobs alive locally.
 - [ ] Danny confirms there are no other clones (other machines) with unpushed work.
 - [ ] Note the current state for comparison: `git rev-parse HEAD^{tree}`, `git tag` and the tree hash of each tag, `git rev-list --count --all`.
 

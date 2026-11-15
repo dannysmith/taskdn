@@ -2,12 +2,12 @@
 
 The order for the work that came out of the November 2026 review. Each top-level item is roughly one session or PR. Items 1–7 have their own task docs; later items get docs when we get closer to them. Items below the line don't get numbers yet. Background and reasoning are in `docs/tasks-todo/temporary/` (`taskdn-review.md`, `spec-review.md`, `view-state-identity-and-core.md`).
 
-- [ ] **1. Housekeeping** (on main) → `task-1-housekeeping.md`
-  - [ ] Fix stale docs and pointers
-  - [ ] Reword rule 4 in `AGENTS.md`: no runtime dependencies between products; shared libraries are fine
-  - [ ] Complete `task-x-quick-entry-ai-processing.md` (all phases done)
-  - [ ] Close the personal review issues (#9–#13)
-  - [ ] Merge the Dependabot PRs (#55–57)
+- [x] **1. Housekeeping** (on main) → `task-1-housekeeping.md`
+  - [x] Fix stale docs and pointers
+  - [x] Reword rule 4 in `AGENTS.md`: no runtime dependencies between products; shared libraries are fine
+  - [x] Complete `task-x-quick-entry-ai-processing.md` (all phases done)
+  - [x] Close the personal review issues (#9–#13)
+  - [x] Merge the Dependabot PRs (#55–57) (already superseded on main, so closed)
 - [ ] **2. Release and CI workflows** (branch and PR, with CodeRabbit) → `task-2-release-and-ci-workflows.md`
   - [ ] CLI releases never become the repo's "Latest" release
   - [ ] Stop committing desktop installers; stable-named release assets instead
