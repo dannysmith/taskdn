@@ -32,7 +32,13 @@ import { join } from 'path';
 import { scanTasks, scanProjects, scanAreas, createVaultSession, getTasksInArea } from '@bindings';
 import type { Task, Project, Area, VaultConfig } from '@bindings';
 import { getToday, getTomorrow, getEndOfWeek, getStartOfWeek } from '@/output/helpers/index.ts';
-import { filterByStatus, sortEntities, filterByQuery, limitResults } from './filtering.ts';
+import {
+  filterByStatus,
+  sortEntities,
+  sortByInstant,
+  filterByQuery,
+  limitResults,
+} from './filtering.ts';
 
 /**
  * Check if a project is "active" per CLI spec:
@@ -282,7 +288,9 @@ export function listTasks(config: VaultConfig, options: ListOptions): Task[] {
     };
 
     const taskField = fieldMap[sortField];
-    if (taskField) {
+    if (taskField === 'createdAt' || taskField === 'updatedAt') {
+      tasks = sortByInstant(tasks, taskField, descending);
+    } else if (taskField) {
       tasks = sortEntities(tasks, taskField, descending);
     }
   }

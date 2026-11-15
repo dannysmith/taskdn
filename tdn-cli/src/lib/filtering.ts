@@ -4,6 +4,8 @@
  * These utilities eliminate duplication across task, project, and area listing.
  */
 
+import { parseInstant } from '@/output/helpers/date-utils.ts';
+
 /**
  * Filter entities by status field.
  *
@@ -68,6 +70,28 @@ export function sortEntities<T>(entities: T[], field: keyof T, descending: boole
     }
 
     return descending ? -comparison : comparison;
+  });
+}
+
+/**
+ * Sort entities chronologically by a date or datetime field. Unlike
+ * `sortEntities`, values written with different UTC offsets (`…Z`,
+ * `…+05:30`, none) compare as the instants they represent. Missing or
+ * unparseable values go last regardless of direction.
+ */
+export function sortByInstant<T>(entities: T[], field: keyof T, descending: boolean = false): T[] {
+  const instantOf = (entity: T): number => {
+    const value = entity[field];
+    return typeof value === 'string' && value !== '' ? parseInstant(value) : NaN;
+  };
+
+  return entities.sort((a, b) => {
+    const aTime = instantOf(a);
+    const bTime = instantOf(b);
+    if (isNaN(aTime) && isNaN(bTime)) return 0;
+    if (isNaN(aTime)) return 1;
+    if (isNaN(bTime)) return -1;
+    return descending ? bTime - aTime : aTime - bTime;
   });
 }
 

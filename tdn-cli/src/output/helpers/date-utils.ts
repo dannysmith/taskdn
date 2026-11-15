@@ -48,6 +48,17 @@ export function getLocalTimestamp(date: Date = new Date()): string {
 }
 
 /**
+ * Parse a date or datetime value from a file into milliseconds since the
+ * epoch, or NaN if it can't be parsed. Values with an offset (`Z`, `+01:00`)
+ * are exact instants; values without one are local time, as S1 says, and a
+ * bare date is local midnight.
+ */
+export function parseInstant(value: string): number {
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return parseDate(value).getTime();
+  return Date.parse(value.replace(' ', 'T'));
+}
+
+/**
  * Parse a YYYY-MM-DD string to a Date object (at midnight local time)
  */
 export function parseDate(dateStr: string): Date {

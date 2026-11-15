@@ -1,5 +1,11 @@
 import { describe, test, expect } from 'bun:test';
-import { filterByStatus, sortEntities, filterByQuery, limitResults } from '@/lib/filtering';
+import {
+  filterByStatus,
+  sortEntities,
+  sortByInstant,
+  filterByQuery,
+  limitResults,
+} from '@/lib/filtering';
 import type { Task, Project, Area, TaskStatus } from '@bindings';
 
 // Helper to create mock entities
@@ -172,6 +178,41 @@ describe('sortEntities', () => {
 
     const result = sortEntities(tasks, 'title', false);
     expect(result.map((t) => t.title)).toEqual(['Apple', 'MANGO', 'zebra']);
+  });
+});
+
+describe('sortByInstant', () => {
+  test('orders timestamps with different UTC offsets chronologically', () => {
+    const tasks = [
+      createMockTask({ title: 'later', createdAt: '2026-11-15T09:30:00-05:00' }), // 14:30 UTC
+      createMockTask({ title: 'earlier', createdAt: '2026-11-15T14:00:00Z' }),
+      createMockTask({ title: 'earliest', createdAt: '2026-11-15T18:00:00+05:30' }), // 12:30 UTC
+    ];
+
+    const sorted = sortByInstant(tasks, 'createdAt');
+    expect(sorted.map((t) => t.title)).toEqual(['earliest', 'earlier', 'later']);
+  });
+
+  test('treats dates and offset-less datetimes as local, and puts missing values last', () => {
+    const tasks = [
+      createMockTask({ title: 'none', createdAt: undefined }),
+      createMockTask({ title: 'afternoon', createdAt: '2026-11-15T15:00:00' }),
+      createMockTask({ title: 'midnight', createdAt: '2026-11-15' }),
+      createMockTask({ title: 'next day', createdAt: '2026-11-16 08:00' }),
+    ];
+
+    expect(sortByInstant(tasks, 'createdAt').map((t) => t.title)).toEqual([
+      'midnight',
+      'afternoon',
+      'next day',
+      'none',
+    ]);
+    expect(sortByInstant(tasks, 'createdAt', true).map((t) => t.title)).toEqual([
+      'next day',
+      'afternoon',
+      'midnight',
+      'none',
+    ]);
   });
 });
 
