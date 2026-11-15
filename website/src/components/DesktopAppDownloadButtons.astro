@@ -46,9 +46,8 @@
 <script>
   function detectOS(): 'macos' | 'windows' | null {
     const userAgent = navigator.userAgent.toLowerCase()
-    const platform = navigator.platform?.toLowerCase() || ''
-    if (platform.includes('mac') || userAgent.includes('mac')) return 'macos'
-    if (platform.includes('win') || userAgent.includes('win')) return 'windows'
+    if (userAgent.includes('mac')) return 'macos'
+    if (userAgent.includes('win')) return 'windows'
     return null
   }
 

@@ -185,13 +185,30 @@ jobs:
       contents: write
       actions: write # dispatch publish-release-notes.yml
     steps:
+      # Full history and tags, to find the previous CLI release for the notes
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v8
         with:
           path: artifacts
           merge-multiple: true
+
+      # GitHub's generated notes list every PR in the repo since the last tag,
+      # desktop and website included, so list only commits touching tdn-cli/.
+      - name: Write release notes
+        working-directory: .
+        run: |
+          PREV=$(git describe --tags --abbrev=0 --match 'tdn-cli-v*' "${GITHUB_REF_NAME}^" 2>/dev/null || true)
+          {
+            echo "## Changes"
+            echo
+            git log --no-merges --format='- %s' "${PREV:+$PREV..}$GITHUB_REF_NAME" -- tdn-cli \
+              | grep -v -E '^- chore\(cli\): release' || true
+          } > "$RUNNER_TEMP/release-notes.md"
+          cat "$RUNNER_TEMP/release-notes.md"
 
       - name: Copy install script
         working-directory: .
@@ -209,7 +226,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: tdn-cli v${{ steps.version.outputs.version }}
-          generate_release_notes: true
+          body_path: ${{ runner.temp }}/release-notes.md
+          # Versions with a `-` (1.1.0-beta.1) are prereleases, which the
+          # website's release posts skip.
+          prerelease: ${{ contains(steps.version.outputs.version, '-') }}
           # The desktop updater and the website's download links use
           # /releases/latest, so only desktop releases may be "latest".
           make_latest: false
