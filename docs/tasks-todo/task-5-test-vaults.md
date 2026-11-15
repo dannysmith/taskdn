@@ -72,9 +72,9 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 
 ### Phase 1: Toolkit
 
-- [ ] `scripts/vaults/lib/` (setup, shift, writers, report) and the `bun run vault` CLI (`new`, `render`, `shift`, `report`, `open`).
-- [ ] Unit tests for date shifting: dates, datetimes with and without offsets, space-separated datetimes, month, year and leap-day boundaries, negative shifts, and what must not change (partial dates, years, version numbers, Obsidian's `{{date}}` template placeholders).
-- [ ] Unit tests for the writers and the report.
+- [x] `scripts/vaults/lib/` (setup, shift, writers, report) and the `bun run vault` CLI (`list`, `new`, `render`, `shift`, `report`, `open`). Shifting also renames files and folders named by date (day notes), via temporary names so a forward shift can't overwrite a later note. `render` and `shift` refuse to write anywhere outside `demo-vaults/`. The shared Obsidian config lives once in `scripts/vaults/obsidian-base/` (taskdn enabled, Daily notes on `day-notes/`, Templates on `templates/`, link settings) and replaces any `.obsidian/` a template has, apart from the vault's own workspace files.
+- [x] Unit tests for date shifting: dates, datetimes with and without offsets, space-separated datetimes, month, year and leap-day boundaries, negative shifts, and what must not change (partial dates, years, version numbers, Obsidian's `{{date}}` template placeholders).
+- [x] Unit tests for the writers and the report, plus integration tests for render and shift (`bun run test:vaults`).
 
 ### Phase 2: Demo template
 
