@@ -15,12 +15,12 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Release notes flow to the website reliably for every product
   - [x] Bring across what helps from Astro Editor (caching, action versions; test builds deferred to task 7)
 - [x] **3. Remove installers from git history** → `task-3-remove-installers-from-history.md`
-- [ ] **4. CLI 1.0.2** → `task-4-cli-1-0-2.md`
-  - [ ] Fix `--json` output starting with an ANSI reset code
-  - [ ] Make `new --dry-run` not write the file
-  - [ ] Write local timestamps with an offset everywhere
-  - [ ] Fix `tdn show "Title"` examples in the skill and website
-  - [ ] Release through the new workflow
+- [x] **4. CLI 1.0.2** → `task-4-cli-1-0-2.md`
+  - [x] Fix `--json` output starting with an ANSI reset code
+  - [x] Make `new --dry-run` not write the file
+  - [x] Write local timestamps with an offset everywhere
+  - [x] Fix `tdn show "Title"` examples in the skill and website
+  - [x] Release through the new workflow
 - [ ] **5. Test vaults** → `task-5-test-vaults.md`
   - [ ] Templates with relative date tokens and a renderer script
   - [ ] Demo vault becomes a template; replaces `demo-vault/` and `dummy-demo-vault/`
