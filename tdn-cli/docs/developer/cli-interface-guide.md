@@ -29,16 +29,16 @@ The CLI provides these primary commands:
 
 | Command       | Purpose                            | Typical Usage                                  |
 | ------------- | ---------------------------------- | ---------------------------------------------- |
-| `list`        | Query and filter entities          | `tdnlist --status inbox --due today`       |
-| `show`        | Display full entity details        | `tdnshow "Fix bug"`                        |
-| `new`         | Create entities                    | `tdnnew "Write docs" --due tomorrow`       |
-| `context`     | Show everything incl relationships | `tdncontext area "Work"`                   |
-| `today`       | Show today's actionable tasks      | `tdntoday`                                 |
-| `set status`  | Change task/project status         | `tdnset status "Fix bug" done`             |
-| `update`      | Modify entity fields               | `tdnupdate "Fix bug" --set area="Work"`    |
-| `archive`     | Move to archive subdirectory       | `tdnarchive "Old task"`                    |
-| `open`        | Open in $EDITOR                    | `tdnopen "Fix bug"`                        |
-| `append-body` | Add content to body                | `tdnappend-body "Fix bug" "Progress note"` |
+| `list`        | Query and filter entities          | `tdn list --status inbox --due today`          |
+| `show`        | Display full entity details        | `tdn show tasks/fix-bug.md`                    |
+| `new`         | Create entities                    | `tdn new "Write docs" --due tomorrow`          |
+| `context`     | Show everything incl relationships | `tdn context area "Work"`                      |
+| `today`       | Show today's actionable tasks      | `tdn today`                                    |
+| `set status`  | Change task/project status         | `tdn set status "Fix bug" done`                |
+| `update`      | Modify entity fields               | `tdn update "Fix bug" --set area="Work"`       |
+| `archive`     | Move to archive subdirectory       | `tdn archive "Old task"`                       |
+| `open`        | Open in $EDITOR                    | `tdn open "Fix bug"`                           |
+| `append-body` | Add content to body                | `tdn append-body "Fix bug" "Progress note"`    |
 
 **Entity Type Support:**
 
@@ -49,7 +49,13 @@ The CLI provides these primary commands:
 
 ## Entity Lookup & Path Resolution
 
-Commands that target specific entities (show, update, archive, etc.) support two lookup modes:
+Commands that target specific entities find them in different ways:
+
+- `update`, `set status`, `archive`, `open` and `append-body` accept a path or a title (both modes below).
+- `show` accepts only a path, resolved against the current directory.
+- `context` accepts a path or an exact title.
+
+The two lookup modes:
 
 ### Path Detection
 
@@ -205,7 +211,7 @@ Configuration precedence (highest to lowest):
 
 1. **Environment variables:** `TASKDN_TASKS_DIR`, `TASKDN_PROJECTS_DIR`, `TASKDN_AREAS_DIR`
 2. **Local config:** `./.taskdn.json` (from cwd)
-3. **User config:** `~/.config/taskdn/config.json`
+3. **User config:** `~/.taskdn.json`
 4. **Defaults:** `./tasks`, `./projects`, `./areas` (relative to cwd)
 
 All paths resolved relative to current working directory unless absolute.
