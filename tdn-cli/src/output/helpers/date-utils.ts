@@ -35,6 +35,19 @@ export function formatDate(date: Date): string {
 }
 
 /**
+ * Format a Date as a local ISO 8601 timestamp with its UTC offset, e.g.
+ * `2026-11-15T14:30:00+00:00`. Matches what the Rust writer stamps on files.
+ */
+export function getLocalTimestamp(date: Date = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const offset = -date.getTimezoneOffset();
+  const sign = offset >= 0 ? '+' : '-';
+  const abs = Math.abs(offset);
+  const time = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+  return `${formatDate(date)}T${time}${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
+}
+
+/**
  * Parse a YYYY-MM-DD string to a Date object (at midnight local time)
  */
 export function parseDate(dateStr: string): Date {

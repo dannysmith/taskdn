@@ -6,6 +6,8 @@ import { resolve } from 'path';
  */
 export interface CliResult {
   stdout: string;
+  /** stdout exactly as printed, ANSI codes included */
+  rawStdout: string;
   stderr: string;
   exitCode: number;
 }
@@ -34,7 +36,7 @@ export function stripAnsi(str: string): string {
 
 /**
  * Run the CLI with the given arguments and return the result.
- * Output is automatically stripped of ANSI escape codes.
+ * stdout and stderr are stripped of ANSI escape codes; rawStdout is not.
  *
  * @param args - Command line arguments (e.g., ['show', 'path/to/task.md'])
  * @param options - Optional configuration for the CLI run
@@ -82,6 +84,7 @@ export async function runCli(
 
   return {
     stdout: stripAnsi(stdoutBuffer),
+    rawStdout: stdoutBuffer,
     stderr: stripAnsi(stderrBuffer),
     exitCode,
   };

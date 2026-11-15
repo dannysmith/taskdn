@@ -89,10 +89,16 @@ pub fn parse_task_file(file_path: String) -> Result<Task> {
         }
     })?;
 
+    parse_task_content(file_path, &content)
+}
+
+/// Parse a task from file content. `file_path` is only recorded on the Task
+/// and used in errors; nothing is read from disk.
+pub(crate) fn parse_task_content(file_path: String, content: &str) -> Result<Task> {
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
     let parsed = matter
-        .parse::<TaskFrontmatter>(&content)
+        .parse::<TaskFrontmatter>(content)
         .map_err(|e| TdnError::parse_error(&file_path, None, e.to_string()))?;
 
     // Extract frontmatter data

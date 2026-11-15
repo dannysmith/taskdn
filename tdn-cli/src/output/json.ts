@@ -244,8 +244,10 @@ export const jsonFormatter: Formatter = {
         const createdResult = result as TaskCreatedResult;
         const task = createdResult.task;
         const output = {
-          summary: `Created task: ${task.title}`,
-          created: true,
+          summary: createdResult.dryRun
+            ? `Dry run: create task ${task.title}`
+            : `Created task: ${task.title}`,
+          ...(createdResult.dryRun ? { dryRun: true } : { created: true }),
           task: taskToJson(task),
         };
         return JSON.stringify(output, null, 2);
@@ -254,8 +256,10 @@ export const jsonFormatter: Formatter = {
         const createdResult = result as ProjectCreatedResult;
         const project = createdResult.project;
         const output = {
-          summary: `Created project: ${project.title}`,
-          created: true,
+          summary: createdResult.dryRun
+            ? `Dry run: create project ${project.title}`
+            : `Created project: ${project.title}`,
+          ...(createdResult.dryRun ? { dryRun: true } : { created: true }),
           project: projectToJson(project),
         };
         return JSON.stringify(output, null, 2);
@@ -264,8 +268,10 @@ export const jsonFormatter: Formatter = {
         const createdResult = result as AreaCreatedResult;
         const area = createdResult.area;
         const output = {
-          summary: `Created area: ${area.title}`,
-          created: true,
+          summary: createdResult.dryRun
+            ? `Dry run: create area ${area.title}`
+            : `Created area: ${area.title}`,
+          ...(createdResult.dryRun ? { dryRun: true } : { created: true }),
           area: areaToJson(area),
         };
         return JSON.stringify(output, null, 2);

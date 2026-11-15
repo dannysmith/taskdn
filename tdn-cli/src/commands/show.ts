@@ -22,7 +22,10 @@ import { parseRustError } from '@/lib/rust-error-parser.ts';
  */
 export const showCommand = new Command('show')
   .description('View a single entity with full content')
-  .argument('<target>', 'Path to file or name of entity')
+  .argument(
+    '<target>',
+    'Path to the entity file (to look up a task by title, use: tdn context task "<title>")'
+  )
   .action((target, _options, command) => {
     const globalOpts = command.optsWithGlobals() as GlobalOptions;
     const mode = getOutputMode(globalOpts);

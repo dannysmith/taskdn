@@ -444,6 +444,88 @@ describe('tdn new', () => {
       expect(output.created).toBe(true);
       expect(output.task).toBeDefined();
     });
+
+    test('JSON and AI output contain no ANSI codes', async () => {
+      const env = {
+        TASKDN_TASKS_DIR: tasksDir,
+        TASKDN_PROJECTS_DIR: projectsDir,
+        TASKDN_AREAS_DIR: areasDir,
+      };
+      const json = await runCli(['new', 'Raw JSON Task', '--json'], { useFixtureVault: false, env });
+      expect(json.rawStdout).toBe(json.stdout);
+      expect(() => JSON.parse(json.rawStdout)).not.toThrow();
+
+      const ai = await runCli(['new', 'Raw AI Task', '--ai'], { useFixtureVault: false, env });
+      expect(ai.rawStdout).toBe(ai.stdout);
+    });
+
+    test('timestamps are local time with a UTC offset', async () => {
+      const { stdout, exitCode } = await runCli(['new', 'Timestamp Task', '--json'], {
+        useFixtureVault: false,
+        env: {
+          TASKDN_TASKS_DIR: tasksDir,
+          TASKDN_PROJECTS_DIR: projectsDir,
+          TASKDN_AREAS_DIR: areasDir,
+        },
+      });
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.task.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$/);
+    });
+  });
+
+  describe('dry run', () => {
+    const vaultEnv = () => ({
+      TASKDN_TASKS_DIR: tasksDir,
+      TASKDN_PROJECTS_DIR: projectsDir,
+      TASKDN_AREAS_DIR: areasDir,
+    });
+
+    test('previews a task without creating it', async () => {
+      const { stdout, exitCode } = await runCli(
+        ['new', 'Dry Task', '--project', 'Q1', '--dry-run', '--json'],
+        { useFixtureVault: false, env: vaultEnv() }
+      );
+
+      expect(exitCode).toBe(0);
+      const output = JSON.parse(stdout);
+      expect(output.dryRun).toBe(true);
+      expect(output.created).toBeUndefined();
+      expect(output.summary).toBe('Dry run: create task Dry Task');
+      expect(output.task.path).toContain('dry-task.md');
+      expect(output.task.project).toBe('[[Q1]]');
+      expect(existsSync(join(tasksDir, 'dry-task.md'))).toBe(false);
+    });
+
+    test('previews projects and areas without creating them', async () => {
+      const project = await runCli(['new', 'project', 'Dry Project', '--dry-run', '--json'], {
+        useFixtureVault: false,
+        env: vaultEnv(),
+      });
+      expect(project.exitCode).toBe(0);
+      expect(JSON.parse(project.stdout).dryRun).toBe(true);
+      expect(existsSync(join(projectsDir, 'dry-project.md'))).toBe(false);
+
+      const area = await runCli(['new', 'area', 'Dry Area', '--dry-run', '--json'], {
+        useFixtureVault: false,
+        env: vaultEnv(),
+      });
+      expect(area.exitCode).toBe(0);
+      expect(JSON.parse(area.stdout).dryRun).toBe(true);
+      expect(existsSync(join(areasDir, 'dry-area.md'))).toBe(false);
+    });
+
+    test('AI mode says no changes were made', async () => {
+      const { stdout, exitCode } = await runCli(['new', 'Dry AI Task', '--dry-run', '--ai'], {
+        useFixtureVault: false,
+        env: vaultEnv(),
+      });
+
+      expect(exitCode).toBe(0);
+      expect(stdout).toContain('**Dry Run** - No changes made');
+      expect(existsSync(join(tasksDir, 'dry-ai-task.md'))).toBe(false);
+    });
   });
 });
 

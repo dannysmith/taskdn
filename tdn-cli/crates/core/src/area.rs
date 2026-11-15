@@ -61,10 +61,16 @@ pub fn parse_area_file(file_path: String) -> Result<Area> {
         }
     })?;
 
+    parse_area_content(file_path, &content)
+}
+
+/// Parse an area from file content. `file_path` is only recorded on the Area
+/// and used in errors; nothing is read from disk.
+pub(crate) fn parse_area_content(file_path: String, content: &str) -> Result<Area> {
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
     let parsed = matter
-        .parse::<AreaFrontmatter>(&content)
+        .parse::<AreaFrontmatter>(content)
         .map_err(|e| TdnError::parse_error(&file_path, None, e.to_string()))?;
 
     // Extract frontmatter data

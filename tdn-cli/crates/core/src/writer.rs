@@ -159,10 +159,11 @@ fn uuid_simple() -> String {
     format!("{:x}", duration.as_nanos())
 }
 
-/// Get current timestamp in ISO 8601 format (UTC).
-/// Format: YYYY-MM-DDTHH:MM:SSZ
+/// Get the current local time as an ISO 8601 timestamp with its UTC offset,
+/// e.g. `2026-11-15T14:30:00+00:00`. The offset keeps it an exact instant,
+/// while the local time is what the user expects to read in the file.
 pub fn now_iso8601() -> String {
-    chrono::Utc::now().format("%Y-%m-%dT%H:%M:%SZ").to_string()
+    chrono::Local::now().to_rfc3339_opts(chrono::SecondsFormat::Secs, false)
 }
 
 /// Atomically write content to a file.
@@ -318,11 +319,13 @@ fn reconstruct_file(frontmatter: &str, body: &str) -> String {
 /// Create a new task file with the given title and optional fields.
 ///
 /// Returns the created task after parsing (for validation and return to caller).
+/// With `dry_run`, nothing is written: it returns the task the file would hold.
 #[napi]
 pub fn create_task_file(
     tasks_dir: String,
     title: String,
     fields: TaskCreateFields,
+    dry_run: Option<bool>,
 ) -> Result<Task> {
     let dir = Path::new(&tasks_dir);
 
@@ -398,12 +401,16 @@ pub fn create_task_file(
     // Serialize and write
     let frontmatter = serialize_yaml(&mapping)?;
     let content = reconstruct_file(&frontmatter, "");
+    let path_str = file_path.to_string_lossy().to_string();
+
+    if dry_run.unwrap_or(false) {
+        return crate::task::parse_task_content(path_str, &content);
+    }
 
     atomic_write(&file_path, &content)?;
 
     // Parse and return the created task
     // If parsing fails, remove the orphaned file
-    let path_str = file_path.to_string_lossy().to_string();
     match parse_task_file(path_str) {
         Ok(task) => Ok(task),
         Err(e) => {
@@ -415,11 +422,13 @@ pub fn create_task_file(
 }
 
 /// Create a new project file with the given title and optional fields.
+/// With `dry_run`, nothing is written: it returns the project the file would hold.
 #[napi]
 pub fn create_project_file(
     projects_dir: String,
     title: String,
     fields: ProjectCreateFields,
+    dry_run: Option<bool>,
 ) -> Result<Project> {
     let dir = Path::new(&projects_dir);
 
@@ -481,12 +490,16 @@ pub fn create_project_file(
     // Serialize and write
     let frontmatter = serialize_yaml(&mapping)?;
     let content = reconstruct_file(&frontmatter, "");
+    let path_str = file_path.to_string_lossy().to_string();
+
+    if dry_run.unwrap_or(false) {
+        return crate::project::parse_project_content(path_str, &content);
+    }
 
     atomic_write(&file_path, &content)?;
 
     // Parse and return the created project
     // If parsing fails, remove the orphaned file
-    let path_str = file_path.to_string_lossy().to_string();
     match parse_project_file(path_str) {
         Ok(project) => Ok(project),
         Err(e) => {
@@ -498,11 +511,13 @@ pub fn create_project_file(
 }
 
 /// Create a new area file with the given title and optional fields.
+/// With `dry_run`, nothing is written: it returns the area the file would hold.
 #[napi]
 pub fn create_area_file(
     areas_dir: String,
     title: String,
     fields: AreaCreateFields,
+    dry_run: Option<bool>,
 ) -> Result<Area> {
     let dir = Path::new(&areas_dir);
 
@@ -550,12 +565,16 @@ pub fn create_area_file(
     // Serialize and write
     let frontmatter = serialize_yaml(&mapping)?;
     let content = reconstruct_file(&frontmatter, "");
+    let path_str = file_path.to_string_lossy().to_string();
+
+    if dry_run.unwrap_or(false) {
+        return crate::area::parse_area_content(path_str, &content);
+    }
 
     atomic_write(&file_path, &content)?;
 
     // Parse and return the created area
     // If parsing fails, remove the orphaned file
-    let path_str = file_path.to_string_lossy().to_string();
     match parse_area_file(path_str) {
         Ok(area) => Ok(area),
         Err(e) => {
@@ -752,7 +771,7 @@ mod tests {
             defer_until: None,
         };
 
-        let task = create_task_file(tasks_dir, "Test Task".to_string(), fields).unwrap();
+        let task = create_task_file(tasks_dir, "Test Task".to_string(), fields, None).unwrap();
 
         assert_eq!(task.title, "Test Task");
         assert_eq!(task.status, crate::TaskStatus::Inbox);
@@ -774,7 +793,7 @@ mod tests {
             defer_until: None,
         };
 
-        let task = create_task_file(tasks_dir, "Full Task".to_string(), fields).unwrap();
+        let task = create_task_file(tasks_dir, "Full Task".to_string(), fields, None).unwrap();
 
         assert_eq!(task.title, "Full Task");
         assert_eq!(task.status, crate::TaskStatus::Ready);
@@ -797,7 +816,7 @@ mod tests {
         };
 
         let project =
-            create_project_file(projects_dir, "Test Project".to_string(), fields).unwrap();
+            create_project_file(projects_dir, "Test Project".to_string(), fields, None).unwrap();
 
         assert_eq!(project.title, "Test Project");
         assert_eq!(project.status, None);
@@ -814,10 +833,62 @@ mod tests {
             description: None,
         };
 
-        let area = create_area_file(areas_dir, "Test Area".to_string(), fields).unwrap();
+        let area = create_area_file(areas_dir, "Test Area".to_string(), fields, None).unwrap();
 
         assert_eq!(area.title, "Test Area");
         assert_eq!(area.status, Some(crate::AreaStatus::Active));
+    }
+
+    #[test]
+    fn test_create_dry_run_writes_nothing() {
+        let temp = TempDir::new().unwrap();
+        let dir = temp.path().to_string_lossy().to_string();
+
+        let task_fields = TaskCreateFields {
+            status: Some("ready".to_string()),
+            project: Some("Q1 Planning".to_string()),
+            area: None,
+            due: None,
+            scheduled: None,
+            defer_until: None,
+        };
+        let task =
+            create_task_file(dir.clone(), "Dry Task".to_string(), task_fields, Some(true)).unwrap();
+        assert_eq!(task.status, crate::TaskStatus::Ready);
+        assert_eq!(task.project, Some("[[Q1 Planning]]".to_string()));
+        assert!(task.path.ends_with("dry-task.md"));
+
+        let project_fields = ProjectCreateFields {
+            status: None,
+            area: None,
+            description: None,
+            start_date: None,
+            end_date: None,
+        };
+        create_project_file(
+            dir.clone(),
+            "Dry Project".to_string(),
+            project_fields,
+            Some(true),
+        )
+        .unwrap();
+
+        let area_fields = AreaCreateFields {
+            status: None,
+            area_type: None,
+            description: None,
+        };
+        create_area_file(dir, "Dry Area".to_string(), area_fields, Some(true)).unwrap();
+
+        assert_eq!(fs::read_dir(temp.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn test_timestamps_include_utc_offset() {
+        let parsed = chrono::DateTime::parse_from_rfc3339(&now_iso8601())
+            .expect("timestamp should be RFC 3339 with an offset");
+        let local_offset = chrono::Local::now().offset().local_minus_utc();
+        assert_eq!(parsed.offset().local_minus_utc(), local_offset);
     }
 
     #[test]
@@ -962,17 +1033,27 @@ due: 2025-01-15
         };
 
         // Create first task
-        let task1 =
-            create_task_file(tasks_dir.clone(), "Same Title".to_string(), fields.clone()).unwrap();
+        let task1 = create_task_file(
+            tasks_dir.clone(),
+            "Same Title".to_string(),
+            fields.clone(),
+            None,
+        )
+        .unwrap();
         assert!(task1.path.ends_with("same-title.md"));
 
         // Create second task with same title
-        let task2 =
-            create_task_file(tasks_dir.clone(), "Same Title".to_string(), fields.clone()).unwrap();
+        let task2 = create_task_file(
+            tasks_dir.clone(),
+            "Same Title".to_string(),
+            fields.clone(),
+            None,
+        )
+        .unwrap();
         assert!(task2.path.ends_with("same-title-1.md"));
 
         // Create third
-        let task3 = create_task_file(tasks_dir, "Same Title".to_string(), fields).unwrap();
+        let task3 = create_task_file(tasks_dir, "Same Title".to_string(), fields, None).unwrap();
         assert!(task3.path.ends_with("same-title-2.md"));
     }
 
