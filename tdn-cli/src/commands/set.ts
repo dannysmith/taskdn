@@ -10,7 +10,7 @@ import {
   type VaultSession,
 } from '@bindings';
 import { createError, formatError, isCliError } from '@/errors/index.ts';
-import { toKebabCase } from '@/output/helpers/index.ts';
+import { toKebabCase, getLocalTimestamp } from '@/output/helpers/index.ts';
 import { lookupTask } from '@/lib/entity-lookup.ts';
 import { processBatch } from '@/lib/batch.ts';
 import { disambiguateTasks } from '@/lib/disambiguation.ts';
@@ -151,8 +151,7 @@ async function previewStatusChange(
 
   // Update completed-at if needed
   if (!wasCompleted && willBeCompleted) {
-    const now = new Date().toISOString().slice(0, 19);
-    updatedTask.completedAt = now;
+    updatedTask.completedAt = getLocalTimestamp();
   } else if (wasCompleted && !willBeCompleted) {
     updatedTask.completedAt = undefined;
   }

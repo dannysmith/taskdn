@@ -69,10 +69,13 @@ export function getFormatter(mode: OutputMode): Formatter {
 
 /**
  * Format a result using the appropriate formatter based on global options.
- * Prepends ANSI reset code to prevent color bleed from terminal prompt.
+ * Human output to a terminal starts with an ANSI reset, to stop colour
+ * bleeding in from the prompt. Other output is never prefixed, so `--json`
+ * and `--ai` stay parseable.
  */
 export function formatOutput(result: FormattableResult, options: GlobalOptions): string {
   const mode = getOutputMode(options);
   const formatter = getFormatter(mode);
-  return reset.open + formatter.format(result);
+  const prefix = mode === 'human' && process.stdout.isTTY ? reset.open : '';
+  return prefix + formatter.format(result);
 }

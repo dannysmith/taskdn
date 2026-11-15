@@ -88,11 +88,12 @@ function createTask(title: string, options: AddOptions): TaskCreatedResult {
     deferUntil,
   };
 
-  const task = createTaskFile(config.tasksDir, title, fields);
+  const task = createTaskFile(config.tasksDir, title, fields, options.dryRun);
 
   return {
     type: 'task-created',
     task,
+    dryRun: options.dryRun,
   };
 }
 
@@ -114,11 +115,12 @@ function createProject(title: string, options: AddOptions): ProjectCreatedResult
     endDate,
   };
 
-  const project = createProjectFile(config.projectsDir, title, fields);
+  const project = createProjectFile(config.projectsDir, title, fields, options.dryRun);
 
   return {
     type: 'project-created',
     project,
+    dryRun: options.dryRun,
   };
 }
 
@@ -134,11 +136,12 @@ function createArea(title: string, options: AddOptions): AreaCreatedResult {
     description: undefined,
   };
 
-  const area = createAreaFile(config.areasDir, title, fields);
+  const area = createAreaFile(config.areasDir, title, fields, options.dryRun);
 
   return {
     type: 'area-created',
     area,
+    dryRun: options.dryRun,
   };
 }
 
@@ -554,6 +557,7 @@ export const newCommand = new Command('new')
           due: typeof data.due === 'string' ? data.due : undefined,
           scheduled: typeof data.scheduled === 'string' ? data.scheduled : undefined,
           deferUntil: typeof data.deferUntil === 'string' ? data.deferUntil : undefined,
+          dryRun: options.dryRun,
         };
 
         // Create the task

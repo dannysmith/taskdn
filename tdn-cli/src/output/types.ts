@@ -223,6 +223,7 @@ export interface VaultOverviewResult {
 export interface TaskCreatedResult {
   type: 'task-created';
   task: Task;
+  dryRun?: boolean;
 }
 
 /**
@@ -231,6 +232,7 @@ export interface TaskCreatedResult {
 export interface ProjectCreatedResult {
   type: 'project-created';
   project: Project;
+  dryRun?: boolean;
 }
 
 /**
@@ -239,6 +241,7 @@ export interface ProjectCreatedResult {
 export interface AreaCreatedResult {
   type: 'area-created';
   area: Area;
+  dryRun?: boolean;
 }
 
 // ============================================================================

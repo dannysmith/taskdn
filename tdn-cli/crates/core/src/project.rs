@@ -79,10 +79,16 @@ pub fn parse_project_file(file_path: String) -> Result<Project> {
         }
     })?;
 
+    parse_project_content(file_path, &content)
+}
+
+/// Parse a project from file content. `file_path` is only recorded on the
+/// Project and used in errors; nothing is read from disk.
+pub(crate) fn parse_project_content(file_path: String, content: &str) -> Result<Project> {
     // Parse frontmatter
     let matter = Matter::<YAML>::new();
     let parsed = matter
-        .parse::<ProjectFrontmatter>(&content)
+        .parse::<ProjectFrontmatter>(content)
         .map_err(|e| TdnError::parse_error(&file_path, None, e.to_string()))?;
 
     // Extract frontmatter data

@@ -24,6 +24,7 @@ import {
   disambiguateAreas,
 } from '@/lib/disambiguation.ts';
 import { getVaultConfig } from '@/config/index.ts';
+import { getToday } from '@/output/helpers/index.ts';
 
 /**
  * Append-body command - add text to the end of an entity's body
@@ -37,14 +38,6 @@ import { getVaultConfig } from '@/config/index.ts';
  * Appends the provided text to the file body with a newline before
  * and an ISO date in brackets at the end.
  */
-
-/**
- * Get the current ISO date (YYYY-MM-DD format)
- */
-function getIsoDate(): string {
-  const now = new Date();
-  return now.toISOString().slice(0, 10);
-}
 
 /**
  * Get the entity title from a file
@@ -64,7 +57,7 @@ function getEntityTitle(filePath: string, entityType: EntityType): string {
  * Format the text to append (with date suffix)
  */
 function formatAppendText(text: string): string {
-  const isoDate = getIsoDate();
+  const isoDate = getToday();
   return `${text} [${isoDate}]`;
 }
 

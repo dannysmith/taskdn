@@ -6,6 +6,7 @@ import {
   getToday,
   formatDate,
   parseDate,
+  getLocalTimestamp,
   getTomorrow,
   getEndOfWeek,
   getStartOfWeek,
@@ -101,6 +102,16 @@ describe('date-utils', () => {
       const today = getToday();
       expect(today).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(today).not.toBe('invalid-date');
+    });
+  });
+
+  describe('getLocalTimestamp', () => {
+    test('formats local time with its UTC offset', () => {
+      const date = new Date(2025, 0, 15, 9, 5, 7);
+      const stamp = getLocalTimestamp(date);
+      expect(stamp).toMatch(/^2025-01-15T09:05:07[+-]\d{2}:\d{2}$/);
+      // The offset makes it the same instant, whatever the machine's timezone
+      expect(new Date(stamp).getTime()).toBe(date.getTime());
     });
   });
 

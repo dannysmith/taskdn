@@ -1912,15 +1912,18 @@ export const aiFormatter: Formatter = {
       }
       case 'task-created': {
         const createdResult = result as TaskCreatedResult;
-        return formatTaskCreated(createdResult.task);
+        const output = formatTaskCreated(createdResult.task);
+        return createdResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'project-created': {
         const createdResult = result as ProjectCreatedResult;
-        return formatProjectCreated(createdResult.project);
+        const output = formatProjectCreated(createdResult.project);
+        return createdResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'area-created': {
         const createdResult = result as AreaCreatedResult;
-        return formatAreaCreated(createdResult.area);
+        const output = formatAreaCreated(createdResult.area);
+        return createdResult.dryRun ? `**Dry Run** - No changes made\n\n${output}` : output;
       }
       case 'task-completed': {
         const completedResult = result as TaskCompletedResult;
