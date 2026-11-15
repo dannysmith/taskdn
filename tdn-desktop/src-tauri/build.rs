@@ -49,7 +49,6 @@ fn build_apple_intelligence_bridge() {
     let has_foundation_models = framework_path.exists();
 
     let source_file = if has_foundation_models {
-        println!("cargo:warning=Building with Apple Intelligence support.");
         REAL_SWIFT_FILE
     } else {
         println!("cargo:warning=Apple Intelligence SDK not found. Building with stubs.");
@@ -91,6 +90,9 @@ fn build_apple_intelligence_bridge() {
             "-sdk",
             &sdk_path,
             "-O",
+            // A lone file is otherwise compiled as a program's main file,
+            // which emits a `_main` symbol that clashes with Rust's
+            "-parse-as-library",
             "-import-objc-header",
             BRIDGE_HEADER,
             "-c",
