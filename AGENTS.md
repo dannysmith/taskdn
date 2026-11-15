@@ -75,9 +75,9 @@ This project builds a task management system, but we also use tasks to track dev
 ## Development Rules
 
 1. **Read before editing** – Understand existing code and patterns before making changes.
-2. **Follow the specs** – All task/project/area file handling must conform to `tdn-specs/S1-core.md`, and where appropriate to `tdn-specs/S2-interface-design.md` and `tdn-specs/S3-data-read-write.md`.
+2. **Follow the specs** – All task/project/area file handling must conform to `tdn-specs/S1-core.md`, and where appropriate to `tdn-specs/S2-implementation-guidance.md`.
 3. **Use `bun`** – Prefer `bun` over `pnpm` or `npm` for JavaScript/TypeScript projects.
-4. **Sub-project autonomy** – Each `tdn-*` directory is self-contained. Don't create cross-project dependencies without good reason, and always ask the user first.
+4. **Sub-project autonomy** – No product may depend on another at runtime: each must install and work without the others present. Shared libraries built into more than one product are fine (e.g. a Rust crate used by both the CLI and the desktop app). Ask the user before introducing a new shared library or any other dependency between products.
 5. **Spec changes are serious** – Changes to the specification docs affect all implementations. Always clearly confirm with the user before making any changes to files in `tdn-specs/`.
 
 ## Demo Vault
