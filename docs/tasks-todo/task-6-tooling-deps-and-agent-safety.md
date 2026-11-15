@@ -10,6 +10,7 @@ Astro Editor is the reference throughout: `~/dev/astro-editor/`, especially `doc
 - [ ] Bring the frontend up to Astro Editor's versions: TypeScript 7, Vite 8, Vitest 5, React and the rest.
 - [ ] Replace ESLint and Prettier with Oxlint (type-aware, via tsgolint) and Oxfmt. Keep ast-grep. Move knip and jscpd into a `codebase-hygiene` skill, as in Astro Editor. Port the React Compiler check script if it applies.
 - [ ] Rust dependencies, except `notify`: its upgrade belongs with the crash work in task 7.
+- [ ] Clear the open Dependabot security alerts. As of 2026-11-15 they're all for `zip` 4.6.1 (one critical, fixed in 9.0.5), which comes only from `tauri-plugin-updater`. Update the plugin to a version on `zip` 9.0.5 or later, or pin `zip` if the plugin hasn't moved yet.
 - [ ] Update `check:all`, the versions listed in `tdn-desktop/AGENTS.md`, and `docs/developer/static-analysis.md`.
 
 ## Phase 2: Desktop dev identity
