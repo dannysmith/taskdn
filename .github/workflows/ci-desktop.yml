@@ -40,6 +40,8 @@ jobs:
       CARGO_PROFILE_DEV_DEBUG: 0
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@v2
 
@@ -92,6 +94,8 @@ jobs:
       CARGO_PROFILE_RELEASE_CODEGEN_UNITS: 16
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: oven-sh/setup-bun@v2
 
@@ -116,14 +120,13 @@ jobs:
       - name: Install frontend dependencies
         run: bun install --frozen-lockfile
 
+      # --no-sign skips updater signing, so CI needs no secrets (and works for
+      # PRs from forks, which don't get them)
       - name: Tauri build
         uses: tauri-apps/tauri-action@v1.0.0
-        env:
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: tdn-desktop
-          args: ${{ matrix.args }}
+          args: ${{ matrix.args }} --no-sign
 
       # A build that compiles can still crash at startup, so launch it and fail
       # if it exits within 20s.

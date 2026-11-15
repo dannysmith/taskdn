@@ -62,6 +62,8 @@ jobs:
 
       # A push made with GITHUB_TOKEN doesn't trigger other workflows, so the
       # path filter on deploy-website.yml won't fire. Dispatch it explicitly.
+      # A manual run always deploys, which retries a deploy that failed after
+      # its posts were committed.
       - name: Deploy website
-        if: steps.commit.outputs.changed == 'true'
+        if: steps.commit.outputs.changed == 'true' || github.event_name == 'workflow_dispatch'
         run: gh workflow run deploy-website.yml --ref main
