@@ -1,0 +1,32 @@
+filters:
+  and:
+    - file.inFolder("areas")
+    - '!file.name.contains("Template")'
+properties:
+  file.name:
+    displayName: Area
+  note.status:
+    displayName: Status
+  note.type:
+    displayName: Type
+views:
+  - type: table
+    name: All Areas
+    order:
+      - file.name
+      - status
+      - type
+    sort:
+      - property: file.name
+        direction: ASC
+  - type: table
+    name: Active Areas
+    filters:
+      and:
+        - note.status.contains("active")
+    order:
+      - file.name
+      - type
+    sort:
+      - property: file.name
+        direction: ASC
