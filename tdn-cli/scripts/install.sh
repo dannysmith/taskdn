@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # tdn-cli installer
-# Usage: curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/dannysmith/taskdn/main/tdn-cli/scripts/install.sh | bash
 #
 # Environment variables:
 #   TDN_VERSION     - Version to install (default: latest)

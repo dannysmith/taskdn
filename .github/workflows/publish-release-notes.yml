@@ -1,0 +1,67 @@
+name: Publish Release Notes
+
+# Turns published releases into posts on the website: the CLI and desktop app
+# from this repo, and the Obsidian plugin from dannysmith/obsidian-taskdn. The
+# logic lives in website/scripts/generate-release-posts.ts, which skips
+# releases that already have a post, so every run is safe.
+#
+# Triggers:
+# - publishing a desktop release (done by hand, so `release` fires)
+# - release-cli.yml dispatching it, because a release created with
+#   GITHUB_TOKEN doesn't fire `release` for other workflows
+# - a schedule, to pick up Obsidian plugin releases from the other repo
+
+on:
+  release:
+    types: [published]
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: publish-release-notes
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commit the new posts to main
+  actions: write # dispatch deploy-website.yml
+
+jobs:
+  publish:
+    if: ${{ !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: oven-sh/setup-bun@v2
+
+      # Uses only Node built-ins and fetch, so no install is needed
+      - name: Generate release posts
+        working-directory: website
+        run: bun scripts/generate-release-posts.ts
+
+      - name: Commit new posts
+        id: commit
+        run: |
+          git add website/src/content/docs/releases
+          if git diff --cached --quiet; then
+            echo "No new release posts"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "docs(releases): add release posts"
+          git pull --rebase origin main
+          git push origin main
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # A push made with GITHUB_TOKEN doesn't trigger other workflows, so the
+      # path filter on deploy-website.yml won't fire. Dispatch it explicitly.
+      - name: Deploy website
+        if: steps.commit.outputs.changed == 'true'
+        run: gh workflow run deploy-website.yml --ref main

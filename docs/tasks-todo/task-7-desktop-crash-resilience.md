@@ -24,7 +24,7 @@ Depends on task 6: release logging (phase 3) so there's something to read, and t
   - quick pane open
   - the "Ignore for today" path
 
-  Do this with a bundled build, since a bare dev binary may not be treated as an app by Screen Time: a test build from task 2, or `tauri build --debug` with the dev identity.
+  Do this with a bundled build, since a bare dev binary may not be treated as an app by Screen Time: `tauri build --debug` with the dev identity, or a signed test build if that isn't enough. Test builds were deferred from task 2; port them from Astro Editor's `release.yml` and `scripts/test-build.js` if needed.
 - [ ] Read the crash report: the crashed thread and exception type will say whether it's the file watcher, the quick pane NSPanel, the webview process, global shortcuts or something else.
 
 ### Fix

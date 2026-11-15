@@ -1,0 +1,80 @@
+name: Desktop Stable Assets
+
+# Adds stable-named copies of a desktop release's installers
+# (taskdn-desktop-latest.*) plus a SHA256SUMS file to that release. The website
+# links to /releases/latest/download/taskdn-desktop-latest.*, which always
+# resolves to the newest published release, so installers never need committing
+# to the repo. CLI releases are never marked "latest", so /releases/latest is
+# always a desktop release.
+#
+# Called by release-desktop.yml after every platform has built. Run it by hand
+# to backfill a release that's missing the copies.
+
+on:
+  workflow_call:
+    inputs:
+      tag:
+        description: 'Desktop release tag (e.g. desktop-v0.1.7)'
+        required: true
+        type: string
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Desktop release tag (e.g. desktop-v0.1.7)'
+        required: true
+        type: string
+
+jobs:
+  publish-stable-assets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Download release installers
+        run: |
+          mkdir -p /tmp/release
+          gh release download "$RELEASE_TAG" \
+            --pattern '*.dmg' \
+            --pattern '*.msi' \
+            --pattern '*.AppImage' \
+            --dir /tmp/release
+          echo "Downloaded:"
+          ls -la /tmp/release
+
+      - name: Create stable-named copies
+        working-directory: /tmp/release
+        run: |
+          copy_stable() {
+            local pattern="$1" dest="$2" match
+            match=$(ls $pattern 2>/dev/null | grep -v '^taskdn-desktop-latest' | head -1)
+            if [ -z "$match" ]; then
+              echo "::error::No file matched $pattern for $RELEASE_TAG"
+              exit 1
+            fi
+            cp "$match" "$dest"
+            echo "Stable copy: $match -> $dest"
+          }
+          copy_stable '*.dmg' taskdn-desktop-latest.dmg
+          copy_stable '*.msi' taskdn-desktop-latest.msi
+          copy_stable '*.AppImage' taskdn-desktop-latest.AppImage
+
+      - name: Generate SHA256SUMS
+        working-directory: /tmp/release
+        run: |
+          # Covers both the versioned assets (Releases page) and the stable
+          # copies (website downloads), so `sha256sum -c` works for either.
+          sha256sum *.dmg *.msi *.AppImage > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Upload stable assets to release
+        working-directory: /tmp/release
+        run: |
+          gh release upload "$RELEASE_TAG" --clobber \
+            taskdn-desktop-latest.dmg \
+            taskdn-desktop-latest.msi \
+            taskdn-desktop-latest.AppImage \
+            SHA256SUMS

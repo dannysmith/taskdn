@@ -42,7 +42,10 @@ This shows a table comparing local versions to published releases and highlights
 |------|-------------|
 | Trigger | Push tag `tdn-cli-v*` |
 | Build | GitHub Actions builds binaries for all platforms |
-| Distribution | GitHub Release created, PR auto-created in `dannysmith/homebrew-taproom` |
+| Distribution | GitHub Release created (never marked "Latest"), npm packages published, PR auto-created in `dannysmith/homebrew-taproom` |
+| Website | `publish-release-notes.yml` dispatched to add a release post |
+
+CLI releases are never marked as the repo's "Latest" release, because the desktop updater and the website's download links use `/releases/latest`. The install script is served from `main` (`https://raw.githubusercontent.com/dannysmith/taskdn/main/tdn-cli/scripts/install.sh`) and looks up the newest `tdn-cli-v*` release itself.
 
 **To release:**
 
@@ -59,8 +62,10 @@ The script updates versions, runs checks, and optionally pushes the tag. See `td
 |------|-------------|
 | Trigger | Push tag `desktop-v*` |
 | Build | GitHub Actions builds via Tauri for macOS (universal, signed, notarized), Windows, Linux |
-| Distribution | Draft GitHub Release created; manually undraft to publish |
-| Website | Latest installers committed to `website/public/` |
+| Distribution | Draft GitHub Release created; write the notes, then publish it by hand |
+| Website | Stable-named installers (`taskdn-desktop-latest.*`) and `SHA256SUMS` uploaded to the release; publishing adds a release post |
+
+The website's download buttons link to `https://github.com/dannysmith/taskdn/releases/latest/download/taskdn-desktop-latest.*`, so the site never changes per release and installers are never committed. To backfill the stable copies on a release that's missing them, run the `Desktop Stable Assets` workflow by hand with the release's tag.
 
 **To release:**
 
@@ -130,11 +135,13 @@ When releases are published, posts are automatically created on the website at `
 
 ### Automation
 
+`website/scripts/generate-release-posts.ts` writes a post for every published release that doesn't have one yet, then `publish-release-notes.yml` commits them and deploys the website. It never touches existing posts, so it's safe to run at any time (`bun scripts/generate-release-posts.ts --dry-run` in `website/` shows what it would write).
+
 | Product | How |
 |---------|-----|
-| tdn-cli | Auto-created on `release: published` |
-| tdn-desktop | Auto-created on `release: published` |
-| obsidian-taskdn | Synced every 6 hours from external repo |
+| tdn-cli | Auto-created when `release-cli.yml` dispatches `publish-release-notes.yml` |
+| tdn-desktop | Auto-created when the release is published (`release: published`) |
+| obsidian-taskdn | Picked up from the external repo every 6 hours |
 | tdn-claude-plugin | Manual |
 | Specs | Manual |
 | Starter vault | Manual |
@@ -174,8 +181,12 @@ Edit the `.mdx` file directly. Add images to `releases/images/` if needed.
 | Workflow | File | Trigger |
 |----------|------|---------|
 | CI - CLI | `.github/workflows/ci-cli.yml` | Push/PR to `tdn-cli/**` |
+| CI - Desktop | `.github/workflows/ci-desktop.yml` | Push/PR to `tdn-desktop/**` |
+| CI - Website | `.github/workflows/ci-website.yml` | PR to `website/**` |
 | Release - CLI | `.github/workflows/release-cli.yml` | Tag `tdn-cli-v*` |
 | Release - Desktop | `.github/workflows/release-desktop.yml` | Tag `desktop-v*` |
-| Deploy - Website | `.github/workflows/deploy-website.yml` | Push to `website/**` on main |
-| Release Post | `.github/workflows/create-release-post.yml` | `release: published` (CLI/Desktop) |
-| Sync Obsidian | `.github/workflows/sync-obsidian-releases.yml` | Every 6 hours + manual |
+| Desktop Stable Assets | `.github/workflows/desktop-stable-assets.yml` | Called by Release - Desktop, or manual with a tag |
+| Deploy - Website | `.github/workflows/deploy-website.yml` | Push to `website/**` on main, or dispatched |
+| Publish Release Notes | `.github/workflows/publish-release-notes.yml` | `release: published`, dispatched by Release - CLI, every 6 hours, manual |
+
+All CI workflows cancel superseded runs, and only `main` saves Rust caches (PRs restore them). Desktop release builds use no Rust cache: they couldn't restore CI's cache, and a tag-scoped cache is never read again.
