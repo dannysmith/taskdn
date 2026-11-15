@@ -11,6 +11,8 @@
     "demo:reset": "./scripts/reset-dummy-vault.sh",
     "cli:install-local": "./scripts/install-cli-locally-via-symlink.sh",
     "monorepo:check": "./scripts/monorepo-check.sh",
-    "versions": "bun scripts/version-status.ts"
+    "versions": "bun scripts/version-status.ts",
+    "vault": "bun scripts/vaults/cli.ts",
+    "test:vaults": "bun test scripts/vaults"
   }
 }
