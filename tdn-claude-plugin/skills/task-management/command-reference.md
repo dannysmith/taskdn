@@ -84,27 +84,26 @@ Display full entity details including body content.
 ### Syntax
 
 ```bash
-tdn show <identifier> [entity-type] --ai
+tdn show <path> --ai
 ```
 
-### Identifier
+### Path
 
-Can be:
+`show` only accepts a file path, not a title. Use the absolute path from `tdn list` or `tdn context` output; relative paths are resolved from the current directory. It works out whether the file is a task, project or area from its directory.
 
-- **Title** (fuzzy match): `"Fix bug"`
-- **File path**: `./tasks/fix-bug.md` or `fix-bug.md`
+To look up a task by title, use `tdn context task "Title" --ai`, which accepts a full or partial title.
 
 ### Examples
 
 ```bash
-# Show task by title
-tdn show "Call dentist" --ai
+# Show a task (path from tdn list output)
+tdn show ~/notes/tasks/call-dentist.md --ai
 
-# Show project by path
-tdn show ./projects/q1-planning.md project --ai
+# Show a project
+tdn show ~/notes/projects/q1-planning.md --ai
 
-# Show area
-tdn show "Work" area --ai
+# Look up a task by title instead
+tdn context task "Call dentist" --ai
 ```
 
 ---
