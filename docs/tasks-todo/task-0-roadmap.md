@@ -8,12 +8,12 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Complete `task-x-quick-entry-ai-processing.md` (all phases done)
   - [x] Close the personal review issues (#9–#13)
   - [x] Merge the Dependabot PRs (#55–57) (already superseded on main, so closed)
-- [ ] **2. Release and CI workflows** (branch and PR, with CodeRabbit) → `task-2-release-and-ci-workflows.md`
-  - [ ] CLI releases never become the repo's "Latest" release
-  - [ ] Stop committing desktop installers; stable-named release assets instead
-  - [ ] CI for desktop and website on PRs
-  - [ ] Release notes flow to the website reliably for every product
-  - [ ] Bring across what helps from Astro Editor (caching, test builds, action versions)
+- [x] **2. Release and CI workflows** (branch and PR, with CodeRabbit) → `task-2-release-and-ci-workflows.md`
+  - [x] CLI releases never become the repo's "Latest" release
+  - [x] Stop committing desktop installers; stable-named release assets instead
+  - [x] CI for desktop and website on PRs
+  - [x] Release notes flow to the website reliably for every product
+  - [x] Bring across what helps from Astro Editor (caching, action versions; test builds deferred to task 7)
 - [ ] **3. Remove installers from git history** → `task-3-remove-installers-from-history.md`
 - [ ] **4. CLI 1.0.2** → `task-4-cli-1-0-2.md`
   - [ ] Fix `--json` output starting with an ANSI reset code

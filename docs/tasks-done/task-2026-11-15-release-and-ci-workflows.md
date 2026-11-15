@@ -36,7 +36,7 @@ Astro Editor solved most of this; see `~/dev/astro-editor/docs/developer/release
 - [x] In `release-desktop.yml`, replace the commit-to-website job with Astro Editor's approach: download the release's installers, make stable-named copies (`taskdn-desktop-latest.dmg`, `.msi`, `.AppImage`) plus a `SHA256SUMS`, and upload them to the same release.
 - [x] Point the website's download buttons at `https://github.com/dannysmith/taskdn/releases/latest/download/taskdn-desktop-latest.*`.
 - [x] Delete the installers from `website/public/` and gitignore them.
-- [ ] Backfill stable-named copies onto `desktop-v0.1.7` so the links work as soon as this merges. Making the stable-copy job runnable by hand (`workflow_dispatch` with a tag input) covers the backfill and tests the job at the same time.
+- [x] Backfill stable-named copies onto `desktop-v0.1.7` so the links work as soon as this merges. Making the stable-copy job runnable by hand (`workflow_dispatch` with a tag input) covers the backfill and tests the job at the same time.
   - The job is `desktop-stable-assets.yml`. A manually triggered workflow can only run once it's on `main`, so run it straight after merging: `gh workflow run desktop-stable-assets.yml -f tag=desktop-v0.1.7`. The download links 404 until it has finished.
 
 ### CI

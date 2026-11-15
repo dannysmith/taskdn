@@ -11,6 +11,7 @@ Astro Editor is the reference throughout: `~/dev/astro-editor/`, especially `doc
 - [ ] Replace ESLint and Prettier with Oxlint (type-aware, via tsgolint) and Oxfmt. Keep ast-grep. Move knip and jscpd into a `codebase-hygiene` skill, as in Astro Editor. Port the React Compiler check script if it applies.
 - [ ] Rust dependencies, except `notify`: its upgrade belongs with the crash work in task 7.
 - [ ] Clear the open Dependabot security alerts. As of 2026-11-15 they're all for `zip` 4.6.1 (one critical, fixed in 9.0.5), which comes only from `tauri-plugin-updater`. Update the plugin to a version on `zip` 9.0.5 or later, or pin `zip` if the plugin hasn't moved yet.
+- [ ] Add `.github/dependabot.yml`. Without it, Dependabot's security updates treat the bun projects as npm and fail ("Set `package-ecosystem: "bun"` in your dependabot.yml"), so npm alerts such as `minimatch` in `tdn-cli` never get fix PRs. Declare `bun` for `tdn-cli`, `tdn-desktop` and `website`, `cargo` for both Rust workspaces, and `github-actions`. Decide whether to allow scheduled version-update PRs, or only security updates (`open-pull-requests-limit: 0`).
 - [ ] Update `check:all`, the versions listed in `tdn-desktop/AGENTS.md`, and `docs/developer/static-analysis.md`.
 
 ## Phase 2: Desktop dev identity
