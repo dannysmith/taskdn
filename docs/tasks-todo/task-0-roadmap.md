@@ -14,7 +14,7 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] CI for desktop and website on PRs
   - [x] Release notes flow to the website reliably for every product
   - [x] Bring across what helps from Astro Editor (caching, action versions; test builds deferred to task 7)
-- [ ] **3. Remove installers from git history** → `task-3-remove-installers-from-history.md`
+- [x] **3. Remove installers from git history** → `task-3-remove-installers-from-history.md`
 - [ ] **4. CLI 1.0.2** → `task-4-cli-1-0-2.md`
   - [ ] Fix `--json` output starting with an ANSI reset code
   - [ ] Make `new --dry-run` not write the file
