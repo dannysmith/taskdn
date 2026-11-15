@@ -73,7 +73,7 @@ When to use which approach for task management operations.
 | Tasks in a project    | `tdn list --project "Name" --ai`      |
 | Tasks in an area      | `tdn list --area "Name" --ai`         |
 | Tasks matching text   | `tdn list --query "search term" --ai` |
-| Specific task details | `tdn show "Task title" --ai`          |
+| Specific task details | `tdn context task "Task title" --ai`  |
 
 ---
 

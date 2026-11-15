@@ -242,7 +242,7 @@ tdn list --query "API documentation" --ai
 2. If found, show details:
 
 ```bash
-tdn show "Document API v2 endpoints" --ai
+tdn context task "Document API v2 endpoints" --ai
 ```
 
 3. If in a project, provide context:

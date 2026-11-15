@@ -158,33 +158,30 @@ tdn list areas --include-archived
 
 ## show
 
-The `show` command displays complete details for a single entity, including its full body content.
+The `show` command displays complete details for a single entity, including its full body content. It takes the entity's file path, which `tdn list` prints for every entity:
 
 ```bash
-tdn show "Review quarterly report"
+tdn show ~/notes/tasks/review-quarterly-report.md
 ```
 
-You can reference entities by title (fuzzy matching) or by file path:
+Relative paths are resolved from the current directory.
+
+To look a task up by its title instead, use [`context task`](#context), which accepts a full or partial title:
 
 ```bash
-tdn show "quarterly report"              # Fuzzy match on title
-tdn show tasks/review-quarterly-report.md   # Exact path
+tdn context task "quarterly report"
 ```
-
-<Aside type="note">
-In human mode, if your query matches multiple entities, you'll be prompted to select one. In AI mode, ambiguous queries return an error listing all matches.
-</Aside>
 
 ### Viewing Projects and Areas
 
 The same command works for projects and areas:
 
 ```bash
-tdn show "Q1 Planning"       # Shows project details
-tdn show "Work"              # Shows area details
+tdn show ~/notes/projects/q1-planning.md   # Shows project details
+tdn show ~/notes/areas/work.md             # Shows area details
 ```
 
-The CLI determines the entity type automatically based on where the file is found.
+The CLI determines the entity type automatically based on which directory the file is in.
 
 ## today
 

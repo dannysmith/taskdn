@@ -131,7 +131,7 @@ Local config takes precedence over global.
 | Command           | Purpose                     | Example                                          |
 | ----------------- | --------------------------- | ------------------------------------------------ |
 | `tdn list`        | Query and filter entities   | `tdn list --status ready --ai`                   |
-| `tdn show`        | Full entity details         | `tdn show "Fix bug" --ai`                        |
+| `tdn show`        | Full entity details by path | `tdn show ~/notes/tasks/fix-bug.md --ai`         |
 | `tdn new`         | Create task/project/area    | `tdn new "Call dentist" --due tomorrow --ai`     |
 | `tdn context`     | Overview with relationships | `tdn context --ai`                               |
 | `tdn today`       | Today's actionable tasks    | `tdn today --ai`                                 |
