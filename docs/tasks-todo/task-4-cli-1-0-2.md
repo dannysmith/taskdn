@@ -28,7 +28,8 @@ Each fix gets a focused test.
 ## Not in this release
 
 - Files with an unknown status or an unquoted wikilink are silently dropped. That's a spec question (task 8) and gets fixed in `tdn-core`. Include a small fix here only if Danny has hit it in real use.
-- Lookup inconsistencies, unvalidated references and the duplicate formatters are all for the 2.0 redesign.
+- Lookup inconsistencies, unvalidated references and the duplicate formatters are all for the 2.0 redesign. One more for that list, from review: `context task` treats any argument containing `/` as a path, so a title like "CI/CD rollout" can't be looked up by title.
+- From review, fixed here: `list --sort created|updated` compared timestamps as strings, which misorders values with different offsets (`…Z` from older files, `…+01:00` from new ones). Those two fields now sort by the instant they represent.
 
 ## Release
 
