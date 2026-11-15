@@ -20,3 +20,7 @@ docs/tasks-todo/temporary/
 
 # Rendered and generated test vaults (templates live in demo-vault-templates/)
 demo-vaults/
+
+# Obsidian creates its own config if a template is opened directly; vaults get
+# theirs from scripts/vaults/obsidian-base/ when rendered
+demo-vault-templates/*/.obsidian/
