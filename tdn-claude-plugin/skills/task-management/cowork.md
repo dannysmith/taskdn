@@ -34,7 +34,7 @@ This is the most reliable method in Cowork, since `registry.npmjs.org` is on the
 **Fallback 1 — download from GitHub Releases:**
 
 ```bash
-curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/dannysmith/taskdn/main/tdn-cli/scripts/install.sh | bash
 export PATH="$PATH:$HOME/.local/bin"
 ```
 

@@ -11,7 +11,7 @@ The release system provides:
 - Universal macOS binary (arm64 + x86_64)
 - Auto-updater with cryptographic verification
 - Draft releases for manual review before publishing
-- Automatic website artifact updates
+- Stable-named installers on each release, which the website links to
 
 **Workflow location:** `/.github/workflows/release-desktop.yml` (in monorepo root)
 
@@ -36,9 +36,9 @@ Then GitHub Actions will:
 1. Create a single **draft** release for the tag (`create-release`)
 2. Build the app for all platforms (macOS, Windows, Linux) in parallel, uploading each platform's installers and `latest.json` entries to that draft by its ID. Creating the draft first stops the parallel builds racing to create separate drafts
 3. Sign and notarize macOS builds
-4. Commit latest installers to `website/public/` and trigger a website deploy
+4. Upload stable-named copies of the installers (`taskdn-desktop-latest.*`) and a `SHA256SUMS` to the draft (`desktop-stable-assets.yml`)
 
-Finally, manually publish the draft release on GitHub.
+Finally, write the release notes in the draft and publish it on GitHub. Publishing makes `latest.json` public, so existing users get the update, and fires `publish-release-notes.yml`, which adds the notes to the website.
 
 ### Manual Method
 
@@ -71,15 +71,17 @@ All three files must have matching versions:
 
 Each release creates:
 
-| Platform | Artifact      | Notes                                                   |
-| -------- | ------------- | ------------------------------------------------------- |
-| macOS    | `.dmg`        | Universal binary (arm64 + x86_64), signed and notarized |
-| Windows  | `.msi`        | Standard installer                                      |
-| Linux    | `.AppImage`   | Portable executable                                     |
-| All      | `latest.json` | Auto-updater manifest                                   |
-| All      | `.sig` files  | Cryptographic signatures                                |
+| Platform | Artifact                  | Notes                                                   |
+| -------- | ------------------------- | ------------------------------------------------------- |
+| macOS    | `.dmg`                    | Universal binary (arm64 + x86_64), signed and notarized |
+| Windows  | `.msi`                    | Standard installer                                      |
+| Linux    | `.AppImage`               | Portable executable                                     |
+| All      | `latest.json`             | Auto-updater manifest                                   |
+| All      | `.sig` files              | Cryptographic signatures                                |
+| All      | `taskdn-desktop-latest.*` | Stable-named copies of the installers                   |
+| All      | `SHA256SUMS`              | Checksums for the installers and their stable copies    |
 
-The workflow also commits latest installers to `website/public/` for direct downloads.
+The website's download buttons link to `/releases/latest/download/taskdn-desktop-latest.*`, which always resolves to the newest published desktop release (CLI releases are never marked "Latest"). Installers are never committed to the repo.
 
 ## GitHub Secrets
 

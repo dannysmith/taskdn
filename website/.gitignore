@@ -19,3 +19,6 @@ pnpm-debug.log*
 
 # macOS-specific files
 .DS_Store
+
+# Desktop installers are served from GitHub release assets, never committed
+public/taskdn-desktop-latest.*

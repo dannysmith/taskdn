@@ -11,7 +11,7 @@ This session is being primed with context on the user's personal task management
    - **If not found** → continue to step 3.
 3. Set up tdn for this environment (likely Claude Cowork). See [cowork.md](../skills/task-management/cowork.md) for full details. In short:
    a. Try npm: `npm install -g @taskdn/cli && export PATH="$PATH:$(npm prefix -g)/bin"`
-   b. If npm fails, try curl: `curl -fsSL https://github.com/dannysmith/taskdn/releases/latest/download/install.sh | bash && export PATH="$PATH:$HOME/.local/bin"`
+   b. If npm fails, try curl: `curl -fsSL https://raw.githubusercontent.com/dannysmith/taskdn/main/tdn-cli/scripts/install.sh | bash && export PATH="$PATH:$HOME/.local/bin"`
    c. If both fail, search mounted dirs for a `tdn` binary: `find /sessions/*/mnt/ /mnt/ -name 'tdn' -o -name 'tdn-linux-arm64' 2>/dev/null`
    d. Discover vault directories in mounted paths (look for `tasks`, `projects`, `areas` folders)
    e. Create a `.taskdn.json` in the current directory with the discovered paths
