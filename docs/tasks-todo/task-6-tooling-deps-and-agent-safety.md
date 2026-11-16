@@ -6,13 +6,13 @@ Astro Editor is the reference throughout: `~/dev/astro-editor/`, especially `doc
 
 ## Phase 1: Desktop dependencies, lint and format
 
-- [ ] Port Astro Editor's `deps-update` skill and use it for this update, so the skill is tested on its first run.
-- [ ] Bring the frontend up to Astro Editor's versions: TypeScript 7, Vite 8, Vitest 5, React and the rest.
-- [ ] Replace ESLint and Prettier with Oxlint (type-aware, via tsgolint) and Oxfmt. Keep ast-grep. Move knip and jscpd into a `codebase-hygiene` skill, as in Astro Editor. Port the React Compiler check script if it applies.
-- [ ] Rust dependencies, except `notify`: its upgrade belongs with the crash work in task 7.
+- [x] Port Astro Editor's `deps-update` skill and use it for this update, so the skill is tested on its first run.
+- [x] Bring the frontend up to Astro Editor's versions: TypeScript 7, Vite 8, Vitest 5, React and the rest.
+- [x] Replace ESLint and Prettier with Oxlint (type-aware, via tsgolint) and Oxfmt. Keep ast-grep. Move knip and jscpd into a `codebase-hygiene` skill, as in Astro Editor. Port the React Compiler check script if it applies.
+- [x] Rust dependencies, except `notify`: its upgrade belongs with the crash work in task 7.
 - [ ] Clear the open Dependabot security alerts. As of 2026-11-15 they're all for `zip` 4.6.1 (one critical, fixed in 9.0.5), which comes only from `tauri-plugin-updater`. Update the plugin to a version on `zip` 9.0.5 or later, or pin `zip` if the plugin hasn't moved yet.
-- [ ] Add `.github/dependabot.yml`. Without it, Dependabot's security updates treat the bun projects as npm and fail ("Set `package-ecosystem: "bun"` in your dependabot.yml"), so npm alerts such as `minimatch` in `tdn-cli` never get fix PRs. Declare `bun` for `tdn-cli`, `tdn-desktop` and `website`, `cargo` for both Rust workspaces, and `github-actions`. Decide whether to allow scheduled version-update PRs, or only security updates (`open-pull-requests-limit: 0`).
-- [ ] Update `check:all`, the versions listed in `tdn-desktop/AGENTS.md`, and `docs/developer/static-analysis.md`.
+- [x] Add `.github/dependabot.yml`. Without it, Dependabot's security updates treat the bun projects as npm and fail ("Set `package-ecosystem: "bun"` in your dependabot.yml"), so npm alerts such as `minimatch` in `tdn-cli` never get fix PRs. Declare `bun` for `tdn-cli`, `tdn-desktop` and `website`, `cargo` for both Rust workspaces, and `github-actions`. Decide whether to allow scheduled version-update PRs, or only security updates (`open-pull-requests-limit: 0`).
+- [x] Update `check:all`, the versions listed in `tdn-desktop/AGENTS.md`, and `docs/developer/static-analysis.md`.
 
 ### Phase 1 working notes
 
@@ -54,8 +54,20 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 5. [x] `90e1264`: Vite 8, plugin-react 6 (compiler via `@rolldown/plugin-babel`, `@babel/core` pinned to 7), Vitest 5 (webstorage workaround removed), jsdom 31, jest-dom 7 (`/vitest` import), `@types/node` 26.
 6. [x] App majors, one commit each: lucide 1.73 (`e2fc1dc`, every icon still exists); react-resizable-panels 4 (`2ddc84b`: wrapper on Group/Panel/Separator, sizes now explicit percentages since v4 reads numbers as pixels, ResizeObserver stub in tests); i18next 27 and react-i18next 18 (`95b9364`, no changes needed); shadcn 4.23 (`f02beb7`, `tailwind.css` only gained opt-in utilities); datepicker 0.1.6 (`b0f0dcd`, adds an `autoFocus` prop).
 7. [x] ast-grep 0.51 (`282b8bc`); knip 6 and jscpd 5 with a `codebase-hygiene` skill in `tdn-desktop/.claude/skills/` replacing `/cleanup` and `cleanup-analyzer` (`be76627`); `compiler:check` in `check:all` (`527131a`), which found 4 components the compiler skipped for try/catch, now fixed.
-8. [ ] `.github/dependabot.yml`, then docs: `check:all`, `tdn-desktop/AGENTS.md` versions, `static-analysis.md`.
-9. [ ] Finish: production build, audit, smoke test, PR.
+8. [x] `.github/dependabot.yml` (`9d95052`); clippy over all targets, fixing 7 test warnings (`eb16c84`); desktop docs: `AGENTS.md` commands and versions, `static-analysis.md`, the docs index and the ast-grep guide (`78d7c54`).
+9. [ ] Finish:
+   - [x] Production build: `Taskdn Desktop.app` 8.34 MiB, no new warnings (the >600 kB `theme` chunk note was already there on `main`: 693 kB then, 669 kB now). Frontend `dist/` 2,176 KB vs 2,148 KB on `main` (+1.3%, mostly react-resizable-panels 4).
+   - [x] Audit: `bun audit` finds 3: `deepmerge` and `minimatch` via the `shadcn` CLI's dependencies (not bundled), and `katex` 0.16 via Milkdown Crepe (low; needs Crepe to move to KaTeX 0.18+). `cargo audit`: no vulnerabilities, 7 warnings for unmaintained or unsound crates deep in Tauri's Linux dependencies.
+   - [ ] Smoke test (Danny), in `bun run tauri:dev` with the rendered demo vault:
+     - Today and This Week views list the right tasks; kanban marks due-today tasks as due, not overdue (`useToday`)
+     - Sidebars open at about 20% width, resize, and hide and show (react-resizable-panels 4)
+     - Rename a task inline in the list, a card and a heading; Escape cancels (title draft sync)
+     - New task from a view starts in edit mode (TaskList auto-edit)
+     - Quick entry: global shortcut opens it; project plus a date promotes inbox to ready; a popover opened by keyboard returns focus when closed; the body section animates open and closed; AI parsing if available
+     - Task detail panel: a shortcut that opens a field opens its popover
+     - Preferences: change language; change vault folders (reinitialises); "Use Demo Vault"; change the quick entry shortcut
+     - Date pickers (datepicker 0.1.6), Milkdown body editing, icons (lucide 1), Check for Updates (updater 2.14.1), a notification
+   - [ ] PR (when Danny says), rebase merge. After merge: check the `zip` alerts are closed.
 
 **Holds:**
 
