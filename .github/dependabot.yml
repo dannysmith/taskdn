@@ -1,0 +1,51 @@
+# Dependabot: security updates only.
+#
+# Dependencies are updated in deliberate sessions with the deps-update skill
+# (.claude/skills/deps-update/), so version-update PRs are off
+# (open-pull-requests-limit: 0). Security updates still open PRs: they need
+# this file to know each project's package manager, or bun projects are
+# treated as npm and their fixes fail.
+#
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+
+version: 2
+
+updates:
+  - package-ecosystem: 'bun'
+    directories:
+      - '/tdn-cli'
+      - '/tdn-desktop'
+      - '/website'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 0
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'chore(deps)'
+
+  - package-ecosystem: 'cargo'
+    directories:
+      - '/tdn-cli'
+      - '/tdn-desktop/src-tauri'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 0
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'chore(deps)'
+
+  # Workflow actions are few and low-risk to bump, so these get monthly PRs
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'monthly'
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    labels:
+      - 'dependencies'
+    commit-message:
+      prefix: 'chore(deps)'
