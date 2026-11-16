@@ -366,7 +366,7 @@ export function ComponentReference() {
               </p>
               <div className="grid gap-3 max-w-xs">
                 <TaskCard
-                  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                  // oxlint-disable-next-line @typescript-eslint/no-non-null-assertion
                   task={FAKE_TASKS[0]!}
                   projectName="Authentication System"
                   onStatusChange={noop}
@@ -380,9 +380,9 @@ export function ComponentReference() {
                 Compact card for month calendar cells. Just checkbox + title.
               </p>
               <div className="grid gap-2 max-w-[200px]">
-                {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+                {/* oxlint-disable-next-line @typescript-eslint/no-non-null-assertion */}
                 <TaskCard task={FAKE_TASKS[0]!} size="compact" />
-                {/* eslint-disable-next-line @typescript-eslint/no-non-null-assertion */}
+                {/* oxlint-disable-next-line @typescript-eslint/no-non-null-assertion */}
                 <TaskCard task={FAKE_TASKS[3]!} size="compact" variant="done" />
               </div>
             </ComponentGroup>
@@ -392,14 +392,14 @@ export function ComponentReference() {
                 Visual states: default, overdue (red), deferred (muted/dashed),
                 done (green).
               </p>
-              {/* eslint-disable @typescript-eslint/no-non-null-assertion */}
+              {/* oxlint-disable @typescript-eslint/no-non-null-assertion */}
               <div className="grid gap-3 max-w-xs">
                 <TaskCard task={FAKE_TASKS[0]!} variant="default" />
                 <TaskCard task={FAKE_TASKS[1]!} variant="overdue" />
                 <TaskCard task={FAKE_TASKS[2]!} variant="deferred" />
                 <TaskCard task={FAKE_TASKS[3]!} variant="done" />
               </div>
-              {/* eslint-enable @typescript-eslint/no-non-null-assertion */}
+              {/* oxlint-enable @typescript-eslint/no-non-null-assertion */}
             </ComponentGroup>
 
             <ComponentGroup title="TaskStatusCheckbox">
