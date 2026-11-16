@@ -134,8 +134,8 @@ Only the required fields decide whether a file is an entity. For every entity:
 
 ### 4.4 Writing Entities
 
-1. When creating an entity, writers MUST write its required fields. When creating a task, writers MUST also write `created-at`.
-2. Writers SHOULD set `updated-at` whenever they change a task.
+1. When creating an entity, writers MUST write its required fields and `created-at`.
+2. Writers SHOULD set `updated-at` whenever they change an entity.
 3. Writers MUST write a task's `projects` as a list with exactly one element. A writer that changes the project of a task that has a `project` field writes `projects` and removes `project`.
 
 ### 4.5 Status
@@ -194,7 +194,7 @@ These definitions make "active" mean the same in every tool. What a tool shows, 
 2. `defer-until` is inclusive: a task with `defer-until: 2026-01-16` is active on 16 January. "Today" is the user's local date.
 3. `scheduled` never affects whether a task is active. A task scheduled for a future date is active.
 4. Whether a task is active depends only on its own file. Its project's status doesn't change it.
-5. A project is active if it has no status, or its status is not `done`.
+5. A project is active if it has no status, or its status is not `done` or `dropped`.
 6. An area is active if it has no status, or its status matches `active` (§7.5).
 
 ---
@@ -249,7 +249,11 @@ A task's `status` is one of these values (§4.5):
 | `dropped`     | Abandoned. Will not be completed.                                                           |
 | `done`        | Completed successfully.                                                                     |
 
-### 5.6 Example
+### 5.6 Overdue Tasks
+
+A task is overdue if its status is not `done` or `dropped` and its `due` has passed. A date `due` has passed once it is before today. A datetime `due` has passed once that time has passed (§4.7).
+
+### 5.7 Example
 
 ```yaml
 ---
@@ -298,31 +302,44 @@ A file in the projects directory is a project if it has this field (§4.2).
 
 ### 6.4 Optional Frontmatter Fields
 
-| Field         | Type                     | Description                                                              |
-| ------------- | ------------------------ | ------------------------------------------------------------------------ |
-| `area`        | file reference           | Reference to an Area file.                                               |
-| `status`      | string                   | One of the project status values in §6.5.                                |
-| `description` | string                   | A short description, SHOULD be under 500 characters.                     |
-| `start-date`  | date                     | When work on the project began or will begin.                            |
-| `end-date`    | date                     | When the project was completed or is expected to complete.               |
-| `blocked-by`  | array of file references | Projects that must be completed before this one can start.               |
+| Field          | Type                     | Description                                                                                            |
+| -------------- | ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| `area`         | file reference           | Reference to an Area file.                                                                             |
+| `status`       | string                   | One of the project status values in §6.5.                                                              |
+| `description`  | string                   | A short description, SHOULD be under 500 characters.                                                   |
+| `start-date`   | date                     | When work on the project is planned to start (§6.6).                                                   |
+| `end-date`     | date                     | When the project is planned to finish (§6.6).                                                          |
+| `blocked-by`   | array of file references | Projects this one depends on (§6.6).                                                                   |
+| `created-at`   | date or datetime         | When the project was created. Writers MUST set it when creating a project (§4.4).                      |
+| `updated-at`   | date or datetime         | When the project was last changed. Writers SHOULD keep it current (§4.4).                              |
+| `completed-at` | date or datetime         | When the project was completed or dropped. SHOULD be set when `status` changes to `done` or `dropped`. |
 
 ### 6.5 Status Values
 
 A project's `status` is one of these values (§4.5):
 
-| Status        | Description                                          |
-| ------------- | ---------------------------------------------------- |
-| `planning`    | Still being scoped or planned.                       |
-| `ready`       | Planned and ready to begin.                          |
-| `blocked`     | Cannot proceed due to dependency on another project. |
-| `in-progress` | Active work is happening.                            |
-| `paused`      | Temporarily on hold.                                 |
-| `done`        | Completed.                                           |
+| Status        | Description                                  |
+| ------------- | -------------------------------------------- |
+| `planning`    | Still being scoped or planned.               |
+| `ready`       | Planned and ready to begin.                  |
+| `blocked`     | Cannot proceed until something else happens. |
+| `in-progress` | Active work is happening.                    |
+| `paused`      | Temporarily on hold.                         |
+| `dropped`     | Abandoned. Will not be completed.            |
+| `done`        | Completed.                                   |
 
 If `status` is absent, implementations SHOULD treat the project as having no defined workflow state and MAY display it in all project views.
 
-### 6.6 Example
+A project's status doesn't change its tasks' statuses. A task in a `done` or `dropped` project has whatever status its own file records (§4.8).
+
+### 6.6 Dates and Dependencies
+
+1. `start-date` and `end-date` are the user's plan. Writers SHOULD NOT change them because the project's status changed. When the project actually finished is recorded in `completed-at`.
+2. A project is overdue if its `end-date` is before today and its status is not `done` or `dropped`.
+3. `blocked-by` lists the projects this one depends on. It is information only: readers MUST take whether a project is blocked from its `status` alone, and MUST NOT infer it from `blocked-by`. A project can be `blocked` with no `blocked-by`, or `in-progress` with an unfinished project in `blocked-by`.
+4. Writers MAY change a project's status as part of a change the user makes, for example setting `status: blocked` when the user adds a project to `blocked-by`.
+
+### 6.7 Example
 
 ```yaml
 ---
@@ -362,11 +379,13 @@ A file in the areas directory is an area if it has this field (§4.2).
 
 ### 7.4 Optional Frontmatter Fields
 
-| Field         | Type   | Description                                                              |
-| ------------- | ------ | ------------------------------------------------------------------------ |
-| `status`      | string | One of the area status values in §7.5.                                   |
-| `type`        | string | Allows differentiation between area types (e.g., "client", "life-area"). |
-| `description` | string | A short description, SHOULD be under 500 characters.                     |
+| Field         | Type             | Description                                                                  |
+| ------------- | ---------------- | ---------------------------------------------------------------------------- |
+| `status`      | string           | One of the area status values in §7.5.                                       |
+| `type`        | string           | The kind of area, such as `work` or `client` (§7.6).                         |
+| `description` | string           | A short description, SHOULD be under 500 characters.                         |
+| `created-at`  | date or datetime | When the area was created. Writers MUST set it when creating an area (§4.4). |
+| `updated-at`  | date or datetime | When the area was last changed. Writers SHOULD keep it current (§4.4).       |
 
 ### 7.5 Status Values
 
@@ -382,7 +401,11 @@ When displaying areas, implementations SHOULD:
 - Display areas with no `status`, or with a status that matches `active` (§4.5).
 - Hide areas with any other status, including `archived` and unknown values such as `paused`.
 
-### 7.6 Example
+### 7.6 Area Type
+
+`type` is a free-text label for the kind of area, such as `personal`, `work` or `client`. It has no fixed values. Implementations MAY use it to group, filter, colour or give icons to areas, and SHOULD compare values ignoring case.
+
+### 7.7 Example
 
 ```yaml
 ---
