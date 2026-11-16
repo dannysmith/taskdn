@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { generateVault } from './generate.ts'
 import { readMeta, writeMeta } from './meta.ts'
+import { populateVault } from './populate.ts'
 import { VAULTS_DIR } from './paths.ts'
 import { newVault, renderTemplate } from './render.ts'
 import { reportVault } from './report.ts'
@@ -241,6 +242,61 @@ describe('generateVault', () => {
     } finally {
       rmSync(otherDir, { recursive: true, force: true })
     }
+  })
+})
+
+describe('populateVault', () => {
+  test('writes a plan with relative dates and date tokens, in batches', () => {
+    newVault(vaultDir, '2026-01-15')
+    populateVault(vaultDir, {
+      areas: [{ title: 'Home' }],
+      projects: [{ title: 'Kitchen', status: 'in-progress', area: 'Home', startDate: 'D-30' }],
+    })
+    const result = populateVault(vaultDir, {
+      tasks: [
+        {
+          title: 'Order tiles',
+          status: 'done',
+          createdAt: 'D-20',
+          completedAt: 'D-2',
+          project: 'Kitchen',
+          body: 'Delivery on {{D+3}}.',
+        },
+        { title: 'Call plumber', status: 'ready', createdAt: 'D-1', due: 'D+1T17:00' },
+      ],
+      notes: [{ path: 'day-notes/{{D-1}}.md', body: 'Picked tiles. Plumber on {{D}}.' }],
+    })
+
+    expect(result).toEqual({ areas: 0, projects: 0, tasks: 2, notes: 1 })
+    expect(readFileSync(join(vaultDir, 'projects/Kitchen.md'), 'utf8')).toContain(
+      'start-date: 2025-12-16',
+    )
+    const tiles = readFileSync(join(vaultDir, 'tasks/order-tiles.md'), 'utf8')
+    expect(tiles).toContain('created-at: 2025-12-26')
+    // updated-at falls back to completed-at
+    expect(tiles).toContain('updated-at: 2026-01-13')
+    expect(tiles).toContain('Delivery on 2026-01-18.')
+    expect(readFileSync(join(vaultDir, 'tasks/call-plumber.md'), 'utf8')).toContain(
+      'due: "2026-01-16T17:00"',
+    )
+    expect(readFileSync(join(vaultDir, 'day-notes/2026-01-14.md'), 'utf8')).toBe(
+      'Picked tiles. Plumber on 2026-01-15.\n',
+    )
+    expect(reportVault(vaultDir).problems).toEqual([])
+  })
+
+  test('checks the whole plan before writing anything', () => {
+    newVault(vaultDir, '2026-01-15')
+    const plan = {
+      areas: [{ title: 'Home' }],
+      tasks: [{ title: 'Bad', status: 'ready', createdAt: 'D-1', due: 'next week' }],
+    }
+    expect(() => populateVault(vaultDir, plan)).toThrow(/tasks\[0\]\.due: "next week"/)
+    expect(existsSync(join(vaultDir, 'areas/Home.md'))).toBe(false)
+
+    expect(() => populateVault(vaultDir, { notes: [{ path: '../escape.md', body: 'x' }] })).toThrow(
+      /inside the vault/,
+    )
   })
 })
 

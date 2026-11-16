@@ -18,6 +18,7 @@ import {
   resolveVaultDir,
 } from './lib/paths.ts'
 import { generateVault, SIZES } from './lib/generate.ts'
+import { populateFromFile } from './lib/populate.ts'
 import { newVault, renderTemplate } from './lib/render.ts'
 import { reportVault, type VaultReport } from './lib/report.ts'
 import { shiftVault } from './lib/shift.ts'
@@ -32,6 +33,8 @@ const HELP = `Usage: bun run vault <command>
   generate <name> [--size small|medium|large|N] [--seed N] [--date YYYY-MM-DD]
                                          Realistic vault with N tasks (small 100, medium 1000,
                                          large 5000; default small). Same seed, same vault
+  populate <vault> <plan.json>...        Add areas, projects, tasks and notes from JSON plans, with
+                                         dates relative to the reference date (D, D+3, D-10)
   shift <vault> (--to YYYY-MM-DD | --days N)
                                          Move every date in a vault
   report <vault> [--json]                What the vault covers, relative to its reference date
@@ -56,7 +59,7 @@ const { positionals, values } = parseArgs({
   },
 })
 
-const [command, target] = positionals
+const [command, target, ...extra] = positionals
 
 function fail(message: string): never {
   console.error(`Error: ${message}`)
@@ -185,6 +188,18 @@ function run(command: string) {
       )
       created(vaultDir, result.notes)
       console.log('  If this vault is open in Obsidian or the desktop app, reload it.')
+      break
+    }
+
+    case 'populate': {
+      const vaultDir = existingVault(requireTarget('vault'))
+      if (!extra.length) fail('give at least one plan file')
+      for (const planFile of extra) {
+        const r = populateFromFile(vaultDir, planFile)
+        console.log(
+          `${planFile}: ${r.areas} areas, ${r.projects} projects, ${r.tasks} tasks, ${r.notes} notes`,
+        )
+      }
       break
     }
 
