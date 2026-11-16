@@ -43,9 +43,9 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 
 **Plan:**
 
-1. [ ] Security: `tauri-plugin-updater` 2.14.1 (Rust and JS), `zip` 9.x.
-2. [ ] JS within ranges (Tauri JS plugins kept in step with their crates).
-3. [ ] Rust: `cargo update`, holding `notify`; unpin deep-link; decisions below on the specta trio, `dirs` and `gray_matter`.
+1. [x] Security: `tauri-plugin-updater` 2.14.1 (Rust and JS), `zip` 9.6.0 (`9b683d3`).
+2. [x] JS within ranges (`08c45da`): Milkdown 7.23, TanStack Query 5.107, Tailwind 4.3.5, zustand 5.1, Tauri JS plugins. Transitive majors (zod 4, brace-expansion 5) are only nested under the packages that need them; no nested ProseMirror or Milkdown copies.
+3. [x] Rust (`223ad6b`): `cargo update` with `notify` and `notify-types` held; deep-link unpinned (2.6.3); `dirs` 7; specta rc.28, tauri-specta rc.29, specta-typescript 0.0.15. The new tauri-specta throws by default, so the builder sets `ErrorHandlingMode::Result` to keep `{ status, data | error }`, plus `disable_serde_phases` and `dangerously_cast_bigints_to_number` as in Astro Editor. Knock-ons: `AppPreferences` and `CliConfig` fields are optional in TypeScript now (struct-level `serde(default)`), `Result` is defined in `tauri-bindings.ts`, and `JsonValue` is specta's stricter `Value` (crash info saves missing fields as null).
 4. [ ] Oxlint and Oxfmt replace ESLint and Prettier: one reformat commit, then TypeScript 7.
 5. [ ] Vite 8, plugin-react 6, Vitest 5, jsdom, jest-dom, `@types/node`.
 6. [ ] App majors one at a time: lucide, react-resizable-panels, i18next and react-i18next, shadcn, datepicker.
@@ -67,7 +67,9 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 - `@dannysmith/datepicker` 0.1.6: yes, checked in the smoke test.
 - Dependabot: security updates only for bun and cargo (`open-pull-requests-limit: 0`), GitHub Actions monthly.
 
-**Issues:** none yet.
+**Issues:**
+
+- `cargo clippy --all-targets` shows 7 warnings in existing test code (`commands/quick_pane.rs`, `vault/manager.rs`). `check:all` doesn't lint tests; fix them when it moves to `--all-targets` like Astro Editor (step 8).
 
 ## Phase 2: Desktop dev identity
 
