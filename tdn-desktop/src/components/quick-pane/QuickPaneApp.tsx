@@ -271,76 +271,79 @@ export default function QuickPaneApp() {
     const sessionId = ++aiSessionRef.current
     setIsProcessingAI(true)
 
-    try {
-      // Build context with project→area relationships
-      const stripWikilink = (s: string) =>
-        s.startsWith('[[') && s.endsWith(']]') ? s.slice(2, -2) : s
-      const projectContexts = projects.map(p => ({
-        id: p.id,
-        name: p.title,
-        areaName: p.area ? stripWikilink(p.area) : null,
-      }))
-      const areaPairs = areas.map(a => ({ id: a.id, name: a.title }))
+    // Build context with project→area relationships
+    const stripWikilink = (s: string) =>
+      s.startsWith('[[') && s.endsWith(']]') ? s.slice(2, -2) : s
+    const projectContexts = projects.map(p => ({
+      id: p.id,
+      name: p.title,
+      areaName: p.area ? stripWikilink(p.area) : null,
+    }))
+    const areaPairs = areas.map(a => ({ id: a.id, name: a.title }))
 
-      const result = await commands.processQuickEntryText(
-        trimmedTitle,
-        projectContexts,
-        areaPairs
-      )
-
-      // Ignore late result if a new session started or pane was reset
-      if (aiSessionRef.current !== sessionId) return
-
-      if (result.status === 'error') {
-        logger.warn('AI processing failed', { error: result.error })
-        setIsProcessingAI(false)
-        return
-      }
-
-      const parsed = result.data
-
-      // Populate ALL form fields from AI result (clear fields not set by AI)
-      setTitle(parsed.title)
-      setBody(parsed.body || '')
-      setShowBody(!!parsed.body)
-      setDue(parsed.due ?? null)
-      setScheduled(parsed.scheduled ?? null)
-      setDeferUntil(parsed.deferUntil ?? null)
-      setProjectId(parsed.projectId ?? null)
-      setAreaId(parsed.areaId ?? null)
-
-      // Set status from keyword detection (Rust handles this, not the LLM)
-      const validStatuses: TaskStatus[] = [
-        'inbox',
-        'icebox',
-        'ready',
-        'in-progress',
-        'blocked',
-      ]
-      if (validStatuses.includes(parsed.status as TaskStatus)) {
-        setStatus(parsed.status as TaskStatus)
-      }
-
-      // Auto-ready Rule 2 (AI only): if scheduled within 7 days and status
-      // is still inbox (keyword detection didn't override), promote to ready.
-      // Compare date strings (YYYY-MM-DD) to avoid time-of-day issues.
-      if (parsed.status === 'inbox' && parsed.scheduled) {
-        const todayStr = getTodayISO()
-        const todayDate = new Date(todayStr + 'T00:00:00')
-        const scheduledDate = new Date(parsed.scheduled + 'T00:00:00')
-        const daysUntil = Math.round(
-          (scheduledDate.getTime() - todayDate.getTime()) /
-            (1000 * 60 * 60 * 24)
-        )
-        if (daysUntil >= 0 && daysUntil <= 7) {
-          setStatus('ready')
-        }
-      }
-
-      logger.info('AI processing complete')
-    } catch (error) {
-      logger.error('Unexpected error during AI processing', { error })
+    // Only this call can throw (a failure outside the command itself). Caught
+    // on the promise rather than with try/catch, which the React Compiler
+    // can't compile here
+    const result = await commands
+      .processQuickEntryText(trimmedTitle, projectContexts, areaPairs)
+      .catch((error: unknown) => {
+        logger.error('Unexpected error during AI processing', { error })
+        return null
+      })
+    if (!result) {
+      setIsProcessingAI(false)
+      return
     }
+
+    // Ignore late result if a new session started or pane was reset
+    if (aiSessionRef.current !== sessionId) return
+
+    if (result.status === 'error') {
+      logger.warn('AI processing failed', { error: result.error })
+      setIsProcessingAI(false)
+      return
+    }
+
+    const parsed = result.data
+
+    // Populate ALL form fields from AI result (clear fields not set by AI)
+    setTitle(parsed.title)
+    setBody(parsed.body || '')
+    setShowBody(!!parsed.body)
+    setDue(parsed.due ?? null)
+    setScheduled(parsed.scheduled ?? null)
+    setDeferUntil(parsed.deferUntil ?? null)
+    setProjectId(parsed.projectId ?? null)
+    setAreaId(parsed.areaId ?? null)
+
+    // Set status from keyword detection (Rust handles this, not the LLM)
+    const validStatuses: TaskStatus[] = [
+      'inbox',
+      'icebox',
+      'ready',
+      'in-progress',
+      'blocked',
+    ]
+    if (validStatuses.includes(parsed.status as TaskStatus)) {
+      setStatus(parsed.status as TaskStatus)
+    }
+
+    // Auto-ready Rule 2 (AI only): if scheduled within 7 days and status
+    // is still inbox (keyword detection didn't override), promote to ready.
+    // Compare date strings (YYYY-MM-DD) to avoid time-of-day issues.
+    if (parsed.status === 'inbox' && parsed.scheduled) {
+      const todayStr = getTodayISO()
+      const todayDate = new Date(todayStr + 'T00:00:00')
+      const scheduledDate = new Date(parsed.scheduled + 'T00:00:00')
+      const daysUntil = Math.round(
+        (scheduledDate.getTime() - todayDate.getTime()) / (1000 * 60 * 60 * 24)
+      )
+      if (daysUntil >= 0 && daysUntil <= 7) {
+        setStatus('ready')
+      }
+    }
+
+    logger.info('AI processing complete')
 
     setIsProcessingAI(false)
   }

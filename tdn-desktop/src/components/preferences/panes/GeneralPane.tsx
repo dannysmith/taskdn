@@ -17,7 +17,7 @@ import {
   SettingsSection,
 } from '../shared/SettingsComponents'
 import { usePreferences, useSavePreferences } from '@/services/preferences'
-import { availableLanguages } from '@/i18n'
+import { availableLanguages, i18n } from '@/i18n'
 import { logger } from '@/lib/logger'
 
 // Language display names (native names)
@@ -25,8 +25,25 @@ const languageNames: Record<string, string> = {
   en: 'English',
 }
 
+/**
+ * Switch the UI language: the given one, or the system locale's if it's null
+ * (falling back to English). Outside the component, since the React Compiler
+ * can't compile this logic inside a try/catch.
+ */
+async function applyLanguage(language: string | null) {
+  if (language) {
+    await i18n.changeLanguage(language)
+    return
+  }
+  const systemLocale = await locale()
+  const langCode = systemLocale?.split('-')[0]?.toLowerCase() ?? 'en'
+  await i18n.changeLanguage(
+    availableLanguages.includes(langCode) ? langCode : 'en'
+  )
+}
+
 export function GeneralPane() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const { theme, setTheme } = useTheme()
   const { data: preferences } = usePreferences()
   const savePreferences = useSavePreferences()
@@ -49,17 +66,7 @@ export function GeneralPane() {
 
     try {
       // Change the language immediately for instant UI feedback
-      if (language) {
-        await i18n.changeLanguage(language)
-      } else {
-        // System language selected - detect and apply system locale
-        const systemLocale = await locale()
-        const langCode = systemLocale?.split('-')[0]?.toLowerCase() ?? 'en'
-        const targetLang = availableLanguages.includes(langCode)
-          ? langCode
-          : 'en'
-        await i18n.changeLanguage(targetLang)
-      }
+      await applyLanguage(language)
     } catch (error) {
       logger.error('Failed to change language', { error })
       toast.error(t('toast.error.generic'))

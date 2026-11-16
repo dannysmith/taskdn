@@ -34,7 +34,7 @@
     "tauri:build": "bun run tauri build",
     "tauri:check": "bun run typecheck && bun run tauri build --check",
     "test:all": "bun run test:run && bun run rust:test",
-    "check:all": "bun run typecheck && bun run lint && bun run ast:lint && bun run format:check && bun run rust:fmt:check && bun run rust:clippy && bun run test:run && bun run rust:test",
+    "check:all": "bun run typecheck && bun run lint && bun run ast:lint && bun run compiler:check && bun run format:check && bun run rust:fmt:check && bun run rust:clippy && bun run test:run && bun run rust:test",
     "fix:all": "bun run lint:fix && bun run format && bun run rust:fmt && bun run rust:clippy:fix",
     "build:analyze": "vite build && echo '\\n📊 Bundle analysis complete. Check dist/ folder sizes or use a tool like webpack-bundle-analyzer on the dist folder.'",
     "release:prepare": "node scripts/prepare-release.js",
@@ -43,6 +43,7 @@
     "knip": "knip",
     "jscpd": "jscpd",
     "ast:lint": "ast-grep scan",
+    "compiler:check": "bun scripts/react-compiler-check.ts",
     "ast:fix": "ast-grep scan --fix"
   },
   "dependencies": {

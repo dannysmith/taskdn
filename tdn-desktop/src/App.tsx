@@ -20,6 +20,34 @@ import { MainWindow } from './components/layout/MainWindow'
 import { ThemeProvider } from './components/providers/ThemeProvider'
 import { ErrorBoundary } from './components/providers/ErrorBoundary'
 
+/**
+ * Load the saved language (or use the system locale), then build the app menu
+ * and the listeners that rebuild it. Outside the component, since the React
+ * Compiler can't compile try/catch blocks like this one.
+ */
+async function initLanguageAndMenu() {
+  try {
+    // Load preferences to get saved language
+    const result = await commands.loadPreferences()
+    const savedLanguage =
+      result.status === 'ok' ? (result.data.language ?? null) : null
+
+    // Initialize language (will use system locale if no preference)
+    await initializeLanguage(savedLanguage)
+
+    // Build the application menu with the initialized language
+    await buildAppMenu()
+    logger.debug('Application menu built')
+
+    // Set up listeners to rebuild menu when needed
+    setupMenuLanguageListener()
+    setupMenuSelectionListener()
+    setupMenuDataListener()
+  } catch (error) {
+    logger.warn('Failed to initialize language or menu', { error })
+  }
+}
+
 function App() {
   // Prevent Escape from exiting macOS fullscreen (must be before other hooks)
   usePreventEscapeExitsFullscreen()
@@ -37,30 +65,7 @@ function App() {
     logger.debug('Command system initialized')
 
     // Initialize language based on saved preference or system locale
-    const initLanguageAndMenu = async () => {
-      try {
-        // Load preferences to get saved language
-        const result = await commands.loadPreferences()
-        const savedLanguage =
-          result.status === 'ok' ? (result.data.language ?? null) : null
-
-        // Initialize language (will use system locale if no preference)
-        await initializeLanguage(savedLanguage)
-
-        // Build the application menu with the initialized language
-        await buildAppMenu()
-        logger.debug('Application menu built')
-
-        // Set up listeners to rebuild menu when needed
-        setupMenuLanguageListener()
-        setupMenuSelectionListener()
-        setupMenuDataListener()
-      } catch (error) {
-        logger.warn('Failed to initialize language or menu', { error })
-      }
-    }
-
-    initLanguageAndMenu()
+    void initLanguageAndMenu()
 
     // Clean up old recovery files on startup
     cleanupOldFiles().catch(error => {
