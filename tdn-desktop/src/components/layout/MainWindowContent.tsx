@@ -14,7 +14,6 @@ import { ViewHeader } from './ViewHeader'
 import {
   AreaView,
   CalendarView,
-  ComponentReference,
   InboxView,
   NoAreaView,
   ProjectView,
@@ -103,12 +102,6 @@ export function MainWindowContent() {
             return 'Calendar'
         }
         break
-      case 'dev-nav':
-        switch (selection.id) {
-          case 'component-reference':
-            return 'Component Reference'
-        }
-        break
       case 'area': {
         const area = areas.find(a => a.id === selection.id)
         return area?.title ?? 'Area'
@@ -160,14 +153,6 @@ export function MainWindowContent() {
           return <WeekView />
         case 'calendar':
           return <CalendarView />
-      }
-    }
-
-    // Dev-only views (only rendered in development mode)
-    if (selection.type === 'dev-nav' && import.meta.env.DEV) {
-      switch (selection.id) {
-        case 'component-reference':
-          return <ComponentReference />
       }
     }
 

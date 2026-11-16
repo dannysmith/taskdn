@@ -111,15 +111,6 @@ describe('navigation-store', () => {
       expect(selectionsEqual(null, { type: 'nav', id: 'today' })).toBe(false)
       expect(selectionsEqual({ type: 'nav', id: 'today' }, null)).toBe(false)
     })
-
-    it('returns true for equal dev-nav selections', () => {
-      expect(
-        selectionsEqual(
-          { type: 'dev-nav', id: 'component-reference' },
-          { type: 'dev-nav', id: 'component-reference' }
-        )
-      ).toBe(true)
-    })
   })
 
   describe('initial state', () => {
