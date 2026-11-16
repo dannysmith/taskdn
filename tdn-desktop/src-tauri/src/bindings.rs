@@ -20,7 +20,7 @@ pub fn generate_bindings() -> Builder<tauri::Wry> {
         config::get_app_data_dir,
         config::open_app_data_dir,
         config::is_dev_mode,
-        config::get_dummy_vault_paths,
+        config::get_demo_vault_paths,
         // Vault commands
         vault::init_vault,
         vault::is_vault_configured,

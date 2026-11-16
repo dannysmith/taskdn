@@ -118,11 +118,11 @@ export function VaultPane() {
     }
   }
 
-  // Use dummy vault (dev only)
-  const handleUseDummyVault = async () => {
+  // Use the demo vault (dev only)
+  const handleUseDemoVault = async () => {
     if (!preferences) return
 
-    const result = await commands.getDummyVaultPaths()
+    const result = await commands.getDemoVaultPaths()
     const success = await saveAndReinitialize({
       ...preferences,
       tasksDir: result.tasksDir,
@@ -130,7 +130,7 @@ export function VaultPane() {
       projectsDir: result.projectsDir,
     })
     if (success) {
-      toast.success(t('toast.success.dummyVaultSet'))
+      toast.success(t('toast.success.demoVaultSet'))
     }
   }
 
@@ -204,10 +204,10 @@ export function VaultPane() {
           {isDevMode && (
             <Button
               variant="outline"
-              onClick={handleUseDummyVault}
+              onClick={handleUseDemoVault}
               disabled={isDisabled}
             >
-              {t('preferences.vault.useDummyVault')}
+              {t('preferences.vault.useDemoVault')}
             </Button>
           )}
         </div>

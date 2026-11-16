@@ -253,10 +253,10 @@ tdn complete fish > ~/.config/fish/completions/tdn.fish
 
 E2E tests are the primary focus. Run the full suite with `bun run test`.
 
-Test against the disposable vault:
+For manual testing, render a disposable vault from the repo root:
 ```bash
-./scripts/reset-dummy-vault.sh  # Reset test vault
-bun run test                     # Run all tests
+bun run vault render demo               # demo-vaults/demo, dated to today
+cd demo-vaults/demo && tdn today --ai   # uses the vault's .taskdn.json
 ```
 
 See [Testing Guide](docs/developer/testing.md) for details.

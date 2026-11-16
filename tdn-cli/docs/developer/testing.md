@@ -152,11 +152,13 @@ Located in `tests/fixtures/vault/`. These are committed files designed specifica
 - Name files descriptively (`minimal.md`, `full-metadata.md`, `with-body.md`)
 - For write operations, create temp directories per-test
 
-**Why not use demo-vault?**
+**Why not use the test vaults in `demo-vault-templates/`?**
 
-- demo-vault may change for demo purposes
+- They may change for demo purposes, and their dates shift when rendered
 - Test fixtures need stability
-- We need edge cases that don't belong in demos
+- Each test should own exactly the files it needs
+
+The `edge-cases` template is still useful for manual checks: its README records what the CLI does with each awkward file.
 
 ## CLI Test Helper
 

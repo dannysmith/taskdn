@@ -127,7 +127,7 @@ The app uses separate preferences files based on build mode:
 
 This allows developers to:
 
-- Point development builds at test vaults (dummy-demo-vault)
+- Point development builds at test vaults ("Use Demo Vault" sets `demo-vaults/demo`, rendered with `bun run vault render demo`)
 - Keep production settings pointing at their real vault
 - Test different configurations without affecting production
 

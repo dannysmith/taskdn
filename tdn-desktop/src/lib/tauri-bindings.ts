@@ -30,7 +30,7 @@ export type {
   CliConfigError,
   CreateProjectOptions,
   CreateTaskOptions,
-  DummyVaultPaths,
+  DemoVaultPaths,
   JsonValue,
   Project,
   ProjectStatus,

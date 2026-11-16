@@ -22,8 +22,8 @@ taskdn/
 │   └── tasks-done/          # Completed development tasks
 ├── images/                  # Brand assets (logos)
 ├── scripts/                 # Monorepo-level scripts
-├── demo-vault/              # Canonical test vault (committed)
-├── dummy-demo-vault/        # Disposable test vault (gitignored)
+├── demo-vault-templates/    # Test vault templates (committed)
+├── demo-vaults/             # Rendered and generated test vaults (gitignored)
 ├── tdn-cli/                 # CLI tool
 ├── tdn-desktop/             # Desktop app
 ├── tdn-claude-plugin/       # Claude Code plugin
@@ -61,16 +61,9 @@ Each product has its own:
 
 The S1 and S2 specs define the data format and implementation guidance. All products that read/write task files must conform to these specs.
 
-### Demo Vaults
+### Test Vaults
 
-Two test vaults exist for development:
-
-| Vault | Purpose | Committed |
-|-------|---------|-----------|
-| `demo-vault/` | Canonical "golden" test data | Yes |
-| `dummy-demo-vault/` | Disposable copy for testing | No |
-
-Reset the dummy vault with `bun run demo:reset`.
+Vault templates live in `demo-vault-templates/`: `demo` (realistic, covers every status and date case) and `edge-cases` (one awkward case per file). `bun run vault render <template>` copies one into the gitignored `demo-vaults/` with its dates shifted to today, ready for `tdn`, the desktop app and Obsidian. `bun run vault generate` builds large vaults from a seed. The toolkit lives in `scripts/vaults/`; run `bun run vault` for every command.
 
 ### Scripts
 
@@ -79,7 +72,8 @@ Root-level scripts in `scripts/`:
 | Script | Purpose |
 |--------|---------|
 | `monorepo-check.sh` | Run checks across all products |
-| `reset-dummy-vault.sh` | Reset dummy vault from canonical |
+| `vaults/` | Render, generate and inspect test vaults |
+| `import-demo-vault-to-things.ts` | Import a rendered demo vault into Things.app |
 | `complete-task.js` | Move completed dev tasks |
 | `version-status.ts` | Check version consistency |
 

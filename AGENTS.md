@@ -64,7 +64,7 @@ See `docs/products.md` for detailed descriptions of each product.
 This project builds a task management system, but we also use tasks to track development work. **Don't confuse them:**
 
 - **Development tasks** – What you create when the user says "create a task" during a coding session. These are simple markdown files for tracking work (e.g., `task-1-implement-parser.md`). They do NOT follow the Taskdn specification.
-- **Taskdn tasks** – The task format we're building the app to handle. These follow `tdn-specs/S1-core.md` and go in `demo-vault/` for testing.
+- **Taskdn tasks** – The task format we're building the app to handle. These follow `tdn-specs/S1-core.md`. Test against the vaults in `demo-vaults/` (see below).
 
 **When the user asks you to "create a task":**
 
@@ -80,29 +80,20 @@ This project builds a task management system, but we also use tasks to track dev
 4. **Sub-project autonomy** – No product may depend on another at runtime: each must install and work without the others present. Shared libraries built into more than one product are fine (e.g. a Rust crate used by both the CLI and the desktop app). Ask the user before introducing a new shared library or any other dependency between products.
 5. **Spec changes are serious** – Changes to the specification docs affect all implementations. Always clearly confirm with the user before making any changes to files in `tdn-specs/`.
 
-## Demo Vault
+## Test Vaults
 
-Two vaults exist for testing:
+Templates are committed in `demo-vault-templates/`. Never point `tdn`, the desktop app or the Obsidian plugin at them: render a disposable copy into the gitignored `demo-vaults/`, where every date is moved so the template's reference date lands on today.
 
-| Vault               | Purpose                     | In Git?         |
-| ------------------- | --------------------------- | --------------- |
-| `demo-vault/`       | Canonical "golden" copy     | Yes             |
-| `dummy-demo-vault/` | Disposable copy for testing | No (gitignored) |
-
-**Always test against `dummy-demo-vault/`** so you don't corrupt the canonical version.
-
-Reset the dummy vault with:
+| Template     | What it is                                                                         |
+| ------------ | ---------------------------------------------------------------------------------- |
+| `demo`       | A realistic vault covering every status and date case. Use this one by default     |
+| `edge-cases` | Small files that each test one awkward case, with notes on what the CLI does today |
 
 ```bash
-./scripts/reset-dummy-vault.sh
+bun run vault render demo                   # demo-vaults/demo, dated to today
+cd demo-vaults/demo && tdn today --ai       # rendered vaults include a .taskdn.json
+bun run vault generate big --size large     # 5,000 generated tasks in demo-vaults/big
+bun run vault                               # all commands: list, new, shift, report...
 ```
 
-Structure (same in both):
-| Path | Contents |
-|------|----------|
-| `*/tasks/` | Active task files (18 files covering all 7 statuses) |
-| `*/tasks/archive/` | Archived completed tasks |
-| `*/projects/` | Project files (9 files covering all 6 statuses) |
-| `*/areas/` | Area files (7 files, including one archived) |
-
-See `demo-vault/README.md` for full details on spec coverage.
+Re-render whenever you want a clean copy. Each template's README lists what it covers. Rendered vaults open in Obsidian with the plugin linked from `~/dev/obsidian-taskdn`, and the desktop app's "Use Demo Vault" button (debug builds) points at `demo-vaults/demo`. The toolkit lives in `scripts/vaults/`.

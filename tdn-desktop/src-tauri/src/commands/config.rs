@@ -3,7 +3,7 @@
 use tauri::{AppHandle, Manager};
 use tauri_plugin_opener::OpenerExt;
 
-use crate::types::{CliConfig, CliConfigError, DummyVaultPaths};
+use crate::types::{CliConfig, CliConfigError, DemoVaultPaths};
 
 /// Read CLI config from ~/.taskdn.json
 #[tauri::command]
@@ -59,11 +59,11 @@ pub fn is_dev_mode() -> bool {
     cfg!(debug_assertions)
 }
 
-/// Get dummy vault paths for development testing (only in debug builds)
+/// Get demo vault paths for development testing (only in debug builds)
 #[cfg(debug_assertions)]
 #[tauri::command]
 #[specta::specta]
-pub fn get_dummy_vault_paths() -> DummyVaultPaths {
+pub fn get_demo_vault_paths() -> DemoVaultPaths {
     // CARGO_MANIFEST_DIR is src-tauri/, navigate to repo root
     let manifest_dir = env!("CARGO_MANIFEST_DIR");
     let repo_root = std::path::Path::new(manifest_dir)
@@ -71,9 +71,10 @@ pub fn get_dummy_vault_paths() -> DummyVaultPaths {
         .and_then(|p| p.parent()) // taskdn/ (repo root)
         .expect("Failed to find repo root");
 
-    let vault = repo_root.join("dummy-demo-vault");
+    // Created with `bun run vault render demo` from the repo root
+    let vault = repo_root.join("demo-vaults").join("demo");
 
-    DummyVaultPaths {
+    DemoVaultPaths {
         tasks_dir: vault.join("tasks").to_string_lossy().to_string(),
         areas_dir: vault.join("areas").to_string_lossy().to_string(),
         projects_dir: vault.join("projects").to_string_lossy().to_string(),
@@ -83,9 +84,9 @@ pub fn get_dummy_vault_paths() -> DummyVaultPaths {
 #[cfg(not(debug_assertions))]
 #[tauri::command]
 #[specta::specta]
-pub fn get_dummy_vault_paths() -> DummyVaultPaths {
+pub fn get_demo_vault_paths() -> DemoVaultPaths {
     // In release builds, return empty paths (command shouldn't be called)
-    DummyVaultPaths {
+    DemoVaultPaths {
         tasks_dir: String::new(),
         areas_dir: String::new(),
         projects_dir: String::new(),
@@ -257,12 +258,12 @@ mod tests {
     }
 
     // -------------------------------------------------------------------------
-    // get_dummy_vault_paths Tests
+    // get_demo_vault_paths Tests
     // -------------------------------------------------------------------------
 
     #[test]
-    fn get_dummy_vault_paths_returns_valid_paths() {
-        let paths = get_dummy_vault_paths();
+    fn get_demo_vault_paths_returns_valid_paths() {
+        let paths = get_demo_vault_paths();
 
         // Paths should not be empty (in debug mode)
         assert!(!paths.tasks_dir.is_empty());
@@ -276,13 +277,15 @@ mod tests {
     }
 
     #[test]
-    fn get_dummy_vault_paths_points_to_dummy_vault() {
-        let paths = get_dummy_vault_paths();
+    fn get_demo_vault_paths_points_to_demo_vault() {
+        let paths = get_demo_vault_paths();
 
-        // All paths should be under dummy-demo-vault
-        assert!(paths.tasks_dir.contains("dummy-demo-vault"));
-        assert!(paths.areas_dir.contains("dummy-demo-vault"));
-        assert!(paths.projects_dir.contains("dummy-demo-vault"));
+        // All paths should be under the rendered demo vault
+        let vault = std::path::Path::new("demo-vaults").join("demo");
+        let vault = vault.to_string_lossy();
+        assert!(paths.tasks_dir.contains(vault.as_ref()));
+        assert!(paths.areas_dir.contains(vault.as_ref()));
+        assert!(paths.projects_dir.contains(vault.as_ref()));
     }
 
     // -------------------------------------------------------------------------

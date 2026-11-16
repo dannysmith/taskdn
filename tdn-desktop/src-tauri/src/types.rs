@@ -183,10 +183,10 @@ impl std::fmt::Display for CliConfigError {
     }
 }
 
-/// Paths to dummy vault for development testing
+/// Paths to the demo vault for development testing
 #[derive(Debug, Clone, Serialize, Deserialize, Type)]
 #[serde(rename_all = "camelCase")]
-pub struct DummyVaultPaths {
+pub struct DemoVaultPaths {
     pub tasks_dir: String,
     pub areas_dir: String,
     pub projects_dir: String,
