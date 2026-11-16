@@ -3,7 +3,7 @@ title: 'Starter Vault'
 description: 'Pre-configured Obsidian vault with templates and bases for Taskdn'
 ---
 
-import { FileTree, Steps } from '@astrojs/starlight/components'
+import { FileTree, LinkButton, Steps } from '@astrojs/starlight/components'
 
 The starter vault is a ready-made Obsidian vault with templates, [Bases](https://obsidian.md/help/bases) views and example content. Clone it to start managing your tasks in Obsidian, or just to try Taskdn out. It needs Obsidian 1.14 or later.
 
@@ -131,11 +131,13 @@ The [Taskdn plugin](/obsidian/plugin) is optional. It renders wikilinks to tasks
 
 <Steps>
 
-1. Go to **Settings → Community plugins** and turn on community plugins
+1. With the vault open in Obsidian, click this button to open Taskdn's page in Obsidian's plugin browser, then click **Install** and **Enable**:
 
-2. Click **Browse**, search for "Taskdn", then install and enable it
+   <LinkButton href="obsidian://show-plugin?id=taskdn" icon="external">Add to Obsidian</LinkButton>
 
-3. In **Settings → Taskdn**, set **Ignored files** to `Overview.md`
+   If the button doesn't open Obsidian, go to **Settings → Community plugins**, turn on community plugins, click **Browse** and search for "Taskdn".
+
+2. In **Settings → Taskdn**, set **Ignored files** to `Overview.md`
 
 </Steps>
 
