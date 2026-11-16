@@ -13,6 +13,7 @@ import { useTaskDetailStore } from '@/store/task-detail-store'
 import { useTaskCreationStore } from '@/store/task-creation-store'
 import { matchesWikilinkTitle } from '@/lib/wikilink'
 import { useTodayOrder, type TodaySectionId } from '@/hooks/use-today-order'
+import { useToday } from '@/hooks/use-today'
 import { SectionTaskGroup } from '@/components/tasks/SectionTaskGroup'
 import { TaskDndContext } from '@/components/tasks/TaskDndContext'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -45,8 +46,8 @@ export function TodayView() {
     string | null
   >(null)
 
-  // Get today's date in ISO format (YYYY-MM-DD)
-  const today = new Date().toISOString().slice(0, 10)
+  // Today's local date (YYYY-MM-DD), updated at midnight
+  const today = useToday()
 
   // Helper to check if task is active (not done/dropped)
   const isActiveTask = (task: Task) =>

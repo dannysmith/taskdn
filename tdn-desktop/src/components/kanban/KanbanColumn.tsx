@@ -8,6 +8,7 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
+import { useToday } from '@/hooks/use-today'
 import { cn } from '@/lib/utils'
 import type { Task, TaskStatus } from '@/lib/tauri-bindings'
 import { taskStatusConfig } from '@/config/status'
@@ -305,13 +306,15 @@ export function SortableKanbanCard({
     transition,
   }
 
-  // Determine variant based on task state
+  // Determine variant based on task state. Dates compare as local YYYY-MM-DD
+  // strings: deferred until after today, or due before today
+  const today = useToday()
   let variant: 'default' | 'overdue' | 'deferred' | 'done' = 'default'
   if (task.status === 'done' || task.status === 'dropped') {
     variant = 'done'
-  } else if (task.deferUntil && new Date(task.deferUntil) > new Date()) {
+  } else if (task.deferUntil && task.deferUntil.slice(0, 10) > today) {
     variant = 'deferred'
-  } else if (task.due && new Date(task.due) < new Date()) {
+  } else if (task.due && task.due.slice(0, 10) < today) {
     variant = 'overdue'
   }
 

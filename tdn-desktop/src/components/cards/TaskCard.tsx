@@ -101,12 +101,13 @@ export function TaskCard({
   const isDropped = task.status === 'dropped'
   const isCompleted = isDone || isDropped
 
-  // Sync edit value when task changes
-  React.useEffect(() => {
-    if (!isEditing) {
-      setEditValue(task.title)
-    }
-  }, [task.title, isEditing])
+  // Outside an edit, keep the draft in step with the title. Adjusting state
+  // during render (rather than in an effect) avoids an extra render
+  const [synced, setSynced] = React.useState({ title: task.title, isEditing })
+  if (synced.title !== task.title || synced.isEditing !== isEditing) {
+    setSynced({ title: task.title, isEditing })
+    if (!isEditing) setEditValue(task.title)
+  }
 
   // Focus textarea when entering edit mode
   React.useEffect(() => {

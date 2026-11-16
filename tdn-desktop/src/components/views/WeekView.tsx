@@ -10,6 +10,7 @@ import { showTaskContextMenu } from '@/lib/context-menu'
 import { useNavigationStore } from '@/store/navigation-store'
 import { useViewMode } from '@/store/view-mode-store'
 import { useKanbanOrder } from '@/hooks/use-kanban-order'
+import { useToday } from '@/hooks/use-today'
 import { WeekCalendar } from '@/components/calendar'
 import { KanbanBoard, useCollapsedColumns } from '@/components/kanban'
 
@@ -42,8 +43,9 @@ export function WeekView() {
   }
 
   // Filter tasks for this week (scheduled or due within the week) - used for kanban
+  const today = useToday()
   const thisWeekTasks = React.useMemo(() => {
-    const now = new Date()
+    const now = parseISO(today)
     const weekStart = startOfWeek(now, { weekStartsOn: 1 }) // Monday
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 })
     const interval = { start: weekStart, end: weekEnd }
@@ -75,7 +77,7 @@ export function WeekView() {
 
       return false
     })
-  }, [tasks])
+  }, [tasks, today])
 
   // Build tasksByStatus map for kanban view
   const tasksByStatus = React.useMemo(() => {

@@ -115,7 +115,9 @@ export default function QuickPaneApp() {
   const [isProcessingAI, setIsProcessingAI] = React.useState(false)
   const [aiAvailable, setAiAvailable] = React.useState(false)
   const [openPopover, setOpenPopover] = React.useState<PopoverType>(null)
-  const [restoreFocusTo, setRestoreFocusTo] = React.useState<FocusTarget>(null)
+  // Where to put focus back when the open popover closes. A ref, since only
+  // the effect that restores focus reads it
+  const restoreFocusTo = React.useRef<FocusTarget>(null)
 
   // ─────────────────────────────────────────────────────────────────────────
   // Refs
@@ -140,7 +142,7 @@ export default function QuickPaneApp() {
     setDue(null)
     setDeferUntil(null)
     setOpenPopover(null)
-    setRestoreFocusTo(null)
+    restoreFocusTo.current = null
   }, [])
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -149,14 +151,18 @@ export default function QuickPaneApp() {
   // context that it doesn't need to sit in the inbox for manual processing.
   // ─────────────────────────────────────────────────────────────────────────
 
-  React.useEffect(() => {
+  // Runs when any of the four change (and on first render), adjusting state
+  // during render rather than in an effect. Status set by hand afterwards sticks
+  const autoReadyInputs = [projectId, areaId, scheduled, deferUntil].join('|')
+  const [checkedInputs, setCheckedInputs] = React.useState<string | null>(null)
+  if (checkedInputs !== autoReadyInputs) {
+    setCheckedInputs(autoReadyInputs)
     const hasProjectOrArea = projectId !== null || areaId !== null
     const hasScheduleOrDefer = scheduled !== null || deferUntil !== null
-
-    if (hasProjectOrArea && hasScheduleOrDefer) {
-      setStatus(prev => (prev === 'inbox' ? 'ready' : prev))
+    if (hasProjectOrArea && hasScheduleOrDefer && status === 'inbox') {
+      setStatus('ready')
     }
-  }, [projectId, areaId, scheduled, deferUntil])
+  }
 
   // ─────────────────────────────────────────────────────────────────────────
   // Dismiss with Animation
@@ -410,20 +416,20 @@ export default function QuickPaneApp() {
    */
   const captureCurrentFocus = React.useCallback(() => {
     if (document.activeElement === titleRef.current) {
-      setRestoreFocusTo('title')
+      restoreFocusTo.current = 'title'
     } else if (document.activeElement === bodyRef.current) {
-      setRestoreFocusTo('body')
+      restoreFocusTo.current = 'body'
     }
   }, [])
 
   // Restore focus when popover closes
   React.useEffect(() => {
-    if (openPopover === null && restoreFocusTo) {
-      const ref = restoreFocusTo === 'title' ? titleRef : bodyRef
+    if (openPopover === null && restoreFocusTo.current) {
+      const ref = restoreFocusTo.current === 'title' ? titleRef : bodyRef
       ref.current?.focus()
-      setRestoreFocusTo(null)
+      restoreFocusTo.current = null
     }
-  }, [openPopover, restoreFocusTo])
+  }, [openPopover])
 
   // ─────────────────────────────────────────────────────────────────────────
   // Global Keyboard Shortcuts

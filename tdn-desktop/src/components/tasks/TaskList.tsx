@@ -667,21 +667,25 @@ export function DraggableTaskList({
   const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null)
   const [editingTaskId, setEditingTaskId] = React.useState<string | null>(null)
 
-  // Auto-edit: when autoEditItemId is set, find the task and start editing
-  // This is used when a task is created via the view's default handler
-  React.useEffect(() => {
-    if (!autoEditItemId) return
-
-    // Find the task in the list
+  // Auto-edit: when autoEditItemId is set, find the task and start editing.
+  // This is used when a task is created via the view's default handler. The
+  // task may not be in the list yet, so this retries as `tasks` updates
+  const [autoEdited, setAutoEdited] = React.useState<string | null>(null)
+  if (autoEditItemId && autoEditItemId !== autoEdited) {
     const taskIndex = tasks.findIndex(t => t.id === autoEditItemId)
     if (taskIndex !== -1) {
-      // Select and edit the task
+      setAutoEdited(autoEditItemId)
       setSelectedIndex(taskIndex)
       setEditingTaskId(autoEditItemId)
-      // Notify that we consumed the auto-edit
+    }
+  }
+
+  // Tell the parent once the auto-edit has been picked up
+  React.useEffect(() => {
+    if (autoEditItemId && autoEditItemId === autoEdited) {
       onAutoEditConsumed?.()
     }
-  }, [autoEditItemId, tasks, onAutoEditConsumed])
+  }, [autoEditItemId, autoEdited, onAutoEditConsumed])
 
   // Sensors for drag and drop - only PointerSensor
   const sensors = useSensors(
