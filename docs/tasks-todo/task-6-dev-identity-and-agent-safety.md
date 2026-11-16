@@ -52,16 +52,50 @@ Work happens on the `desktop-dev-identity` branch. All paths below are in `tdn-d
 
 ## Phase 2: Agent bridge, styleguide and logs
 
-- [ ] Agent bridge, debug builds only:
+- [x] Agent bridge, debug builds only:
   - a token-protected HTTP server in `src-tauri/src/agent_bridge/`
   - `window.__agentBridge` in `src/lib/agent-bridge/`
   - the `bun run app` CLI (`scripts/app.ts`, `app-logs.ts`, `app-diff.ts`)
 
   The CLI covers screenshots in both themes, the UI tree, click, fill, key and logs. Add Taskdn-specific actions: open a view, select a task, run a command palette command, open the quick entry pane.
-- [ ] Port the `app-control` skill.
-- [ ] Styleguide as a second Vite entry (`styleguide.html`, `src/styleguide/`) replacing the in-app component reference view, so it never ships and each section can be screenshotted.
-- [ ] Release builds log at info level to the log file, rotating at 5 MB and keeping two old files. Today the release log is empty, which is why the 1am crash left no trace. Task 7 depends on this.
-- [ ] Document it all in a `tdn-desktop/docs/developer/agent-tooling.md`.
+- [x] Port the `app-control` skill.
+- [x] Styleguide as a second Vite entry (`styleguide.html`, `src/styleguide/`) replacing the in-app component reference view, so it never ships and each section can be screenshotted.
+- [x] Release builds log at info level to the log file, rotating at 5 MB and keeping two old files. Today the release log is empty, which is why the 1am crash left no trace. Task 7 depends on this.
+- [x] Document it all in a `tdn-desktop/docs/developer/agent-tooling.md`.
+
+### Plan
+
+Work happens on the `desktop-agent-bridge` branch. Paths are in `tdn-desktop/`.
+
+**Port from Astro Editor, near-verbatim:**
+
+- `src-tauri/src/agent_bridge/` (`mod.rs`, `snapshot.rs`): `tiny_http` on 127.0.0.1 (port 1422, else random), token in `agent-bridge.json` in the slot's app data folder, endpoints `/health`, `/eval`, `/snapshot` (WKWebView `takeSnapshot`), `/window`. New dependencies: `tiny_http`, `uuid`, and macOS-only `block2`, `objc2`, `objc2-foundation`, `objc2-app-kit`, `objc2-web-kit`.
+- `src/lib/agent-bridge/`: `page.ts` (theme, idle, shot mode, `withFrames`, tree, click, fill, key), `ui-tree.ts`, `keys.ts`, `console.ts` (dev `console.*` forwarded to the log file), with their tests.
+- `scripts/app.ts`, `app-logs.ts`, `app-diff.ts` with tests (`pixelmatch` and `pngjs` as dev dependencies). Shots go to `tdn-desktop/docs/tasks-todo/temporary/`, which gets gitignored.
+- `app-control` skill in `tdn-desktop/.claude/skills/`.
+- Styleguide: `styleguide.html` and `src/styleguide/`, one section per page (`?section=<id>`), overlays rendered open on their own pages, `bun run app styleguide` shoots them all.
+- Logging: the log file on every platform (today it's macOS only), `KeepSome(2)` instead of `KeepOne`, `tao` and `wry` at info.
+
+**Different here:**
+
+- **Taskdn actions** in `src/lib/agent-bridge/api.ts`, built on the existing `commandContext` and stores:
+  - `view <today|this-week|inbox|calendar|area or project title>` navigates
+  - `task <title or id>` opens a task in the detail panel
+  - `run <command-id>` / `run --list` runs command palette commands (static and the dynamic area and project ones)
+  - `quick-entry` opens the quick entry pane
+  - `type <text>` types into the focused input or the Milkdown editor
+  - `state` reports the view, open task, sidebars, theme, dialogs, toasts and task counts
+- **Quick pane window.** It's a separate webview (an NSPanel on macOS), so `/eval` and `/snapshot` take an optional window label, and the CLI's `tree`, `click`, `fill`, `key` and `shot` take `--window=quick-pane`. The quick pane installs the page API in dev builds.
+- **Test vaults.** `reset` re-renders the checkout's `demo-vaults/demo` and refreshes the app. `vault <name|path>` switches the dev app to another rendered vault (`edge-cases`, a persona vault, `big`), and `vault` alone goes back to the demo.
+- **UI tree.** It summarises the Milkdown editor (ProseMirror) instead of CodeMirror.
+- **Styleguide replaces the Components view.** Its seven sections (tasks, projects, areas, layout, forms, display, overlays) move into `src/styleguide/`, split so each fits the dev window, with overlays on their own pages. The `dev-nav` selection type, the sidebar link and the deep-link and navigation-store handling for it go.
+- **The release log isn't actually empty.** It has content since the last restart. The problem is `KeepOne`, which deletes the whole file each time it reaches 5 MB, and before phase 1 dev builds filled the installed app's log fast with debug scanning lines. So the log had most likely been wiped by the time anyone looked. `KeepSome(2)` keeps the last two full files with their dates. The panic hook stays in task 7.
+
+**Order of commits:** bridge (Rust and page API, CLI basics: status, tree, shot, click, fill, key, eval, logs, diff); Taskdn actions and the quick pane; styleguide replacing the Components view; release logging; skill and docs.
+
+**Checks:** `bun run check:all`; drive the running dev app through each command (Danny starts `tauri:dev`); shoot every styleguide section in both themes; confirm a release build's log settings by reading the config, since a release build isn't run here.
+
+**Progress:** Done and committed on `desktop-agent-bridge`; `bun run check:all` passes. Every command was driven against the running dev app, including the quick pane, vault switching, `reload` restoring the view and task, and all 15 styleguide sections in both themes. The bridge and Taskdn actions went in as one commit, not two. The release log settings were checked by reading the config, not by running a release build. Found along the way, not fixed here: the sidebar's No Area group has a toggle button with no accessible label (`button [34] (expanded)` in `app tree`), a Base UI warning that a `TooltipTrigger` is passed as a `render` function, `AreaCard` isn't used anywhere in the app (only the styleguide), and the collapsed notes preview shows raw markdown (`**bold**`).
 
 ## Phase 3: The CLI, the rest of the repo and other products
 

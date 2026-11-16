@@ -19,7 +19,10 @@ bun run setup            # Install dependencies; in a worktree, claim a dev slot
 bun run tauri:dev        # Run development build (own identity, opens the demo vault)
 bun run check:all        # Run all checks (TS, Oxlint, Oxfmt, ast-grep, React Compiler, clippy, tests)
 bun run test             # Run Vitest tests
+bun run app help         # Drive the running dev app: screenshots, UI tree, clicks, logs
 ```
+
+To see or check UI changes in the running app, use the `app-control` skill.
 
 ## Core Rules
 
@@ -141,7 +144,7 @@ Key documents:
 - `state-management.md` - State onion, getState() pattern details
 - `tauri-commands.md` - Adding new Rust commands
 - `static-analysis.md` - All linting tools and quality gates
-- `agent-tooling.md` - Dev identity and worktree slots: dev builds never touch the installed app or a real vault
+- `agent-tooling.md` - Dev identity, worktree slots, the agent bridge and styleguide: dev builds never touch the installed app or a real vault
 
 ## Claude Code Commands, Skills & Agents
 
@@ -154,6 +157,7 @@ These are specific to Claude Code but documented here for context.
 
 ### Skills
 
+- `app-control` - See and drive the running dev app with `bun run app`: screenshots in both themes, the UI tree, views, tasks, commands, the quick pane, test vaults, the styleguide and logs
 - `codebase-hygiene` - Find unused code (knip) and duplication (jscpd), review the findings and clean up what you approve
 
 ### Agents
