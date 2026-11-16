@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { Flag, Calendar, Hourglass } from 'lucide-react'
 import { DatePicker } from '@dannysmith/datepicker'
-import { format } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 
 import { cn } from '@/lib/utils'
 import { formatRelativeDate, isOverdue } from '@/lib/date-utils'
@@ -198,8 +198,8 @@ export function TaskCard({
     (projectName && onProjectClick) || (areaName && onAreaClick)
 
   // Parse dates for calendar
-  const scheduledDate = task.scheduled ? new Date(task.scheduled) : undefined
-  const dueDate = task.due ? new Date(task.due) : undefined
+  const scheduledDate = task.scheduled ? parseISO(task.scheduled) : undefined
+  const dueDate = task.due ? parseISO(task.due) : undefined
 
   // Toggle status between done and ready
   const handleStatusToggle = () => {
