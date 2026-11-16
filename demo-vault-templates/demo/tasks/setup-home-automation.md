@@ -1,8 +1,8 @@
 ---
 title: Set up home automation
 status: icebox
-created-at: 2024-08-20
-updated-at: 2024-12-10
+created-at: 2025-08-13
+updated-at: 2025-12-03
 area: "[[Home]]"
 ---
 

@@ -1,9 +1,9 @@
 ---
 title: Replace smoke alarm batteries
 status: done
-created-at: 2024-11-01
-updated-at: 2024-11-03
-completed-at: 2024-11-03
+created-at: 2025-10-25
+updated-at: 2025-10-27
+completed-at: 2025-10-27
 area: "[[Home]]"
 ---
 

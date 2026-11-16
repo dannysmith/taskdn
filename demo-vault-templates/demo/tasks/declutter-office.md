@@ -1,8 +1,8 @@
 ---
 title: Declutter home office
 status: in-progress
-created-at: 2025-01-15
-updated-at: 2025-01-21
+created-at: 2026-01-08
+updated-at: 2026-01-14
 projects:
   - "[[Home Office Setup]]"
 ---

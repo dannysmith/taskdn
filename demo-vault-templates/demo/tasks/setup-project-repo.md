@@ -1,9 +1,9 @@
 ---
 title: Set up project repo
 status: done
-created-at: 2025-01-14
-updated-at: 2025-01-16
-completed-at: 2025-01-16
+created-at: 2026-01-07
+updated-at: 2026-01-14
+completed-at: 2026-01-14
 projects:
   - "[[Personal Website Rebuild]]"
 ---

@@ -4,8 +4,8 @@ status: in-progress
 unique-id: proj-website-2025
 area: "[[Coding]]"
 description: Complete rebuild of personal website using modern stack.
-start-date: 2025-01-06
-end-date: 2025-02-28
+start-date: 2025-12-30
+end-date: 2026-01-10
 ---
 
 ## Overview

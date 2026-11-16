@@ -3,8 +3,8 @@ title: Half Marathon Training
 status: in-progress
 area: "[[Health]]"
 description: Train for and complete a half marathon.
-start-date: 2025-01-06
-end-date: 2025-04-20
+start-date: 2025-12-30
+end-date: 2026-04-13
 priority: high
 ---
 
@@ -14,11 +14,11 @@ Complete a half marathon (21.1km) in under 2 hours.
 
 ## Target Race
 
-City Half Marathon - April 20, 2025
+City Half Marathon - 2026-04-13
 
 ## Training Plan
 
-12-week plan starting January 6.
+15-week plan starting 2025-12-30.
 
 ### Weekly Structure
 - **Mon:** Rest or cross-training

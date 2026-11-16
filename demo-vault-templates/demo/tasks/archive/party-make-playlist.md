@@ -1,11 +1,11 @@
 ---
 title: Make party playlist
 status: done
-created-at: 2024-11-20
-updated-at: 2024-12-10
-completed-at: 2024-12-10
+created-at: 2025-11-13
+updated-at: 2025-12-03
+completed-at: 2025-12-03
 projects:
-  - "[[Holiday Party 2024]]"
+  - "[[Holiday Party]]"
 ---
 
 Created 4-hour Spotify playlist. Mix of:

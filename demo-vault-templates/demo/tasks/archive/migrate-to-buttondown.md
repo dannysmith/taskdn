@@ -1,9 +1,9 @@
 ---
 title: Migrate newsletter to Buttondown
 status: done
-created-at: 2025-01-02
-updated-at: 2025-01-12
-completed-at: 2025-01-12T18:45
+created-at: 2025-12-26
+updated-at: 2026-01-05
+completed-at: 2026-01-05T18:45
 projects:
   - "[[Newsletter Setup]]"
 ---

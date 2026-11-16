@@ -1,8 +1,8 @@
 ---
 title: Refactor authentication module
 status: ready
-created-at: 2025-01-18
-updated-at: 2025-01-19
+created-at: 2026-01-11
+updated-at: 2026-01-12
 projects:
   - "[[Side Hustle App]]"
 ---

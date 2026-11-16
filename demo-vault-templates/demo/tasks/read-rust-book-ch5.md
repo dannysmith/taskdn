@@ -1,8 +1,8 @@
 ---
 title: Read Rust Book Chapter 5 - Structs
 status: in-progress
-created-at: 2025-01-20
-updated-at: 2025-01-21
+created-at: 2026-01-13
+updated-at: 2026-01-14
 projects:
   - "[[Learn Rust]]"
 ---

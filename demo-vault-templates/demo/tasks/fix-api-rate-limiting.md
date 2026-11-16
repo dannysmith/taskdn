@@ -1,10 +1,11 @@
 ---
 title: Fix API rate limiting bug
 status: in-progress
-created-at: 2025-01-19
-updated-at: 2025-01-22T14:30
+created-at: 2026-01-12
+updated-at: 2026-01-15T14:30
 projects:
   - "[[Acme Dashboard Redesign]]"
+scheduled: 2026-01-15
 ---
 
 Users hitting rate limits when refreshing dashboard too quickly. Need to implement proper debouncing and caching.

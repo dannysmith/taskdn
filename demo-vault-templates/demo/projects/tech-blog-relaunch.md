@@ -3,8 +3,8 @@ title: Tech Blog Relaunch
 status: in-progress
 area: "[[Writing]]"
 description: Relaunch the technical blog with fresh content and improved design.
-start-date: 2025-01-15
-end-date: 2025-03-01
+start-date: 2026-01-08
+end-date: 2026-01-20
 ---
 
 ## Goal
@@ -19,7 +19,7 @@ Get the tech blog back up and running with:
 ### Launch Posts
 1. "How I'm Using AI Tools in My Workflow" - personal experience piece - see [[AI Workflow Draft]]
 2. "Building CLI Tools in Rust" - technical tutorial - ties into [[Open Source CLI Tool]]
-3. "My Development Environment Setup 2025" - reference/resource post
+3. "My Development Environment Setup" - reference/resource post
 
 ### Ongoing Topics
 - AI and developer tools

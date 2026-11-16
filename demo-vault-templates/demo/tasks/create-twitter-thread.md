@@ -1,8 +1,8 @@
 ---
 title: Create Twitter thread about productivity
 status: in-progress
-created-at: 2025-01-19
-updated-at: 2025-01-20
+created-at: 2026-01-12
+updated-at: 2026-01-13
 area: "[[Marketing]]"
 ---
 

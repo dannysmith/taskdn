@@ -1,8 +1,8 @@
 ---
 title: Start a YouTube channel
 status: icebox
-created-at: 2024-07-30
-updated-at: 2024-11-20
+created-at: 2025-07-23
+updated-at: 2025-11-13
 area: "[[Marketing]]"
 ---
 

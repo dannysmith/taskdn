@@ -1,8 +1,8 @@
 ---
 title: Build a custom mechanical keyboard
 status: icebox
-created-at: 2024-08-10
-updated-at: 2024-12-01
+created-at: 2025-08-03
+updated-at: 2025-11-24
 area: "[[Coding]]"
 ---
 

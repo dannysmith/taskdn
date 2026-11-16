@@ -1,11 +1,11 @@
 ---
 title: Create guest list
 status: done
-created-at: 2024-11-03
-updated-at: 2024-11-08
-completed-at: 2024-11-08
+created-at: 2025-10-27
+updated-at: 2025-11-01
+completed-at: 2025-11-01
 projects:
-  - "[[Holiday Party 2024]]"
+  - "[[Holiday Party]]"
 ---
 
 Final list: 30 people invited. Mix of:

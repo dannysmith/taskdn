@@ -1,8 +1,8 @@
 ---
 title: Write book proposal
 status: icebox
-created-at: 2024-07-20
-updated-at: 2024-11-15
+created-at: 2025-07-13
+updated-at: 2025-11-08
 area: "[[Writing]]"
 ---
 

@@ -12,7 +12,7 @@ Ongoing client relationship with Acme Corporation.
 **Industry:** Enterprise Software
 **Engagement Type:** Consulting and development
 **Primary Contact:** [[Sarah Chen]], VP of Engineering
-**Started:** 2024-06
+**Started:** 2025-06-02
 
 ## Scope of Work
 
@@ -26,7 +26,7 @@ Currently engaged on:
 - Standard consulting rate applies
 - 30-day payment terms
 - IP belongs to client after delivery
-- NDA in place (signed June 2024)
+- NDA in place (signed 2025-06-02)
 
 ## Relationship Notes
 
@@ -34,7 +34,7 @@ Good relationship with the engineering team. Sarah is responsive and clear about
 
 ## Communication
 
-- Weekly sync calls (Thursdays 2pm)
+- Weekly sync calls with Sarah
 - Slack for day-to-day
 - Email for formal communications
 
@@ -42,6 +42,6 @@ Good relationship with the engineering team. Sarah is responsive and clear about
 
 | Date | Event |
 |------|-------|
-| 2024-06 | Initial engagement, discovery phase |
-| 2024-08 | Dashboard redesign kicked off |
-| 2024-11 | API integration project added |
+| 2025-06-02 | Initial engagement, discovery phase |
+| 2025-08-08 | Dashboard redesign kicked off |
+| 2025-11-03 | API integration project added |

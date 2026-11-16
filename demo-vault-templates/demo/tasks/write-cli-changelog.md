@@ -1,8 +1,8 @@
 ---
 title: Write v2.0 changelog
 status: ready
-created-at: 2025-01-19
-updated-at: 2025-01-20
+created-at: 2026-01-12
+updated-at: 2026-01-13
 projects:
   - "[[Open Source CLI Tool]]"
 ---

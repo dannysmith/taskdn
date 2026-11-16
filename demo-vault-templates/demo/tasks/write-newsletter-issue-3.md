@@ -1,8 +1,8 @@
 ---
 title: Write newsletter issue #3
 status: in-progress
-created-at: 2025-01-20
-updated-at: 2025-01-22
+created-at: 2026-01-13
+updated-at: 2026-01-15
 projects:
   - "[[Newsletter Setup]]"
 ---

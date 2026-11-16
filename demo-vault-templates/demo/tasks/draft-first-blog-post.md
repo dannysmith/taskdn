@@ -1,10 +1,11 @@
 ---
 title: Draft week 1 blog post
 status: ready
-created-at: 2025-01-16
-updated-at: 2025-01-20
+created-at: 2026-01-09
+updated-at: 2026-01-13
 projects:
   - "[[Tech Blog Relaunch]]"
+scheduled: 2026-01-15
 ---
 
 Write the first post for the relaunched blog. Topic: "How I'm Using AI Tools in My Workflow"

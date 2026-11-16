@@ -3,6 +3,7 @@ title: Newsletter Setup
 status: ready
 area: "[[Writing]]"
 description: Set up an email newsletter for regular updates.
+start-date: 2026-01-22
 ---
 
 Setting up a simple newsletter to stay in touch with readers.

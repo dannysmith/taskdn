@@ -18,7 +18,7 @@ I'm doing good in this area if...
 ## Key Focus Areas
 
 ### Content Marketing
-Creating valuable content that showcases expertise and attracts the right audience. See [[Content Calendar Q1]] for current plan.
+Creating valuable content that showcases expertise and attracts the right audience. See [[Content Calendar]] for current plan.
 
 ### Networking
 Building genuine relationships with peers, potential clients, and collaborators.

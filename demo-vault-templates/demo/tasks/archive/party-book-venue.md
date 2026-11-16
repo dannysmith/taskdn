@@ -1,11 +1,11 @@
 ---
 title: Book venue for holiday party
 status: done
-created-at: 2024-11-02
-updated-at: 2024-11-05
-completed-at: 2024-11-05
+created-at: 2025-10-26
+updated-at: 2025-10-29
+completed-at: 2025-10-29
 projects:
-  - "[[Holiday Party 2024]]"
+  - "[[Holiday Party]]"
 ---
 
 Decided to do it at home. Saves money and more intimate.

@@ -32,4 +32,4 @@ The monthly cost adds up. $150 × 12 = $1,800/year for stuff I don't use. That m
 
 ## When to Do This
 
-Need a free weekend with good weather (parking lot work). Spring would be ideal.
+Need a free weekend with good weather (parking lot work). A dry, mild weekend would be ideal.

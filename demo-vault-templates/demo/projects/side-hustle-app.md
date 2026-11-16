@@ -2,7 +2,7 @@
 title: Side Hustle App
 status: planning
 description: Mobile app idea for tracking side income and expenses.
-start-date: 2025-02-01
+start-date: 2026-01-25
 tags:
   - mobile
   - product-idea

@@ -1,9 +1,9 @@
 ---
 title: Complete onboarding docs for Acme
 status: done
-created-at: 2024-08-15
-updated-at: 2024-08-20
-completed-at: 2024-08-20
+created-at: 2025-08-08
+updated-at: 2025-08-13
+completed-at: 2025-08-13
 projects:
   - "[[Acme Dashboard Redesign]]"
 ---

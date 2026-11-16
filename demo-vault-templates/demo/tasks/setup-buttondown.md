@@ -1,8 +1,8 @@
 ---
 title: Set up Buttondown account
 status: ready
-created-at: 2025-01-17
-updated-at: 2025-01-17
+created-at: 2026-01-10
+updated-at: 2026-01-10
 projects:
   - "[[Newsletter Setup]]"
 ---

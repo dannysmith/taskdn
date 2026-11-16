@@ -1,12 +1,12 @@
 ---
 title: Review Japan flight prices
 status: ready
-created-at: 2025-01-15
-updated-at: 2025-01-20
+created-at: 2026-01-08
+updated-at: 2026-01-13
 projects:
-  - "[[Japan Trip 2025]]"
+  - "[[Japan Trip]]"
 ---
 
-Check flight prices for late October flights to Tokyo. Set up price alerts.
+Check flight prices for the Tokyo flights. Set up price alerts.
 
-Not urgent yet - deferring until February when prices should be more predictable.
+Not urgent yet - prices should be more predictable in a few weeks.

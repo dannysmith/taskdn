@@ -1,20 +1,20 @@
 ---
-title: Q1 Tax Preparation
+title: Tax Return Preparation
 status: in-progress
 area: "[[Finance]]"
-description: Prepare and file Q1 2025 estimated taxes.
-start-date: 2025-01-02
-end-date: 2025-04-15
+description: Prepare and file estimated taxes and the annual return.
+start-date: 2025-12-26
+end-date: 2026-04-08
 ---
 
 ## Overview
 
-Prepare estimated taxes for Q1 2025. Need to gather all income documentation, calculate estimated payments, and file on time.
+Prepare estimated taxes and the annual return. Need to gather all income documentation, calculate estimated payments, and file on time.
 
 ## Key Dates
 
-- **Jan 15:** Q4 2024 estimated payment due
-- **Apr 15:** Q1 2025 estimated payment due + annual return
+- **2026-01-15:** Estimated payment for last quarter due
+- **2026-04-08:** Next estimated payment due + annual return
 
 ## Documents Needed
 

@@ -3,7 +3,7 @@ title: Open Source CLI Tool
 status: in-progress
 area: "[[Coding]]"
 description: Build and release a useful CLI tool as open source.
-start-date: 2025-01-15
+start-date: 2026-01-08
 ---
 
 Building a CLI tool to scratch my own itch, then open sourcing it.

@@ -1,13 +1,13 @@
 ---
 title: Get Mum's birthday present
 status: ready
-created-at: 2025-01-20
-updated-at: 2025-01-20
-defer-until: 2027-03-15
-due: 2027-04-02
+created-at: 2026-01-13
+updated-at: 2026-01-13
+defer-until: 2026-02-14
+due: 2026-03-04
 ---
 
-[[Mum]]'s birthday is April 5th. Start thinking about presents mid-March.
+[[Mum]]'s birthday is 2026-03-07. Start thinking about presents a few weeks before.
 
 Ideas from last year:
 - She mentioned wanting a nice scarf

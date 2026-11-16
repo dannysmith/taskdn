@@ -1,10 +1,11 @@
 ---
 title: Book JR Pass for Japan trip
 status: blocked
-created-at: 2025-01-12
-updated-at: 2025-01-20
+created-at: 2026-01-05
+updated-at: 2026-01-13
 projects:
-  - "[[Japan Trip 2025]]"
+  - "[[Japan Trip]]"
+due: 2026-01-20
 ---
 
 Need to order the JR Pass in advance.

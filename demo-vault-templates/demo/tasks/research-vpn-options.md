@@ -1,8 +1,8 @@
 ---
 title: Research VPN options
 status: ready
-created-at: 2025-01-15
-updated-at: 2025-01-15
+created-at: 2026-01-08
+updated-at: 2026-01-08
 area: "[[Coding]]"
 ---
 

@@ -2,7 +2,7 @@
 title: Emergency Fund Goal
 status: paused
 description: Build 6-month emergency fund.
-start-date: 2024-06-01
+start-date: 2025-05-25
 ---
 
 ## Goal
@@ -15,7 +15,7 @@ Made good progress but then had to redirect funds to home office setup and Japan
 
 ## Progress
 
-- Started: June 2024
+- Started: 2025-05-25
 - Current balance: $8,500
 - Target: $18,000
 - Progress: 47%
@@ -30,4 +30,4 @@ Made good progress but then had to redirect funds to home office setup and Japan
 
 This is important but not urgent. The current $8,500 covers about 3 months which provides some buffer. Can afford to pause and prioritize other financial goals for now.
 
-Will reassess in Q2.
+Will reassess next quarter.

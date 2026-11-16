@@ -1,8 +1,8 @@
 ---
 title: Fix leaky kitchen tap
 status: ready
-created-at: 2025-01-12
-updated-at: 2025-01-12
+created-at: 2026-01-05
+updated-at: 2026-01-05
 area: "[[Home]]"
 energy: low
 ---

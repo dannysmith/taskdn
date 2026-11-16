@@ -1,12 +1,13 @@
 ---
 title: Review home insurance renewal
 status: ready
-created-at: 2025-01-10
-updated-at: 2025-01-15
+created-at: 2026-01-03
+updated-at: 2026-01-08
 area: "[[Finance]]"
+due: 2026-01-05
 ---
 
-Renewal coming up in mid-February. Should compare quotes before auto-renewing.
+Renewal date is 2026-01-20. Should compare quotes before auto-renewing.
 
 Current provider: Direct Line
 Check: Compare the Market, Moneysupermarket

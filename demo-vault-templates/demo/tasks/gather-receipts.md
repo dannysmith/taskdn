@@ -1,13 +1,13 @@
 ---
-title: Gather 2024 receipts and expenses
+title: "Gather last year's receipts and expenses"
 status: ready
-created-at: 2025-01-05
-updated-at: 2025-01-10
+created-at: 2025-12-29
+updated-at: 2026-01-03
 projects:
-  - "[[Q1 Tax Preparation]]"
+  - "[[Tax Return Preparation]]"
 ---
 
-Go through email and files to gather all business expense receipts for 2024.
+Go through email and files to gather all business expense receipts for last year.
 
 ## Categories to check
 

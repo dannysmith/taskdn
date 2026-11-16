@@ -1,9 +1,9 @@
 ---
 title: Try out local coworking space
 status: dropped
-created-at: 2024-10-15
-updated-at: 2025-01-10
-completed-at: 2025-01-10
+created-at: 2025-10-08
+updated-at: 2026-01-03
+completed-at: 2026-01-03
 area: "[[Coding]]"
 ---
 

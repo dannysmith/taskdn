@@ -1,8 +1,8 @@
 ---
 title: Random app idea from shower thought
 status: inbox
-created-at: 2025-01-21
-updated-at: 2025-01-21
+created-at: 2026-01-14
+updated-at: 2026-01-14
 ---
 
 Had an idea for an app that tracks when friends mention wanting things, so you always have gift ideas ready. Need to think about whether this is worth building.
@@ -12,7 +12,7 @@ Had an idea for an app that tracks when friends mention wanting things, so you a
 - "[[Emma]] said she's been meaning to get that book about mushrooms"
 - "[[Dad]] mentioned his old wallet is falling apart"
 
-Then when a birthday or Christmas comes around, you have a list ready.
+Then when a birthday or holiday comes around, you have a list ready.
 
 ## Questions
 - Does this already exist?

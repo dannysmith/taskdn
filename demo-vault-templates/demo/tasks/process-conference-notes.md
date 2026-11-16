@@ -1,8 +1,8 @@
 ---
 title: Process notes from conference talk
 status: inbox
-created-at: 2025-01-18
-updated-at: 2025-01-18
+created-at: 2026-01-11
+updated-at: 2026-01-11
 area: "[[Learning]]"
 ---
 

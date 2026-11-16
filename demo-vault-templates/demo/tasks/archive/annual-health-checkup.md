@@ -1,9 +1,9 @@
 ---
 title: Annual health checkup
 status: done
-created-at: 2024-11-01
-updated-at: 2024-12-05
-completed-at: 2024-12-05
+created-at: 2025-10-25
+updated-at: 2025-11-28
+completed-at: 2025-11-28
 area: "[[Health]]"
 ---
 

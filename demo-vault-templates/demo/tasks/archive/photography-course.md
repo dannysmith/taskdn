@@ -1,9 +1,9 @@
 ---
 title: Take photography course
 status: dropped
-created-at: 2024-07-01
-updated-at: 2024-09-15
-completed-at: 2024-09-15
+created-at: 2025-06-24
+updated-at: 2025-09-08
+completed-at: 2025-09-08
 area: "[[Learning]]"
 ---
 

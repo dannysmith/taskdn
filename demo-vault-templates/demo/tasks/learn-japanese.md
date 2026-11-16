@@ -1,11 +1,11 @@
 ---
 title: Learn Japanese properly
 status: icebox
-created-at: 2024-09-01
-updated-at: 2025-01-10
+created-at: 2025-08-25
+updated-at: 2026-01-03
 area: "[[Learning]]"
 projects:
-  - "[[Japan Trip 2025]]"
+  - "[[Japan Trip]]"
 ---
 
 Would be nice for the Japan trip but realistically won't get to conversational level in time. Maybe just learn basics and revisit seriously after the trip if I want to go back.

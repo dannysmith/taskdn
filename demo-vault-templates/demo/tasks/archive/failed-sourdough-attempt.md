@@ -1,9 +1,9 @@
 ---
 title: Learn to make sourdough
 status: dropped
-created-at: 2024-04-01
-updated-at: 2024-05-15
-completed-at: 2024-05-15
+created-at: 2025-03-25
+updated-at: 2025-05-08
+completed-at: 2025-05-08
 area: "[[Learning]]"
 ---
 

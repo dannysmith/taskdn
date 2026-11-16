@@ -1,10 +1,11 @@
 ---
 title: Order new running shoes
 status: ready
-created-at: 2025-01-19
-updated-at: 2025-01-19
+created-at: 2026-01-12
+updated-at: 2026-01-12
 projects:
   - "[[Half Marathon Training]]"
+due: 2026-01-21
 ---
 
 Current shoes have about 400 miles on them. Should replace before increasing mileage.

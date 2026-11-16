@@ -1,11 +1,11 @@
 ---
 title: Buy birthday present for Sarah
 status: ready
-created-at: 2025-01-18
-updated-at: 2025-01-18
+created-at: 2026-01-11
+updated-at: 2026-01-11
 ---
 
-[[Sarah]]'s birthday is Feb 8. Need to get a present.
+[[Sarah]]'s birthday is 2026-02-08. Need to get a present.
 
 Ideas:
 - Nice candle from [[Diptyque]]

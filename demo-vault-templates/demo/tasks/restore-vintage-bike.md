@@ -1,8 +1,8 @@
 ---
 title: Restore the vintage bike in the garage
 status: icebox
-created-at: 2024-05-22
-updated-at: 2024-09-14
+created-at: 2025-05-15
+updated-at: 2025-09-07
 area: "[[Home]]"
 ---
 

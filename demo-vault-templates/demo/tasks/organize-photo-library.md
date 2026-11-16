@@ -1,8 +1,8 @@
 ---
 title: Organize photo library
 status: in-progress
-created-at: 2025-01-10
-updated-at: 2025-01-19
+created-at: 2026-01-03
+updated-at: 2026-01-12
 area: "[[Home]]"
 ---
 

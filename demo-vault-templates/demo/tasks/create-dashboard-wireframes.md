@@ -1,8 +1,8 @@
 ---
 title: Create wireframes for dashboard pages
 status: ready
-created-at: 2025-01-12
-updated-at: 2025-01-18
+created-at: 2026-01-05
+updated-at: 2026-01-11
 projects:
   - "[[Acme Dashboard Redesign]]"
 priority: 2

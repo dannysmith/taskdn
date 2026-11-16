@@ -1,11 +1,11 @@
 ---
 title: Party setup on the day
 status: done
-created-at: 2024-12-10
-updated-at: 2024-12-14
-completed-at: 2024-12-14
+created-at: 2025-12-03
+updated-at: 2025-12-07
+completed-at: 2025-12-07
 projects:
-  - "[[Holiday Party 2024]]"
+  - "[[Holiday Party]]"
 ---
 
 Day-of tasks:

@@ -1,8 +1,8 @@
 ---
 title: Prepare podcast appearance talking points
 status: icebox
-created-at: 2024-11-05
-updated-at: 2024-11-05
+created-at: 2025-10-29
+updated-at: 2025-10-29
 area: "[[Marketing]]"
 ---
 
