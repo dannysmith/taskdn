@@ -49,7 +49,29 @@ A reference to another file, expressed as one of:
 
 ---
 
-## 2. General Rules
+## 2. Conformance
+
+This specification sets requirements for files and for the software that reads and writes them:
+
+- **Files** conform when they follow the format rules in this document.
+- **Readers** are software that reads files. Readers are lenient: they accept everything this specification allows.
+- **Writers** are software that creates or changes files. Writers are strict: what they write conforms.
+
+Most implementations are both readers and writers. An implementation conforms when it meets the requirements for each role it plays. Rules that apply to only one role say so.
+
+User interfaces, commands and configuration are outside this specification. [S2](./S2-implementation-guidance.md) gives guidance on those, and on creating and changing files well.
+
+### 2.1 Design Principle
+
+This specification only constrains what tools must agree on for files to work across them, and what protects users' data. Everything else is left to implementations.
+
+The meaning of an entity comes from what is written in its file. Readers don't treat an entity as being in a state its file doesn't record. Writers that change something on a user's behalf write the result to the file, so every tool sees the same thing.
+
+---
+
+## 3. General Rules
+
+### 3.1 Files
 
 1. All files MUST contain valid UTF-8 encoded Markdown, optionally with YAML frontmatter.
 2. If frontmatter is present:
@@ -58,36 +80,46 @@ A reference to another file, expressed as one of:
    3. The YAML block MUST be terminated with a line containing exactly `---`, followed by a newline.
 3. Frontmatter fields MAY appear in any order.
 4. The Markdown body MAY be empty.
-5. Implementations MUST ignore unknown frontmatter fields. This allows users to add custom metadata without breaking compatibility.
-6. All date and datetime values MUST use ISO 8601 format.
-7. All enum values (such as `status`) are case-sensitive and MUST be lowercase.
-8. Empty or null field values SHOULD be treated as if the field were absent.
-9. Implementations MUST NOT reject files with unrecognized status values. Unknown statuses SHOULD be preserved and MAY be displayed or filtered as the implementation sees fit.
-10. When modifying files, implementations MUST preserve data they don't explicitly change:
-    - Unknown frontmatter fields MUST be preserved.
-    - The Markdown body MUST be preserved.
-    - YAML formatting (comments, field ordering) SHOULD be preserved where possible.
-11. Implementations MUST provide configuration options so users can specify paths to their `tasks_dir`, `projects_dir`, and `areas_dir` directories. Implementations MUST NOT _require_ these directories to be co-located.
-12. Implementations SHOULD NOT impose filename conventions.
+5. All date and datetime values MUST use ISO 8601 format.
+6. All enum values (such as `status`) are case-sensitive and MUST be lowercase.
+7. Tasks, projects and areas are each stored in their own directory. The three directories are independent: they need not be co-located, and they share no common root.
+
+### 3.2 Readers
+
+1. Readers MUST ignore unknown frontmatter fields. This allows users to add custom metadata without breaking compatibility.
+2. Readers MUST treat a field whose value is null, an empty string or an empty list as if the field were absent. A key with no value is null.
+3. Readers MUST NOT reject files with unrecognized status values. Unknown statuses SHOULD be preserved and MAY be displayed or filtered as the implementation sees fit.
+4. Readers MUST NOT depend on any filename convention. Users may name and rename files freely.
+
+### 3.3 Writers
+
+1. Every file a writer creates MUST conform to this specification, and a writer MUST NOT make a conforming file non-conforming.
+2. When creating a file, writers MUST NOT overwrite an existing file. If the chosen filename is taken, writers MUST choose another, for example by appending a number.
+3. When changing a file, writers MUST preserve everything they don't explicitly change:
+   - Unknown frontmatter fields MUST be preserved.
+   - Fields that aren't part of the change MUST keep their values exactly as written. One change may set several fields (marking a task done sets `status` and `completed-at`), but writers MUST NOT normalise, reformat or rewrite unrelated fields along the way. For example, a writer that changes `due` leaves `status: Ready` and an `area` reference as they were.
+   - The Markdown body MUST be preserved.
+   - YAML formatting (comments, field ordering) SHOULD be preserved where possible.
+4. Writers choose filenames only for the files they create. Any valid filename conforms; S2 recommends a convention for new files.
 
 ---
 
-## 3. Task Files
+## 4. Task Files
 
 A Task represents a single actionable item.
 
-### 3.1 File Location
+### 4.1 File Location
 
 - Task files MUST be stored in a designated tasks directory.
 - Task files in subdirectories SHALL NOT be read during normal operation.
 - Implementations MAY move completed or dropped tasks to a `tasks/archive` subdirectory.
 - Implementations MAY provide separate functionality to query archived tasks.
 
-### 3.2 Filename
+### 4.2 Filename
 
 Any valid filename.
 
-### 3.3 Required Frontmatter Fields
+### 4.3 Required Frontmatter Fields
 
 | Field        | Type             | Description                                                                      |
 | ------------ | ---------------- | -------------------------------------------------------------------------------- |
@@ -96,7 +128,7 @@ Any valid filename.
 | `created-at` | date or datetime | When the task was created.                                                       |
 | `updated-at` | date or datetime | When the task was last modified.                                                 |
 
-### 3.4 Optional Frontmatter Fields
+### 4.4 Optional Frontmatter Fields
 
 | Field          | Type                     | Description                                                                                                                        |
 | -------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
@@ -107,7 +139,7 @@ Any valid filename.
 | `scheduled`    | date                     | The date the task is planned to be worked on. Used for calendar-based planning.                                                    |
 | `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.                                           |
 
-### 3.5 Status Values
+### 4.5 Status Values
 
 | Status        | Description                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------- |
@@ -119,7 +151,7 @@ Any valid filename.
 | `dropped`     | Abandoned. Will not be completed.                                                           |
 | `done`        | Completed successfully.                                                                     |
 
-### 3.6 Example
+### 4.6 Example
 
 ```yaml
 ---
@@ -146,25 +178,25 @@ Discussion with finance team on 2025-01-10...
 
 ---
 
-## 4. Project Files
+## 5. Project Files
 
 A Project represents a collection of related tasks with a defined end goal.
 
-### 4.1 File Location
+### 5.1 File Location
 
 Project files SHOULD be stored in a designated `projects` directory, but this is not required.
 
-### 4.2 Filename
+### 5.2 Filename
 
 Any valid filename.
 
-### 4.3 Required Frontmatter Fields
+### 5.3 Required Frontmatter Fields
 
 | Field   | Type   | Description               |
 | ------- | ------ | ------------------------- |
 | `title` | string | The title of the project. |
 
-### 4.4 Optional Frontmatter Fields
+### 5.4 Optional Frontmatter Fields
 
 | Field         | Type                     | Description                                                              |
 | ------------- | ------------------------ | ------------------------------------------------------------------------ |
@@ -175,7 +207,7 @@ Any valid filename.
 | `end-date`    | date                     | When the project was completed or is expected to complete.               |
 | `blocked-by`  | array of file references | Projects that must be completed before this one can start.               |
 
-### 4.5 Status Values
+### 5.5 Status Values
 
 | Status        | Description                                          |
 | ------------- | ---------------------------------------------------- |
@@ -188,7 +220,7 @@ Any valid filename.
 
 If `status` is absent, implementations SHOULD treat the project as having no defined workflow state and MAY display it in all project views.
 
-### 4.6 Example
+### 5.6 Example
 
 ```yaml
 ---
@@ -206,25 +238,25 @@ This project covers all Q1 planning activities...
 
 ---
 
-## 5. Area Files
+## 6. Area Files
 
 An Area represents an ongoing area of responsibility (e.g., "Health", "Finances", "Client: Acme Corp").
 
-### 5.1 File Location
+### 6.1 File Location
 
 Area files SHOULD be stored in a designated `areas` directory, but this is not required.
 
-### 5.2 Filename
+### 6.2 Filename
 
 Any valid filename.
 
-### 5.3 Required Frontmatter Fields
+### 6.3 Required Frontmatter Fields
 
 | Field   | Type   | Description            |
 | ------- | ------ | ---------------------- |
 | `title` | string | The title of the area. |
 
-### 5.4 Optional Frontmatter Fields
+### 6.4 Optional Frontmatter Fields
 
 | Field         | Type   | Description                                                              |
 | ------------- | ------ | ------------------------------------------------------------------------ |
@@ -232,7 +264,7 @@ Any valid filename.
 | `type`        | string | Allows differentiation between area types (e.g., "client", "life-area"). |
 | `description` | string | A short description, SHOULD be under 500 characters.                     |
 
-### 5.5 Note on Area Status
+### 6.5 Note on Area Status
 
 Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting or moving them.
 
@@ -241,7 +273,7 @@ When displaying areas, implementations SHOULD:
 - Display areas with `status: active` or with no `status` field.
 - Hide areas with any other `status` value (e.g., `archived`).
 
-### 5.6 Example
+### 6.6 Example
 
 ```yaml
 ---
@@ -257,9 +289,9 @@ Key contacts, agreements, and background information...
 
 ---
 
-## 6. Appendix
+## 7. Appendix
 
-### 6.1 JSON Schemas
+### 7.1 JSON Schemas
 
 Machine-readable JSON Schema files are available to assist with validation:
 
@@ -269,6 +301,6 @@ Machine-readable JSON Schema files are available to assist with validation:
 
 These schemas can be used by editors for autocomplete and inline validation, or by implementations for programmatic validation. **Conformance with these schemas does not guaruntee complete conformance with this specification** – some requirements cannot be encoded as JSON schemas.
 
-### 6.2 Guidance for Implementations
+### 7.2 Guidance for Implementations
 
 [S2: Implementation Guidance](./S2-implementation-guidance.md) contains additional guidance for implementations.

@@ -20,6 +20,10 @@ While S1 defines the file format and compatibility requirements, this specificat
 
 S1 defines what files look like and what implementations must do for compatibility. This specification provides guidance on how implementations should behave for a good user experience.
 
+### 1.3 Directories
+
+Implementations SHOULD let users set the path to each of the tasks, projects and areas directories separately, and SHOULD NOT require them to be co-located.
+
 ---
 
 ## 2. Design Principles
