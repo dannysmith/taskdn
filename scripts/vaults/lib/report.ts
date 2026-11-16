@@ -152,7 +152,7 @@ function countBy(entities: Entity[], key: string): Record<string, number> {
 function checkStatuses(entities: Entity[], valid: string[], kind: string, problems: string[]) {
   for (const e of entities) {
     const status = e.fm.status
-    if (status !== undefined && !valid.includes(String(status))) {
+    if (status != null && !valid.includes(String(status))) {
       problems.push(`${e.file}: unknown ${kind} status "${String(status)}"`)
     }
   }

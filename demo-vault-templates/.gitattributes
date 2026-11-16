@@ -1,0 +1,2 @@
+# Keep these byte-for-byte: they test line endings
+edge-cases/work/tasks/crlf-line-endings.md -text
