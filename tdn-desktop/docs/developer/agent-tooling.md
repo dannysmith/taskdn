@@ -8,7 +8,9 @@ Dev builds are set up so that coding agents (and you) can run and test them with
 
 - app data and preferences: `~/Library/Application Support/is.danny.taskdn-desktop.dev/`
 - logs: `~/Library/Logs/is.danny.taskdn-desktop.dev/`
-- window state, recovery files, WebKit storage (localStorage) and single-instance lock
+- window state, recovery files and single-instance lock
+
+WebKit storage (localStorage) is the exception: unbundled dev builds keep it in `~/Library/WebKit/taskdn-desktop/`, named after the binary, which is still apart from the installed app's `is.danny.taskdn-desktop`.
 
 The installed app and the dev build can run side by side without touching each other's state. Keep window settings out of the overlay; they live in the platform configs.
 
@@ -32,7 +34,7 @@ Each git worktree of the repo can run its own dev app alongside the others. `scr
 | 0    | main       | `is.danny.taskdn-desktop.dev`    | Taskdn Dev   | 1420       |
 | 1–4  | a worktree | `is.danny.taskdn-desktop.dev<n>` | Taskdn Dev n | 1420 + 10n |
 
-- **The identifier** gives each slot its own app data, logs and single-instance lock. Two dev apps with the same identifier would share preferences, and the second would hand over to the first and quit. WebKit storage is keyed by origin too, so the port separates it as well.
+- **The identifier** gives each slot its own app data, logs and single-instance lock. Two dev apps with the same identifier would share preferences, and the second would hand over to the first and quit. All slots share one WebKit folder, but storage in it is keyed by origin, so the port separates it.
 - **The demo vault** is the worktree's own `demo-vaults/demo`, so each dev app edits its own copy.
 - **The main checkout** is the one whose `git rev-parse --git-dir` is the shared `--git-common-dir`. It's always slot 0 and needs no file.
 - **A worktree** gets its slot from `bun run setup` in `tdn-desktop/` (`scripts/setup.ts`), which takes the lowest slot no other worktree has and whose Vite port is free (a removed worktree's dev app may still be running), and writes it to `tdn-desktop/dev-slot.local` (gitignored by `*.local`). Removing the worktree frees it. A slot file that doesn't hold 1–4 counts as no slot. `tauri:dev` in a worktree without one stops and says to run setup, rather than clash with slot 0.

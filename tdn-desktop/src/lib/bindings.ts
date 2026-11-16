@@ -57,7 +57,10 @@ export const commands = {
 	 *  Pass None to reset to default.
 	 */
 	updateQuickPaneShortcut: (shortcut: string | null, options?: InvokeOptions) => typedError<null, string>(__TAURI_INVOKE("update_quick_pane_shortcut", { shortcut }, options)),
-	/**  Read CLI config from ~/.taskdn.json */
+	/**
+	 *  Read the CLI config from ~/.taskdn.json. Debug builds read the demo vault's
+	 *  `.taskdn.json` instead, so the "Read from CLI" button can't reach the real vault.
+	 */
 	readCliConfig: (options?: InvokeOptions) => typedError<CliConfig, CliConfigError>(__TAURI_INVOKE("read_cli_config", undefined, options)),
 	/**  Get the app's data directory path */
 	getAppDataDir: (options?: InvokeOptions) => typedError<string, string>(__TAURI_INVOKE("get_app_data_dir", undefined, options)),
