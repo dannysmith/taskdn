@@ -4,6 +4,8 @@
 //! Command implementations are organized in the `commands` module,
 //! and shared types are in the `types` module.
 
+#[cfg(debug_assertions)]
+mod agent_bridge;
 mod bindings;
 mod commands;
 #[cfg(debug_assertions)]
@@ -175,6 +177,10 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
     setup_quick_pane(app)?;
     setup_vault(app);
 
+    // Lets `bun run app` drive the dev app (docs/developer/agent-tooling.md)
+    #[cfg(debug_assertions)]
+    agent_bridge::start(app.handle());
+
     // NOTE: Application menu is built from JavaScript for i18n support
     // See src/lib/menu.ts for the menu implementation
 
@@ -339,6 +345,8 @@ fn handle_run_event(app_handle: &AppHandle, event: RunEvent) {
         }
         RunEvent::Exit => {
             log::info!("Application exiting - performing cleanup");
+            #[cfg(debug_assertions)]
+            agent_bridge::stop(app_handle);
             hide_quick_pane(app_handle);
             unregister_global_shortcuts(app_handle);
         }
