@@ -146,24 +146,9 @@ Key documents:
 - `static-analysis.md` - All linting tools and quality gates
 - `agent-tooling.md` - Dev identity, worktree slots, the agent bridge and styleguide: dev builds never touch the installed app or a real vault
 
-## Claude Code Commands, Skills & Agents
+## Claude Code Skills
 
-These are specific to Claude Code but documented here for context.
-
-### Commands
-
-- `/check` - Check work against architecture, run `bun run check:all`, suggest commit message
-- `/init` - One-time template initialization
-
-### Skills
+These live in the repo root's `.claude/skills/`, so sessions started anywhere in the repo find them:
 
 - `app-control` - See and drive the running dev app with `bun run app`: screenshots in both themes, the UI tree, views, tasks, commands, the quick pane, test vaults, the styleguide and logs
 - `codebase-hygiene` - Find unused code (knip) and duplication (jscpd), review the findings and clean up what you approve
-
-### Agents
-
-Task-focused agents that leverage separate context for focused work:
-
-- `plan-checker` - Validate implementation plans against documented architecture
-- `docs-reviewer` - Review developer docs for accuracy and codebase consistency
-- `userguide-reviewer` - Review user guide against actual system features

@@ -1,6 +1,6 @@
 # Agent Tooling
 
-Dev builds are set up so that coding agents (and you) can run and test them without touching the installed app or a real vault, and can see and drive the running app from the terminal: screenshots, a UI outline, clicks and typing, a component styleguide and searchable logs. None of it ships in release builds. For day-to-day usage, see the `app-control` skill (`tdn-desktop/.claude/skills/app-control/SKILL.md`) or run `bun run app help`.
+Dev builds are set up so that coding agents (and you) can run and test them without touching the installed app or a real vault, and can see and drive the running app from the terminal: screenshots, a UI outline, clicks and typing, a component styleguide and searchable logs. None of it ships in release builds. For day-to-day usage, see the `app-control` skill (`.claude/skills/app-control/SKILL.md` at the repo root) or run `bun run app help`.
 
 ## Dev Identity
 
