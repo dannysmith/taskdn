@@ -426,22 +426,24 @@ mod tests {
     #[test]
     fn quick_pane_dimensions_are_reasonable() {
         // Width should be reasonable for a quick entry panel
-        assert!(QUICK_PANE_WIDTH >= 400.0);
-        assert!(QUICK_PANE_WIDTH <= 1200.0);
+        const { assert!(QUICK_PANE_WIDTH >= 400.0) };
+        const { assert!(QUICK_PANE_WIDTH <= 1200.0) };
 
         // Height should be reasonable
-        assert!(QUICK_PANE_HEIGHT >= 300.0);
-        assert!(QUICK_PANE_HEIGHT <= 1000.0);
+        const { assert!(QUICK_PANE_HEIGHT >= 300.0) };
+        const { assert!(QUICK_PANE_HEIGHT <= 1000.0) };
     }
 
     #[test]
     fn quick_pane_is_larger_than_minimum_usable_size() {
         // Ensure the panel is large enough to be usable
-        assert!(QUICK_PANE_WIDTH >= 600.0, "Width should be at least 600px");
-        assert!(
-            QUICK_PANE_HEIGHT >= 400.0,
-            "Height should be at least 400px"
-        );
+        const { assert!(QUICK_PANE_WIDTH >= 600.0, "Width should be at least 600px") };
+        const {
+            assert!(
+                QUICK_PANE_HEIGHT >= 400.0,
+                "Height should be at least 400px"
+            )
+        };
     }
 
     // -------------------------------------------------------------------------

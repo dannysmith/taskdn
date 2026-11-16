@@ -999,7 +999,7 @@ mod tests {
         assert_eq!(index.tasks.len(), 1);
         assert!(index.get_task("task-1").is_none());
         assert!(index.get_task("task-2").is_some());
-        assert!(index.task_paths.get("/tasks/task-1.md").is_none());
+        assert!(!index.task_paths.contains_key("/tasks/task-1.md"));
     }
 
     #[test]
