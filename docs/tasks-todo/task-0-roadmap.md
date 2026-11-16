@@ -27,12 +27,12 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Large generated vault
   - [x] Replace `demo-vault/`, `dummy-demo-vault/` and the reset script
   - [x] Persona vault generator skill (#26)
-- [ ] **6. Tooling, deps and agent safety** (match Astro Editor) → `task-6-tooling-deps-and-agent-safety.md`
-  - [ ] Desktop: dependencies, Oxlint and Oxfmt
+- [ ] **6. Tooling, deps and agent safety** (match Astro Editor) → `task-6-dev-identity-and-agent-safety.md`
+  - [x] Desktop: dependencies, Oxlint and Oxfmt (#66) → `tasks-done/task-2026-11-16-desktop-dependencies-and-tooling.md`
   - [ ] Desktop: dev identity and worktree slots
   - [ ] Desktop: agent bridge, `bun run app`, styleguide, release logging
   - [ ] Agents running `tdn` anywhere in the repo always hit a test vault
-  - [ ] Repo skills; website and Obsidian plugin dependencies
+  - [ ] Repo skills; website and CLI dependencies
 - [ ] **7. Desktop crash resilience** (the 1am "quit unexpectedly" crash) → `task-7-desktop-crash-resilience.md`
 - [ ] **8. Spec 1.1**
   - [ ] Deterministic reference resolution

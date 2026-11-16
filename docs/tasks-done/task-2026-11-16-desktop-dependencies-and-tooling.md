@@ -1,22 +1,20 @@
-# Task 6: Tooling, deps and agent safety
+# Desktop dependencies and tooling
 
-Bring the desktop app's tooling up to Astro Editor's, update dependencies across products, and make sure an agent working on any product in this repo can never touch Danny's real vault or installed app. Several PRs, roughly one per phase.
+Phase 1 of task 6 (tooling, deps and agent safety): bring the desktop app's dependencies and tooling up to Astro Editor's (`~/dev/astro-editor/`), clear the `zip` security alerts, and give Dependabot a config so security fixes work for the bun projects. The rest of task 6 (dev identity, agent bridge, CLI agent safety) is in its own task doc.
 
-Astro Editor is the reference throughout: `~/dev/astro-editor/`, especially `docs/developer/agent-tooling.md`, `package.json`, `scripts/` and `.claude/skills/` (`app-control`, `deps-update`, `codebase-hygiene`). `tdn-desktop` came from the same Tauri template, so most of it ports directly.
-
-## Phase 1: Desktop dependencies, lint and format
+## Checklist
 
 - [x] Port Astro Editor's `deps-update` skill and use it for this update, so the skill is tested on its first run.
 - [x] Bring the frontend up to Astro Editor's versions: TypeScript 7, Vite 8, Vitest 5, React and the rest.
 - [x] Replace ESLint and Prettier with Oxlint (type-aware, via tsgolint) and Oxfmt. Keep ast-grep. Move knip and jscpd into a `codebase-hygiene` skill, as in Astro Editor. Port the React Compiler check script if it applies.
 - [x] Rust dependencies, except `notify`: its upgrade belongs with the crash work in task 7.
-- [ ] Clear the open Dependabot security alerts. As of 2026-11-15 they're all for `zip` 4.6.1 (one critical, fixed in 9.0.5), which comes only from `tauri-plugin-updater`. Update the plugin to a version on `zip` 9.0.5 or later, or pin `zip` if the plugin hasn't moved yet.
+- [x] Clear the open Dependabot security alerts. As of 2026-11-15 they're all for `zip` 4.6.1 (one critical, fixed in 9.0.5), which comes only from `tauri-plugin-updater`. Update the plugin to a version on `zip` 9.0.5 or later, or pin `zip` if the plugin hasn't moved yet. Done: the updater moved to 2.14.1, which brings `zip` 9.6.0; the alerts close when #66 merges.
 - [x] Add `.github/dependabot.yml`. Without it, Dependabot's security updates treat the bun projects as npm and fail ("Set `package-ecosystem: "bun"` in your dependabot.yml"), so npm alerts such as `minimatch` in `tdn-cli` never get fix PRs. Declare `bun` for `tdn-cli`, `tdn-desktop` and `website`, `cargo` for both Rust workspaces, and `github-actions`. Decide whether to allow scheduled version-update PRs, or only security updates (`open-pull-requests-limit: 0`).
 - [x] Update `check:all`, the versions listed in `tdn-desktop/AGENTS.md`, and `docs/developer/static-analysis.md`.
 
-### Phase 1 working notes
+## Working notes
 
-Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Branch:** `desktop-deps-tooling`. **Status:** done and smoke-tested; PR open.
+Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Branch:** `desktop-deps-tooling`. **Status:** done and smoke-tested; PR #66. After merge, check that Dependabot alerts #35–37 have closed.
 
 **Research (2026-11-16):**
 
@@ -55,7 +53,7 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 6. [x] App majors, one commit each: lucide 1.73 (`e2fc1dc`, every icon still exists); react-resizable-panels 4 (`2ddc84b`: wrapper on Group/Panel/Separator, sizes now explicit percentages since v4 reads numbers as pixels, ResizeObserver stub in tests); i18next 27 and react-i18next 18 (`95b9364`, no changes needed); shadcn 4.23 (`f02beb7`, `tailwind.css` only gained opt-in utilities); datepicker 0.1.6 (`b0f0dcd`, adds an `autoFocus` prop).
 7. [x] ast-grep 0.51 (`282b8bc`); knip 6 and jscpd 5 with a `codebase-hygiene` skill in `tdn-desktop/.claude/skills/` replacing `/cleanup` and `cleanup-analyzer` (`be76627`); `compiler:check` in `check:all` (`527131a`), which found 4 components the compiler skipped for try/catch, now fixed.
 8. [x] `.github/dependabot.yml` (`9d95052`); clippy over all targets, fixing 7 test warnings (`eb16c84`); desktop docs: `AGENTS.md` commands and versions, `static-analysis.md`, the docs index and the ast-grep guide (`78d7c54`).
-9. [ ] Finish:
+9. [x] Finish:
    - [x] Production build: `Taskdn Desktop.app` 8.34 MiB, no new warnings (the >600 kB `theme` chunk note was already there on `main`: 693 kB then, 669 kB now). Frontend `dist/` 2,176 KB vs 2,148 KB on `main` (+1.3%, mostly react-resizable-panels 4).
    - [x] Audit: `bun audit` finds 3: `deepmerge` and `minimatch` via the `shadcn` CLI's dependencies (not bundled), and `katex` 0.16 via Milkdown Crepe (low; needs Crepe to move to KaTeX 0.18+). `cargo audit`: no vulnerabilities, 7 warnings for unmaintained or unsound crates deep in Tauri's Linux dependencies.
    - [x] Smoke test (Danny, 2026-11-16), in `bun run tauri:dev` with the rendered demo vault. It found one regression: hiding a sidebar left its width empty, because MainWindow hid panels with CSS, which v4's explicit panel sizes don't reflow. Fixed in `97e4e91` by collapsing the panels through their refs, as Astro Editor does. Everything below then passed:
@@ -67,7 +65,7 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
      - Task detail panel: a shortcut that opens a field opens its popover
      - Preferences: change language; change vault folders (reinitialises); "Use Demo Vault"; change the quick entry shortcut
      - Date pickers (datepicker 0.1.6), Milkdown body editing, icons (lucide 1), Check for Updates (updater 2.14.1), a notification
-   - [ ] PR (when Danny says), rebase merge. After merge: check the `zip` alerts are closed.
+   - [x] PR #66, rebase merge. After merge: check the `zip` alerts are closed.
 
 **Holds:**
 
@@ -88,48 +86,6 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 - knip findings left for a `codebase-hygiene` session with Danny: 2 unused dependencies (`@tanstack/react-query-devtools`; `next-themes`, used only by the unused `ui/sonner.tsx`), 11 unused exports, 7 unused exported types.
 - `sgconfig.yml` points at a `.ast-grep/test` folder that doesn't exist, so `ast-grep test` fails. Unrelated to the upgrade.
 - `.vscode/` is gitignored and the sandbox can't write it, so Danny's local `extensions.json` still recommends Prettier and `settings.json` has no Oxc formatter. Astro Editor's versions are the model.
-- Vite 8 build: one chunk over the 600 kB warning (`theme`, 669 kB). Compare with a Vite 7 build in the finish step.
+- Vite 8 build: one chunk over the 600 kB warning (`theme`, 669 kB). Not new: on `main` it was 693 kB (see Finish).
 - Fixed (`9325f02`): `TaskCard` saved picked dates with `toISOString().split('T')[0]`, which gave the day before in BST (local midnight is 23:00 UTC). Now `format(date, 'yyyy-MM-dd')`, like the other pickers.
-- `cargo clippy --all-targets` shows 7 warnings in existing test code (`commands/quick_pane.rs`, `vault/manager.rs`). `check:all` doesn't lint tests; fix them when it moves to `--all-targets` like Astro Editor (step 8).
-
-## Phase 2: Desktop dev identity
-
-Today a dev build uses the installed app's identifier (`is.danny.taskdn-desktop`). It reads Danny's real preferences and vault path, shares the single-instance lock and fights the installed app for the global shortcut.
-
-- [ ] `src-tauri/tauri.dev.conf.json` with identifier `is.danny.taskdn-desktop.dev` and product name "Taskdn Dev", applied by a `scripts/tauri-dev.sh` behind `bun run tauri:dev`.
-- [ ] Worktree dev slots (`scripts/dev-slot.ts`, `scripts/setup.ts`): each worktree gets its own identifier, Vite port and app data.
-- [ ] Dev builds:
-  - use a different global shortcut
-  - skip the update check
-  - show the slot and branch in the window title
-  - start with the rendered demo test vault (task 5) as their vault
-- [ ] List each slot's app data folder in `.claude/settings.json`'s sandbox config so agents can reach the bridge file (Danny edits this file; agents can't write it).
-
-## Phase 3: Agent bridge, styleguide and logs
-
-- [ ] Agent bridge, debug builds only:
-  - a token-protected HTTP server in `src-tauri/src/agent_bridge/`
-  - `window.__agentBridge` in `src/lib/agent-bridge/`
-  - the `bun run app` CLI (`scripts/app.ts`, `app-logs.ts`, `app-diff.ts`)
-
-  The CLI covers screenshots in both themes, the UI tree, click, fill, key and logs. Add Taskdn-specific actions: open a view, select a task, run a command palette command, open the quick entry pane.
-- [ ] Port the `app-control` skill.
-- [ ] Styleguide as a second Vite entry (`styleguide.html`, `src/styleguide/`) replacing the in-app component reference view, so it never ships and each section can be screenshotted.
-- [ ] Release builds log at info level to the log file, rotating at 5 MB and keeping two old files. Today the release log is empty, which is why the 1am crash left no trace. Task 7 depends on this.
-- [ ] Document it all in a `tdn-desktop/docs/developer/agent-tooling.md`.
-
-## Phase 4: The CLI, the rest of the repo and other products
-
-- [ ] **CLI agent safety.** The CLI checks, in order, `TASKDN_*_DIR` env vars, `.taskdn.json` in the *current directory only*, then `~/.taskdn.json`. An agent running `tdn` from a subfolder or worktree falls through to Danny's real vault, and `tdn` runs outside the sandbox. Set `TASKDN_TASKS_DIR`, `TASKDN_PROJECTS_DIR` and `TASKDN_AREAS_DIR` in the `env` block of the repo's `.claude/settings.json`, pointing at the rendered test vault's fixed path from task 5 (Danny makes the edit). Check that the installed `tdn` and the dev CLI both resolve to the test vault from the repo root, from `tdn-cli/`, and from a worktree. Note that personal task management through Claude won't work in sessions in this repo, which is intended.
-- [ ] **Repo skills.** Put cross-product skills in a root `.claude/skills/`. Convert `tdn-desktop/.claude/commands/` to skills and drop the template-era agents nobody uses.
-- [ ] **Website.** Dependency updates. Keep ESLint and Prettier (Astro Editor's website did too).
-- [ ] **CLI.** Security-relevant dependency updates only; its tooling is redone in the 2.0 rewrite.
-- [ ] **Obsidian plugin** (`dannysmith/obsidian-taskdn`, separate repo, its own session and PR there): dependency updates. Keep ESLint, since `eslint-plugin-obsidianmd` mirrors Obsidian's review bot.
-
-## Done when
-
-- `bun run check:all` passes in `tdn-desktop` with the new tooling.
-- A dev build runs alongside the installed app without sharing anything.
-- An agent can screenshot and drive the dev app with `bun run app`.
-- The release log has content.
-- `tdn` run by an agent anywhere in the repo hits the test vault.
+- Fixed (`eb16c84`): `cargo clippy --all-targets` showed 7 warnings in existing test code (`commands/quick_pane.rs`, `vault/manager.rs`); `check:all` now lints tests.
