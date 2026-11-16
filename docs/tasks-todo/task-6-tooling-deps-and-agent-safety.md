@@ -16,7 +16,7 @@ Astro Editor is the reference throughout: `~/dev/astro-editor/`, especially `doc
 
 ### Phase 1 working notes
 
-Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Branch:** `desktop-deps-tooling`. **Status:** decisions made; working through the plan.
+Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Branch:** `desktop-deps-tooling`. **Status:** done and smoke-tested; PR open.
 
 **Research (2026-11-16):**
 
@@ -58,7 +58,7 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 9. [ ] Finish:
    - [x] Production build: `Taskdn Desktop.app` 8.34 MiB, no new warnings (the >600 kB `theme` chunk note was already there on `main`: 693 kB then, 669 kB now). Frontend `dist/` 2,176 KB vs 2,148 KB on `main` (+1.3%, mostly react-resizable-panels 4).
    - [x] Audit: `bun audit` finds 3: `deepmerge` and `minimatch` via the `shadcn` CLI's dependencies (not bundled), and `katex` 0.16 via Milkdown Crepe (low; needs Crepe to move to KaTeX 0.18+). `cargo audit`: no vulnerabilities, 7 warnings for unmaintained or unsound crates deep in Tauri's Linux dependencies.
-   - [ ] Smoke test (Danny), in `bun run tauri:dev` with the rendered demo vault:
+   - [x] Smoke test (Danny, 2026-11-16), in `bun run tauri:dev` with the rendered demo vault. It found one regression: hiding a sidebar left its width empty, because MainWindow hid panels with CSS, which v4's explicit panel sizes don't reflow. Fixed in `97e4e91` by collapsing the panels through their refs, as Astro Editor does. Everything below then passed:
      - Today and This Week views list the right tasks; kanban marks due-today tasks as due, not overdue (`useToday`)
      - Sidebars open at about 20% width, resize, and hide and show (react-resizable-panels 4)
      - Rename a task inline in the list, a card and a heading; Escape cancels (title draft sync)
