@@ -42,39 +42,45 @@ export function VaultPane() {
   ): Promise<boolean> => {
     const configChanged = vaultConfigChanged(preferences, newPreferences)
 
-    try {
-      // Save preferences first
-      await savePreferences.mutateAsync(newPreferences)
+    // Promise handlers rather than try/catch, which the React Compiler can't
+    // compile here
 
-      // If vault config changed and all paths are configured, reinitialize
-      if (
-        configChanged &&
-        newPreferences.tasksDir &&
-        newPreferences.areasDir &&
-        newPreferences.projectsDir
-      ) {
-        setIsReinitializing(true)
-        try {
-          await reinitializeVault(
-            newPreferences.tasksDir,
-            newPreferences.projectsDir,
-            newPreferences.areasDir,
-            newPreferences.ignore ?? null
-          )
-        } catch (error) {
+    // Save preferences first
+    const saved = await savePreferences.mutateAsync(newPreferences).then(
+      () => true,
+      (error: unknown) => {
+        // Error already shown by useSavePreferences
+        logger.error('Failed to save preferences', { error })
+        return false
+      }
+    )
+    if (!saved) return false
+
+    // If vault config changed and all paths are configured, reinitialize
+    if (
+      configChanged &&
+      newPreferences.tasksDir &&
+      newPreferences.areasDir &&
+      newPreferences.projectsDir
+    ) {
+      setIsReinitializing(true)
+      const reinitialized = await reinitializeVault(
+        newPreferences.tasksDir,
+        newPreferences.projectsDir,
+        newPreferences.areasDir,
+        newPreferences.ignore ?? null
+      ).then(
+        () => true,
+        (error: unknown) => {
           logger.error('Failed to reinitialize vault', { error })
           toast.error(t('toast.error.vaultReinitialize'))
           return false
-        } finally {
-          setIsReinitializing(false)
         }
-      }
-      return true
-    } catch (error) {
-      // Save preferences failed - error already shown by useSavePreferences
-      logger.error('Failed to save preferences', { error })
-      return false
+      )
+      setIsReinitializing(false)
+      return reinitialized
     }
+    return true
   }
 
   // Directory path handlers - fire-and-forget with internal error handling
