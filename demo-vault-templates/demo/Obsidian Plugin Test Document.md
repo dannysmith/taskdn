@@ -1,5 +1,3 @@
-# Obsidian Plugin Test Document
-
 This document tests all the different ways task widgets can be displayed. Use it for visual testing of the obsidian-taskdn plugin.
 
 ---

@@ -1,5 +1,3 @@
-# Dashboard
-
 A simple overview using [Obsidian Bases](https://obsidian.md/plugins/bases).
 
 ---

@@ -36,6 +36,7 @@ The order for the work that came out of the November 2026 review. Each top-level
 - [ ] **7. Desktop crash resilience** (the 1am "quit unexpectedly" crash) → `task-7-desktop-crash-resilience.md`
 - [ ] **8. Spec 1.1**
   - [ ] Deterministic reference resolution
+  - [ ] Links that resolve in Obsidian: the CLI names files `japan-trip.md` but writes links as `[[Japan Trip]]`, and Obsidian matches links to filenames, not titles. Either name project and area files after their titles (as the starter vault does) or write links by filename
   - [ ] Open statuses: unknown values are kept and surfaced, never dropped
   - [ ] YAML quoting guidance for wikilinks and statuses
   - [ ] Timestamps with offsets
