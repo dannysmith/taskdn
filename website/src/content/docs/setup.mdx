@@ -12,23 +12,25 @@ This guide walks through setting up the full Taskdn suite. It assumes you alread
 
 1. **Set up the starter vault**
 
-   Clone the starter vault and open it in Obsidian:
+   Clone the starter vault (it needs Obsidian 1.14 or later):
 
    ```bash
    git clone https://github.com/dannysmith/tdn-obsidian-starter-vault my-tasks
-   cd my-tasks && rm -rf .git README.md
+   cd my-tasks
+   ./shift-dates.sh
+   rm -rf .git README.md shift-dates.sh
    ```
 
-   Open the folder as a vault in Obsidian. When prompted, trust the vault to enable plugins.
+   `./shift-dates.sh` is optional. It moves the example dates so they're relative to today.
 
-   Go to **Settings → Files and links** and make sure **Wikilinks** are enabled. Then go to **Settings → Core plugins** and enable **Bases** and **Templates**.
+   In Obsidian, click **Open folder as vault** and choose the cloned folder. Bases, Templates and wikilinks are already set up.
 
-   Have a look around. Check out the `tasks/Overview.md`, `projects/Overview.md`, and `areas/Overview.md` files to see the Bases views.
+   Have a look around. The vault opens on `Start Here.md`, a dashboard with today's tasks, a task board and your active projects. The `Overview.md` files in `tasks/`, `projects/` and `areas/` have more views.
 
    <details>
    <summary>Optional: Folder Notes plugin</summary>
 
-   The [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes) plugin makes the Overview files open automatically when you click a folder. Install it from Community Plugins, then set the folder note name to `Overview.md`.
+   The [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes) plugin makes the Overview files open automatically when you click a folder. Install it from Community Plugins, set the folder note name to `Overview`, then restart Obsidian.
 
    </details>
 
@@ -36,11 +38,11 @@ This guide walks through setting up the full Taskdn suite. It assumes you alread
 
 2. **Install the Obsidian plugin**
 
-   The plugin isn't in the Community Plugins store yet. See the [installation instructions](/obsidian/plugin/#installation) for how to install via BRAT or manually.
+   Go to **Settings → Community plugins** and turn on community plugins. Click **Browse**, search for "Taskdn", then install and enable it.
 
-   In plugin settings, set the tasks directory to `tasks` (or wherever your tasks live).
+   In **Settings → Taskdn**, set **Ignored files** to `Overview.md`. The default tasks directory, `tasks`, already matches the starter vault.
 
-   Now look at `example-note.md` in your vault to see task links rendered as interactive widgets. Click a checkbox to mark a task done.
+   Now open `example-note.md` in your vault to see task links rendered as interactive widgets. Click a checkbox to mark a task done.
 
    <LinkCard title="Obsidian Plugin Documentation" href="/obsidian/plugin" />
 

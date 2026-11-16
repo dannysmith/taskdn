@@ -25,72 +25,56 @@ The Obsidian plugin turns wikilinks to task files into interactive widgets. Link
 
 ## Installation
 
-### Community Plugins (Coming Soon)
+The plugin needs Obsidian 1.13 or later, with **Use `[[Wikilinks]]`** turned on in **Settings → Files and links**.
 
-The plugin isn't in the Obsidian Community Plugins store yet. Once available, install it by going to **Settings → Community Plugins**, searching for "Taskdn", and clicking **Install**.
+### From Community Plugins
 
-Until then, use one of the methods below.
-
-### Using BRAT (Recommended)
-
-[BRAT](https://github.com/TfTHacker/obsidian42-brat) (Beta Reviewer's Auto-update Tool) handles installation and keeps the plugin updated automatically.
+Taskdn is in Obsidian's [community plugin directory](https://community.obsidian.md/plugins/taskdn).
 
 <Steps>
 
-1. Install BRAT from **Settings → Community Plugins → Browse**, search for "BRAT"
+1. Go to **Settings → Community plugins** and turn on community plugins if you haven't already
 
-2. Enable BRAT in your Community Plugins list
+2. Click **Browse** and search for "Taskdn"
 
-3. Open the Command Palette (`Cmd/Ctrl+P`) and run **BRAT: Add a beta plugin for testing**
-
-4. Enter the repository: `dannysmith/obsidian-taskdn`
-
-5. Go to **Settings → Community Plugins**, find "Taskdn", and enable it
+3. Click **Install**, then **Enable**
 
 </Steps>
 
-### Manual Download
+Obsidian keeps the plugin up to date along with your other community plugins.
+
+### Manual Install
 
 <Steps>
 
-1. Download the latest release:
+1. Download `main.js`, `manifest.json` and `styles.css` from the [latest release](https://github.com/dannysmith/obsidian-taskdn/releases/latest)
 
-   [Download obsidian-taskdn.zip](https://github.com/dannysmith/obsidian-taskdn/releases/latest/download/obsidian-taskdn.zip)
+2. Copy them into `YOUR_VAULT/.obsidian/plugins/taskdn/`, creating the `taskdn` folder if it doesn't exist
 
-2. Extract the zip file
+   The `.obsidian` folder is hidden by default. Press `Cmd+Shift+.` in the macOS Finder or `Ctrl+H` in most Linux file managers to show it.
 
-3. Copy the extracted files (`main.js`, `manifest.json`, `styles.css`) to your vault's plugin folder:
+3. Restart Obsidian
 
-   ```
-   YOUR_VAULT/.obsidian/plugins/obsidian-taskdn/
-   ```
-
-   Create the `obsidian-taskdn` folder if it doesn't exist.
-
-4. Restart Obsidian
-
-5. Go to **Settings → Community Plugins**, find "Taskdn", and enable it
+4. Go to **Settings → Community plugins**, find "Taskdn", and enable it
 
 </Steps>
 
-:::note[Hidden Folders]
-The `.obsidian` folder is hidden by default. Use `Cmd+Shift+.` on macOS or `Ctrl+H` on Linux to show hidden files in your file manager.
+:::tip[Installed it by hand before?]
+Earlier versions of these instructions used `.obsidian/plugins/obsidian-taskdn/` as the folder. Close Obsidian and rename that folder to `taskdn`. Your settings come with it, and Obsidian updates the plugin like any other community plugin from then on.
 :::
-
-Make sure Wikilinks are enabled in your vault settings.
 
 ## Configuration
 
-Open **Settings → Taskdn** to configure:
+Open **Settings → Taskdn** to configure the plugin. Changes apply straight away, and the settings show up in Obsidian's settings search.
 
 | Setting | Description |
 |---------|-------------|
-| Tasks directory | Path to your tasks folder (default: `tasks`) |
-| Default status | Status for newly converted tasks (default: `inbox`) |
-| Show desktop button | Whether to show the "open in desktop app" button |
-| Exclude patterns | Files to ignore, supports wildcards |
-| Use task title as inline title | Show the title frontmatter instead of the filename in the inline title |
-| Sync filename with task title | Also rename the file when the inline title is edited |
+| Tasks directory | Folder containing your task files (default: `tasks`) |
+| Default status for new tasks | Status given to tasks converted from checklist items: `inbox`, `ready` or `icebox` (default: `inbox`) |
+| Show desktop app button | Adds a button to task widgets that opens the task in the [desktop app](/desktop/overview) (default: off) |
+| Ignored files | Task files that never render as widgets, one pattern per line. Paths are relative to the tasks directory and `*` is a wildcard, for example `archive/*` or `*-template` |
+| Use task title as inline title | Show the `title` frontmatter instead of the filename in the inline title. Only appears when Obsidian's **Show inline title** is on |
+| Sync filename with task title | Also rename the file when you edit the inline title. Only appears when **Use task title as inline title** is on |
 
 ## Usage
 
@@ -124,7 +108,7 @@ When enabled, a coloured left border appears indicating the task's status:
 |--------|---------------|
 | inbox | Blue |
 | icebox | Cyan |
-| ready | Green |
+| ready | Grey |
 | in-progress | Yellow |
 | blocked | Red |
 | dropped | Pink |
@@ -137,6 +121,8 @@ Click the inline title to edit. When you finish (press Enter or click away), the
 1. Updates the `title` frontmatter
 2. Sets `updated-at` to today's date
 3. Optionally renames the file (if "Sync filename with task title" is enabled)
+
+Press Escape to cancel without saving.
 
 The standard Obsidian behaviour of renaming the file is intercepted—your edits go to the frontmatter instead.
 
@@ -153,7 +139,7 @@ Enable **Sync filename with task title** to rename files when editing the inline
 The inline title replacement only activates when all of these conditions are met:
 
 1. The file is in your configured tasks directory
-2. The file is not matched by any pattern in the exclude patterns list
+2. The file isn't matched by any pattern in **Ignored files**
 3. The file has valid frontmatter with both `title` and `status` fields
 
 For all other files, Obsidian's normal inline title behaviour applies—edits will rename the file as usual.
