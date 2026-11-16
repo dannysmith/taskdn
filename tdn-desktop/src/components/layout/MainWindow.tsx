@@ -82,6 +82,9 @@ export function MainWindow() {
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
             id="left-sidebar"
+            // A collapsed panel keeps its content mounted; inert keeps keyboard
+            // focus out of it
+            inert={!leftSidebarVisible}
             panelRef={leftPanelRef}
             collapsible
             collapsedSize={0}
@@ -111,6 +114,7 @@ export function MainWindow() {
 
           <ResizablePanel
             id="right-sidebar"
+            inert={!rightSidebarVisible}
             panelRef={rightPanelRef}
             collapsible
             collapsedSize={0}
