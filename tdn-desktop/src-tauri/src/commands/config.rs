@@ -1,25 +1,39 @@
 //! Configuration-related commands for reading CLI config and app info.
 
+use std::path::{Path, PathBuf};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_opener::OpenerExt;
 
 use crate::types::{CliConfig, CliConfigError, DemoVaultPaths};
 
-/// Read CLI config from ~/.taskdn.json
+/// Read the CLI config from ~/.taskdn.json. Debug builds read the demo vault's
+/// `.taskdn.json` instead, so the "Read from CLI" button can't reach the real vault.
 #[tauri::command]
 #[specta::specta]
 pub async fn read_cli_config() -> Result<CliConfig, CliConfigError> {
-    let home = dirs::home_dir().ok_or(CliConfigError::HomeNotFound)?;
-    let config_path = home.join(".taskdn.json");
+    read_cli_config_from_path(&cli_config_path()?)
+}
 
-    if !config_path.exists() {
+#[cfg(not(debug_assertions))]
+fn cli_config_path() -> Result<PathBuf, CliConfigError> {
+    let home = dirs::home_dir().ok_or(CliConfigError::HomeNotFound)?;
+    Ok(home.join(".taskdn.json"))
+}
+
+#[cfg(debug_assertions)]
+fn cli_config_path() -> Result<PathBuf, CliConfigError> {
+    Ok(demo_vault_dir().join(".taskdn.json"))
+}
+
+/// Read CLI config from a specific path.
+fn read_cli_config_from_path(path: &Path) -> Result<CliConfig, CliConfigError> {
+    if !path.exists() {
         return Err(CliConfigError::FileNotFound);
     }
 
-    let contents =
-        std::fs::read_to_string(&config_path).map_err(|e| CliConfigError::ReadError {
-            message: e.to_string(),
-        })?;
+    let contents = std::fs::read_to_string(path).map_err(|e| CliConfigError::ReadError {
+        message: e.to_string(),
+    })?;
 
     serde_json::from_str(&contents).map_err(|e| CliConfigError::ParseError {
         message: e.to_string(),
@@ -59,20 +73,24 @@ pub fn is_dev_mode() -> bool {
     cfg!(debug_assertions)
 }
 
+/// This checkout's rendered demo vault (`demo-vaults/demo` at the repo root, made
+/// with `bun run vault render demo`). Debug builds open it until another vault is chosen.
+#[cfg(debug_assertions)]
+fn demo_vault_dir() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")) // tdn-desktop/src-tauri/
+        .parent()
+        .and_then(Path::parent)
+        .expect("src-tauri is two levels below the repo root")
+        .join("demo-vaults")
+        .join("demo")
+}
+
 /// Get demo vault paths for development testing (only in debug builds)
 #[cfg(debug_assertions)]
 #[tauri::command]
 #[specta::specta]
 pub fn get_demo_vault_paths() -> DemoVaultPaths {
-    // CARGO_MANIFEST_DIR is src-tauri/, navigate to repo root
-    let manifest_dir = env!("CARGO_MANIFEST_DIR");
-    let repo_root = std::path::Path::new(manifest_dir)
-        .parent() // tdn-desktop/
-        .and_then(|p| p.parent()) // taskdn/ (repo root)
-        .expect("Failed to find repo root");
-
-    // Created with `bun run vault render demo` from the repo root
-    let vault = repo_root.join("demo-vaults").join("demo");
+    let vault = demo_vault_dir();
 
     DemoVaultPaths {
         tasks_dir: vault.join("tasks").to_string_lossy().to_string(),
@@ -91,26 +109,6 @@ pub fn get_demo_vault_paths() -> DemoVaultPaths {
         areas_dir: String::new(),
         projects_dir: String::new(),
     }
-}
-
-// =============================================================================
-// Testable Core Functions (test-only)
-// =============================================================================
-
-/// Read CLI config from a specific path.
-#[cfg(test)]
-fn read_cli_config_from_path(path: &std::path::Path) -> Result<CliConfig, CliConfigError> {
-    if !path.exists() {
-        return Err(CliConfigError::FileNotFound);
-    }
-
-    let contents = std::fs::read_to_string(path).map_err(|e| CliConfigError::ReadError {
-        message: e.to_string(),
-    })?;
-
-    serde_json::from_str(&contents).map_err(|e| CliConfigError::ParseError {
-        message: e.to_string(),
-    })
 }
 
 // =============================================================================

@@ -6,6 +6,8 @@
 
 mod bindings;
 mod commands;
+#[cfg(debug_assertions)]
+mod dev_identity;
 mod types;
 mod utils;
 pub mod vault;
@@ -24,6 +26,10 @@ pub use types::DEFAULT_QUICK_PANE_SHORTCUT;
 /// Application entry point. Sets up all plugins and initializes the app.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let context = tauri::generate_context!();
+    #[cfg(debug_assertions)]
+    dev_identity::exit_unless_dev_identifier(&context.config().identifier);
+
     let builder = bindings::generate_bindings();
 
     export_bindings_if_dev();
@@ -32,7 +38,7 @@ pub fn run() {
         .manage(VaultManager::new())
         .setup(|app| setup_app(app))
         .invoke_handler(builder.invoke_handler())
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building tauri application")
         .run(handle_run_event);
 }
@@ -156,6 +162,15 @@ fn setup_app(app: &mut App) -> Result<(), Box<dyn Error>> {
         app.package_info().name
     );
 
+    // Make the dev build easy to tell apart in Mission Control and the Window menu.
+    // `tauri:dev` passes a title naming the checkout's dev slot and branch.
+    #[cfg(debug_assertions)]
+    if let Some(window) = app.get_webview_window("main") {
+        let title =
+            std::env::var("TASKDN_DEV_TITLE").unwrap_or_else(|_| "Taskdn (Dev)".to_string());
+        let _ = window.set_title(&title);
+    }
+
     setup_global_shortcuts(app)?;
     setup_quick_pane(app)?;
     setup_vault(app);
@@ -174,12 +189,25 @@ fn setup_global_shortcuts(app: &mut App) -> Result<(), Box<dyn Error>> {
     app.handle().plugin(Builder::new().build())?;
 
     let saved_shortcut = commands::preferences::load_quick_pane_shortcut(app.handle());
+
+    // Worktree dev slots leave the default to the main checkout's dev app
+    #[cfg(debug_assertions)]
+    if saved_shortcut.is_none() && dev_identity::is_worktree_identifier(&app.config().identifier) {
+        log::info!("Worktree dev slot: no quick pane shortcut registered");
+        return Ok(());
+    }
+
     let shortcut_to_register = saved_shortcut
         .as_deref()
         .unwrap_or(DEFAULT_QUICK_PANE_SHORTCUT);
 
     log::info!("Registering quick pane shortcut: {shortcut_to_register}");
-    commands::quick_pane::register_quick_pane_shortcut(app.handle(), shortcut_to_register)?;
+    // Another app holding the shortcut shouldn't stop this one starting
+    if let Err(e) =
+        commands::quick_pane::register_quick_pane_shortcut(app.handle(), shortcut_to_register)
+    {
+        log::warn!("Quick pane shortcut not registered: {e}");
+    }
 
     Ok(())
 }

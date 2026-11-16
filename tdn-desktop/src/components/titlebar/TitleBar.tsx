@@ -32,7 +32,9 @@ interface TitleBarProps {
  */
 export function TitleBar({ className, title, forcePlatform }: TitleBarProps) {
   const { t } = useTranslation()
-  const displayTitle = title ?? t('titlebar.default')
+  // Dev builds name their slot and branch, e.g. "Taskdn (Dev 2 · quick-entry)"
+  const displayTitle =
+    title ?? import.meta.env.TASKDN_DEV_TITLE ?? t('titlebar.default')
   const detectedPlatform = usePlatform()
 
   // In development, allow forcing a platform for testing

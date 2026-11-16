@@ -129,8 +129,11 @@ function App() {
       }
     }
 
-    // Check for updates 5 seconds after app loads
-    const updateTimer = setTimeout(checkForUpdates, 5000)
+    // Check for updates 5 seconds after app loads. Dev builds skip the automatic
+    // check; the menu item still works for testing the dialog.
+    const updateTimer = import.meta.env.DEV
+      ? undefined
+      : setTimeout(checkForUpdates, 5000)
     return () => clearTimeout(updateTimer)
   }, [])
 
