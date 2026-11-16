@@ -10,6 +10,7 @@ import {
   isSameDay,
   isToday,
   isBefore,
+  parseISO,
   startOfDay,
 } from 'date-fns'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
@@ -163,10 +164,10 @@ export function WeekCalendar({
 
       if (task.scheduled) {
         // Tasks with scheduled date show on that date
-        displayDate = new Date(task.scheduled)
+        displayDate = parseISO(task.scheduled)
       } else if (task.deferUntil) {
         // Tasks with only deferUntil (no scheduled) show on defer date
-        displayDate = new Date(task.deferUntil)
+        displayDate = parseISO(task.deferUntil)
       }
 
       if (!displayDate) continue
@@ -196,7 +197,7 @@ export function WeekCalendar({
       if (task.status === 'done' || task.status === 'dropped') continue
       if (!task.due) continue
 
-      const dueDate = new Date(task.due)
+      const dueDate = parseISO(task.due)
       const matchingDay = weekDays.find(day => isSameDay(day, dueDate))
       if (matchingDay) {
         const dateKey = format(matchingDay, 'yyyy-MM-dd')
@@ -222,7 +223,7 @@ export function WeekCalendar({
 
     // Overdue tasks (has scheduled AND due date is today or in past)
     if (task.scheduled && task.due) {
-      const dueDate = startOfDay(new Date(task.due))
+      const dueDate = startOfDay(parseISO(task.due))
       const today = startOfDay(new Date())
       if (isBefore(dueDate, today) || isToday(dueDate)) {
         return 'overdue'

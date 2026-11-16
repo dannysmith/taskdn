@@ -11,6 +11,7 @@ import {
   subMonths,
   isToday,
   isBefore,
+  parseISO,
   startOfDay,
   isSameMonth,
 } from 'date-fns'
@@ -141,9 +142,9 @@ export function MonthCalendar({
       let displayDate: Date | null = null
 
       if (task.scheduled) {
-        displayDate = new Date(task.scheduled)
+        displayDate = parseISO(task.scheduled)
       } else if (task.deferUntil) {
-        displayDate = new Date(task.deferUntil)
+        displayDate = parseISO(task.deferUntil)
       }
 
       if (!displayDate) continue
@@ -169,7 +170,7 @@ export function MonthCalendar({
     }
 
     if (task.scheduled && task.due) {
-      const dueDate = startOfDay(new Date(task.due))
+      const dueDate = startOfDay(parseISO(task.due))
       const today = startOfDay(new Date())
       if (isBefore(dueDate, today) || isToday(dueDate)) {
         return 'overdue'
