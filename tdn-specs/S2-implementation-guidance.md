@@ -151,23 +151,7 @@ For long-running processes (TUI interfaces, desktop applications):
 
 ### 7.1 Active Items
 
-By default, queries should return "active" items. The definition of "active" varies by entity type:
-
-**Active tasks:**
-
-- Status NOT IN (`done`, `dropped`, `icebox`)
-- `defer-until` is unset or <= today
-- File is in the tasks directory (not a subdirectory)
-
-**Active projects:**
-
-- Status is unset OR status NOT IN (`done`)
-
-**Active areas:**
-
-- Status is unset OR status = `active`
-
-Items excluded by default should be includable via explicit parameters or options.
+By default, queries SHOULD return active items, as S1 §4.8 defines them. Items excluded by default SHOULD be includable via explicit parameters or options.
 
 ---
 

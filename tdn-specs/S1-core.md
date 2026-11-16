@@ -183,6 +183,20 @@ Date fields hold one of two kinds of value. **Timestamps** (`created-at`, `updat
 5. Writers SHOULD write timestamps as datetimes to the second, with the local offset: `2026-01-15T14:30:00+01:00`.
 6. Writers SHOULD NOT add an offset to user dates.
 
+### 4.8 Active Entities
+
+These definitions make "active" mean the same in every tool. What a tool shows, and whether it shows only active entities by default, is up to the tool.
+
+1. A task is active if all of these are true:
+   - its status is not `done`, `dropped` or `icebox` (so a task with an unknown status is active)
+   - it isn't archived (§5.1)
+   - its `defer-until` is absent, or is today or earlier
+2. `defer-until` is inclusive: a task with `defer-until: 2026-01-16` is active on 16 January. "Today" is the user's local date.
+3. `scheduled` never affects whether a task is active. A task scheduled for a future date is active.
+4. Whether a task is active depends only on its own file. Its project's status doesn't change it.
+5. A project is active if it has no status, or its status is not `done`.
+6. An area is active if it has no status, or its status matches `active` (§7.5).
+
 ---
 
 ## 5. Task Files
@@ -218,8 +232,8 @@ A file in the tasks directory is a task if it has both of these fields (§4.2).
 | `area`         | file reference           | Reference to an Area file.                                                                                                         |
 | `projects`     | array of file references | Reference to a Project file, as a list with one element (§4.3, §4.4). The list form is for compatibility with other systems.       |
 | `due`          | date or datetime         | Hard deadline for the task.                                                                                                        |
-| `scheduled`    | date                     | The date the task is planned to be worked on. Used for calendar-based planning.                                                    |
-| `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.                                           |
+| `scheduled`    | date                     | The date the task is planned to be worked on. It doesn't affect whether the task is active (§4.8).                                 |
+| `defer-until`  | date                     | The date the task becomes relevant. The task isn't active before this date (§4.8).                                                 |
 
 ### 5.5 Status Values
 
