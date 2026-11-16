@@ -89,7 +89,7 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 - `sgconfig.yml` points at a `.ast-grep/test` folder that doesn't exist, so `ast-grep test` fails. Unrelated to the upgrade.
 - `.vscode/` is gitignored and the sandbox can't write it, so Danny's local `extensions.json` still recommends Prettier and `settings.json` has no Oxc formatter. Astro Editor's versions are the model.
 - Vite 8 build: one chunk over the 600 kB warning (`theme`, 669 kB). Compare with a Vite 7 build in the finish step.
-- `TaskCard` saves picked dates with `toISOString().split('T')[0]`, which gives the day before in BST (local midnight is 23:00 UTC). Not a lint finding; raised with Danny.
+- Fixed (`9325f02`): `TaskCard` saved picked dates with `toISOString().split('T')[0]`, which gave the day before in BST (local midnight is 23:00 UTC). Now `format(date, 'yyyy-MM-dd')`, like the other pickers.
 - `cargo clippy --all-targets` shows 7 warnings in existing test code (`commands/quick_pane.rs`, `vault/manager.rs`). `check:all` doesn't lint tests; fix them when it moves to `--all-targets` like Astro Editor (step 8).
 
 ## Phase 2: Desktop dev identity
