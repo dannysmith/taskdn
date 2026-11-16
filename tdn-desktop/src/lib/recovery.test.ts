@@ -198,11 +198,11 @@ describe('recovery', () => {
   describe('saveCrashState', () => {
     beforeEach(() => {
       // Mock window and navigator for crash state tests
-      Object.defineProperty(global, 'navigator', {
+      Object.defineProperty(globalThis, 'navigator', {
         value: { userAgent: 'test-agent' },
         writable: true,
       })
-      Object.defineProperty(global, 'window', {
+      Object.defineProperty(globalThis, 'window', {
         value: { location: { href: 'http://localhost:1420/' } },
         writable: true,
       })

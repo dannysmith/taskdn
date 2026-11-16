@@ -1,3 +1,4 @@
+/// <reference types="node" />
 import { describe, it, expect, beforeEach } from 'vitest'
 import {
   createTestTask,
