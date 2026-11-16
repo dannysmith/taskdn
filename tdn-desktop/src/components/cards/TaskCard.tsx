@@ -1,6 +1,7 @@
 import * as React from 'react'
 import { Flag, Calendar, Hourglass } from 'lucide-react'
 import { DatePicker } from '@dannysmith/datepicker'
+import { format } from 'date-fns'
 
 import { cn } from '@/lib/utils'
 import { formatRelativeDate, isOverdue } from '@/lib/date-utils'
@@ -183,12 +184,12 @@ export function TaskCard({
   }
 
   const handleScheduledSelect = (date: Date | undefined) => {
-    onScheduledChange?.(date ? date.toISOString().split('T')[0] : undefined)
+    onScheduledChange?.(date ? format(date, 'yyyy-MM-dd') : undefined)
     setScheduledOpen(false)
   }
 
   const handleDueSelect = (date: Date | undefined) => {
-    onDueChange?.(date ? date.toISOString().split('T')[0] : undefined)
+    onDueChange?.(date ? format(date, 'yyyy-MM-dd') : undefined)
     setDueOpen(false)
   }
 
