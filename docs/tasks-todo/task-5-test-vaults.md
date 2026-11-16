@@ -103,11 +103,11 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
   - remove weekdays, month names and years from titles and prose;
   - add a few ISO dates in bodies.
 - [x] Complete the `.obsidian/` config as above, and check the plugin test document's links still resolve. Project and area files are now named after their titles so links work in Obsidian (see Gotchas). Opened in Obsidian: it changed no files, and the plugin works in a rendered vault after trusting it once.
-- [x] A README listing what the vault covers. `demo-template.test.ts` renders the template on another date and checks the coverage with `vault report`, so the vault can't silently lose a case.
+- [x] A README listing what the vault covers. `templates.test.ts` renders the template on another date and checks the coverage with `vault report`, so the vault can't silently lose a case.
 
 ### Phase 3: Edge-case template
 
-- [ ] `demo-vault-templates/edge-cases/`, small and hand-written:
+- [x] `demo-vault-templates/edge-cases/`, small and hand-written:
   - bad YAML
   - unknown task and project statuses (including `dropped` for a project)
   - an unquoted `[[wikilink]]`
@@ -119,8 +119,9 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
   - unknown fields
   - missing required fields
   - entity folders nested in unusual places
-- [ ] `.vault.json` can override the entity folder paths, and `.taskdn.json` is written to match.
-- [ ] README listing each case and what it's for (CLI `doctor`, Spec 1.1, `tdn-core` conformance tests).
+  - also: CRLF and BOM files, empty and unclosed frontmatter, every link form the spec allows, numeric and multi-line titles, datetimes with offsets, invalid and empty dates, inconsistent dates, dotfiles and `.MD` files
+- [x] `.vault.json` can override the entity folder paths, and `.taskdn.json` is written to match.
+- [x] README listing each case and what it's for (CLI `doctor`, Spec 1.1, `tdn-core` conformance tests). The README also records what CLI 1.0.2 does with each case and lists where it disagrees with the spec. `templates.test.ts` checks it renders into its custom folders and leaves invalid dates alone.
 
 ### Phase 4: Large vault
 
