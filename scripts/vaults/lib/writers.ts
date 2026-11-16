@@ -3,6 +3,9 @@
  * generate vaults programmatically, and by Claude when building persona
  * vaults. Links take a title (`Acme Corp`) or a ready-made `[[...]]` link and
  * are written quoted, as Taskdn's tools write them.
+ *
+ * Projects and areas are named after their titles (`Acme Corp.md`), so links
+ * by title resolve in Obsidian too; tasks get slugs, as the CLI names them.
  */
 
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
@@ -15,7 +18,7 @@ export interface AreaInput {
   type?: string
   description?: string
   body?: string
-  /** Filename without `.md`; defaults to a slug of the title */
+  /** Filename without `.md`; defaults to the title */
   filename?: string
 }
 
@@ -28,6 +31,7 @@ export interface ProjectInput {
   description?: string
   blockedBy?: string[]
   body?: string
+  /** Filename without `.md`; defaults to the title */
   filename?: string
 }
 
@@ -46,6 +50,7 @@ export interface TaskInput {
   body?: string
   /** Write to `tasks/archive/` */
   archived?: boolean
+  /** Filename without `.md`; defaults to a slug of the title */
   filename?: string
 }
 
@@ -62,9 +67,18 @@ export function slugify(title: string): string {
   return slug || 'untitled'
 }
 
+/** A title as a filename: drops characters that filesystems or Obsidian links can't take. */
+export function titleFilename(title: string): string {
+  const name = title
+    .replace(/[\\/:*?"<>|#^[\]]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return name || 'Untitled'
+}
+
 export function writeArea(vaultDir: string, meta: VaultMeta, area: AreaInput): string {
   const { areasDir } = entityDirs(vaultDir, meta)
-  return writeEntity(areasDir, area.filename ?? slugify(area.title), area.body, [
+  return writeEntity(areasDir, area.filename ?? titleFilename(area.title), area.body, [
     ['title', area.title],
     ['type', area.type],
     ['status', area.status ?? 'active'],
@@ -74,7 +88,7 @@ export function writeArea(vaultDir: string, meta: VaultMeta, area: AreaInput): s
 
 export function writeProject(vaultDir: string, meta: VaultMeta, project: ProjectInput): string {
   const { projectsDir } = entityDirs(vaultDir, meta)
-  return writeEntity(projectsDir, project.filename ?? slugify(project.title), project.body, [
+  return writeEntity(projectsDir, project.filename ?? titleFilename(project.title), project.body, [
     ['title', project.title],
     ['status', project.status],
     ['area', link(project.area)],

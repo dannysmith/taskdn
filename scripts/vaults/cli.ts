@@ -17,6 +17,7 @@ import {
   resolveTemplateDir,
   resolveVaultDir,
 } from './lib/paths.ts'
+import { generateVault, SIZES } from './lib/generate.ts'
 import { newVault, renderTemplate } from './lib/render.ts'
 import { reportVault, type VaultReport } from './lib/report.ts'
 import { shiftVault } from './lib/shift.ts'
@@ -28,12 +29,15 @@ const HELP = `Usage: bun run vault <command>
                                          Copy a template into demo-vaults/ with its dates shifted
                                          so its reference date lands on --date (default: today)
   new <name> [--date YYYY-MM-DD]         Empty vault whose reference date is --date (default: today)
+  generate <name> [--size small|medium|large|N] [--seed N] [--date YYYY-MM-DD]
+                                         Realistic vault with N tasks (small 100, medium 1000,
+                                         large 5000; default small). Same seed, same vault
   shift <vault> (--to YYYY-MM-DD | --days N)
                                          Move every date in a vault
   report <vault> [--json]                What the vault covers, relative to its reference date
   open <vault>                           Print the obsidian:// link
 
-A <vault> is a name in demo-vaults/ or a path. Re-rendering a vault replaces it
+A <vault> is a name in demo-vaults/ or a path. Re-rendering or regenerating a vault replaces it
 (keeping Obsidian's workspace layout). Never point a tool at a template: work on
 a rendered copy.`
 
@@ -45,6 +49,8 @@ const { positionals, values } = parseArgs({
     date: { type: 'string' },
     to: { type: 'string' },
     days: { type: 'string' },
+    size: { type: 'string' },
+    seed: { type: 'string' },
     json: { type: 'boolean' },
     help: { type: 'boolean', short: 'h' },
   },
@@ -158,6 +164,27 @@ function run(command: string) {
       const vaultDir = resolveVaultDir(requireTarget('name'))
       if (existsSync(vaultDir)) fail(`${vaultDir} already exists`)
       created(vaultDir, newVault(vaultDir, dateOption(values.date, 'date')))
+      break
+    }
+
+    case 'generate': {
+      const vaultDir = resolveVaultDir(requireTarget('name'))
+      const size = values.size ?? 'small'
+      const tasks = size in SIZES ? SIZES[size as keyof typeof SIZES] : Number(size)
+      if (!Number.isInteger(tasks) || tasks < 1)
+        fail('--size must be small, medium, large or a number of tasks')
+      const seed = Number(values.seed ?? 1)
+      if (!Number.isInteger(seed)) fail('--seed must be a whole number')
+      const result = generateVault(vaultDir, {
+        tasks,
+        seed,
+        referenceDate: dateOption(values.date, 'date'),
+      })
+      console.log(
+        `Generated ${result.tasks} tasks, ${result.projects} projects and ${result.areas} areas (seed ${seed})`,
+      )
+      created(vaultDir, result.notes)
+      console.log('  If this vault is open in Obsidian or the desktop app, reload it.')
       break
     }
 

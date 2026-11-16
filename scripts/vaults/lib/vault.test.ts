@@ -11,6 +11,7 @@ import {
 } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { generateVault } from './generate.ts'
 import { readMeta, writeMeta } from './meta.ts'
 import { VAULTS_DIR } from './paths.ts'
 import { newVault, renderTemplate } from './render.ts'
@@ -174,11 +175,54 @@ describe('writers', () => {
         '',
       ].join('\n'),
     )
-    expect(readFileSync(join(vaultDir, 'projects/launch-v2.md'), 'utf8')).toContain(
+    // Projects and areas are named after their titles, minus what a filename can't hold
+    expect(readFileSync(join(vaultDir, 'projects/Launch v2.md'), 'utf8')).toContain(
       'title: "Launch: v2"',
     )
     // Same title again gets a numbered filename
-    expect(writeArea(vaultDir, meta, { title: 'Work' })).toBe(join(vaultDir, 'areas/work-1.md'))
+    expect(writeArea(vaultDir, meta, { title: 'Work' })).toBe(join(vaultDir, 'areas/Work-1.md'))
+  })
+})
+
+describe('generateVault', () => {
+  function snapshot(dir: string): Record<string, string> {
+    const files: Record<string, string> = {}
+    for (const path of new Bun.Glob('**/*.md').scanSync(dir)) {
+      files[path] = readFileSync(join(dir, path), 'utf8')
+    }
+    return files
+  }
+
+  test('builds a valid vault of the requested size', () => {
+    const result = generateVault(vaultDir, { tasks: 300, seed: 7, referenceDate: '2026-01-15' })
+    const r = reportVault(vaultDir)
+
+    expect(r.tasks.total).toBe(300)
+    expect(r.projects.total).toBe(result.projects)
+    expect(r.areas.total).toBe(result.areas)
+    expect(r.problems).toEqual([])
+    expect(r.links.unresolved).toEqual([])
+    expect(r.tasks.archived).toBeGreaterThan(0)
+    expect(r.tasks.orphans).toBeGreaterThan(0)
+    expect(r.areas.byStatus.archived).toBeGreaterThan(0)
+  })
+
+  test('is deterministic for a seed, and a later date gives the same vault shifted', () => {
+    const otherDir = join(VAULTS_DIR, `.test-${crypto.randomUUID()}`)
+    try {
+      generateVault(vaultDir, { tasks: 50, seed: 3, referenceDate: '2026-01-15' })
+      generateVault(otherDir, { tasks: 50, seed: 3, referenceDate: '2026-01-15' })
+      expect(snapshot(otherDir)).toEqual(snapshot(vaultDir))
+
+      generateVault(otherDir, { tasks: 50, seed: 4, referenceDate: '2026-01-15' })
+      expect(snapshot(otherDir)).not.toEqual(snapshot(vaultDir))
+
+      generateVault(otherDir, { tasks: 50, seed: 3, referenceDate: '2026-02-14' })
+      shiftVault(vaultDir, 30)
+      expect(snapshot(otherDir)).toEqual(snapshot(vaultDir))
+    } finally {
+      rmSync(otherDir, { recursive: true, force: true })
+    }
   })
 })
 

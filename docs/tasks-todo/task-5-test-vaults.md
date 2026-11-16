@@ -125,7 +125,7 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 
 ### Phase 4: Large vault
 
-- [ ] `vault generate` builds a realistic vault from the entity writers: areas, projects in them, tasks spread across statuses, dates, links and the archive, plus some orphans. It's deterministic for a seed, with sizes from small to several thousand tasks. Generated vaults are never committed.
+- [x] `vault generate` builds a realistic vault from the entity writers: areas, projects in them, tasks spread across statuses, dates, links and the archive, plus some orphans. It's deterministic for a seed, with sizes from small to several thousand tasks. Generated vaults are never committed. `--size small|medium|large` gives 100, 1,000 or 5,000 tasks, or pass a number. The same seed and date always give the same vault, and a later date gives the same vault shifted (tested). 5,000 tasks generate in under a second, and `tdn today` on them takes about 0.2s. Generated titles are combinations of word lists, so some read oddly; persona vaults cover realism.
 
 ### Phase 5: Switch over
 
