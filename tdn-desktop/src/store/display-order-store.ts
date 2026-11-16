@@ -28,7 +28,9 @@ import type { TaskStatus } from '@/lib/tauri-bindings'
 
 /** Section identifiers for Today view */
 export type TodaySectionId =
-  'scheduled-today' | 'overdue-due-today' | 'became-available-today'
+  | 'scheduled-today'
+  | 'overdue-due-today'
+  | 'became-available-today'
 
 /**
  * Kanban column order storage.

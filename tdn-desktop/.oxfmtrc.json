@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "tabWidth": 2,
+  "printWidth": 80,
+  "endOfLine": "lf",
+  "arrowParens": "avoid",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "quoteProps": "as-needed",
+  "jsxSingleQuote": false,
+  "proseWrap": "preserve",
+  "sortPackageJson": false,
+  "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    "build/",
+    "src-tauri/target/",
+    "src-tauri/gen/",
+    "*.config.js",
+    "*.config.ts",
+    "vite.config.ts",
+    "package-lock.json",
+    ".git/",
+    "src/lib/bindings.ts",
+    "*.log",
+    "*.toml",
+    "*.md"
+  ]
+}
