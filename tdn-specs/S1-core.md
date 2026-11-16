@@ -16,7 +16,7 @@ A lightweight markup language. This specification uses [CommonMark](https://spec
 
 ### YAML
 
-A human-readable data serialization language. This specification uses [YAML 1.2](https://yaml.org/spec/1.2.2/) as the authoritative YAML specification.
+A human-readable data serialization language. This specification uses [YAML 1.2](https://yaml.org/spec/1.2.2/) as the authoritative YAML specification, with its [core schema](https://yaml.org/spec/1.2.2/#103-core-schema).
 
 ### Frontmatter
 
@@ -75,9 +75,9 @@ The meaning of an entity comes from what is written in its file. Readers don't t
 
 1. All files MUST contain valid UTF-8 encoded Markdown, optionally with YAML frontmatter.
 2. If frontmatter is present:
-   1. It MUST be valid YAML 1.2.
+   1. It MUST be valid YAML 1.2, and its top level MUST be a mapping of field names to values.
    2. The file MUST begin with a line containing exactly `---`.
-   3. The YAML block MUST be terminated with a line containing exactly `---`, followed by a newline.
+   3. The YAML block MUST be terminated with a line containing exactly `---`, followed by a newline or the end of the file.
 3. Frontmatter fields MAY appear in any order.
 4. The Markdown body MAY be empty.
 5. All date and datetime values MUST use ISO 8601 format.
@@ -90,6 +90,10 @@ The meaning of an entity comes from what is written in its file. Readers don't t
 2. Readers MUST treat a field whose value is null, an empty string or an empty list as if the field were absent. A key with no value is null.
 3. Readers MUST NOT reject files with unrecognized status values. Unknown statuses SHOULD be preserved and MAY be displayed or filtered as the implementation sees fit.
 4. Readers MUST NOT depend on any filename convention. Users may name and rename files freely.
+5. Readers MUST accept a UTF-8 byte order mark at the start of a file, and CRLF line endings.
+6. Readers MUST interpret frontmatter with the YAML 1.2 core schema. Date-like values such as `2025-01-15` are strings, and readers MUST read dates and datetimes from their text, never from a date type a YAML library produces. Many YAML libraries default to YAML 1.1 behaviour, which turns unquoted dates into date objects and can shift datetimes to UTC, so they need configuring.
+7. Where this specification expects a string, readers MUST accept any scalar and read it as text. For example, `title: 1984` is the title "1984".
+8. Readers MUST read an unquoted wikilink as that wikilink. YAML parses `area: [[Work]]` as a list containing a list containing the string `Work`, and readers treat that value as `[[Work]]`, both as a field value and as an item in a list.
 
 ### 3.3 Writers
 
@@ -101,6 +105,7 @@ The meaning of an entity comes from what is written in its file. Readers don't t
    - The Markdown body MUST be preserved.
    - YAML formatting (comments, field ordering) SHOULD be preserved where possible.
 4. Writers choose filenames only for the files they create. Any valid filename conforms; S2 recommends a convention for new files.
+5. Writers MUST quote string values that YAML would otherwise read as something else. This includes wikilinks (`area: "[[Work]]"`, never `area: [[Work]]`) and strings that look like numbers, booleans or null (`title: "1984"`).
 
 ---
 
