@@ -1,46 +1,63 @@
-use tauri_specta::{collect_commands, Builder};
+use tauri_specta::{collect_commands, Builder, ErrorHandlingMode};
 
 pub fn generate_bindings() -> Builder<tauri::Wry> {
     use crate::commands::{ai, config, notifications, preferences, quick_pane, recovery, vault};
 
-    Builder::<tauri::Wry>::new().commands(collect_commands![
-        preferences::greet,
-        preferences::load_preferences,
-        preferences::save_preferences,
-        notifications::send_native_notification,
-        recovery::save_emergency_data,
-        recovery::load_emergency_data,
-        recovery::cleanup_old_recovery_files,
-        quick_pane::show_quick_pane,
-        quick_pane::dismiss_quick_pane,
-        quick_pane::toggle_quick_pane,
-        quick_pane::get_default_quick_pane_shortcut,
-        quick_pane::update_quick_pane_shortcut,
-        config::read_cli_config,
-        config::get_app_data_dir,
-        config::open_app_data_dir,
-        config::is_dev_mode,
-        config::get_demo_vault_paths,
-        // Vault commands
-        vault::init_vault,
-        vault::is_vault_configured,
-        vault::refresh_vault,
-        vault::list_tasks,
-        vault::list_projects,
-        vault::list_areas,
-        vault::get_task,
-        vault::get_project,
-        vault::get_area,
-        vault::create_task,
-        vault::create_project,
-        vault::update_task,
-        vault::update_project,
-        vault::delete_task,
-        vault::get_entity_raw_content,
-        // AI commands
-        ai::check_apple_intelligence_available,
-        ai::process_quick_entry_text,
-    ])
+    Builder::<tauri::Wry>::new()
+        // Specta refuses 64-bit integers because JSON.parse truncates values above
+        // 2^53. serde_json::Value (the recovery data) may hold i64/u64 numbers and
+        // can't be annotated per field. Runtime is unchanged: IPC is JSON, so these
+        // were always JS numbers. This disables the check for new fields too, so keep
+        // large integers out of IPC types.
+        .dangerously_cast_bigints_to_number()
+        // One TypeScript type per struct, not X_Serialize and X_Deserialize, as
+        // older specta versions generated. Our types only use `default` and
+        // renames that apply both ways; attributes that make the directions
+        // differ (skip_deserializing, deserialize_with, a one-way rename) would
+        // need the phases back.
+        .disable_serde_phases()
+        // Commands that return a Result resolve to { status: "ok", data } or
+        // { status: "error", error } instead of throwing. The frontend relies on
+        // this shape (see docs/developer/tauri-commands.md).
+        .error_handling(ErrorHandlingMode::Result)
+        .commands(collect_commands![
+            preferences::greet,
+            preferences::load_preferences,
+            preferences::save_preferences,
+            notifications::send_native_notification,
+            recovery::save_emergency_data,
+            recovery::load_emergency_data,
+            recovery::cleanup_old_recovery_files,
+            quick_pane::show_quick_pane,
+            quick_pane::dismiss_quick_pane,
+            quick_pane::toggle_quick_pane,
+            quick_pane::get_default_quick_pane_shortcut,
+            quick_pane::update_quick_pane_shortcut,
+            config::read_cli_config,
+            config::get_app_data_dir,
+            config::open_app_data_dir,
+            config::is_dev_mode,
+            config::get_demo_vault_paths,
+            // Vault commands
+            vault::init_vault,
+            vault::is_vault_configured,
+            vault::refresh_vault,
+            vault::list_tasks,
+            vault::list_projects,
+            vault::list_areas,
+            vault::get_task,
+            vault::get_project,
+            vault::get_area,
+            vault::create_task,
+            vault::create_project,
+            vault::update_task,
+            vault::update_project,
+            vault::delete_task,
+            vault::get_entity_raw_content,
+            // AI commands
+            ai::check_apple_intelligence_available,
+            ai::process_quick_entry_text,
+        ])
 }
 
 /// Export TypeScript bindings to the frontend.

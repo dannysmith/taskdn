@@ -21,7 +21,7 @@
  * @see docs/developer/tauri-commands.md for full documentation
  */
 
-export { commands, type Result } from './bindings'
+export { commands } from './bindings'
 export type {
   AppPreferences,
   Area,
@@ -31,7 +31,7 @@ export type {
   CreateProjectOptions,
   CreateTaskOptions,
   DemoVaultPaths,
-  JsonValue,
+  Value as JsonValue,
   Project,
   ProjectStatus,
   ProjectUpdate,
@@ -42,12 +42,14 @@ export type {
   VaultError,
 } from './bindings'
 
+/** What a command that returns a Rust `Result` resolves to. */
+export type Result<T, E> =
+  { status: 'ok'; data: T } | { status: 'error'; error: E }
+
 /**
  * Helper to unwrap a Result type, throwing on error
  */
-export function unwrapResult<T, E>(
-  result: { status: 'ok'; data: T } | { status: 'error'; error: E }
-): T {
+export function unwrapResult<T, E>(result: Result<T, E>): T {
   if (result.status === 'ok') {
     return result.data
   }
