@@ -27,6 +27,8 @@ async function* sourceFiles(dir: string): AsyncGenerator<string> {
 
 interface CompilerEvent {
   kind: string
+  /** The error message, on PipelineError events */
+  data?: string
   fnLoc?: { start?: { line?: number } }
   detail?: {
     reason?: string
@@ -43,9 +45,18 @@ for await (const file of sourceFiles(SRC)) {
 
   const logger = {
     logEvent(_filename: string, event: CompilerEvent) {
-      if (event.kind !== 'CompileError' && event.kind !== 'CompileSkip') return
+      // PipelineError: the compiler crashed on the function and left it
+      // uncompiled, which panicThreshold 'none' turns into a log event
+      if (
+        event.kind !== 'CompileError' &&
+        event.kind !== 'CompileSkip' &&
+        event.kind !== 'PipelineError'
+      ) {
+        return
+      }
       const detail = event.detail
-      const reason = detail?.reason ?? detail?.options?.reason ?? ''
+      const reason =
+        detail?.reason ?? detail?.options?.reason ?? event.data ?? ''
       const line =
         detail?.loc?.start?.line ??
         detail?.options?.loc?.start?.line ??
