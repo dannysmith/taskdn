@@ -1,13 +1,14 @@
 ---
 title: Gather client 1099s
 status: in-progress
-created-at: 2025-01-08
-updated-at: 2025-01-20
+created-at: 2026-01-01
+updated-at: 2026-01-13
 projects:
-  - "[[Q1 Tax Preparation]]"
+  - "[[Tax Return Preparation]]"
+due: 2026-01-27
 ---
 
-Need to collect 1099s from all clients I invoiced in 2024.
+Need to collect 1099s from all clients I invoiced last year.
 
 ## Status
 

@@ -1,9 +1,10 @@
 ---
 title: Book eye test
 status: ready
-created-at: 2025-01-18
-updated-at: 2025-01-18
+created-at: 2026-01-11
+updated-at: 2026-01-11
 area: "[[Health]]"
+scheduled: 2026-01-26
 ---
 
-Due for annual eye test. Last one was Feb 2024.
+Due for annual eye test. Last one was 2025-02-10.

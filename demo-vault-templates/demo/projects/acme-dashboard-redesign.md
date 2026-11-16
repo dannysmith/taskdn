@@ -4,8 +4,8 @@ status: in-progress
 unique-id: acme-dash-2024
 area: "[[Acme Corp]]"
 description: Complete redesign of the Acme Corp internal dashboard.
-start-date: 2024-08-15
-end-date: 2025-02-28
+start-date: 2025-08-08
+end-date: 2026-02-21
 ---
 
 ## Project Overview
@@ -36,11 +36,11 @@ Redesigning Acme Corp's internal analytics dashboard. Current system is slow, ha
 
 | Phase | Dates | Status |
 |-------|-------|--------|
-| Discovery | Aug 15 - Sep 15 | Complete |
-| Design | Sep 16 - Oct 31 | Complete |
-| Development | Nov 1 - Jan 31 | In Progress |
-| Testing | Feb 1 - Feb 15 | Not Started |
-| Launch | Feb 28 | Target |
+| Discovery | 2025-08-08 to 2025-09-08 | Complete |
+| Design | 2025-09-09 to 2025-10-24 | Complete |
+| Development | 2025-10-25 to 2026-01-24 | In Progress |
+| Testing | 2026-01-25 to 2026-02-08 | Not Started |
+| Launch | 2026-02-21 | Target |
 
 ## Tech Stack
 
@@ -53,12 +53,12 @@ Redesigning Acme Corp's internal analytics dashboard. Current system is slow, ha
 
 1. **Data quality issues** - Some legacy data may be inconsistent
 2. **Scope creep** - Stakeholders keep requesting new features
-3. **Timeline pressure** - Feb 28 deadline is firm
+3. **Timeline pressure** - the launch deadline is firm
 
 ## Meeting Notes
 
-Weekly syncs on Thursdays. Notes kept in separate meeting notes files.
+Weekly syncs with Sarah. Notes kept in separate meeting notes files.
 
-- [[2025-01-16 Acme Sync]]
-- [[2025-01-09 Acme Sync]]
-- [[2025-01-02 Acme Sync]]
+- [[2026-01-09 Acme Sync]]
+- [[2026-01-02 Acme Sync]]
+- [[2025-12-26 Acme Sync]]

@@ -1,9 +1,9 @@
 ---
 title: Finish reading Atomic Habits
 status: done
-created-at: 2024-06-15
-updated-at: 2024-08-10
-completed-at: 2024-08-10
+created-at: 2025-06-08
+updated-at: 2025-08-03
+completed-at: 2025-08-03
 area: "[[Learning]]"
 ---
 

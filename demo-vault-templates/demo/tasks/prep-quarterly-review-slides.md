@@ -1,10 +1,11 @@
 ---
 title: Prepare quarterly review slides for Acme
 status: ready
-created-at: 2025-01-18
-updated-at: 2025-01-20
+created-at: 2026-01-11
+updated-at: 2026-01-13
 projects:
   - "[[Acme Dashboard Redesign]]"
+due: 2026-01-17
 ---
 
 Need to present progress on dashboard redesign to [[Sarah Chen]] and the leadership team.

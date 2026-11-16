@@ -1,9 +1,9 @@
 ---
 title: Review and update resume
 status: done
-created-at: 2024-10-15
-updated-at: 2024-11-01
-completed-at: 2024-11-01
+created-at: 2025-10-08
+updated-at: 2025-10-25
+completed-at: 2025-10-25
 area: "[[Marketing]]"
 ---
 

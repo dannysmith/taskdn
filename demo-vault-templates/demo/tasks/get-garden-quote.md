@@ -1,8 +1,8 @@
 ---
 title: Get quote for patio work
 status: blocked
-created-at: 2025-01-08
-updated-at: 2025-01-16
+created-at: 2026-01-01
+updated-at: 2026-01-09
 projects:
   - "[[Garden Renovation]]"
 ---

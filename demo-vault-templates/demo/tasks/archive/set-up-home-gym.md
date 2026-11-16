@@ -1,9 +1,9 @@
 ---
 title: Set up basic home gym
 status: done
-created-at: 2024-11-15
-updated-at: 2025-01-05
-completed-at: 2025-01-05
+created-at: 2025-11-08
+updated-at: 2025-12-29
+completed-at: 2025-12-29
 area: "[[Health]]"
 projects:
   - "[[Home Office Setup]]"

@@ -1,8 +1,8 @@
 ---
 title: Check out that TypeScript library someone tweeted
 status: inbox
-created-at: 2025-01-20T11:45:00
-updated-at: 2025-01-20T11:45:00
+created-at: 2026-01-13T11:45:00
+updated-at: 2026-01-13T11:45:00
 area: "[[Coding]]"
 ---
 

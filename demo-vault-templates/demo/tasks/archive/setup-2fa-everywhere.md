@@ -1,9 +1,9 @@
 ---
 title: Set up 2FA on all important accounts
 status: done
-created-at: 2024-07-01
-updated-at: 2024-07-20
-completed-at: 2024-07-20
+created-at: 2025-06-24
+updated-at: 2025-07-13
+completed-at: 2025-07-13
 ---
 
 Finally set up 2FA on:

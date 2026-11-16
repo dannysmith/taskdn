@@ -1,9 +1,9 @@
 ---
 title: Set up Bitwarden password manager
 status: done
-created-at: 2025-01-05
-updated-at: 2025-01-10
-completed-at: 2025-01-10
+created-at: 2025-12-29
+updated-at: 2026-01-03
+completed-at: 2026-01-03
 area: "[[Coding]]"
 ---
 

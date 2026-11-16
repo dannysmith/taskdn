@@ -1,8 +1,8 @@
 ---
 title: Write "AI tools in workflow" blog post
 status: in-progress
-created-at: 2025-01-16
-updated-at: 2025-01-21
+created-at: 2026-01-09
+updated-at: 2026-01-14
 projects:
   - "[[Tech Blog Relaunch]]"
 ---

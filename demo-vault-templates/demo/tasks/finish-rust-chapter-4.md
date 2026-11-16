@@ -1,8 +1,8 @@
 ---
 title: Finish Rust book chapter 4 (Ownership)
 status: ready
-created-at: 2025-01-14
-updated-at: 2025-01-19
+created-at: 2026-01-07
+updated-at: 2026-01-12
 projects:
   - "[[Learn Rust]]"
 energy: high

@@ -1,9 +1,9 @@
 ---
 title: Attend networking event
 status: dropped
-created-at: 2024-11-15
-updated-at: 2024-12-02
-completed-at: 2024-12-02
+created-at: 2025-11-08
+updated-at: 2025-11-25
+completed-at: 2025-11-25
 area: "[[Marketing]]"
 ---
 

@@ -1,8 +1,8 @@
 ---
 title: Schedule storage unit clear-out day
 status: ready
-created-at: 2025-01-17
-updated-at: 2025-01-17
+created-at: 2026-01-10
+updated-at: 2026-01-10
 projects:
   - "[[Declutter Storage Unit]]"
 ---
@@ -15,4 +15,4 @@ Need to:
 - Arrange to borrow [[Chris]]'s car for potential donations run
 - Maybe ask [[Tom]] to help - pizza and beer payment
 
-Ideal timeframe: March or April when weather improves.
+Ideal timeframe: once the weather improves.

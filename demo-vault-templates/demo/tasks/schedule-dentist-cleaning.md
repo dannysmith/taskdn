@@ -1,8 +1,8 @@
 ---
 title: Schedule dentist cleaning
 status: blocked
-created-at: 2025-01-15
-updated-at: 2025-01-18
+created-at: 2026-01-08
+updated-at: 2026-01-11
 area: "[[Health]]"
 ---
 

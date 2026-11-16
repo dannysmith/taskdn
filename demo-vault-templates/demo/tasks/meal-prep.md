@@ -1,8 +1,8 @@
 ---
 title: Meal prep for the week
 status: ready
-created-at: 2025-01-19
-updated-at: 2025-01-19
+created-at: 2026-01-12
+updated-at: 2026-01-12
 area: "[[Health]]"
 ---
 

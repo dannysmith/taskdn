@@ -1,12 +1,12 @@
 ---
 title: Order standing desk
 status: blocked
-created-at: 2025-01-15
-updated-at: 2025-01-20
+created-at: 2026-01-08
+updated-at: 2026-01-13
 projects:
   - "[[Home Office Setup]]"
 ---
 
-Decided on the Uplift V2 Commercial. Waiting for their January sale to end - heard they usually have a better Presidents Day sale in February.
+Decided on the Uplift V2 Commercial. Waiting for their current sale to end - heard the next one is usually better.
 
-**Blocked on:** Waiting for February sale.
+**Blocked on:** Waiting for the next sale.

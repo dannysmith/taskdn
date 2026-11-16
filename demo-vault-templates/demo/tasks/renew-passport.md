@@ -1,12 +1,12 @@
 ---
 title: Renew passport
 status: ready
-created-at: 2025-01-05
-updated-at: 2025-01-05
-defer-until: 2027-06-01
-due: 2027-09-01
+created-at: 2025-12-29
+updated-at: 2025-12-29
+defer-until: 2026-06-14
+due: 2026-08-03
 ---
 
-Passport expires September 2027. Need to renew before any big international trips.
+Passport expires 2026-09-01. Need to renew before any big international trips.
 
-Start process in June - takes 6-10 weeks apparently.
+Start the process by 2026-06-14 - takes 6-10 weeks apparently.

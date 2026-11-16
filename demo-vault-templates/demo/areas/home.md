@@ -38,4 +38,4 @@ Key people: [[Jake]], [[Emma]], [[Chris]], [[Sophie]], [[Tom]]
 
 Try to have people over regularly. Doesn't need to be fancy - simple dinners, game nights, or just coffee.
 
-See [[Holiday Party 2024]] for lessons learned from last big event.
+See [[Holiday Party]] for lessons learned from last big event.

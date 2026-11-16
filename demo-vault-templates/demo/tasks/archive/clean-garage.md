@@ -1,9 +1,9 @@
 ---
 title: Clean out garage
 status: done
-created-at: 2024-09-10
-updated-at: 2024-10-15
-completed-at: 2024-10-15
+created-at: 2025-09-03
+updated-at: 2025-10-08
+completed-at: 2025-10-08
 area: "[[Home]]"
 ---
 

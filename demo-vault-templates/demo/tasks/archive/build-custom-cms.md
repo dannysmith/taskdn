@@ -1,9 +1,9 @@
 ---
 title: Build custom CMS for blog
 status: dropped
-created-at: 2024-08-20
-updated-at: 2024-10-10
-completed-at: 2024-10-10
+created-at: 2025-08-13
+updated-at: 2025-10-03
+completed-at: 2025-10-03
 area: "[[Coding]]"
 ---
 

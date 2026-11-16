@@ -1,8 +1,8 @@
 ---
 title: Learn to play piano
 status: icebox
-created-at: 2024-06-15
-updated-at: 2025-01-02
+created-at: 2025-06-08
+updated-at: 2025-12-26
 area: "[[Learning]]"
 ---
 
@@ -13,4 +13,4 @@ Would need to:
 - Find a teacher or use an app like Simply Piano
 - Commit to regular practice
 
-Maybe revisit when the [[Japan Trip 2025]] is done and I have more bandwidth.
+Maybe revisit when the [[Japan Trip]] is done and I have more bandwidth.

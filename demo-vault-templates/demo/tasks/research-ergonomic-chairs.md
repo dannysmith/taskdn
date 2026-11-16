@@ -1,8 +1,8 @@
 ---
 title: Research ergonomic chairs
 status: in-progress
-created-at: 2025-01-14
-updated-at: 2025-01-20
+created-at: 2026-01-07
+updated-at: 2026-01-13
 projects:
   - "[[Home Office Setup]]"
 ---

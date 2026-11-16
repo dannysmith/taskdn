@@ -1,8 +1,8 @@
 ---
 title: Set up dotfiles repository
 status: ready
-created-at: 2025-01-14
-updated-at: 2025-01-15
+created-at: 2026-01-07
+updated-at: 2026-01-08
 area: "[[Coding]]"
 ---
 

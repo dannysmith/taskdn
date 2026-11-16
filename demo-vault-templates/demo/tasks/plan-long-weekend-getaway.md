@@ -1,18 +1,18 @@
 ---
 title: Plan long weekend getaway
 status: inbox
-created-at: 2025-01-22
-updated-at: 2025-01-22
+created-at: 2026-01-15
+updated-at: 2026-01-15
 area: "[[Travel]]"
 ---
 
-February bank holiday weekend - should go somewhere. Maybe Edinburgh? Or a cottage in the Cotswolds?
+Next bank holiday weekend - should go somewhere. Maybe Edinburgh? Or a cottage in the Cotswolds?
 
 ## Options
 
 ### Edinburgh
 - Pro: Great city, good food scene, haven't been in years
-- Con: Might be cold in February, longer travel
+- Con: Might be cold, longer travel
 - Would need train tickets + hotel
 
 ### Cotswolds cottage

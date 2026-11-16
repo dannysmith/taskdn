@@ -1,8 +1,8 @@
 ---
 title: Look into that meditation app Sarah mentioned
 status: inbox
-created-at: 2025-01-19T14:30:00
-updated-at: 2025-01-19T14:30:00
+created-at: 2026-01-12T14:30:00
+updated-at: 2026-01-12T14:30:00
 area: "[[Health]]"
 ---
 

@@ -1,9 +1,9 @@
 ---
 title: Start a developer podcast
 status: dropped
-created-at: 2024-08-05
-updated-at: 2024-12-15
-completed-at: 2024-12-15
+created-at: 2025-07-29
+updated-at: 2025-12-08
+completed-at: 2025-12-08
 area: "[[Marketing]]"
 ---
 

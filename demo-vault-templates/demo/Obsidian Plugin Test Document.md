@@ -27,7 +27,7 @@ This document tests all the different ways task widgets can be displayed. Use it
 | `blocked` | Cannot proceed due to dependency | [[Garden Renovation]] |
 | `in-progress` | Active work is happening | [[Acme Dashboard Redesign]] |
 | `paused` | Temporarily on hold | [[Emergency Fund Goal]] |
-| `done` | Completed | [[Holiday Party 2024]] |
+| `done` | Completed | [[Holiday Party]] |
 | `dropped` | Abandoned, will not be completed | [[Investment Portfolio Review]] |
 
 ---
@@ -37,7 +37,7 @@ This document tests all the different ways task widgets can be displayed. Use it
 ### Tasks with Area Only
 
 - [[check-new-coffee-shop]] — area: Home
-- [[think-summer-travel]] — area: Travel
+- [[think-about-holiday-plans]] — area: Travel
 - [[backup-laptop]] — area: Coding
 - [[learn-piano]] — area: Learning
 
@@ -50,26 +50,26 @@ This document tests all the different ways task widgets can be displayed. Use it
 
 ### Tasks with Both Area and Project
 
-- [[learn-japanese]] — area: Learning, project: Japan Trip 2025
+- [[learn-japanese]] — area: Learning, project: Japan Trip
 - [[review-website-analytics]] — area: Marketing, project: Personal Website Rebuild
 
 ### Tasks with Due Date
 
-- [[car-mot]] — due: 2025-12-10 (overdue example)
-- [[renew-domain]] — due: 2025-12-20 (overdue example)
-- [[mums-birthday-present]] — due: 2027-04-02 (far future)
-- [[renew-passport]] — due: 2027-09-01 (far future)
+- [[car-mot]] — due: 2026-12-03 (overdue example)
+- [[renew-domain]] — due: 2026-12-13 (overdue example)
+- [[mums-birthday-present]] — due: 2028-03-25 (far future)
+- [[renew-passport]] — due: 2028-08-24 (far future)
 
 ### Tasks with Scheduled Date
 
-- [[review-investment-allocation]] — scheduled: 2027-02-01
+- [[review-investment-allocation]] — scheduled: 2028-01-25
 
 ### Tasks with Defer-Until Date
 
-- [[mums-birthday-present]] — defer-until: 2027-03-15
-- [[book-summer-flights]] — defer-until: 2027-03-01
-- [[renew-passport]] — defer-until: 2027-06-01
-- [[print-japan-photos]] — defer-until: 2027-11-01
+- [[mums-birthday-present]] — defer-until: 2028-03-07
+- [[book-beach-holiday-flights]] — defer-until: 2028-02-22
+- [[renew-passport]] — defer-until: 2028-05-24
+- [[print-japan-photos]] — defer-until: 2028-10-24
 
 ### Tasks with Multiple Date Fields
 
@@ -78,22 +78,22 @@ This document tests all the different ways task widgets can be displayed. Use it
 
 ### Tasks with DateTime (not just date)
 
-- [[fix-api-rate-limiting]] — updated with time: 2025-01-22T14:30
-- [[archive/migrate-to-buttondown]] — completed-at with time: 2025-01-12T18:45
+- [[fix-api-rate-limiting]] — updated with time: 2026-01-15T14:30
+- [[archive/migrate-to-buttondown]] — completed-at with time: 2026-01-05T18:45
 
 ### Completed Tasks (with completed-at)
 
-- [[archive/setup-bitwarden]] — done, completed: 2025-01-10
-- [[archive/book-flights-tokyo]] — done, completed: 2025-01-15
-- [[archive/write-year-in-review-post]] — done, completed: 2025-01-02
-- [[archive/cancel-gym-membership]] — done, completed: 2025-01-08
+- [[archive/setup-bitwarden]] — done, completed: 2026-01-03
+- [[archive/book-flights-tokyo]] — done, completed: 2026-01-08
+- [[archive/write-year-in-review-post]] — done, completed: 2025-12-26
+- [[archive/cancel-gym-membership]] — done, completed: 2026-01-01
 
 ### Dropped Tasks (with completed-at)
 
-- [[archive/try-coworking-space]] — dropped, completed: 2025-01-10
-- [[archive/build-ios-app]] — dropped, completed: 2025-01-05
-- [[archive/attend-react-conf]] — dropped, completed: 2025-01-02
-- [[archive/start-podcast]] — dropped, completed: 2024-12-15
+- [[archive/try-coworking-space]] — dropped, completed: 2026-01-03
+- [[archive/build-ios-app]] — dropped, completed: 2025-12-29
+- [[archive/attend-react-conf]] — dropped, completed: 2025-12-26
+- [[archive/start-podcast]] — dropped, completed: 2025-12-08
 
 ---
 
@@ -127,8 +127,8 @@ These task links are **first in a bullet point**, so they should behave like nat
 ### With Extra Text After
 
 - [[buy-sarah-present]] remember to check her wishlist first
-- [[archive/christmas-shopping]] all done and under budget!
-- [[car-mot]] due in March, don't forget
+- [[archive/present-shopping]] all done and under budget!
+- [[car-mot]] is overdue, don't forget
 
 ### Nested Task Lists
 
@@ -155,7 +155,7 @@ Multiple tasks in one paragraph: Start with [[check-typescript-library]], then m
 
 ### In Bullet Lists (Not First)
 
-- Remember to check on [[book-summer-flights]] when prices drop
+- Remember to check on [[book-beach-holiday-flights]] when prices drop
 - Sarah mentioned [[check-meditation-app]] at dinner last week
 - The [[archive/start-podcast]] idea was dropped in favour of newsletter
 - For the party, see [[archive/party-buy-drinks]] which is already done
@@ -193,11 +193,11 @@ These are native Obsidian checkboxes with task links inside. Obsidian controls t
 - [[complete-week-2-runs]] — Marathon training
 - [[order-new-running-shoes]] — Equipment
 - [[schedule-dentist-cleaning]] — Blocked on booking
-- [[meal-prep-sunday]] — Nutrition planning
+- [[meal-prep]] — Nutrition planning
 
 ### Finance ([[Finance]])
 
-- [[review-insurance-renewal]] — Deferred until February
+- [[review-insurance-renewal]] — Overdue
 - [[review-investment-allocation]] — Annual review
 - [[gather-client-1099s]] — Tax prep
 - [[schedule-accountant-call]] — Blocked on response
@@ -222,7 +222,7 @@ These are native Obsidian checkboxes with task links inside. Obsidian controls t
 
 ### Complex Paragraph
 
-The [[Acme Dashboard Redesign]] project is progressing well. We've already done [[archive/complete-acme-onboarding]] and [[archive/book-flights-tokyo]], though [[implement-user-filtering]] is currently in progress. Next up is [[create-dashboard-wireframes]] which ties into the [[Content Calendar Q1]] planning. Don't forget to also check [[review-acme-metrics]] for the latest numbers.
+The [[Acme Dashboard Redesign]] project is progressing well. We've already done [[archive/complete-acme-onboarding]] and [[archive/book-flights-tokyo]], though [[implement-user-filtering]] is currently in progress. Next up is [[create-dashboard-wireframes]] which ties into the [[Content Calendar]] planning. Don't forget to also check [[review-acme-metrics]] for the latest numbers.
 
 ### Mixed List
 
@@ -241,7 +241,7 @@ The [[Acme Dashboard Redesign]] project is progressing well. We've already done 
 - Top level item
   - [[book-dentist]]
     - Nested under task: [[check-meditation-app]]
-      - Even deeper: [[archive/dentist-checkup-june]]
+      - Even deeper: [[archive/dentist-checkup]]
     - Another nested item
   - Regular nested bullet
 - [[create-training-plan]]
@@ -303,7 +303,7 @@ Check out [[book-dentist]] and [[eye-test]] and [[haircut]] — all health-relat
 
 These should render as normal Obsidian links, not our widgets:
 
-- [[Japan Trip 2025]] — project file
+- [[Japan Trip]] — project file
 - [[Half Marathon Training]] — project file
 - [[Coding]] — area file
 - [[Finance]] — area file

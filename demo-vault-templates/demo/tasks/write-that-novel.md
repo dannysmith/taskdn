@@ -1,8 +1,8 @@
 ---
 title: Write that novel idea
 status: icebox
-created-at: 2024-03-20
-updated-at: 2024-11-15
+created-at: 2025-03-13
+updated-at: 2025-11-08
 area: "[[Writing]]"
 ---
 

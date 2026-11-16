@@ -26,7 +26,7 @@ I'm doing good in this area if...
 
 ## Bucket List Destinations
 
-- Japan (especially outside Tokyo) - see [[Japan Trip 2025]]
+- Japan (especially outside Tokyo) - see [[Japan Trip]]
 - New Zealand - [[Sophie]] loved it
 - Iceland
 - Portugal - [[Ben]] has an apartment there

@@ -1,8 +1,8 @@
 ---
 title: Try out Zed editor
 status: inbox
-created-at: 2025-01-21
-updated-at: 2025-01-21
+created-at: 2026-01-14
+updated-at: 2026-01-14
 area: "[[Coding]]"
 ---
 

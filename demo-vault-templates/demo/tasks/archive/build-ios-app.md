@@ -1,9 +1,9 @@
 ---
 title: Build companion iOS app for CLI
 status: dropped
-created-at: 2024-09-20
-updated-at: 2025-01-05
-completed-at: 2025-01-05
+created-at: 2025-09-13
+updated-at: 2025-12-29
+completed-at: 2025-12-29
 projects:
   - "[[Open Source CLI Tool]]"
 ---

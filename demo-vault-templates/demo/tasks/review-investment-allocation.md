@@ -1,11 +1,11 @@
 ---
 title: Review investment allocation
 status: ready
-created-at: 2025-01-18
-updated-at: 2025-01-18
+created-at: 2026-01-11
+updated-at: 2026-01-11
 projects:
   - "[[Investment Portfolio Review]]"
-scheduled: 2027-02-01
+scheduled: 2026-01-24
 ---
 
 Annual review of investment portfolio allocation. Check if rebalancing is needed.

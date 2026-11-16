@@ -1,11 +1,11 @@
 ---
 title: Order catering
 status: done
-created-at: 2024-11-10
-updated-at: 2024-12-01
-completed-at: 2024-12-01
+created-at: 2025-11-03
+updated-at: 2025-11-24
+completed-at: 2025-11-24
 projects:
-  - "[[Holiday Party 2024]]"
+  - "[[Holiday Party]]"
 ---
 
 Ordered from [[Lucia's Italian]]:

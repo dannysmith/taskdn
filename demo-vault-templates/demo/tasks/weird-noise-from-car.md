@@ -1,8 +1,8 @@
 ---
 title: Investigate weird noise from car
 status: inbox
-created-at: 2025-01-22
-updated-at: 2025-01-22
+created-at: 2026-01-15
+updated-at: 2026-01-15
 area: "[[Home]]"
 ---
 

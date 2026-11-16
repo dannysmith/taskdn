@@ -1,8 +1,8 @@
 ---
 title: Implement dark mode for website
 status: in-progress
-created-at: 2025-01-18
-updated-at: 2025-01-21
+created-at: 2026-01-11
+updated-at: 2026-01-14
 projects:
   - "[[Personal Website Rebuild]]"
 ---

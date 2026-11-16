@@ -1,9 +1,10 @@
 ---
 title: Garden Renovation
 status: blocked
+blocked-by:
+  - "[[Home Office Setup]]"
 area: "[[Home]]"
 description: Renovate the back garden into a usable outdoor space.
-blocked-by:
   - "[[Home Office Setup]]"
 ---
 
@@ -13,7 +14,7 @@ The back garden is currently a mess. Want to turn it into a nice outdoor space f
 
 ## Why Blocked
 
-Need to focus on the home office first. Also, better to start garden work in spring when the weather is suitable.
+Need to focus on the home office first. Also, better to start garden work once the weather improves.
 
 ## Ideas
 

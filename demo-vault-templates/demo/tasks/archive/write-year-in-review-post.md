@@ -1,20 +1,20 @@
 ---
-title: Write 2024 year in review blog post
+title: Write year in review blog post
 status: done
-created-at: 2024-12-20
-updated-at: 2025-01-02
-completed-at: 2025-01-02
+created-at: 2025-12-13
+updated-at: 2025-12-26
+completed-at: 2025-12-26
 projects:
   - "[[Tech Blog Relaunch]]"
-due: 2025-01-01
+due: 2025-12-25
 ---
 
 Published the year in review post. Got good engagement on Twitter.
 
-Link: [2024 in Review](/blog/2024-review)
+Link: [Year in Review](/blog/year-in-review)
 
 Covered:
 - Projects shipped
 - Lessons learned
-- Goals for 2025
+- Goals for the year ahead
 - Stats and metrics

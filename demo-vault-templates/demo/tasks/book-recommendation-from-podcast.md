@@ -1,8 +1,8 @@
 ---
 title: Look into book recommendation from podcast
 status: inbox
-created-at: 2025-01-19
-updated-at: 2025-01-19
+created-at: 2026-01-12
+updated-at: 2026-01-12
 area: "[[Learning]]"
 ---
 

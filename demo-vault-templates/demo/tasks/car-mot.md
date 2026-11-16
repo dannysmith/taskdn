@@ -1,9 +1,9 @@
 ---
 title: Book car in for MOT
 status: ready
-created-at: 2025-01-15
-updated-at: 2025-01-15
-due: 2025-12-10
+created-at: 2026-01-08
+updated-at: 2026-01-08
+due: 2026-01-12
 ---
 
-MOT due December 10th. Book in a couple weeks beforehand.
+MOT was due 2026-01-12. Book it in as soon as possible.

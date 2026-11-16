@@ -1,8 +1,8 @@
 ---
 title: Build a personal CRM
 status: icebox
-created-at: 2024-09-12
-updated-at: 2025-01-02
+created-at: 2025-09-05
+updated-at: 2025-12-26
 area: "[[Coding]]"
 energy: high
 estimate: 40h

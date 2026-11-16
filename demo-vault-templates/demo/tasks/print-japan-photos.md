@@ -1,10 +1,10 @@
 ---
 title: Print best Japan trip photos
 status: ready
-created-at: 2025-01-16
-updated-at: 2025-01-16
+created-at: 2026-01-09
+updated-at: 2026-01-09
 area: "[[Travel]]"
-defer-until: 2027-11-01
+defer-until: 2026-03-16
 ---
 
 After the trip, select the 20-30 best photos and order prints for an album.

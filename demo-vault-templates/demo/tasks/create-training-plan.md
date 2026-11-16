@@ -1,9 +1,9 @@
 ---
 title: Initial training plan created
 status: done
-created-at: 2025-01-05
-updated-at: 2025-01-06
-completed-at: 2025-01-06
+created-at: 2025-12-29
+updated-at: 2025-12-30
+completed-at: 2025-12-30
 projects:
   - "[[Half Marathon Training]]"
 ---

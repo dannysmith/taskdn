@@ -1,21 +1,21 @@
 ---
-title: Japan Trip 2025
+title: Japan Trip
 status: in-progress
 area: "[[Travel]]"
-description: Two-week trip to Japan in autumn 2025.
-start-date: 2025-06-01
-end-date: 2025-11-15
+description: Two-week trip to Japan.
+start-date: 2025-12-01
+end-date: 2026-11-08
 ---
 
 ## Overview
 
-Planning a two-week trip to Japan for autumn 2025. Want to see Tokyo but also spend significant time outside the capital.
+Planning a two-week trip to Japan. Want to see Tokyo but also spend significant time outside the capital.
 
 ## Dates
 
-Targeting late October / early November for autumn colors.
+Timed for the autumn colours, after the busiest tourist weeks.
 
-**Tentative:** October 25 - November 8, 2025
+**Tentative:** 2026-10-25 to 2026-11-08
 
 ## Rough Itinerary
 
@@ -32,7 +32,7 @@ Targeting late October / early November for autumn colors.
 
 ## To Book
 
-- [ ] Flights (book by June)
+- [x] Flights (booked, see [[book-flights-tokyo]])
 - [ ] JR Pass
 - [ ] Accommodation (mix of hotels and traditional ryokan)
 

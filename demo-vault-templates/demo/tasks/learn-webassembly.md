@@ -1,8 +1,8 @@
 ---
 title: Learn WebAssembly basics
 status: icebox
-created-at: 2024-10-15
-updated-at: 2025-01-05
+created-at: 2025-10-08
+updated-at: 2025-12-29
 projects:
   - "[[Learn Rust]]"
 ---

@@ -1,9 +1,9 @@
 ---
 title: Cancel unused subscriptions
 status: done
-created-at: 2024-10-01
-updated-at: 2024-10-15
-completed-at: 2024-10-15
+created-at: 2025-09-24
+updated-at: 2025-10-08
+completed-at: 2025-10-08
 area: "[[Finance]]"
 ---
 

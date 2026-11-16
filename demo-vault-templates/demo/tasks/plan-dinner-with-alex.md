@@ -1,8 +1,8 @@
 ---
 title: Plan dinner with Alex
 status: ready
-created-at: 2025-01-20
-updated-at: 2025-01-20
+created-at: 2026-01-13
+updated-at: 2026-01-13
 area: "[[Home]]"
 ---
 
