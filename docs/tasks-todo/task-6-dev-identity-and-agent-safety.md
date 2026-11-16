@@ -106,6 +106,17 @@ Work happens on the `desktop-agent-bridge` branch. Paths are in `tdn-desktop/`.
 - [ ] **Website.** Dependency updates with the `deps-update` skill. Keep ESLint and Prettier (Astro Editor's website did too).
 - [ ] **CLI.** Security-relevant dependency updates only, with the `deps-update` skill; its tooling is redone in the 2.0 rewrite. Includes Dependabot #38 (`minimatch`).
 
+  **CLI security update** (`deps-update` skill), on `repo-agent-safety`. Status: done; Danny agreed to dismiss Dependabot #1 (glib) and leave PRs #67 and #68 for the website session.
+
+  Findings:
+  - **Dependabot #38**, `minimatch` (medium, DoS via globparts amplification, fixed in 11.0.1). A direct runtime dependency at `^10.2.6`, used once: `tdn doctor` matches ignore patterns against bare filenames (`minimatch(filename, pattern, { dot, nocase })`). Config validation rejects slashes in patterns. 11.0's breaking changes (`makeRe`, `AST`, `**` and `partial` matching, Windows UNC paths) don't touch that call; it still needs Node 20 or 22+.
+  - `typescript-eslint` 8.72.2 (latest) still asks for `minimatch ^10.2.2`, so a vulnerable copy stays as a lint-only dev dependency after the bump. eslint's own `minimatch` 3.x is outside the vulnerable range.
+  - Rust (`cargo audit`): no vulnerabilities. One "unsound" warning, RUSTSEC-2026-0486 in `rustix` 1.1.5, reached only through `tempfile` (dev dependency). 1.1.6 is available.
+  - **Dependabot #1**, `glib` 0.18 in `tdn-desktop/src-tauri/Cargo.lock` (medium, unsoundness in `VariantStrIter`). Tauri's Linux GTK 0.18 stack pulls it in (`gtk`, `tao`, `wry`, `webkit2gtk`). We can't move it until Tauri moves to glib 0.20, and we don't call that API.
+  - Open Dependabot PRs: #68 (minor and patch, CLI and website) and #67 (GitHub Actions). Neither is a security fix.
+
+  Phases: [x] `minimatch` 11.0.8 [x] `rustix` 1.1.6 [x] checks (`bun run check`, `bun run test`: 685 TS and 107 Rust tests), and `tdn doctor` with ignore patterns by hand, since no test covers it [ ] check #38 closes after merge (if the lint-only `minimatch` 10 under `typescript-eslint` keeps it open, dismiss it as dev-only)
+
 ## Follow-ups from the desktop dependency update
 
 Small and independent; do them whenever convenient.
