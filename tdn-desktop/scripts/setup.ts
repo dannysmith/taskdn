@@ -69,6 +69,16 @@ async function portInUse(port: number): Promise<boolean> {
   return false
 }
 
+/** The app data folder Tauri's `app_data_dir()` gives an identifier on macOS and Linux. */
+function appDataDir(identifier: string): string {
+  if (process.platform === 'darwin') {
+    return path.join(homedir(), 'Library/Application Support', identifier)
+  }
+  const dataHome =
+    process.env.XDG_DATA_HOME || path.join(homedir(), '.local/share')
+  return path.join(dataHome, identifier)
+}
+
 /**
  * Picks the lowest free slot, empties its app data, then records it in the
  * slot file. Recording it last means an interrupted run empties it again.
@@ -93,11 +103,7 @@ async function claimSlot(current: Checkout) {
   }
 
   const { identifier } = await slotIdentity(slot, current)
-  const dataDir = path.join(
-    homedir(),
-    'Library/Application Support',
-    identifier
-  )
+  const dataDir = appDataDir(identifier)
   const leftovers = await readdir(dataDir).catch(
     (error: NodeJS.ErrnoException) => {
       if (error.code === 'ENOENT') return []
@@ -126,8 +132,10 @@ if (!current.isMain) {
   const from = path.join(current.mainRoot, RUST_TARGET)
   const to = path.join(root, RUST_TARGET)
   if (!(await exists(to)) && (await exists(from))) {
-    // -c clones with APFS clonefile, so the copy shares disk until files change
-    run(['cp', '-cR', from, to], root)
+    // On macOS -c clones with APFS clonefile, so the copy shares disk until
+    // files change. GNU cp has no clone flag, so elsewhere it's a full copy.
+    const flags = process.platform === 'darwin' ? '-cR' : '-R'
+    run(['cp', flags, from, to], root)
   }
 }
 
