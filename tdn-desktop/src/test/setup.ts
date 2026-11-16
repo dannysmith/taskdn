@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom/vitest'
 import { vi, afterEach } from 'vitest'
 
 // Reset platform cache between tests to ensure clean state
