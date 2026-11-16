@@ -1,7 +1,9 @@
+import * as React from 'react'
 import {
   ResizablePanelGroup,
   ResizablePanel,
   ResizableHandle,
+  type PanelImperativeHandle,
 } from '@/components/ui/resizable'
 import { TitleBar } from '@/components/titlebar/TitleBar'
 import { LeftSideBar } from './LeftSideBar'
@@ -34,6 +36,21 @@ const MAIN_CONTENT_DEFAULT =
 // react-resizable-panels reads bare numbers as pixels
 const percent = (value: number) => `${value}%`
 
+/**
+ * Keep the store in step when a sidebar is collapsed or expanded by dragging
+ * its handle, rather than with the toggle.
+ */
+function syncVisibility(side: 'left' | 'right', sizePercent: number) {
+  const visible = sizePercent > 0
+  const state = useUIStore.getState()
+  if (side === 'left' && state.leftSidebarVisible !== visible) {
+    state.setLeftSidebarVisible(visible)
+  }
+  if (side === 'right' && state.rightSidebarVisible !== visible) {
+    state.setRightSidebarVisible(visible)
+  }
+}
+
 export function MainWindow() {
   const { theme } = useTheme()
   const leftSidebarVisible = useUIStore(state => state.leftSidebarVisible)
@@ -42,6 +59,21 @@ export function MainWindow() {
   // Set up global event listeners (keyboard shortcuts, etc.)
   useMainWindowEventListeners()
 
+  // Sidebars are hidden by collapsing their panels, so the main content takes
+  // the space. Hiding a panel with CSS would leave its width empty
+  const leftPanelRef = React.useRef<PanelImperativeHandle>(null)
+  const rightPanelRef = React.useRef<PanelImperativeHandle>(null)
+
+  React.useEffect(() => {
+    if (leftSidebarVisible) leftPanelRef.current?.expand()
+    else leftPanelRef.current?.collapse()
+  }, [leftSidebarVisible])
+
+  React.useEffect(() => {
+    if (rightSidebarVisible) rightPanelRef.current?.expand()
+    else rightPanelRef.current?.collapse()
+  }, [rightSidebarVisible])
+
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden rounded-xl bg-background">
       <TitleBar />
@@ -49,10 +81,14 @@ export function MainWindow() {
       <div className="flex flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
+            id="left-sidebar"
+            panelRef={leftPanelRef}
+            collapsible
+            collapsedSize={0}
             defaultSize={percent(LAYOUT.leftSidebar.default)}
             minSize={percent(LAYOUT.leftSidebar.min)}
             maxSize={percent(LAYOUT.leftSidebar.max)}
-            className={cn(!leftSidebarVisible && 'hidden')}
+            onResize={size => syncVisibility('left', size.asPercentage)}
           >
             <LeftSideBar />
           </ResizablePanel>
@@ -62,6 +98,7 @@ export function MainWindow() {
           />
 
           <ResizablePanel
+            id="main"
             defaultSize={percent(MAIN_CONTENT_DEFAULT)}
             minSize={percent(LAYOUT.main.min)}
           >
@@ -73,10 +110,14 @@ export function MainWindow() {
           />
 
           <ResizablePanel
+            id="right-sidebar"
+            panelRef={rightPanelRef}
+            collapsible
+            collapsedSize={0}
             defaultSize={percent(LAYOUT.rightSidebar.default)}
             minSize={percent(LAYOUT.rightSidebar.min)}
             maxSize={percent(LAYOUT.rightSidebar.max)}
-            className={cn(!rightSidebarVisible && 'hidden')}
+            onResize={size => syncVisibility('right', size.asPercentage)}
           >
             <RightSideBar />
           </ResizablePanel>

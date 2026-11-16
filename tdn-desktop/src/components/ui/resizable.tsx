@@ -64,4 +64,5 @@ function ResizableHandle({
   )
 }
 
+export type { PanelImperativeHandle } from 'react-resizable-panels'
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle }
