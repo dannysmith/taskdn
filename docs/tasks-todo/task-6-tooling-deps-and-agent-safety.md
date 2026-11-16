@@ -52,8 +52,8 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
    - `2b3051c`: Oxfmt with the Prettier settings; TOML and Markdown excluded. 7 files reformatted, too few for `.git-blame-ignore-revs`.
    - `6cf97b5`: TypeScript 7. Test helpers reference Node's types themselves; tests use `globalThis` and `import.meta.dirname`.
 5. [x] `90e1264`: Vite 8, plugin-react 6 (compiler via `@rolldown/plugin-babel`, `@babel/core` pinned to 7), Vitest 5 (webstorage workaround removed), jsdom 31, jest-dom 7 (`/vitest` import), `@types/node` 26.
-6. [ ] App majors one at a time: lucide, react-resizable-panels, i18next and react-i18next, shadcn, datepicker.
-7. [ ] `codebase-hygiene` skill (knip 6, jscpd 5), `compiler:check`, ast-grep 0.51.
+6. [x] App majors, one commit each: lucide 1.73 (`e2fc1dc`, every icon still exists); react-resizable-panels 4 (`2ddc84b`: wrapper on Group/Panel/Separator, sizes now explicit percentages since v4 reads numbers as pixels, ResizeObserver stub in tests); i18next 27 and react-i18next 18 (`95b9364`, no changes needed); shadcn 4.23 (`f02beb7`, `tailwind.css` only gained opt-in utilities); datepicker 0.1.6 (`b0f0dcd`, adds an `autoFocus` prop).
+7. [x] ast-grep 0.51 (`282b8bc`); knip 6 and jscpd 5 with a `codebase-hygiene` skill in `tdn-desktop/.claude/skills/` replacing `/cleanup` and `cleanup-analyzer` (`be76627`); `compiler:check` in `check:all` (`527131a`), which found 4 components the compiler skipped for try/catch, now fixed.
 8. [ ] `.github/dependabot.yml`, then docs: `check:all`, `tdn-desktop/AGENTS.md` versions, `static-analysis.md`.
 9. [ ] Finish: production build, audit, smoke test, PR.
 
@@ -73,6 +73,8 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 
 **Issues:**
 
+- knip findings left for a `codebase-hygiene` session with Danny: 2 unused dependencies (`@tanstack/react-query-devtools`; `next-themes`, used only by the unused `ui/sonner.tsx`), 11 unused exports, 7 unused exported types.
+- `sgconfig.yml` points at a `.ast-grep/test` folder that doesn't exist, so `ast-grep test` fails. Unrelated to the upgrade.
 - `.vscode/` is gitignored and the sandbox can't write it, so Danny's local `extensions.json` still recommends Prettier and `settings.json` has no Oxc formatter. Astro Editor's versions are the model.
 - Vite 8 build: one chunk over the 600 kB warning (`theme`, 669 kB). Compare with a Vite 7 build in the finish step.
 - `TaskCard` saves picked dates with `toISOString().split('T')[0]`, which gives the day before in BST (local midnight is 23:00 UTC). Not a lint finding; raised with Danny.
