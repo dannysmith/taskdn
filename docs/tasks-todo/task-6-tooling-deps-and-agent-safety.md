@@ -46,8 +46,12 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 1. [x] Security: `tauri-plugin-updater` 2.14.1 (Rust and JS), `zip` 9.6.0 (`9b683d3`).
 2. [x] JS within ranges (`08c45da`): Milkdown 7.23, TanStack Query 5.107, Tailwind 4.3.5, zustand 5.1, Tauri JS plugins. Transitive majors (zod 4, brace-expansion 5) are only nested under the packages that need them; no nested ProseMirror or Milkdown copies.
 3. [x] Rust (`223ad6b`): `cargo update` with `notify` and `notify-types` held; deep-link unpinned (2.6.3); `dirs` 7; specta rc.28, tauri-specta rc.29, specta-typescript 0.0.15. The new tauri-specta throws by default, so the builder sets `ErrorHandlingMode::Result` to keep `{ status, data | error }`, plus `disable_serde_phases` and `dangerously_cast_bigints_to_number` as in Astro Editor. Knock-ons: `AppPreferences` and `CliConfig` fields are optional in TypeScript now (struct-level `serde(default)`), `Result` is defined in `tauri-bindings.ts`, and `JsonValue` is specta's stricter `Value` (crash info saves missing fields as null).
-4. [ ] Oxlint and Oxfmt replace ESLint and Prettier: one reformat commit, then TypeScript 7.
-5. [ ] Vite 8, plugin-react 6, Vitest 5, jsdom, jest-dom, `@types/node`.
+4. [x] Oxlint, Oxfmt and TypeScript 7:
+   - `52b0966`: Oxlint's React Compiler rules caught 13 sites ESLint missed. Fixed all of them (Danny's call): a `useToday()` hook for `new Date()` during render (TodayView also used the UTC date; kanban overdue now matches `isOverdue`), and render-time state adjustment, a ref or `useSyncExternalStore` for effects that only set state.
+   - `c9407fc`: Oxlint via `@oxlint/migrate`, type-aware, native compiler rules instead of `eslint-plugin-react-compiler`, `oxlint-disable` comments. Dropped the `zod-validation-error` override and tsconfig `baseUrl`.
+   - `2b3051c`: Oxfmt with the Prettier settings; TOML and Markdown excluded. 7 files reformatted, too few for `.git-blame-ignore-revs`.
+   - `6cf97b5`: TypeScript 7. Test helpers reference Node's types themselves; tests use `globalThis` and `import.meta.dirname`.
+5. [x] `90e1264`: Vite 8, plugin-react 6 (compiler via `@rolldown/plugin-babel`, `@babel/core` pinned to 7), Vitest 5 (webstorage workaround removed), jsdom 31, jest-dom 7 (`/vitest` import), `@types/node` 26.
 6. [ ] App majors one at a time: lucide, react-resizable-panels, i18next and react-i18next, shadcn, datepicker.
 7. [ ] `codebase-hygiene` skill (knip 6, jscpd 5), `compiler:check`, ast-grep 0.51.
 8. [ ] `.github/dependabot.yml`, then docs: `check:all`, `tdn-desktop/AGENTS.md` versions, `static-analysis.md`.
@@ -69,6 +73,9 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 
 **Issues:**
 
+- `.vscode/` is gitignored and the sandbox can't write it, so Danny's local `extensions.json` still recommends Prettier and `settings.json` has no Oxc formatter. Astro Editor's versions are the model.
+- Vite 8 build: one chunk over the 600 kB warning (`theme`, 669 kB). Compare with a Vite 7 build in the finish step.
+- `TaskCard` saves picked dates with `toISOString().split('T')[0]`, which gives the day before in BST (local midnight is 23:00 UTC). Not a lint finding; raised with Danny.
 - `cargo clippy --all-targets` shows 7 warnings in existing test code (`commands/quick_pane.rs`, `vault/manager.rs`). `check:all` doesn't lint tests; fix them when it moves to `--all-targets` like Astro Editor (step 8).
 
 ## Phase 2: Desktop dev identity
