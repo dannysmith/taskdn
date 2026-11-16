@@ -73,7 +73,7 @@ This is a **monorepo**. Each `tdn-*` directory is a self-contained project with 
 
 ```
 taskdn/
-├── demo-vault/          # Sample vault for testing
+├── demo-vault-templates/ # Test vault templates, rendered into demo-vaults/ (gitignored)
 ├── docs/                # Project-wide documentation
 │   ├── archive/         # Old docs for reference
 │   ├── developer/       # Developer guides common to all products
@@ -100,8 +100,9 @@ Run these from the repository root with `bun <script>`:
 | `versions` | Show local vs published versions for all products |
 | `monorepo:check` | Run lint, typecheck, and tests across all products |
 | `cli:install-local` | Install the CLI locally via symlink (for development) |
-| `demo:reset` | Reset the dummy test vault to a clean state |
-| `demo:import-to-things` | Import demo vault tasks into Things.app |
+| `vault` | Render, generate and inspect test vaults (`bun run vault` for help) |
+| `test:vaults` | Test the vault toolkit and templates |
+| `demo:import-to-things` | Import a rendered demo vault into Things.app |
 | `task:complete` | Move a completed dev task to tasks-done |
 | `task:rename-done` | Add dates to existing completed task files |
 

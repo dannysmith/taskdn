@@ -2,19 +2,21 @@
 /**
  * Import Demo Vault to Things 3
  *
- * One-off script that reads the demo-vault (areas, projects, tasks) and imports
+ * One-off script that reads a rendered demo vault (areas, projects, tasks) and imports
  * them into Things 3 via the Things URL scheme. Created for testing the desktop
  * app UI against real-ish data in Things 3.
  *
  * What it does:
- * - Reads all projects from demo-vault/projects/
- * - Reads all tasks from demo-vault/tasks/ (including archive/)
+ * - Reads all projects from <vault>/projects/
+ * - Reads all tasks from <vault>/tasks/ (including archive/)
  * - Maps Taskdn statuses to Things statuses (inbox→Inbox, in-progress→Today, etc.)
  * - Nests tasks inside their parent projects where applicable
  * - Opens Things 3 URLs in batches to create everything
  *
  * Usage:
- *   bun scripts/import-demo-vault-to-things.ts [--dry-run] [--batch-size=N]
+ *   bun scripts/import-demo-vault-to-things.ts [vault] [--dry-run] [--batch-size=N]
+ *
+ * The vault defaults to demo-vaults/demo; create it with `bun run vault render demo`.
  *
  * Limitations:
  * - Things 3 URL scheme cannot create Areas - you must create them manually first
@@ -24,13 +26,16 @@
  */
 
 import { readdir, readFile } from "fs/promises";
-import { join } from "path";
+import { join, resolve } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
 
-const DEMO_VAULT = join(import.meta.dir, "..", "demo-vault");
+const DEMO_VAULT = resolve(
+  process.argv.slice(2).find((a) => !a.startsWith("--")) ??
+    join(import.meta.dir, "..", "demo-vaults", "demo")
+);
 const BATCH_SIZE = parseInt(process.argv.find(a => a.startsWith("--batch-size="))?.split("=")[1] ?? "10");
 const DRY_RUN = process.argv.includes("--dry-run");
 
@@ -318,7 +323,7 @@ async function main() {
   }
 
   // 1. Read all data
-  console.log("📂 Reading demo-vault...\n");
+  console.log(`📂 Reading ${DEMO_VAULT}...\n`);
 
   const areas = await readMarkdownFiles<AreaFrontmatter>(join(DEMO_VAULT, "areas"));
   const projects = await readMarkdownFiles<ProjectFrontmatter>(join(DEMO_VAULT, "projects"));

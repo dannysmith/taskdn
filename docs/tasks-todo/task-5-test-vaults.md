@@ -129,16 +129,17 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 
 ### Phase 5: Switch over
 
-- [ ] Remove `demo-vault/`, `dummy-demo-vault/` and `scripts/reset-dummy-vault.sh`. Add `demo-vaults/` to `.gitignore`.
-- [ ] `package.json` scripts: replace `demo:reset`; point `demo:import-to-things` at a rendered vault (default `demo-vaults/demo`, overridable with an argument).
-- [ ] Desktop: `get_dummy_vault_paths` and its test use `demo-vaults/demo`.
-- [ ] Docs:
+- [x] Remove `demo-vault/`, `dummy-demo-vault/` and `scripts/reset-dummy-vault.sh`. Add `demo-vaults/` to `.gitignore`.
+- [x] `package.json` scripts: replace `demo:reset`; point `demo:import-to-things` at a rendered vault (default `demo-vaults/demo`, overridable with an argument). `demo:reset` is gone: `bun run vault render demo` does the job.
+- [x] Desktop: `get_dummy_vault_paths` and its test use `demo-vaults/demo`. Renamed to `get_demo_vault_paths` and the "Use Demo Vault" button, since the dummy vault no longer exists.
+- [x] Docs:
   - `AGENTS.md` (demo vault table and reset instructions)
   - root `README.md`
   - `docs/monorepo-architecture.md`
   - `tdn-desktop/docs/developer/data-persistence.md`
   - `tdn-cli/docs/developer/testing.md`
   - `tdn-desktop/src/test/fixtures/vault/README.md`
+  - also `tdn-cli/README.md` and the Things import script
 
 ### Phase 6: Persona generator (#26)
 

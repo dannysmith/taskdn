@@ -183,10 +183,10 @@ async isDevMode() : Promise<boolean> {
     return await TAURI_INVOKE("is_dev_mode");
 },
 /**
- * Get dummy vault paths for development testing (only in debug builds)
+ * Get demo vault paths for development testing (only in debug builds)
  */
-async getDummyVaultPaths() : Promise<DummyVaultPaths> {
-    return await TAURI_INVOKE("get_dummy_vault_paths");
+async getDemoVaultPaths() : Promise<DemoVaultPaths> {
+    return await TAURI_INVOKE("get_demo_vault_paths");
 },
 /**
  * Initialize the vault with the given configuration.
@@ -502,9 +502,9 @@ export type CreateProjectOptions = { title: string; status: ProjectStatus | null
  */
 export type CreateTaskOptions = { title: string | null; status: TaskStatus | null; projectId: string | null; areaId: string | null; scheduled: string | null; due: string | null; deferUntil: string | null }
 /**
- * Paths to dummy vault for development testing
+ * Paths to the demo vault for development testing
  */
-export type DummyVaultPaths = { tasksDir: string; areasDir: string; projectsDir: string }
+export type DemoVaultPaths = { tasksDir: string; areasDir: string; projectsDir: string }
 export type JsonValue = null | boolean | number | string | JsonValue[] | Partial<{ [key in string]: JsonValue }>
 /**
  * A name+ID pair for passing project/area context to the AI processor.

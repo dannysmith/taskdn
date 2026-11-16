@@ -1,6 +1,6 @@
 # Test Fixture Vault
 
-This directory contains deterministic test fixtures for automated tests. These are minimal fixtures designed for testing, not for realistic exploration (see `demo-vault/` for that).
+This directory contains deterministic test fixtures for automated tests. These are minimal fixtures designed for testing, not for realistic exploration (see the test vaults in `demo-vault-templates/` for that).
 
 ## Structure
 
