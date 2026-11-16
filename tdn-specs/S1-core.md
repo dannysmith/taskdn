@@ -30,6 +30,8 @@ A link format originating from wiki software, used by tools like [Obsidian](http
 - With display text: `[[Page Name|Display Text]]`
 - With heading: `[[Page Name#Heading]]`
 
+This specification only gives wikilinks a meaning in reference fields (§4.6).
+
 ### ISO 8601
 
 An international standard for date and time representation. This specification uses:
@@ -41,11 +43,7 @@ Datetime values SHOULD be interpreted as local time. Timezone suffixes (`Z`, `+H
 
 ### File Reference
 
-A reference to another file, expressed as one of:
-
-- A WikiLink: `[[Project Name]]`
-- A relative path: `./projects/my-project.md`
-- A filename: `my-project.md`
+A value in a reference field that names another entity, such as `"[[Japan Trip]]"`. §4.6 defines the forms a reference can take and how it resolves.
 
 ---
 
@@ -146,6 +144,33 @@ Only the required fields decide whether a file is an entity. For every entity:
 2. Readers MUST match a status against these values ignoring case, and treating `_` and spaces as `-`. For example, `Ready` matches `ready`, and `IN_PROGRESS` and `In Progress` match `in-progress`.
 3. A status that matches none of the values is unknown, and the file doesn't conform. Readers MUST still treat the file as an entity with an unknown status, and SHOULD NOT treat that status as any of the defined values.
 4. Writers that set a status MUST write one of the values for its type, in lowercase.
+
+### 4.6 References
+
+Four fields refer to other entities: a task's `area` and `projects`, and a project's `area` and `blocked-by`. The field decides the type of entity referred to: `area` refers to an area, and `projects` and `blocked-by` refer to projects. This specification says nothing about links anywhere else, including in the Markdown body.
+
+1. Readers MUST accept a reference in any of these forms. Each of these refers to the same project:
+
+   ```yaml
+   "[[Japan Trip]]"                              # wikilink
+   "[[Japan Trip|the trip]]"                     # wikilink with display text
+   "[[Japan Trip#Bookings]]"                     # wikilink with a heading
+   "[[projects/Japan Trip]]"                     # wikilink with a path
+   "[[../projects/Japan Trip.md]]"               # wikilink with a relative path and extension
+   "[Japan Trip](../projects/Japan%20Trip.md)"   # Markdown link
+   "[Japan Trip](<../projects/Japan Trip.md>)"   # Markdown link in angle brackets
+   "../projects/Japan Trip.md"                   # path
+   "Japan Trip.md"                               # filename
+   "Japan Trip"                                  # name or title
+   ```
+
+   Readers also accept an unquoted wikilink (§3.2).
+
+2. A reference's name is what remains without its link syntax: the `[[ ]]` or Markdown link syntax, display text after `|`, a heading after `#`, percent-encoding (`%20` is a space), any folder path (up to the last `/` or `\`), and a trailing `.md` in any case. A Markdown link's name comes from its destination, not its link text.
+3. A reference refers to the entity of the referenced type whose filename, without `.md`, matches its name. If no filename matches, it refers to the entity whose `title` matches. Names match ignoring case, after Unicode normalisation (NFC). Folder paths play no part, because the field decides the directory and the directories share no common root (§3.1): `area: "[[projects/Garden]]"` refers to the area `Garden.md`.
+4. A reference that matches more than one entity at the same step is ambiguous. Readers SHOULD NOT assume which entity it refers to. They MAY instead show the matches, or ask the user to choose.
+5. A reference that matches no entity is dangling. Dangling references are valid.
+6. Writers MAY write a reference in any of the forms above, quoted (§3.3). S2 recommends one.
 
 ---
 

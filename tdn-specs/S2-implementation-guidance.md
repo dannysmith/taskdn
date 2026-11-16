@@ -98,6 +98,10 @@ Implementations SHOULD ignore unknown frontmatter fields during processing. This
 
 S1 requires readers to ignore files in entity directories that aren't entities. Implementations that report problems with files SHOULD list the files they ignored, with the reason (for example "no `status`", "frontmatter is not valid YAML" or "no frontmatter"), so that they can be found.
 
+### 5.4 References
+
+Implementations that report problems with files SHOULD report ambiguous references (S1 §4.6), and MAY report dangling ones, which are valid.
+
 ---
 
 ## 6. Writing Files
