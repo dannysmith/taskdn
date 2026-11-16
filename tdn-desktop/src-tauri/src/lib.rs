@@ -28,6 +28,8 @@ pub use types::DEFAULT_QUICK_PANE_SHORTCUT;
 /// Application entry point. Sets up all plugins and initializes the app.
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    log_panics();
+
     let context = tauri::generate_context!();
     #[cfg(debug_assertions)]
     dev_identity::exit_unless_dev_identifier(&context.config().identifier);
@@ -43,6 +45,19 @@ pub fn run() {
         .build(context)
         .expect("error while building tauri application")
         .run(handle_run_event);
+}
+
+/// Write any panic to the log before the process dies, so a crash in a release
+/// build leaves a trace in the log file. Release builds abort on panic and are
+/// stripped, so the panic message (which names the file and line) is all there is.
+fn log_panics() {
+    let default_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |info| {
+        let thread = std::thread::current();
+        let thread_name = thread.name().unwrap_or("unnamed");
+        log::error!("Panic on thread '{thread_name}': {info}");
+        default_hook(info);
+    }));
 }
 
 /// Export TypeScript bindings in debug builds when not bundled.

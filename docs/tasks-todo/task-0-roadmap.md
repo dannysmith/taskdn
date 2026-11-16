@@ -1,6 +1,6 @@
 # Roadmap
 
-The order for the work that came out of the November 2026 review. Each top-level item is roughly one session or PR. Items 1–7 have their own task docs; later items get docs when we get closer to them. Items below the line don't get numbers yet. Background and reasoning are in `docs/tasks-todo/temporary/` (`taskdn-review.md`, `spec-review.md`, `view-state-identity-and-core.md`).
+The order for the work that came out of the November 2026 review. Each top-level item is roughly one session or PR. Items 1–6 have their own task docs; later items get docs when we get closer to them. Items below the line don't get numbers yet. Background and reasoning are in `docs/tasks-todo/temporary/` (`taskdn-review.md`, `spec-review.md`, `view-state-identity-and-core.md`).
 
 - [x] **1. Housekeeping** (on main) → `task-1-housekeeping.md`
   - [x] Fix stale docs and pointers
@@ -13,7 +13,7 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Stop committing desktop installers; stable-named release assets instead
   - [x] CI for desktop and website on PRs
   - [x] Release notes flow to the website reliably for every product
-  - [x] Bring across what helps from Astro Editor (caching, action versions; test builds deferred to task 7)
+  - [x] Bring across what helps from Astro Editor (caching, action versions)
 - [x] **3. Remove installers from git history** → `task-3-remove-installers-from-history.md`
 - [x] **4. CLI 1.0.2** → `task-4-cli-1-0-2.md`
   - [x] Fix `--json` output starting with an ANSI reset code
@@ -33,7 +33,6 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Desktop: agent bridge, `bun run app`, styleguide, release logging (#70)
   - [x] Agents running `tdn` anywhere in the repo always hit a test vault (#71)
   - [x] Repo skills; website and CLI dependencies (#71)
-- [ ] **7. Desktop crash resilience** (the 1am "quit unexpectedly" crash) → `task-7-desktop-crash-resilience.md`
 - [ ] **8. Spec 1.1**
   - [ ] Deterministic reference resolution
   - [ ] Links that resolve in Obsidian: the CLI names files `japan-trip.md` but writes links as `[[Japan Trip]]`, and Obsidian matches links to filenames, not titles. Either name project and area files after their titles (as the starter vault does) or write links by filename

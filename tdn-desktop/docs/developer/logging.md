@@ -31,6 +31,7 @@ logger.error('Request failed', { error: response.error })
 - Uses `tauri-plugin-log` with the standard Rust `log` crate, configured in `configure_log_plugin()` in `src-tauri/src/lib.rs`
 - **Development**: Debug level. **Release**: Info level. `tao` and `wry` are held at info in both, because they log every focus change below that
 - Every build writes to stdout, the webview console and the log file
+- A panic hook (`log_panics()`) logs any Rust panic as an error, with its file and line, before the process dies. Release builds abort on panic and are stripped, so there's no backtrace
 
 ### TypeScript Frontend
 
