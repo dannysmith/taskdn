@@ -35,7 +35,7 @@ tauri-plugin-os = "2"
 tauri-plugin-global-shortcut = "2"
 log = "0.4"
 regex = "1"
-dirs = "6"
+dirs = "7"
 
 # Vault management dependencies
 gray_matter = "0.2"                          # Frontmatter parsing
@@ -50,12 +50,10 @@ parking_lot = "0.12"                         # Better RwLock implementation
 trash = "5"                                  # Cross-platform trash/recycle bin
 
 # Type-safe Tauri command bindings
-specta = { version = "=2.0.0-rc.22", features = ["derive", "serde_json"] }
-tauri-specta = { version = "=2.0.0-rc.21", features = ["typescript"] }
-specta-typescript = "=0.0.9"
-# 2.6.2 doesn't compile on Linux against rust-ini 0.21.3
-# (tauri-apps/plugins-workspace#3710). Unpin once a fixed 2.6.x is released.
-tauri-plugin-deep-link = "=2.6.1"
+specta = { version = "=2.0.0-rc.28", features = ["serde_json"] }
+tauri-specta = { version = "=2.0.0-rc.29", features = ["derive", "typescript"] }
+specta-typescript = "=0.0.15"
+tauri-plugin-deep-link = "2"
 fuzzydate = "0.4.0"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

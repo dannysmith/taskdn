@@ -34,7 +34,7 @@ export function QuickEntryPane() {
   const handleShortcutChange = async (newShortcut: string | null) => {
     if (!preferences) return
 
-    const oldShortcut = preferences.quickPaneShortcut
+    const oldShortcut = preferences.quickPaneShortcut ?? null
 
     logger.info('Updating quick pane shortcut', { oldShortcut, newShortcut })
 

@@ -175,7 +175,14 @@ export async function saveCrashState(
   const crashData = {
     timestamp,
     state,
-    crashInfo,
+    // JSON has no undefined, so missing details are saved as null
+    crashInfo: crashInfo
+      ? {
+          error: crashInfo.error ?? null,
+          stack: crashInfo.stack ?? null,
+          componentStack: crashInfo.componentStack ?? null,
+        }
+      : null,
     userAgent: navigator.userAgent,
     url: window.location.href,
   }

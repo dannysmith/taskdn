@@ -42,7 +42,7 @@ function App() {
         // Load preferences to get saved language
         const result = await commands.loadPreferences()
         const savedLanguage =
-          result.status === 'ok' ? result.data.language : null
+          result.status === 'ok' ? (result.data.language ?? null) : null
 
         // Initialize language (will use system locale if no preference)
         await initializeLanguage(savedLanguage)
