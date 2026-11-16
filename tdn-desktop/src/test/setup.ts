@@ -23,6 +23,15 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
+// jsdom has no ResizeObserver; react-resizable-panels measures panels with one
+class ResizeObserverStub {
+  observe = vi.fn()
+  unobserve = vi.fn()
+  disconnect = vi.fn()
+}
+globalThis.ResizeObserver ??=
+  ResizeObserverStub as unknown as typeof ResizeObserver
+
 // =============================================================================
 // Tauri API Mocks
 // =============================================================================

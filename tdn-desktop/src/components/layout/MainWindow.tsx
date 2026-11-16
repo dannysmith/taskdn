@@ -31,6 +31,9 @@ const LAYOUT = {
 const MAIN_CONTENT_DEFAULT =
   100 - LAYOUT.leftSidebar.default - LAYOUT.rightSidebar.default
 
+// react-resizable-panels reads bare numbers as pixels
+const percent = (value: number) => `${value}%`
+
 export function MainWindow() {
   const { theme } = useTheme()
   const leftSidebarVisible = useUIStore(state => state.leftSidebarVisible)
@@ -46,9 +49,9 @@ export function MainWindow() {
       <div className="flex flex-1 overflow-hidden">
         <ResizablePanelGroup direction="horizontal">
           <ResizablePanel
-            defaultSize={LAYOUT.leftSidebar.default}
-            minSize={LAYOUT.leftSidebar.min}
-            maxSize={LAYOUT.leftSidebar.max}
+            defaultSize={percent(LAYOUT.leftSidebar.default)}
+            minSize={percent(LAYOUT.leftSidebar.min)}
+            maxSize={percent(LAYOUT.leftSidebar.max)}
             className={cn(!leftSidebarVisible && 'hidden')}
           >
             <LeftSideBar />
@@ -59,8 +62,8 @@ export function MainWindow() {
           />
 
           <ResizablePanel
-            defaultSize={MAIN_CONTENT_DEFAULT}
-            minSize={LAYOUT.main.min}
+            defaultSize={percent(MAIN_CONTENT_DEFAULT)}
+            minSize={percent(LAYOUT.main.min)}
           >
             <MainWindowContent />
           </ResizablePanel>
@@ -70,9 +73,9 @@ export function MainWindow() {
           />
 
           <ResizablePanel
-            defaultSize={LAYOUT.rightSidebar.default}
-            minSize={LAYOUT.rightSidebar.min}
-            maxSize={LAYOUT.rightSidebar.max}
+            defaultSize={percent(LAYOUT.rightSidebar.default)}
+            minSize={percent(LAYOUT.rightSidebar.min)}
+            maxSize={percent(LAYOUT.rightSidebar.max)}
             className={cn(!rightSidebarVisible && 'hidden')}
           >
             <RightSideBar />
