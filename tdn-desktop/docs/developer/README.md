@@ -45,6 +45,7 @@ Technical documentation for building and extending this app. These docs describe
 
 | Document                                              | Description                                             |
 | ----------------------------------------------------- | ------------------------------------------------------- |
+| [Agent Tooling](./agent-tooling.md)                   | Dev identity, worktree dev slots, dev logs              |
 | [Static Analysis](./static-analysis.md)               | Oxlint, Oxfmt, ast-grep, knip, jscpd, React Compiler   |
 | [Writing ast-grep Rules](./writing-ast-grep-rules.md) | AI reference for creating custom rules                  |
 | [Testing](./testing.md)                               | Test patterns, Tauri mocking                            |

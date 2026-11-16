@@ -15,8 +15,8 @@ Taskdn Desktop is a desktop application for managing [S1-compliant](../tdn-specs
 ## Key Commands
 
 ```bash
-bun install              # Install dependencies
-bun run tauri:dev        # Run development build
+bun run setup            # Install dependencies; in a worktree, claim a dev slot
+bun run tauri:dev        # Run development build (own identity, opens the demo vault)
 bun run check:all        # Run all checks (TS, Oxlint, Oxfmt, ast-grep, React Compiler, clippy, tests)
 bun run test             # Run Vitest tests
 ```
@@ -141,6 +141,7 @@ Key documents:
 - `state-management.md` - State onion, getState() pattern details
 - `tauri-commands.md` - Adding new Rust commands
 - `static-analysis.md` - All linting tools and quality gates
+- `agent-tooling.md` - Dev identity and worktree slots: dev builds never touch the installed app or a real vault
 
 ## Claude Code Commands, Skills & Agents
 
