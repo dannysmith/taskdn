@@ -36,20 +36,20 @@ A repo skill that has Claude build a realistic test vault for an invented person
 2. `bun run vault new <name>`, with the name based on the persona.
 3. Write `persona.md`, then `vault-plan.md` with the areas and projects and the reasoning behind them.
 4. Describe areas, projects, tasks and notes as JSON plans with dates relative to the reference date (`D+3`, `{{D-1}}` in text), and load them with `bun run vault populate`. Large vaults split tasks across subagents, one plan file each.
-5. A subagent reviews everything critically for realism and consistency and fixes what it finds.
-6. Write `playbook.md`: scenarios to try in each tool, e.g. "Do a weekly review in the desktop app: are the right tasks surfaced?"
+5. Write `playbook.md`: scenarios to try in each tool, e.g. "Do a weekly review in the desktop app: are the right tasks surfaced?"
+6. A subagent reviews everything, including the playbook, critically for realism, consistency and local details, and fixes what it finds.
 7. Check with `bun run vault report` and `tdn doctor`; fix any problems.
 8. Tell the user how to open it in each tool.
 
 ## Phases
 
 - [x] Write the skill, plus `vault populate` so Claude writes data rather than code. The skill takes freeform instructions that override all its defaults, so other sessions can ask for exactly the vault they need.
-- [ ] Generate one persona vault end to end and review it together. A library of personas isn't needed yet.
-- [ ] Document it in `AGENTS.md`'s test vaults section, and close #26.
+- [x] Generate one persona vault end to end. A cold subagent built `rosalind-achterberg` (small, desktop-app user on Shetland): 116 tasks, every date case, 0 problems, `tdn doctor` clean. Its review caught an English power of attorney in a Scottish vault. Fixes from its report: `populate` rejects unknown fields and lists task filenames; the skill limits times to created/updated/completed (`doctor` bug, now on the roadmap), widens the "can't move" rule to seasons and holidays, checks local details in review, writes the playbook before the review, and treats `.plans/` as a record rather than something to rebuild from.
+- [x] Document it in `AGENTS.md`'s test vaults section. #26 closes with this PR.
 
 ## Gotchas
 
-- **Dates must be relative.** Write every date from the vault's reference date, using the date layer in the demo README as a checklist, so the vault can be shifted later. Avoid weekdays, months and years in titles and prose.
+- **Dates must be relative.** Write every date from the vault's reference date, using the date layer in the demo README as a checklist, so the vault can be shifted later. Avoid weekdays, months, years, seasons and holidays in titles and prose.
 - **Persona notes aren't entities.** `persona.md`, `vault-plan.md` and `playbook.md` go in the vault root, outside the entity folders, so tools ignore them.
 - **Writing the skill needs permission.** The sandbox blocks writes to `.claude/skills/`, so creating the skill file will prompt.
 - **Keepers can become templates.** A vault worth keeping can be committed to `demo-vault-templates/` with a `.vault.json` reference date.

@@ -13,7 +13,7 @@ import { tmpdir } from 'node:os'
 import { join, relative } from 'node:path'
 import { generateVault } from './generate.ts'
 import { readMeta, writeMeta } from './meta.ts'
-import { populateVault } from './populate.ts'
+import { populateVault, type VaultPlan } from './populate.ts'
 import { VAULTS_DIR } from './paths.ts'
 import { newVault, renderTemplate } from './render.ts'
 import { reportVault } from './report.ts'
@@ -267,7 +267,12 @@ describe('populateVault', () => {
       notes: [{ path: 'day-notes/{{D-1}}.md', body: 'Picked tiles. Plumber on {{D}}.' }],
     })
 
-    expect(result).toEqual({ areas: 0, projects: 0, tasks: 2, notes: 1 })
+    expect(result).toEqual({
+      areas: 0,
+      projects: 0,
+      taskFiles: ['tasks/order-tiles.md', 'tasks/call-plumber.md'],
+      notes: 1,
+    })
     expect(readFileSync(join(vaultDir, 'projects/Kitchen.md'), 'utf8')).toContain(
       'start-date: 2025-12-16',
     )
@@ -293,6 +298,12 @@ describe('populateVault', () => {
     }
     expect(() => populateVault(vaultDir, plan)).toThrow(/tasks\[0\]\.due: "next week"/)
     expect(existsSync(join(vaultDir, 'areas/Home.md'))).toBe(false)
+
+    // A misspelt field is an error, not silently dropped
+    const typo = { tasks: [{ title: 'T', status: 'ready', createdAt: 'D', deferuntil: 'D+3' }] }
+    expect(() => populateVault(vaultDir, typo as VaultPlan)).toThrow(
+      /tasks\[0\]: unknown field "deferuntil"/,
+    )
 
     expect(() => populateVault(vaultDir, { notes: [{ path: '../escape.md', body: 'x' }] })).toThrow(
       /inside the vault/,

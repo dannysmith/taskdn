@@ -197,8 +197,10 @@ function run(command: string) {
       for (const planFile of extra) {
         const r = populateFromFile(vaultDir, planFile)
         console.log(
-          `${planFile}: ${r.areas} areas, ${r.projects} projects, ${r.tasks} tasks, ${r.notes} notes`,
+          `${planFile}: ${r.areas} areas, ${r.projects} projects, ${r.taskFiles.length} tasks, ${r.notes} notes`,
         )
+        // Task filenames, for linking to tasks from note bodies
+        for (const file of r.taskFiles) console.log(`  ${file}`)
       }
       break
     }
