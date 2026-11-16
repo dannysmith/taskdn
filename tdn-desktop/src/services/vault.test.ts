@@ -816,7 +816,7 @@ describe('vault service', () => {
       const error = {
         type: 'unknownType',
         message: 'Something unexpected',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // oxlint-disable-next-line @typescript-eslint/no-explicit-any
       } as any
       const result = formatVaultError(error)
       expect(result).toContain('Unknown error')

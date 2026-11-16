@@ -628,7 +628,7 @@ function LooseTasksSwimlane({
 // Hook: useCollapsedColumns (re-export with area-specific defaults)
 // -----------------------------------------------------------------------------
 
-// eslint-disable-next-line react-refresh/only-export-components
+// oxlint-disable-next-line react-refresh/only-export-components
 export function useAreaCollapsedColumns() {
   const [collapsedColumns, setCollapsedColumns] = React.useState<
     Set<TaskStatus>

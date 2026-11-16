@@ -78,7 +78,7 @@ export function ProjectStatusIndicator({
   }
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
+// oxlint-disable-next-line react-refresh/only-export-components
 export function getProjectTitleClass(
   status: ProjectStatus | null | undefined
 ): string {
