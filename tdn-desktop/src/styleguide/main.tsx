@@ -1,6 +1,6 @@
 /**
  * Dev-only styleguide: every UI component the app uses, in each state. Vite
- * serves it at http://localhost:1420/styleguide.html (the slot's port in a
+ * serves it at http://localhost:1520/styleguide.html (the slot's port in a
  * worktree) but only builds index.html and quick-pane.html, so it never ships.
  * `bun run app styleguide` screenshots it.
  */

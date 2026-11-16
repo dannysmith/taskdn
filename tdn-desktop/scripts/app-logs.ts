@@ -140,6 +140,27 @@ export function formatEntry(entry: Entry, full: boolean): string {
 }
 
 /**
+ * The plugin log's text, oldest first: the archives rotation keeps
+ * (`<product name>_<date>.log`, whose dates sort as text), then the active file.
+ * So a recent entry is still found just after the file rotates.
+ */
+export async function readPluginLog(
+  dir: string,
+  productName: string
+): Promise<string> {
+  const archivePrefix = `${productName}_`
+  const archives = (await readdir(dir).catch(() => []))
+    .filter(name => name.startsWith(archivePrefix) && name.endsWith('.log'))
+    .sort()
+  const texts = await Promise.all(
+    [...archives, `${productName}.log`].map(name =>
+      readIfExists(path.join(dir, name))
+    )
+  )
+  return texts.join('\n')
+}
+
+/**
  * Matching entries, oldest first. Entries from the dev terminal have no
  * timestamps; that file only covers the current run, so `since` doesn't apply.
  */
@@ -149,9 +170,7 @@ export async function readLogs(
   options: LogOptions
 ): Promise<string> {
   const dir = logDir(identifier)
-  const pluginEntries = parsePluginLog(
-    await readIfExists(path.join(dir, `${productName}.log`))
-  )
+  const pluginEntries = parsePluginLog(await readPluginLog(dir, productName))
   const devEntries = parseDevLog(
     await readIfExists(path.join(dir, 'tauri-dev.log'))
   )

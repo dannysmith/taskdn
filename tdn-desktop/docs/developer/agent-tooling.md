@@ -31,10 +31,11 @@ Each git worktree of the repo can run its own dev app alongside the others. `scr
 
 | Slot | Checkout   | Identifier                       | Product name | Vite port  |
 | ---- | ---------- | -------------------------------- | ------------ | ---------- |
-| 0    | main       | `is.danny.taskdn-desktop.dev`    | Taskdn Dev   | 1420       |
-| 1–4  | a worktree | `is.danny.taskdn-desktop.dev<n>` | Taskdn Dev n | 1420 + 10n |
+| 0    | main       | `is.danny.taskdn-desktop.dev`    | Taskdn Dev   | 1520       |
+| 1–4  | a worktree | `is.danny.taskdn-desktop.dev<n>` | Taskdn Dev n | 1520 + 10n |
 
 - **The identifier** gives each slot its own app data, logs and single-instance lock. Two dev apps with the same identifier would share preferences, and the second would hand over to the first and quit. All slots share one WebKit folder, but storage in it is keyed by origin, so the port separates it.
+- **The ports** start at 1520 rather than Tauri's usual 1420 (and the agent bridge prefers 1522), so the dev app runs alongside other Tauri dev apps on this machine, such as Astro Editor's.
 - **The demo vault** is the worktree's own `demo-vaults/demo`, so each dev app edits its own copy.
 - **The main checkout** is the one whose `git rev-parse --git-dir` is the shared `--git-common-dir`. It's always slot 0 and needs no file.
 - **A worktree** gets its slot from `bun run setup` in `tdn-desktop/` (`scripts/setup.ts`), which takes the lowest slot no other worktree has and whose Vite port is free (a removed worktree's dev app may still be running), and writes it to `tdn-desktop/dev-slot.local` (gitignored by `*.local`). Removing the worktree frees it. A slot file that doesn't hold 1–4 counts as no slot. `tauri:dev` in a worktree without one stops and says to run setup, rather than clash with slot 0.
@@ -49,7 +50,7 @@ The sandbox in the repo's `.claude/settings.json` lists each slot's app data fol
 
 Three parts, all debug-only:
 
-- **`src-tauri/src/agent_bridge/`**: an HTTP server on `127.0.0.1` (port 1422, or a random one if that's taken, as it is for every slot after the first) with endpoints for eval, snapshot, window (size, appearance and navigation) and health. On startup it writes `{ port, token, pid }` to `agent-bridge.json` in the app data folder, and removes it on exit. Requests must send the token in `x-agent-bridge-token`, so a web page open in a browser can't call it. Eval, snapshot and window act on the main window unless the request names another (`"window": "quick-pane"`).
+- **`src-tauri/src/agent_bridge/`**: an HTTP server on `127.0.0.1` (port 1522, or a random one if that's taken, as it is for every slot after the first) with endpoints for eval, snapshot, window (size, appearance and navigation) and health. On startup it writes `{ port, token, pid }` to `agent-bridge.json` in the app data folder, and removes it on exit. Requests must send the token in `x-agent-bridge-token`, so a web page open in a browser can't call it. Eval, snapshot and window act on the main window unless the request names another (`"window": "quick-pane"`).
   - **Eval:** wraps the snippet in an async function. `eval_with_callback` can't await, so the result is stored on `window.__agentBridgeResults` and polled for.
   - **Snapshots:** use `WKWebView.takeSnapshot`. It needs no Screen Recording permission, doesn't raise or focus the window, and works while the window is behind others. It captures the webview only, so native menus, dialogs, the vibrancy and the quick pane's transparent edges are missing. macOS only; elsewhere the endpoint returns an error.
 - **`src/lib/agent-bridge/`**: the `window.__agentBridge` API the CLI calls through eval:
@@ -68,7 +69,7 @@ To add an app action, add a method to `createAgentApi` (or `createPageApi` if it
 
 ## Styleguide
 
-`styleguide.html` and `src/styleguide/` make up a second Vite entry. Vite only builds `index.html` and `quick-pane.html`, so it never ships (knip is told about it in `knip.json`). It shows the app's components in each state, with fake data. One section per page (`?section=<id>`) fits the dev window at its minimum size, so each can be screenshotted whole; overlays are rendered open on their own pages. `bun run app styleguide` shoots every section in both themes. The styleguide runs inside the dev app's webview, so Tauri calls work; it also opens in a browser at `localhost:1420/styleguide.html` (or the slot's port in a worktree).
+`styleguide.html` and `src/styleguide/` make up a second Vite entry. Vite only builds `index.html` and `quick-pane.html`, so it never ships (knip is told about it in `knip.json`). It shows the app's components in each state, with fake data. One section per page (`?section=<id>`) fits the dev window at its minimum size, so each can be screenshotted whole; overlays are rendered open on their own pages. `bun run app styleguide` shoots every section in both themes. The styleguide runs inside the dev app's webview, so Tauri calls work; it also opens in a browser at `localhost:1520/styleguide.html` (or the slot's port in a worktree).
 
 When you add or change a shared component, add it to a section in `src/styleguide/sections.tsx`.
 

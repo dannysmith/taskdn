@@ -72,11 +72,12 @@ export function createAgentApi(deps: AgentApiDeps) {
   const { idle } = page
 
   async function state() {
+    // From disk: switching vault clears the query cache. Read first, so the
+    // UI below is read after the wait and agrees with the dialogs found in the DOM
+    const prefs = await loadPreferences()
     const { selection } = useNavigationStore.getState()
     const ui = useUIStore.getState()
     const task = commandContext.getSelectedTask()
-    // From disk: switching vault clears the query cache
-    const prefs = await loadPreferences()
     return {
       view: selection,
       task: task && { id: task.id, title: task.title, status: task.status },

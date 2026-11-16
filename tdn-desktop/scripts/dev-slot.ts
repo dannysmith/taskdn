@@ -14,7 +14,8 @@ export const MAX_SLOT = 4
 export const SLOT_FILE = 'dev-slot.local'
 /** Where the desktop app lives, relative to a checkout's root */
 export const APP_DIR = 'tdn-desktop'
-const BASE_PORT = 1420
+// Not Tauri's usual 1420, which Astro Editor's dev app uses, so both can run at once
+const BASE_PORT = 1520
 
 export interface Checkout {
   root: string

@@ -6,7 +6,7 @@
   "build": {
     "removeUnusedCommands": true,
     "beforeDevCommand": "bun run dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1520",
     "beforeBuildCommand": "bun run build",
     "frontendDist": "../dist"
   },

@@ -182,9 +182,11 @@ export interface UiTreeOptions {
 }
 
 function defaultIsVisible(el: Element): boolean {
-  return typeof el.checkVisibility === 'function'
-    ? el.checkVisibility({ visibilityProperty: true, opacityProperty: true })
-    : true
+  if (typeof el.checkVisibility !== 'function') return true
+  // checkVisibility() is false for an element without its own box, which
+  // `display: contents` wrappers never have, though their children show
+  if (getComputedStyle(el).display === 'contents') return true
+  return el.checkVisibility({ visibilityProperty: true, opacityProperty: true })
 }
 
 function defaultHasArea(el: Element): boolean {

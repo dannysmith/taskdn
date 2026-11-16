@@ -1,3 +1,6 @@
+import { mkdtemp, rm, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
 import { describe, it, expect } from 'vitest'
 import {
   collapse,
@@ -6,8 +9,49 @@ import {
   parseDuration,
   parseLevel,
   parsePluginLog,
+  readPluginLog,
   summariseCrash,
 } from './app-logs'
+
+describe('readPluginLog', () => {
+  it('reads the kept archives oldest first, then the active file', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'app-logs-'))
+    try {
+      const line = (time: string, level: string, message: string) =>
+        `[2026-10-26][${time}][taskdn_desktop_lib][${level}] ${message}\n`
+      await writeFile(
+        path.join(dir, 'Taskdn Dev_2026-10-26_02-00-01.log'),
+        line('02:00:00', 'WARN', 'Just before the rotation')
+      )
+      await writeFile(
+        path.join(dir, 'Taskdn Dev_2026-10-25_09-00-00.log'),
+        line('09:00:00', 'INFO', 'Yesterday')
+      )
+      await writeFile(
+        path.join(dir, 'Taskdn Dev.log'),
+        line('02:00:02', 'INFO', 'After the rotation')
+      )
+      // Another slot's files never share a folder, but its name mustn't match
+      await writeFile(
+        path.join(dir, 'Taskdn Dev 1.log'),
+        line('03:00:00', 'ERROR', 'Other')
+      )
+
+      const entries = parsePluginLog(await readPluginLog(dir, 'Taskdn Dev'))
+      expect(entries.map(e => e.message)).toEqual([
+        'Yesterday',
+        'Just before the rotation',
+        'After the rotation',
+      ])
+    } finally {
+      await rm(dir, { recursive: true, force: true })
+    }
+  })
+
+  it('reads nothing from a folder that does not exist', async () => {
+    expect(await readPluginLog('/nonexistent/logs', 'Taskdn Dev')).toBe('')
+  })
+})
 
 describe('parsePluginLog', () => {
   it('reads tauri-plugin-log lines and tells Rust from webview output', () => {
