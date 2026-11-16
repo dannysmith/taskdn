@@ -20,6 +20,7 @@ Spec changes are serious (`AGENTS.md`, rule 5): every change to `tdn-specs/` is 
   - `review-checklist.md`: what to look for in review passes, built from Danny's feedback on wording and scope.
   - `s1-review-pass-1.md`: the first S1 review, still to be worked through.
   - `spec-review-2026-11.md`: the original cold review of 1.0 and where we landed, copied from `temporary/`.
+  - `spec-history.md`: how 1.0 was simplified in Dec 2025 and Jan 2026, and where 1.1 reverses that work. **Read this before phase 3**: some of its questions may change what the review pass does.
 - **Other background:** `docs/tasks-todo/temporary/view-state-identity-and-core.md` (status aliases, identity), and `demo-vault-templates/edge-cases/README.md`, which lists every awkward case, what S1 1.0 says and what CLI 1.0.2 does.
 
 ## Principles
