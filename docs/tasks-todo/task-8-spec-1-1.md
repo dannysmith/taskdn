@@ -1,130 +1,140 @@
 # Task 8: Spec 1.1
 
-**Product:** `tdn-specs/`, plus the website's spec pages. **Background:** `docs/tasks-todo/temporary/spec-review.md` (the cold review and where we landed), `view-state-identity-and-core.md` (the `uid` field) and the `edge-cases` test vault template, whose README records where S1 1.0 is silent and what CLI 1.0.2 does.
+**Product:** `tdn-specs/`, plus the website's spec pages. **Branch:** `spec-1-1`. **Must finish before:** roadmap items 9–13, which build on Spec 1.1.
 
-S1 1.0 is small and mostly sound, but tools already disagree in the places where it's silent: what a wikilink points at, how YAML values are typed, whether `status` is an open set, and how timestamps are written. Spec 1.1 settles these. Almost all of it is clarification and nothing should break existing files.
+S1 1.0 is small and mostly sound, but tools disagree in the places where it's silent: what a wikilink points at, how YAML values are typed, whether `status` is an open set, which files count, and how timestamps are written. Files with an unknown status or an unquoted wikilink disappear from both the CLI and the desktop app. Spec 1.1 settles these, almost entirely as clarifications that don't break existing files.
 
-This task changes the spec only. The CLI and desktop catch up through `tdn-core` (tasks 11–13), so until then files with an unknown status or an unquoted wikilink still disappear from both.
+This task changes the spec only. The CLI and desktop catch up through `tdn-core` (tasks 11–13).
 
-Every edit to `tdn-specs/` needs Danny's explicit confirmation (`AGENTS.md`, rule 5), so phase 1 settles the decisions before anything is written.
+Spec changes are serious (`AGENTS.md`, rule 5): every change to `tdn-specs/` is confirmed with Danny one at a time, one commit per change.
+
+## Picking this up
+
+- **Where we are:** phases 1 and 2 are done. S1 has been redrafted and reviewed once, cold. **Next is phase 3:** go through `s1-review-pass-1.md` with Danny. It has fixes to make (A), changes that need his nod (B) and six questions (C).
+- **See the spec changes so far:**
+  - `git diff main...spec-1-1 -- tdn-specs/` shows the whole change.
+  - `git log --oneline main..spec-1-1 -- tdn-specs/` lists one commit per change, so `git show <sha>` shows any single change.
+- **Read `tdn-specs/CHANGELOG.md` first** for a summary of S1 1.1 as it stands.
+- **Supporting files** are in `task-8-spec-1-1/`:
+  - `change-log-detailed.md`: every change, commit by commit, with the problem it solves. Later commits supersede some earlier details (e.g. `created-at` became a rule for all entities in the projects commit).
+  - `review-checklist.md`: what to look for in review passes, built from Danny's feedback on wording and scope.
+  - `s1-review-pass-1.md`: the first S1 review, still to be worked through.
+  - `spec-review-2026-11.md`: the original cold review of 1.0 and where we landed, copied from `temporary/`.
+- **Other background:** `docs/tasks-todo/temporary/view-state-identity-and-core.md` (status aliases, identity), and `demo-vault-templates/edge-cases/README.md`, which lists every awkward case, what S1 1.0 says and what CLI 1.0.2 does.
+
+## Principles
+
+These came out of the decisions and Danny's review feedback, and apply to every remaining phase.
+
+- **S1 constrains only what tools must agree on for files to work across them, and what protects users' data** (S1 §2.1). UI, reporting and configuration go in S2. A test for each rule: if two tools handle this differently, does a file mean something different, or does data get lost? If not, the rule goes to S2 or goes.
+- **Meaning comes from what's written in the file.** Readers don't derive state the file doesn't record. Writers may do helpful things for the user (change several fields at once, set `blocked` when a blocker is added), as long as the result is written to the file.
+- **Read leniently, write strictly.** Readers tolerate common mistakes so files don't disappear. Writers produce conforming files.
+- **Don't imply permission we don't intend,** e.g. that users can invent statuses.
+- **Write like a spec:** short, declarative rules in the register of S1 1.0, with no conversational explanation and no claims we can't back up. See `review-checklist.md`.
+
+## Decisions
+
+Settled with Danny in phase 1, with adjustments made while drafting. The spec is the source of truth for exact wording.
+
+1. **References resolve however they were written.**
+   - References exist only in the reference fields: a task's `area` and `projects`, and a project's `area` and `blocked-by`. The field decides the target type. The spec says nothing about links in bodies.
+   - Readers accept any common form: wikilinks (with display text, a heading, a path, `.md`), Markdown links, paths, filenames and bare titles, quoted or as an unquoted wikilink. That makes references independent of Obsidian's link settings and of which tool wrote them.
+   - A reference's name is what remains without link syntax, display text, headings, percent-encoding, folders and `.md`. It refers to the entity whose filename matches that name, or failing that whose `title` matches, ignoring case after NFC normalisation. Folder paths never matter: there's no vault or shared root.
+   - Ambiguous references: readers SHOULD NOT assume which entity is meant, and MAY show the matches or ask. Dangling references are valid.
+2. **Writer guidance is split between S1 and S2.** S1 was written from the reader's side and never said what writers produce, so each tool invented its own conventions.
+   - S1 holds the writer MUSTs: conform, never overwrite, leave unrelated fields as written, quote wikilinks.
+   - S2 gets a section on creating and changing files, with defaults and the choices tools SHOULD let users configure. The two choices are:
+     - **Reference style:** default a quoted wikilink by filename.
+     - **Filename for new projects and areas:** default the title, with unsafe characters replaced.
+   - Renaming is left to each tool. The exact options our tools offer are decided in tasks 11–13 (shared `~/.taskdn/config.json`).
+3. **Projects:**
+   - **`dropped` status.** A project's status never changes its tasks' statuses.
+   - **`end-date` is the planned date,** and actual completion goes in a new optional `completed-at`.
+   - **Optional timestamps on projects and areas.**
+   - **`status` alone says whether a project is blocked.** Readers never infer it from `blocked-by`. Writers MAY set `blocked` as part of a user's change.
+4. **Area `type` is kept and defined:** a free-text label for the kind of area (personal, work, client) that tools can group or style by. Danny wants this. It has no fixed values and is compared ignoring case. The name `type` stays, though it clashes with some vaults' use of `type` for note kinds; the clash is harmless.
+5. **Status is a fixed set per type, read leniently.**
+   - An entity's status MUST be one of its type's values. Readers match ignoring case, treating `_` and spaces as `-`.
+   - A status that matches none of the values is unknown and doesn't conform. Readers still treat the file as an entity with an unknown status, and it counts as active. Writers write lowercase values.
+   - This is not a way to add statuses. Status aliases come later, and go into the spec when they're built.
+6. **`tdn-uid` is reserved for sync tools only.**
+   - It is optional, and not an entity identifier.
+   - Implementations MUST NOT use it except for sync, and only sync tools add it. This was tightened from SHOULD NOT, because tools that use it as a primary key break on entities without one.
+   - It is never changed or removed, never used in references, and not guaranteed unique.
+7. **What counts as an entity: recognising a file is separate from validating its fields.**
+   - An entity file is a `.md` file directly in its type's directory (plus the tasks `archive/`).
+   - It's an entity if it has its type's required fields, non-empty: `title` and `status` for tasks, `title` for projects and areas. Other files are notes, which keeps mixed folders working.
+   - No other field can hide an entity: invalid values are treated as absent, and timestamps are optional.
+   - Tools that report problems SHOULD list ignored files (S2).
+
+Also from phase 1: **status aliases** were dropped from 1.1; they go into the spec when built.
 
 ## Phases
 
-### Phase 1: Decisions
+### Phase 1: Decisions ✅
 
-Go through these with Danny and record the answers here.
+The decisions are above.
 
-**Guiding principle for the edits:** the spec restricts implementations only where a behaviour would make files incompatible with other tools or change data in ways a user wouldn't expect. Everything else is left to implementations. Meaning comes from what's in the file: readers don't derive state that isn't written down, and writers may do helpful things as long as the result is written to the file.
+### Phase 2: S1 edits ✅
 
-- [x] **Reference resolution.** The proposal: strip `|alias` and `#heading`; match the basename case-insensitively in the target type's directory (as Obsidian does); fall back to `title`; report ambiguity when several match; relative paths resolve from the referencing file; dangling references are valid and kept. What happens to the `./projects/my-project.md` example, which breaks under both readings?
-  - **Decided:** the spec should make references work however they were written (any Obsidian link setting, hand edits, other people's tools), not prescribe one form.
-  - **Scope:** references exist only in the four reference fields (task `area` and `projects`, project `area` and `blocked-by`). The field decides the target type. The spec says nothing about links in bodies or anywhere else, and only defines WikiLinks for these fields.
-  - **Readers accept any ordinary way of naming a file or title:** a wikilink (with alias, heading, any path style, with or without `.md`), a markdown link (URL-encoded or in angle brackets), a relative or absolute path, a filename, a bare title, and the unquoted `[[X]]` that YAML reads as a nested list.
-  - **Only the name resolves.** Reduce the reference to a name (strip link syntax, `|alias`, `#heading`, URL-encoding, folder parts and `.md`), then look it up in the target type's directory: filename first, then `title`, ignoring case and Unicode normalisation.
-    - Folder parts are ignored because the spec has no vault or shared root (the three directories are configured independently and needn't be co-located), and only files directly in an entity directory are entities. So `"[[projects/Garden]]"` in `area` finds `areas/Garden.md`; the spec says so explicitly.
-    - This answers the `./projects/my-project.md` question: it finds `my-project.md` in the projects dir. The example becomes a wikilink.
-  - **Several files match:** the reference is unresolved, and readers SHOULD warn. Tools never pick one, because that depends on directory listing order.
-  - **Nothing matches:** the reference dangles but is valid and kept. S2's `REFERENCE_ERROR` moves out of the spec.
-  - **Writers** may use any accepted form; the spec recommends one (next decision). When editing a file, writers MUST leave references they aren't changing exactly as written.
-  - **Known gap:** a slugged filename reached through the title fallback can resolve differently in Obsidian, which searches the whole vault by filename.
-- [x] **Links that resolve in Obsidian.** The CLI names files `japan-trip.md` but writes `[[Japan Trip]]`, and Obsidian matches links to filenames. Either writers name project and area files after their titles (as the starter and demo vaults now do), or writers write links by filename. Pick one.
-  - **Decided:** this turned out to be one symptom of a bigger gap. S1 was written from the reader's side, and never said what writers should produce, so each tool invented its own conventions. Spec 1.1 adds writer guidance, split by how binding it is.
-  - **S1: what every tool must agree on.** What files mean (reader rules), plus the few things a writer MUST do so other tools can read what it writes:
-    - write valid YAML, with wikilinks quoted
-    - never overwrite an existing file when creating one: if the name is taken, pick a unique one (e.g. `Japan Trip 2.md`)
-    - leave references and fields it isn't changing exactly as written (alongside the existing preserve-unknown-fields and preserve-body rules)
-  - **S2: how to write well.** A section on creating and changing files: the conventions a good writer follows, their defaults, and which ones tools SHOULD let users configure. S2 recommends configuration but never requires it (the same reasoning that moves rule 11 out of S1). It also collects writer rules decided elsewhere in this task: timestamps with offsets, lowercase statuses, a one-element `projects` array, and not writing empty fields. So S2 becomes "reading and writing files well" rather than shrinking as far as phase 3 first assumed.
-  - **Two configurable writer choices**, with these defaults:
-    - **Reference style:** a quoted wikilink by filename, e.g. `"[[Japan Trip]]"`.
-    - **Filename for new projects and areas:** the title, with characters unsafe in filenames or links (`/ \ : * ? " < > | # ^ [ ]`) replaced, e.g. `Japan Trip.md`.
-    - With both defaults the visible link is the title and always resolves by filename, in Taskdn and in Obsidian. Since readers accept every form (decision 1), no setting can break another tool.
-  - **§2.12 is reworded:** readers never depend on filenames; writers only choose names for files they create; users can rename files freely. Task filenames stay up to each tool, since nothing in the spec references a task.
-  - **Renaming:** changing a title doesn't rename its file. Rename behaviour is left to each tool.
-  - **Not decided here:** the exact options our tools offer (slug or title filenames, wikilinks, plain names, markdown links). Tasks 11–13 decide those, with the settings in the shared `~/.taskdn/config.json` so the CLI and desktop write the same way.
-  - Existing vaults with slug filenames and title links keep working through the title fallback. Nothing needs migrating.
-- [x] **Project `dropped` status.** An abandoned project can only be left "active" or wrongly marked `done`. The review recommends adding `dropped`. While here: does `end-date` mean "finished on" or "expected by", and does `status: blocked` or `blocked-by` win?
-  - **`dropped` is added to project statuses.** It reuses the task word rather than adding `cancelled`, and is non-breaking since unknown statuses are already kept. An active project is one with no status, or a status other than `done` and `dropped`.
-  - **A project's status never changes or hides its tasks.** Dropping or finishing a project leaves its tasks' statuses alone. Tools may choose to hide them, but the spec doesn't cascade.
-  - **`end-date` is the planned end date.** `start-date` and `end-date` are the user's plan: floating dates that tools SHOULD NOT change when the status changes. An overdue project is one whose `end-date` is past and whose status isn't `done` or `dropped`.
-  - **Projects get an optional `completed-at`** with the same rules as tasks: set when the status becomes `done` or `dropped`, removed when it's reopened.
-  - **Optional timestamps on projects and areas:** `created-at` and `updated-at` are allowed on both, and `completed-at` on projects, all with the same meaning and writer rules as on tasks. Required-ness on tasks is settled separately in phase 2: readers accept their absence.
-  - **Status is the only source of truth for blocked.** Readers MUST take a project's state from `status` alone and MUST NOT infer `blocked` from `blocked-by` (or anything else from it). A project can be `blocked` with no `blocked-by` (blocked by something outside Taskdn), or `in-progress` with an unfinished blocker.
-  - **Writers MAY change the status as part of a user action**, e.g. set `status: blocked` when the user adds a `blocked-by`, or offer to unblock once every blocker is done. That's fine because the result is written to the file, so every tool sees the same state.
-- [x] **Area `type`.** It has no defined meaning. Drop it from S1 (it's kept as an unknown field), define it, or leave it.
-  - **Decided: keep it and define it.** Danny will want to tell areas apart (e.g. personal, work, client), and our own tools are likely to group, colour or give icons to areas by kind, so the spec names the field.
-  - **Definition:** `type` is a free-text label for the kind of area. Tools MAY group, filter, colour or give icons to areas by it. Grouping ignores case.
-  - **No known values.** Nothing depends on particular values, and every user's will differ.
-  - **The name stays `type`.** Renaming it (e.g. `area-type`) would avoid clashing with vaults that use `type:` for note kinds, but would break existing files. The clash is harmless: areas that all say `type: area` just form one group.
-  - **Areas only** for now; projects can get the same field later if needed.
-- [x] **Status matching.** Case-insensitive on read, lowercase on write? Unknown values count as not done, are kept and shown as written.
-  - **`status` is a string with known values.** Tasks, projects (now with `dropped`) and areas each have their own list; other values are valid.
-  - **Readers match known values ignoring case, and treat `_` and space as `-`.** `Ready`, `in_progress` and `In Progress` all match. This only normalises formatting and never maps one word to another (that's the later status-aliases idea).
-  - **Writers write the lowercase known value when they set a status** and leave a status they aren't changing exactly as written (as in decision 2).
-  - **Unknown task and project statuses count as open** (not done, not dropped). They appear in default views, shown exactly as written, so the user can see and fix them; tools MAY style them differently. A side effect is that e.g. `cancelled` shows in a Today view until fixed or until status aliases arrive. Visible and fixable beats invisible.
-  - **Areas keep their rule, ignoring case:** no status or `active` is shown, anything else is hidden. So `Active` is now shown.
-  - **Missing or empty task status:** the file isn't a task at all; see "What counts as an entity" below. (Provisionally we'd said "treat it as unknown", but that would turn every titled note in a mixed folder into a task.)
-- [x] **`uid`.** Reserve an optional field that tools must preserve, never change once set, and never use in references.
-  - **Purpose: only for sync tools.** Two-way sync needs a key that survives renames, archive moves and title changes. The spec names one so sync tools don't invent different ones. It's not part of the core data model.
-  - **Fully optional for conformance.** Most files will never have one, and a vault where some files have it and others don't is normal. A sync tool will most likely add it only to the files it syncs, when it syncs them.
-  - **Only sync tools add or use it.** Other implementations MUST NOT add it and MUST NOT use it to identify entities (e.g. the desktop's view state keys on paths, not on this). Every implementation MUST preserve it. (Tightened from SHOULD NOT while drafting: Danny's concern is that agents and implementers will treat it as a primary key, and anything built that way breaks on entities without one.)
-  - **Name:** `tdn-uid` (namespaced, so it signals Taskdn sync and won't clash with users' `id` or `uid` fields, e.g. TaskNotes v5 writes `id`; kebab-case to match the other fields).
-  - **Value:** an opaque string; tools generating one SHOULD use a UUID. Readers never parse it.
-  - **Once set, it MUST NOT change,** through renames, archive moves and edits.
-  - **Never used in references.** References stay human (decision 1).
-  - **Duplicates:** copying a file copies its uid. Readers MUST NOT assume uids are unique. A tool that finds two files with the same uid MAY give one a new uid (the one exception to "never change"). A writer that deliberately duplicates an entity MUST NOT copy the uid.
-- [x] **What counts as an entity.** S1 was written before any implementation, as a definition of what must be true for a file to be a task, so its "required fields" double as "how to recognise a task". That was partly deliberate: people may keep tasks in a folder alongside other notes, and tools can show only the valid ones and ignore the rest. The cost is that a task with one bad field silently disappears. Danny's notes:
-  - Intuitively, a file is a Taskdn task if it has a `title` and a `status` that match what Taskdn expects. With those two, it's reasonable to treat it as a task.
-  - One idea is three tiers: fields that make a file an entity, fields that tools can expect and writers must always write, and optional fields. That may be more complicated than needed.
-  - Another: recognise a task only when it has the identifying fields, but show an unset or unusual status as something like "unknown".
-  - Needs careful thought. Covers missing `title`, missing or empty `status` (see "Status matching"), no frontmatter, YAML that won't parse, and missing timestamps, and how all of this fits the phase 2 lenient-reading rules.
-  - **Decided: separate recognising a file from validating its fields.** Readers have two tiers (fields that recognise a file, and everything else); writers have their own obligations.
-  - **Recognition.** A file is an entity if it's directly in its configured directory and its frontmatter parses to a mapping with these fields present and non-empty:
-    - **Task:** `title` and `status`. Any status value counts, so `waiting` and `Done` are recognised (unknown statuses are shown, per "Status matching").
-    - **Project and area:** `title`.
-    - Anything else in the directory is a note, and tools ignore it. That keeps mixed folders working.
-  - **Once recognised, no other field can hide it.** Readers treat every other field leniently, and a bad field gives at most a warning:
-    - missing `created-at` or `updated-at` is fine (tools may fall back to the file's modified time)
-    - an invalid value (e.g. `due: next tuesday`) is treated as absent, kept in the file, and MAY be flagged
-    - a wrong shape is accepted (a scalar `projects`, a `project:` key, `title: 1984` read as text)
-  - **Writers' obligations** (Danny's second tier, as a writer rule rather than something readers rely on): on creation, writers MUST write `title`, `status` (tasks) and `created-at`, and SHOULD keep `updated-at` current. Readers can't rely on `updated-at` anyway, since editing in Obsidian doesn't touch it.
-  - **Ignored isn't invisible.** Tools that offer validation (e.g. `tdn doctor`) SHOULD list every file in an entity directory they didn't recognise, with the reason ("no `status`", "YAML doesn't parse", "no frontmatter"). Views stay clean, but nothing is hidden from someone looking. Files whose YAML doesn't parse are never modified.
-  - **Accepted tradeoffs:**
-    - A note in a mixed folder with a `title` and e.g. `status: draft` shows up as a task with an unknown status. It's visible, and status aliases can map it later. Recognising only known statuses would bring back disappearing tasks.
-    - A task written without a `title` is ignored (and listed by validators). Falling back to the filename would make any note with a `status` a task.
-    - Projects and areas still need a `title`, so a projects folder of Obsidian notes without `title` shows nothing until titles are added. Same as today.
+One commit each:
 
-### Phase 2: S1 edits
+- [x] Conformance roles (files, readers, writers), the design principle, and general rules split by role
+- [x] Frontmatter data model: YAML 1.2 core schema, scalars as text, unquoted wikilinks, BOM and CRLF, writers quote
+- [x] Entities: entity files, recognition, lenient field reading, writer rules, archive
+- [x] Status: a fixed set per type, lenient matching, unknown statuses
+- [x] References: forms, resolution, ambiguous and dangling references
+- [x] Dates and times: exact ISO 8601 forms, meanings, timestamp offsets
+- [x] Active entities moved from S2 into S1
+- [x] Projects and areas: `dropped`, `completed-at`, `blocked-by`, optional timestamps, area `type`, overdue tasks and projects
+- [x] `tdn-uid`
+- [x] `tdn-specs/CHANGELOG.md`
 
-- [ ] Deterministic reference resolution, as decided.
-- [ ] `status` is an open string with known values.
-- [ ] Frontmatter data model: YAML 1.2 core schema, so date-like values are strings. Writers must quote wikilinks; readers should accept the nested-list form `[[Work]]` as a link.
-- [ ] Entity files: a non-dot `*.md` file directly inside its configured directory, with its type taken from the directory. `tasks/archive/` only means "skip by default"; status stays authoritative.
-- [ ] Datetimes: no offset means local wall-clock time, an offset means that instant; fractional seconds are accepted; a datetime in a date-only field uses its date part. Writers put the local offset on `created-at`, `updated-at` and `completed-at`. User dates (`due`, `scheduled`, `defer-until`, `start-date`, `end-date`) stay floating local dates.
-- [ ] Separate rules for readers and writers. Read leniently: missing `created-at`/`updated-at` (fall back to mtime), a scalar `projects`, a `project:` key. Write strictly: a one-element `projects` array.
-- [ ] Move the meanings out of S2 into S1: what counts as active, `defer-until` is inclusive, `scheduled` never hides a task.
-- [ ] The decisions from phase 1 (`dropped`, `end-date`, area `type`, `uid`).
-- [ ] The smaller fixes from `spec-review.md` item 9: closing `---` followed by a newline, empty means absent, a conformance section, rule 11 (tools must offer configuration) moved out of the file format.
-- [x] ~~A short note recording the status alias design (see `view-state-identity-and-core.md`), for later.~~ Dropped: aliases go into the spec when they're actually built.
-- [ ] Bump to 1.1.0 with a changelog entry.
+### Phase 3: S1 review pass
 
-### Phase 3: S2
+Work through `task-8-spec-1-1/s1-review-pass-1.md` with Danny, then apply it as one commit.
 
-- [ ] Trim S2 to reading and writing files safely. Error codes, filter logic and agent output move into the CLI's developer docs (or are dropped, since CLI 2.0 replaces them).
-- [ ] Add a section on creating and changing files, as in decision 2: writer conventions, their defaults, and which ones tools should let users configure.
+- [ ] Answer the six questions (C):
+  1. `created-at` on creation: MUST or SHOULD?
+  2. The area status fixed set as a second breaking change
+  3. `archive/` for projects and areas
+  4. Whether active and overdue stay in S1
+  5. Whether `paused` projects are active
+  6. Whether the three directories must be different
+- [ ] Agree the recommended changes (B): the removals, plus the additions (writers write references that resolve to the intended entity; which tolerated forms conform; the same leniency for `area` and `blocked-by`; and the others listed there).
+- [ ] Apply the fixes (A) together with B and C.
+- [ ] Update `CHANGELOG.md` and `change-log-detailed.md`.
+
+### Phase 4: S2
+
+- [ ] Trim S2 to reading and writing files. Error codes, filter logic and agent output move into the CLI's developer docs, or are dropped since CLI 2.0 replaces them.
+- [ ] Add the section on creating and changing files (decision 2): writer conventions, defaults, and what to make configurable. That makes the "S2 recommends…" references in S1 §3.3 and §4.6 true.
+- [ ] Fix the leftovers:
+  - §5.1 still calls files missing a required field "invalid"
+  - §6.1's timestamp table says "Task" where it means every entity
+  - Appendix A has `REFERENCE_ERROR`
+- [ ] Decide whether S2 standardises how tools find the three directories (`.taskdn.json`). Coordinate with the shared config in task 11.
 - [ ] Fix the S2 filename in `docs/developer/releases-and-versioning.md` (it says `S2-implementation-requirements.md`).
 
-### Phase 4: JSON schemas
+### Phase 5: JSON schemas
 
-- [ ] Open `status` (no closed `enum`), fractional seconds, offsets, no `maxLength` enforcing a SHOULD, no `minItems` that contradicts "empty means absent".
+- [ ] Status values as `enum`s that accept any case? Or no `enum` at all, since unknown statuses don't conform but must be read? Decide with Danny.
+- [ ] Datetimes: fractional seconds, offsets, and datetimes in date-only fields. Timestamps optional. No `maxLength` or `minItems`. Add `tdn-uid`, project `dropped`, `completed-at` and the new timestamps.
 - [ ] Use the draft that matches `$defs` (or stop using `$defs`), and point `$id` at `tdn.danny.is`.
-- [ ] Validate the `demo` and `edge-cases` templates against the new schemas, and check every case lands where the spec says it should.
+- [ ] Validate the `demo` and `edge-cases` templates against the new schemas, and check that every case lands where the spec says it should.
 
-### Phase 5: Everything that quotes the spec
+### Phase 6: Full review and version bump
+
+- [ ] A cold review of S1, S2, the schemas and the changelog together (a fresh agent with no task context), plus a wording pass against `review-checklist.md`.
+- [ ] Bump S1 and S2 to 1.1.0, and finalise `CHANGELOG.md`.
+
+### Phase 7: Everything that quotes the spec
 
 - [ ] Website spec pages (`website/src/content/docs/specification/`).
-- [ ] The "Spec" column in the `edge-cases` README, which currently says "Not specified" or "1.1" in many rows.
-- [ ] Any other docs that summarise S1 (`docs/overview.md`, the plugin skill's spec reference). Keep these changes small; the skill is rewritten in task 14 and the website in task 17.
+- [ ] The "Spec" column in the `edge-cases` README. Many rows change; for example, unknown statuses are now non-conforming but still read.
+- [ ] Other docs that summarise S1 (`docs/overview.md`, the plugin skill's spec reference). Keep these changes small: the skill is rewritten in task 14 and the website in task 17.
+- [ ] Fix references elsewhere to `uid` (now `tdn-uid`) and "open statuses", e.g. in `task-11-tdn-core.md` and the roadmap.
 
 ## Done when
 
-S1 1.1.0 and the trimmed S2 are published on the website, the schemas match, and every case in the `edge-cases` template has a defined answer.
+S1 1.1.0 and the trimmed S2 are published on the website, the schemas match, and every case in the `edge-cases` template has a defined answer. When completing the task, move `task-8-spec-1-1/` to `tasks-done/` alongside the task file.
