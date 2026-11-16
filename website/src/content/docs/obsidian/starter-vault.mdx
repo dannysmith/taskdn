@@ -5,7 +5,7 @@ description: 'Pre-configured Obsidian vault with templates and bases for Taskdn'
 
 import { FileTree, Steps } from '@astrojs/starlight/components'
 
-The starter vault is a pre-configured Obsidian vault with templates, [Bases](https://obsidian.md/plugins/bases), and example content. Clone it to get a working Taskdn setup in minutes.
+The starter vault is a ready-made Obsidian vault with templates, [Bases](https://obsidian.md/help/bases) views and example content. Clone it to start managing your tasks in Obsidian, or just to try Taskdn out. It needs Obsidian 1.14 or later.
 
 ## Installation
 
@@ -16,118 +16,134 @@ The starter vault is a pre-configured Obsidian vault with templates, [Bases](htt
    ```bash
    git clone https://github.com/dannysmith/tdn-obsidian-starter-vault my-tasks
    cd my-tasks
-   rm -rf .git README.md
+   ./shift-dates.sh
+   rm -rf .git README.md shift-dates.sh
    ```
 
-2. Open the folder as a vault in Obsidian
+   `./shift-dates.sh` is optional. It moves the dates in the example content so they're relative to today, which gives the Today and Upcoming views something to show. Skip it and the examples just look old.
 
-3. When prompted, **Trust** the vault to enable plugins
-
-4. Go to **Settings → Files and links** and ensure **Wikilinks** are enabled
-
-5. Go to **Settings → Core plugins** and enable **Bases** and **Templates**
+2. In Obsidian, click **Open folder as vault** and choose the cloned folder. The vault opens on `Start Here.md`.
 
 </Steps>
+
+Bases, Templates and wikilinks are already turned on, and the date fields are set up as date properties, so there's nothing else to configure. For task widgets in your notes, add the [Taskdn plugin](#taskdn-plugin).
 
 ## Vault Structure
 
 <FileTree>
+- .obsidian/ (core plugin and property settings)
 - areas/
   - Overview.md (embedded bases view)
-  - Side Projects.md
+  - Health.md
+  - Home.md
+  - …
 - projects/
   - Overview.md (embedded bases view)
-  - Japan Trip 2025.md
-  - Learn Rust.md
+  - Japan Trip.md
   - Website Redesign.md
+  - …
 - tasks/
   - Overview.md (embedded bases view)
   - archive/ (completed & dropped tasks)
-  - update-homepage.md
   - book-flights.md
-  - ...
+  - update-homepage.md
+  - …
 - templates/
   - bases/
     - Tasks.base
     - Projects.base
     - Areas.base
-    - AreaProjects.base
   - Task.md
   - Project.md
   - Area.md
   - Trip Project.md
+- **Start Here.md** (dashboard the vault opens on)
 - example-note.md (demonstrates plugin features)
-- getting-started.md
-- CLAUDE.md
+- CLAUDE.md (instructions for AI assistants)
 </FileTree>
+
+## Start Here
+
+`Start Here.md` is a dashboard built from the vault's bases:
+
+- **Today**: in-progress tasks, anything due or scheduled today or earlier, and tasks that became available today
+- **Board**: your tasks as a kanban board. Drag a card to another column to change its status.
+- **Active Projects**: projects that are planning, ready or in progress
+- **Tasks in Your Notes**: task links mixed with plain checkboxes, which render as live tasks with the [Taskdn plugin](/obsidian/plugin)
+
+Edit it into your own dashboard, or pick a different note to open in **Settings → Files and links → Default file to open**.
 
 ## Templates
 
-Create new tasks, projects, and areas using Obsidian's Templates plugin. Each template includes the required frontmatter fields with sensible defaults.
+Create new tasks, projects, and areas with Obsidian's Templates plugin, which is already pointed at the `templates/` folder. Each template includes the required frontmatter fields.
 
-**Task Template** — Creates a task with `ready` status, today's date for `created-at` and `updated-at`, and empty fields for `due`, `scheduled`, `defer-until`, `projects`, and `area`.
+**Task Template**: `ready` status, today's date for `created-at` and `updated-at`, and empty fields for `due`, `scheduled`, `defer-until`, `projects`, and `area`.
 
-**Project Template** — Creates a project with `planning` status, today's date for `start-date`, and sections for Overview and Next Steps.
+**Project Template**: `planning` status, today's date for `start-date`, and sections for an overview, the project's tasks and next steps.
 
-**Area Template** — Creates an area with `active` status and a prompt to define what "doing well" looks like.
+**Area Template**: `active` status, a prompt to define what "doing well" looks like, and the area's projects and tasks.
 
-**Trip Project Template** — A more detailed template showing how to create project-specific templates with pre-filled checklists and sections for itinerary, transport, accommodation, and packing.
+**Trip Project Template**: an example of a project-specific template, with sections for itinerary, transport and accommodation, a planning checklist and a kit list.
 
 To use a template, create a new file in the appropriate directory, then run the **Insert template** command (`Cmd/Ctrl + P` → "Insert template").
 
 ## Bases
 
-[Obsidian Bases](https://obsidian.md/plugins/bases) let you create database-like views of your notes. The starter vault includes pre-configured bases for tasks, projects, and areas.
+[Obsidian Bases](https://obsidian.md/help/bases) let you create database-like views of your notes. Every view in the starter vault comes from the three bases in `templates/bases/`. Open one to see all its views, or edit them to suit how you work.
 
 ### Included Bases
 
-**Tasks.base** — Views for all tasks, filtered by status:
-- All Tasks
-- Active (excludes done, dropped, icebox; respects defer-until)
-- Inbox
-- Ready
-- In Progress
-- Blocked
-- Overdue
+**Tasks.base**
 
-**Projects.base** — Views for projects by status:
-- All Projects
-- Active (in-progress, planning, ready)
-- On Hold (paused, blocked)
+- **Board**: kanban by status, leaving out archived tasks and tasks deferred until later
+- **Today**: in-progress tasks, anything due or scheduled today or earlier, and tasks that became available today
+- **Upcoming**: tasks due, scheduled or becoming available in the next 14 days
+- **Active**: everything not done, dropped, in the icebox or deferred, grouped by status
+- **All**: every task, most recently updated first
+- **Linked Tasks**: embedded in project and area notes to list the tasks that link to them
 
-**Areas.base** — Views for areas:
-- All Areas
-- Active (excludes archived)
+**Projects.base**
 
-**AreaProjects.base** — For embedding in area documents to show that area's projects
+- **Board**: kanban by status
+- **Active**: projects that are planning, ready or in progress
+- **All Projects**
+- **Linked Projects**: embedded in area notes to list the projects that link to them
+
+**Areas.base**
+
+- **Active**: every area that isn't archived
+- **All Areas**
 
 ### Overview Pages
 
-Each directory contains an `Overview.md` file with embedded bases. Open `tasks/Overview.md` to see a filterable table of all your tasks. Switch between views using the tabs.
+`tasks/`, `projects/` and `areas/` each have an `Overview.md` that embeds that folder's base. Switch between its views using the tabs.
 
 Embed a base view in any note using:
 
 ```md
 ![[Tasks.base]]
-![[Tasks.base#Ready]]
+![[Tasks.base#Today]]
 ```
 
-## Plugin Configuration
+## Taskdn Plugin
 
-### Taskdn Plugin
+The [Taskdn plugin](/obsidian/plugin) is optional. It renders wikilinks to tasks as interactive widgets: open `example-note.md` or the "Tasks in Your Notes" section of `Start Here.md` to see it in action.
 
-Go to **Settings → Taskdn** and configure:
+<Steps>
 
-| Setting | Recommended Value |
-|---------|-------------------|
-| Tasks directory | `tasks` |
-| Exclude patterns | `Overview.md` |
+1. Go to **Settings → Community plugins** and turn on community plugins
 
-This prevents the Overview files from appearing as tasks.
+2. Click **Browse**, search for "Taskdn", then install and enable it
+
+3. In **Settings → Taskdn**, set **Ignored files** to `Overview.md`
+
+</Steps>
+
+The default tasks directory, `tasks`, already matches the vault. Ignoring `Overview.md` stops links to the tasks Overview rendering as a task widget.
 
 ### Folder Notes (Optional)
 
-If you use the [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes) plugin, configure it to use `Overview.md` as the folder note name. This makes the Overview page open automatically when you click a folder in the file explorer.
+If you use the [Folder Notes](https://github.com/LostPaul/obsidian-folder-notes) plugin, set its **Folder note name** to `Overview` and restart Obsidian. Clicking `tasks/`, `projects/` or `areas/` in the file explorer then opens that folder's Overview, and the Overview files are hidden from the file list.
 
 ## Web Clipper Template
 
