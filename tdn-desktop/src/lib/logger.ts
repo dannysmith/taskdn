@@ -1,9 +1,12 @@
 /**
  * Simple logging utility for the frontend
  *
- * In development: logs to browser console
- * In production: can optionally send to Tauri backend for system logging
+ * In development: logs to the browser console, which dev builds also copy to
+ * the log file (`lib/agent-bridge/console.ts`)
+ * In production: writes to the log file through tauri-plugin-log, at the
+ * level the Rust side allows (info and above)
  */
+import * as pluginLog from '@tauri-apps/plugin-log'
 
 type LogLevel = 'trace' | 'debug' | 'info' | 'warn' | 'error'
 
@@ -64,18 +67,20 @@ class Logger {
       context,
     }
 
-    // Always log to console in development
     if (this.isDevelopment) {
       this.logToConsole(entry)
+    } else {
+      this.logToFile(entry)
     }
+  }
 
-    // In production, you could optionally send logs to Tauri backend
-    // This is commented out to keep it simple, but here's how you might do it:
-    /*
-    if (!this.isDevelopment && (level === 'warn' || level === 'error')) {
-      this.logToBackend(entry)
-    }
-    */
+  private logToFile(entry: LogEntry): void {
+    const message = entry.context
+      ? `${entry.message} ${safeStringify(entry.context)}`
+      : entry.message
+    pluginLog[entry.level](message).catch(() => {
+      // Logging must never break the app
+    })
   }
 
   private logToConsole(entry: LogEntry): void {
@@ -102,22 +107,17 @@ class Logger {
         break
     }
   }
+}
 
-  /*
-  // Optional: Send logs to Tauri backend for system logging
-  private async logToBackend(entry: LogEntry): Promise<void> {
-    try {
-      await invoke('log_from_frontend', {
-        level: entry.level,
-        message: entry.message,
-        timestamp: entry.timestamp.toISOString(),
-        context: entry.context,
-      })
-    } catch (error) {
-      console.warn('Failed to send log to backend:', error)
-    }
+/** JSON for log context, falling back to String() for values JSON can't hold. */
+function safeStringify(value: unknown): string {
+  try {
+    return JSON.stringify(value, (_key, v: unknown) =>
+      v instanceof Error ? `${v.name}: ${v.message}` : v
+    )
+  } catch {
+    return String(value)
   }
-  */
 }
 
 // Export a singleton logger instance

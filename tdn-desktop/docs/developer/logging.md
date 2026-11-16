@@ -28,40 +28,37 @@ logger.error('Request failed', { error: response.error })
 
 ### Rust Backend
 
-- Uses `tauri-plugin-log` with standard Rust `log` crate
-- **Development**: Debug level, logs to stdout + webview console
-- **Production**: Info level, logs to stdout + app log directory
-- Configuration in `src-tauri/src/lib.rs`
+- Uses `tauri-plugin-log` with the standard Rust `log` crate, configured in `configure_log_plugin()` in `src-tauri/src/lib.rs`
+- **Development**: Debug level. **Release**: Info level. `tao` and `wry` are held at info in both, because they log every focus change below that
+- Every build writes to stdout, the webview console and the log file
 
 ### TypeScript Frontend
 
-- **Development**: All logs go to browser console
-- **Production**: Console logging only (keeps it simple)
+- **Development**: logs go to the browser console. Dev builds copy `console.*` into the log file, marked `[console]` (`src/lib/agent-bridge/console.ts`), so `bun run app logs` can read them
+- **Release**: logs go to the log file through `@tauri-apps/plugin-log`, with any context appended as JSON
 - Logger utility at `src/lib/logger.ts`
 
 ## Log Levels
 
-| Level   | When to Use            | Dev | Prod |
-| ------- | ---------------------- | --- | ---- |
-| `trace` | Most verbose debugging | ✅  | ❌   |
-| `debug` | Development debugging  | ✅  | ❌   |
-| `info`  | General information    | ✅  | ✅   |
-| `warn`  | Warning conditions     | ✅  | ✅   |
-| `error` | Error conditions       | ✅  | ✅   |
+| Level   | When to Use            | Dev | Release |
+| ------- | ---------------------- | --- | ------- |
+| `trace` | Most verbose debugging | ❌  | ❌      |
+| `debug` | Development debugging  | ✅  | ❌      |
+| `info`  | General information    | ✅  | ✅      |
+| `warn`  | Warning conditions     | ✅  | ✅      |
+| `error` | Error conditions       | ✅  | ✅      |
 
 ## Where Logs Appear
 
-### Development
+The log file is `<product name>.log` in the app's log folder:
 
-- **Rust**: Terminal (stdout) + Browser DevTools console (webview)
-- **TypeScript**: Browser DevTools console
+- **macOS:** `~/Library/Logs/is.danny.taskdn-desktop/Taskdn Desktop.log`
+- **Windows:** `%LOCALAPPDATA%\is.danny.taskdn-desktop\logs\`
+- **Linux:** `~/.local/share/is.danny.taskdn-desktop/logs/`
 
-### Production
+Dev builds log to their own folder (`is.danny.taskdn-desktop.dev`, or `.dev<n>` for a worktree's slot) as `Taskdn Dev.log`. See [Agent Tooling](./agent-tooling.md#logs).
 
-- **Rust**: Terminal (stdout) + log file in app log directory
-- **TypeScript**: Browser DevTools console
-
-Log directory locations vary by platform (e.g., `~/Library/Logs/` on macOS).
+When the file reaches 5 MB it's renamed with its date and a new one starts; the two most recent old files are kept. The plugin's default (`KeepOne`) deletes the whole file instead, which left the release log nearly empty whenever someone went looking.
 
 ## Examples
 
@@ -118,7 +115,4 @@ See [error-handling.md](./error-handling.md) for patterns on when to log vs show
 
 ## Production Considerations
 
-- Rust logs go to the app's log directory (platform-specific location)
-- No sensitive data should be logged (passwords, tokens, etc.)
-- The plugin supports log rotation when files reach size limits
-- Frontend logs stay in browser - not sent to backend by default
+- No sensitive data should be logged (passwords, tokens, etc.): release logs are what users send when reporting a problem

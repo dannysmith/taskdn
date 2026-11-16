@@ -139,16 +139,19 @@ fn configure_log_plugin() -> tauri::plugin::TauriPlugin<tauri::Wry> {
         } else {
             log::LevelFilter::Info
         })
-        // Prevent log files from growing indefinitely
-        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepOne)
-        .max_file_size(5_000_000) // 5MB max before rotation
+        // Window and webview internals log every focus change at trace and debug level
+        .level_for("tao", log::LevelFilter::Info)
+        .level_for("wry", log::LevelFilter::Info)
+        // The default (KeepOne) deletes the whole file every time it fills, which
+        // leaves a support log nearly empty. A full file is renamed with its date
+        // instead, and the two most recent are kept
+        .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(2))
+        .max_file_size(5_000_000)
         .targets([
-            // Always log to stdout for development
             tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
-            // Log to webview console for development
+            // Rust logs also show in the webview's console
             tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
-            // Log to system logs on macOS (appears in Console.app)
-            #[cfg(target_os = "macos")]
+            // `<product name>.log` in the app's log folder (~/Library/Logs/<identifier>/ on macOS)
             tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir { file_name: None }),
         ])
         .build()
