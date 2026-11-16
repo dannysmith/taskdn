@@ -1,20 +1,7 @@
 {
-  "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["src/main.tsx", "vite.config.ts", "vitest.config.ts"],
-  "project": ["src/**/*.{ts,tsx}"],
-  "ignore": [
-    "src/components/ui/**",
-    "src/test/**",
-    "**/index.ts",
-    "src/lib/platform-strings.ts"
-  ],
-  "ignoreDependencies": [
-    "@tauri-apps/*",
-    "@radix-ui/*",
-    "tailwindcss",
-    "tw-animate-css",
-    "@testing-library/*",
-    "babel-plugin-react-compiler"
-  ],
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "project": ["src/**/*.{ts,tsx,css}"],
+  "ignore": ["src/components/ui/**", "**/index.ts"],
+  "ignoreDependencies": ["@tauri-apps/*", "@testing-library/*"],
   "ignoreExportsUsedInFile": true
 }
