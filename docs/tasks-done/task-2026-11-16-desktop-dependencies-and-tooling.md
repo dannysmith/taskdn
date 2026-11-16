@@ -79,7 +79,7 @@ Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Br
 - specta: the latest matched set (tauri-specta rc.29 and what it needs), diffing the bindings; Astro Editor's rc.26 set is the fallback.
 - `dirs` 7: yes. `gray_matter` 0.3: held, since task 13 replaces the desktop's vault code with `tdn-core`.
 - `@dannysmith/datepicker` 0.1.6: yes, checked in the smoke test.
-- Dependabot: security updates only for bun and cargo (`open-pull-requests-limit: 0`), GitHub Actions monthly.
+- Dependabot: security updates only for bun and cargo (`open-pull-requests-limit: 0`), GitHub Actions monthly. Revised after review: Dependabot can't do security updates for bun, so bun projects get one monthly PR each with grouped minor and patch updates (majors ignored, left for `deps-update`); cargo stays security-only.
 
 **Issues:**
 
