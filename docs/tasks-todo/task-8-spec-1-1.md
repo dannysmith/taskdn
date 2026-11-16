@@ -1,6 +1,6 @@
 # Task 8: Spec 1.1
 
-**Product:** `tdn-specs/`, plus the website's spec pages. **Branch:** `spec-1-1`. **Must finish before:** roadmap items 9–13, which build on Spec 1.1.
+**Product:** `tdn-specs/`, plus the website's spec pages. **Branch:** `spec-1-1` (draft PR #72). **Must finish before:** roadmap items 9–13, which build on Spec 1.1.
 
 S1 1.0 is small and mostly sound, but tools disagree in the places where it's silent: what a wikilink points at, how YAML values are typed, whether `status` is an open set, which files count, and how timestamps are written. Files with an unknown status or an unquoted wikilink disappear from both the CLI and the desktop app. Spec 1.1 settles these, almost entirely as clarifications that don't break existing files.
 

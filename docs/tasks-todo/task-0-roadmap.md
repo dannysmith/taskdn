@@ -33,7 +33,7 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Desktop: agent bridge, `bun run app`, styleguide, release logging (#70)
   - [x] Agents running `tdn` anywhere in the repo always hit a test vault (#71)
   - [x] Repo skills; website and CLI dependencies (#71)
-- [ ] **8. Spec 1.1** → `task-8-spec-1-1.md` (in progress on the `spec-1-1` branch; finish before items 9–13)
+- [ ] **8. Spec 1.1** → `task-8-spec-1-1.md` (in progress on the `spec-1-1` branch, #72; finish before items 9–13)
   - [x] Decisions, and S1 redrafted: reference resolution, links that resolve in Obsidian, lenient reading of unknown statuses, YAML quoting, timestamps with offsets, `tdn-uid` for sync tools, project `dropped`, area `type`
   - [ ] S1 review pass
   - [ ] S2: trim, and add writer conventions
