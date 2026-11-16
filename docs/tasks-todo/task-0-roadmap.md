@@ -33,16 +33,13 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Desktop: agent bridge, `bun run app`, styleguide, release logging (#70)
   - [x] Agents running `tdn` anywhere in the repo always hit a test vault (#71)
   - [x] Repo skills; website and CLI dependencies (#71)
-- [ ] **8. Spec 1.1** → `task-8-spec-1-1.md`
-  - [ ] Deterministic reference resolution
-  - [ ] Links that resolve in Obsidian: the CLI names files `japan-trip.md` but writes links as `[[Japan Trip]]`, and Obsidian matches links to filenames, not titles. Either name project and area files after their titles (as the starter vault does) or write links by filename
-  - [ ] Open statuses: unknown values are kept and surfaced, never dropped
-  - [ ] YAML quoting guidance for wikilinks and statuses
-  - [ ] Timestamps with offsets
-  - [ ] Reserve an optional `uid` field
-  - [ ] Smaller fixes from `spec-review.md`
-  - [ ] Decide: project `dropped` status, area `type`
-  - [ ] JSON schemas and website spec pages
+- [ ] **8. Spec 1.1** → `task-8-spec-1-1.md` (in progress on the `spec-1-1` branch, #72; finish before items 9–13)
+  - [x] Decisions, and S1 redrafted: reference resolution, links that resolve in Obsidian, lenient reading of unknown statuses, YAML quoting, timestamps with offsets, `tdn-uid` for sync tools, project `dropped`, area `type`
+  - [ ] S1 review pass
+  - [ ] S2: trim, and add writer conventions
+  - [ ] JSON schemas
+  - [ ] Full review, then bump to 1.1.0
+  - [ ] Website spec pages and other docs that quote the spec
 - [ ] **9. CLI eval harness and baseline** (#27) → `task-9-cli-eval-harness.md`
   - [ ] Headless `claude -p` runs against a rendered test vault, with ground truth computed by script
   - [ ] Baseline scores for the current CLI

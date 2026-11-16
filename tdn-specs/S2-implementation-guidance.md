@@ -20,6 +20,10 @@ While S1 defines the file format and compatibility requirements, this specificat
 
 S1 defines what files look like and what implementations must do for compatibility. This specification provides guidance on how implementations should behave for a good user experience.
 
+### 1.3 Directories
+
+Implementations SHOULD let users set the path to each of the tasks, projects and areas directories separately, and SHOULD NOT require them to be co-located.
+
 ---
 
 ## 2. Design Principles
@@ -61,10 +65,10 @@ If a file contains multiple projects, use the first one. Validation commands SHO
 
 Dates SHOULD use ISO 8601 format when stored or output:
 
-| Field Type                                              | Format                | Example               |
-| ------------------------------------------------------- | --------------------- | --------------------- |
-| Date fields (due, scheduled, defer-until)               | `YYYY-MM-DD`          | `2025-12-20`          |
-| Timestamp fields (created-at, updated-at, completed-at) | `YYYY-MM-DDTHH:MM:SS` | `2025-12-15T14:30:00` |
+| Field Type                                                     | Format                      | Example                     |
+| -------------------------------------------------------------- | --------------------------- | --------------------------- |
+| User dates (due, scheduled, defer-until, start-date, end-date) | `YYYY-MM-DD`                | `2025-12-20`                |
+| Timestamps (created-at, updated-at, completed-at)              | `YYYY-MM-DDTHH:MM:SS±HH:MM` | `2025-12-15T14:30:00+01:00` |
 
 ### 4.2 Input Formats
 
@@ -82,13 +86,21 @@ When reading files, implementations SHOULD handle malformed data gracefully:
 
 - If a file cannot be parsed as valid YAML, skip the file and MAY emit a warning.
 - If a required field is missing, treat the file as invalid and MAY emit a warning.
-- If a status value is not recognized, preserve it (per S1) and MAY display it distinctively.
+- If a status is unknown (S1 §4.5), SHOULD display it exactly as written, so the user can see and fix it, and MAY style it distinctively.
 
 Implementations SHOULD NOT crash or halt entirely when encountering individual malformed files. Partial results (valid files only) are preferable to complete failure.
 
 ### 5.2 Unknown Fields
 
 Implementations SHOULD ignore unknown frontmatter fields during processing. This allows users to add custom metadata without breaking compatibility. S1 requires that unknown fields be preserved when writing.
+
+### 5.3 Ignored Files
+
+S1 requires readers to ignore files in entity directories that aren't entities. Implementations that report problems with files SHOULD list the files they ignored, with the reason (for example "no `status`", "frontmatter is not valid YAML" or "no frontmatter"), so that they can be found.
+
+### 5.4 References
+
+Implementations that report problems with files SHOULD report ambiguous references (S1 §4.6), and MAY report dangling ones, which are valid.
 
 ---
 
@@ -139,23 +151,7 @@ For long-running processes (TUI interfaces, desktop applications):
 
 ### 7.1 Active Items
 
-By default, queries should return "active" items. The definition of "active" varies by entity type:
-
-**Active tasks:**
-
-- Status NOT IN (`done`, `dropped`, `icebox`)
-- `defer-until` is unset or <= today
-- File is in the tasks directory (not a subdirectory)
-
-**Active projects:**
-
-- Status is unset OR status NOT IN (`done`)
-
-**Active areas:**
-
-- Status is unset OR status = `active`
-
-Items excluded by default should be includable via explicit parameters or options.
+By default, queries SHOULD return active items, as S1 §4.8 defines them. Items excluded by default SHOULD be includable via explicit parameters or options.
 
 ---
 
