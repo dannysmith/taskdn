@@ -53,11 +53,11 @@ A reference to another file, expressed as one of:
 
 This specification sets requirements for files and for the software that reads and writes them:
 
-- **Files** conform when they follow the format rules in this document.
+- **Files** conform if they follow the format rules in this document.
 - **Readers** are software that reads files. Readers are lenient: they accept everything this specification allows.
 - **Writers** are software that creates or changes files. Writers are strict: what they write conforms.
 
-Most implementations are both readers and writers. An implementation conforms when it meets the requirements for each role it plays. Rules that apply to only one role say so.
+Most implementations are both readers and writers. An implementation conforms if it meets the requirements for each role it plays. Rules that apply to only one role say so.
 
 User interfaces, commands and configuration are outside this specification. [S2](./S2-implementation-guidance.md) gives guidance on those, and on creating and changing files well.
 
@@ -109,42 +109,78 @@ The meaning of an entity comes from what is written in its file. Readers don't t
 
 ---
 
-## 4. Task Files
+## 4. Entities
+
+Tasks, projects and areas are entities. Each entity is one Markdown file in the directory for its type.
+
+### 4.1 Entity Files
+
+1. An entity file is a file directly inside the tasks, projects or areas directory whose name ends in `.md` (in any case) and doesn't start with `.`. Its type comes from the directory it is in.
+2. Files in subdirectories are not entity files, with one exception: files directly inside the `archive` subdirectory of the tasks directory are archived tasks (§5.1).
+
+### 4.2 Recognising Entities
+
+1. An entity file is an entity if its frontmatter is a mapping that contains the required fields for its type (§5.3, §6.3, §7.3), each with a non-empty value.
+2. Any other file in an entity directory is not an entity, and readers MUST ignore it. This lets users keep other notes alongside their tasks, projects and areas.
+3. Writers MUST NOT modify a file whose frontmatter is not valid YAML.
+
+### 4.3 Reading Entity Fields
+
+Only the required fields decide whether a file is an entity. For every entity:
+
+1. Readers MUST NOT ignore an entity because another field is missing, invalid or in an unexpected form.
+2. A field with an invalid value (for example `due: next tuesday`) is treated as absent, and readers MUST preserve it.
+3. A missing `created-at` or `updated-at` is not an error. Readers MAY use the file's modification time in its place, for example for sorting.
+4. Readers read a task's `projects` field leniently:
+   - A single value instead of a list is read as a list with that one element.
+   - If the list has more than one element, readers use the first and preserve the rest.
+   - If `projects` is absent, a `project` field is read as `projects`.
+
+### 4.4 Writing Entities
+
+1. When creating an entity, writers MUST write its required fields. When creating a task, writers MUST also write `created-at`.
+2. Writers SHOULD set `updated-at` whenever they change a task.
+3. Writers MUST write a task's `projects` as a list with exactly one element. A writer that changes the project of a task that has a `project` field writes `projects` and removes `project`.
+
+---
+
+## 5. Task Files
 
 A Task represents a single actionable item.
 
-### 4.1 File Location
+### 5.1 File Location
 
-- Task files MUST be stored in a designated tasks directory.
-- Task files in subdirectories SHALL NOT be read during normal operation.
-- Implementations MAY move completed or dropped tasks to a `tasks/archive` subdirectory.
-- Implementations MAY provide separate functionality to query archived tasks.
+Task files are stored directly in the tasks directory (§4.1).
 
-### 4.2 Filename
+Writers MAY move tasks whose status is `done` or `dropped` into an `archive` subdirectory of the tasks directory. Files directly inside it are archived tasks. Readers MAY leave archived tasks out unless asked for them. Archiving doesn't change a task's status: an open task in the archive is still open.
+
+### 5.2 Filename
 
 Any valid filename.
 
-### 4.3 Required Frontmatter Fields
+### 5.3 Required Frontmatter Fields
 
-| Field        | Type             | Description                                                                      |
-| ------------ | ---------------- | -------------------------------------------------------------------------------- |
-| `title`      | string           | The title of the task.                                                           |
-| `status`     | enum             | One of: `inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done`. |
-| `created-at` | date or datetime | When the task was created.                                                       |
-| `updated-at` | date or datetime | When the task was last modified.                                                 |
+A file in the tasks directory is a task if it has both of these fields (§4.2).
 
-### 4.4 Optional Frontmatter Fields
+| Field    | Type   | Description                                                                      |
+| -------- | ------ | -------------------------------------------------------------------------------- |
+| `title`  | string | The title of the task.                                                           |
+| `status` | enum   | One of: `inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done`. |
+
+### 5.4 Optional Frontmatter Fields
 
 | Field          | Type                     | Description                                                                                                                        |
 | -------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `created-at`   | date or datetime         | When the task was created. Writers MUST set it when creating a task (§4.4).                                                        |
+| `updated-at`   | date or datetime         | When the task was last changed. Writers SHOULD keep it current (§4.4).                                                             |
 | `completed-at` | date or datetime         | When the task was completed or dropped. SHOULD be set when `status` changes to `done` or `dropped`.                                |
 | `area`         | file reference           | Reference to an Area file.                                                                                                         |
-| `projects`     | array of file references | Reference to a Project file. MUST be an array with exactly one element. Array format is used for compatibility with other systems. |
+| `projects`     | array of file references | Reference to a Project file, as a list with one element (§4.3, §4.4). The list form is for compatibility with other systems.       |
 | `due`          | date or datetime         | Hard deadline for the task.                                                                                                        |
 | `scheduled`    | date                     | The date the task is planned to be worked on. Used for calendar-based planning.                                                    |
 | `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.                                           |
 
-### 4.5 Status Values
+### 5.5 Status Values
 
 | Status        | Description                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------- |
@@ -156,7 +192,7 @@ Any valid filename.
 | `dropped`     | Abandoned. Will not be completed.                                                           |
 | `done`        | Completed successfully.                                                                     |
 
-### 4.6 Example
+### 5.6 Example
 
 ```yaml
 ---
@@ -183,25 +219,27 @@ Discussion with finance team on 2025-01-10...
 
 ---
 
-## 5. Project Files
+## 6. Project Files
 
 A Project represents a collection of related tasks with a defined end goal.
 
-### 5.1 File Location
+### 6.1 File Location
 
-Project files SHOULD be stored in a designated `projects` directory, but this is not required.
+Project files are stored directly in the projects directory (§4.1).
 
-### 5.2 Filename
+### 6.2 Filename
 
 Any valid filename.
 
-### 5.3 Required Frontmatter Fields
+### 6.3 Required Frontmatter Fields
+
+A file in the projects directory is a project if it has this field (§4.2).
 
 | Field   | Type   | Description               |
 | ------- | ------ | ------------------------- |
 | `title` | string | The title of the project. |
 
-### 5.4 Optional Frontmatter Fields
+### 6.4 Optional Frontmatter Fields
 
 | Field         | Type                     | Description                                                              |
 | ------------- | ------------------------ | ------------------------------------------------------------------------ |
@@ -212,7 +250,7 @@ Any valid filename.
 | `end-date`    | date                     | When the project was completed or is expected to complete.               |
 | `blocked-by`  | array of file references | Projects that must be completed before this one can start.               |
 
-### 5.5 Status Values
+### 6.5 Status Values
 
 | Status        | Description                                          |
 | ------------- | ---------------------------------------------------- |
@@ -225,7 +263,7 @@ Any valid filename.
 
 If `status` is absent, implementations SHOULD treat the project as having no defined workflow state and MAY display it in all project views.
 
-### 5.6 Example
+### 6.6 Example
 
 ```yaml
 ---
@@ -243,25 +281,27 @@ This project covers all Q1 planning activities...
 
 ---
 
-## 6. Area Files
+## 7. Area Files
 
 An Area represents an ongoing area of responsibility (e.g., "Health", "Finances", "Client: Acme Corp").
 
-### 6.1 File Location
+### 7.1 File Location
 
-Area files SHOULD be stored in a designated `areas` directory, but this is not required.
+Area files are stored directly in the areas directory (§4.1).
 
-### 6.2 Filename
+### 7.2 Filename
 
 Any valid filename.
 
-### 6.3 Required Frontmatter Fields
+### 7.3 Required Frontmatter Fields
+
+A file in the areas directory is an area if it has this field (§4.2).
 
 | Field   | Type   | Description            |
 | ------- | ------ | ---------------------- |
 | `title` | string | The title of the area. |
 
-### 6.4 Optional Frontmatter Fields
+### 7.4 Optional Frontmatter Fields
 
 | Field         | Type   | Description                                                              |
 | ------------- | ------ | ------------------------------------------------------------------------ |
@@ -269,7 +309,7 @@ Any valid filename.
 | `type`        | string | Allows differentiation between area types (e.g., "client", "life-area"). |
 | `description` | string | A short description, SHOULD be under 500 characters.                     |
 
-### 6.5 Note on Area Status
+### 7.5 Note on Area Status
 
 Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting or moving them.
 
@@ -278,7 +318,7 @@ When displaying areas, implementations SHOULD:
 - Display areas with `status: active` or with no `status` field.
 - Hide areas with any other `status` value (e.g., `archived`).
 
-### 6.6 Example
+### 7.6 Example
 
 ```yaml
 ---
@@ -294,9 +334,9 @@ Key contacts, agreements, and background information...
 
 ---
 
-## 7. Appendix
+## 8. Appendix
 
-### 7.1 JSON Schemas
+### 8.1 JSON Schemas
 
 Machine-readable JSON Schema files are available to assist with validation:
 
@@ -306,6 +346,6 @@ Machine-readable JSON Schema files are available to assist with validation:
 
 These schemas can be used by editors for autocomplete and inline validation, or by implementations for programmatic validation. **Conformance with these schemas does not guaruntee complete conformance with this specification** – some requirements cannot be encoded as JSON schemas.
 
-### 7.2 Guidance for Implementations
+### 8.2 Guidance for Implementations
 
 [S2: Implementation Guidance](./S2-implementation-guidance.md) contains additional guidance for implementations.

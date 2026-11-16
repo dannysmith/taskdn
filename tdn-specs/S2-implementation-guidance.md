@@ -94,6 +94,10 @@ Implementations SHOULD NOT crash or halt entirely when encountering individual m
 
 Implementations SHOULD ignore unknown frontmatter fields during processing. This allows users to add custom metadata without breaking compatibility. S1 requires that unknown fields be preserved when writing.
 
+### 5.3 Ignored Files
+
+S1 requires readers to ignore files in entity directories that aren't entities. Implementations that report problems with files SHOULD list the files they ignored, with the reason (for example "no `status`", "frontmatter is not valid YAML" or "no frontmatter"), so that they can be found.
+
 ---
 
 ## 6. Writing Files
