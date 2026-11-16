@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(bun run *)",
+      "Bash(cargo test *)",
+      "Bash(cargo check *)",
+      "Bash(cargo fmt *)",
+      "Bash(cargo clippy *)",
+      "mcp__context7__resolve-library-id",
+      "mcp__context7__query-docs",
+      "WebFetch(domain:v2.tauri.app)",
+      "WebFetch(domain:docs.rs)"
+    ]
+  },
+  "sandbox": {
+    "filesystem": {
+      "allowRead": [
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev1",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev2",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev3",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev4"
+      ],
+      "allowWrite": [
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev1",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev2",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev3",
+        "~/Library/Application Support/is.danny.taskdn-desktop.dev4"
+      ]
+    }
+  }
+}
