@@ -6,7 +6,7 @@ This is a template. Don't open it with `tdn`, the desktop app or the plugin: the
 
 ```bash
 bun run vault render demo          # demo-vaults/demo, dated as if today were the reference date
-cd demo-vaults/demo && tdn today --ai
+bun run vault tdn demo today --ai
 ```
 
 The rendered vault comes with Obsidian set up and the Taskdn plugin linked in from a local build (`~/dev/obsidian-taskdn`, or set `TASKDN_OBSIDIAN_PLUGIN_DIR`). Obsidian asks once whether to trust it before it loads the plugin.
