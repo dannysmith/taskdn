@@ -3,7 +3,7 @@ title: 'Setup Guide'
 description: 'Get everything installed and configured'
 ---
 
-import { Steps, Aside, LinkCard } from '@astrojs/starlight/components'
+import { Steps, Aside, LinkButton, LinkCard } from '@astrojs/starlight/components'
 import DesktopAppDownloadButtons from '@components/DesktopAppDownloadButtons.astro'
 
 This guide walks through setting up the full Taskdn suite. It assumes you already have [Obsidian](https://obsidian.md) and [Claude Code](https://docs.anthropic.com/en/docs/claude-code) installed.
@@ -38,7 +38,11 @@ This guide walks through setting up the full Taskdn suite. It assumes you alread
 
 2. **Install the Obsidian plugin**
 
-   Go to **Settings → Community plugins** and turn on community plugins. Click **Browse**, search for "Taskdn", then install and enable it.
+   With your vault open in Obsidian, click this button to open Taskdn's page in Obsidian's plugin browser, then click **Install** and **Enable**:
+
+   <LinkButton href="obsidian://show-plugin?id=taskdn" icon="external">Add to Obsidian</LinkButton>
+
+   If the button doesn't open Obsidian, go to **Settings → Community plugins**, turn on community plugins, click **Browse** and search for "Taskdn".
 
    In **Settings → Taskdn**, set **Ignored files** to `Overview.md`. The default tasks directory, `tasks`, already matches the starter vault.
 

@@ -4,7 +4,7 @@ description: 'Integrate Taskdn with your Obsidian vault'
 ---
 
 import { Image } from 'astro:assets'
-import { Steps } from '@astrojs/starlight/components'
+import { LinkButton, Steps } from '@astrojs/starlight/components'
 import obsidianScreenshot from '@assets/obsidian-screenshot-1.png'
 import ObsidianDemo from '@components/demos/ObsidianDemo.astro'
 
@@ -29,7 +29,11 @@ The plugin needs Obsidian 1.13 or later, with **Use `[[Wikilinks]]`** turned on 
 
 ### From Community Plugins
 
-Taskdn is in Obsidian's [community plugin directory](https://community.obsidian.md/plugins/taskdn).
+Taskdn is in Obsidian's [community plugin directory](https://community.obsidian.md/plugins/taskdn). If you have Obsidian installed, this button opens Taskdn's page in Obsidian's plugin browser. Click **Install**, then **Enable**.
+
+<LinkButton href="obsidian://show-plugin?id=taskdn" icon="external">Add to Obsidian</LinkButton>
+
+Or find it from inside Obsidian:
 
 <Steps>
 

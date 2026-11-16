@@ -209,9 +209,14 @@ Key points to review:
           <li>Turn any checklist item into a proper task when it grows up</li>
         </ul>
 
-        <Button href="/obsidian/plugin" variant="primary" showArrow>
-          Learn More
-        </Button>
+        <div class="product-buttons">
+          <Button href="obsidian://show-plugin?id=taskdn" variant="secondary">
+            Add to Obsidian
+          </Button>
+          <Button href="/obsidian/plugin" variant="primary" showArrow>
+            Learn More
+          </Button>
+        </div>
       </div>
 
       <div class="product-visual demo-frame">
@@ -623,6 +628,12 @@ Key points to review:
     gap: 0.75rem;
   }
 
+  .product-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
   .product-visual {
     border-radius: 0.5rem;
     overflow: hidden;
@@ -677,6 +688,10 @@ Key points to review:
     .product-actions {
       max-width: 400px;
       margin: 0 auto;
+    }
+
+    .product-buttons {
+      justify-content: center;
     }
 
     .product-visual {
