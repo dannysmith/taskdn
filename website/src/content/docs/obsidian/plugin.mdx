@@ -45,7 +45,7 @@ Or find it from inside Obsidian:
 
 </Steps>
 
-Obsidian keeps the plugin up to date along with your other community plugins.
+Updates appear in **Settings → Community plugins** alongside your other plugins' updates.
 
 ### Manual Install
 
@@ -64,7 +64,7 @@ Obsidian keeps the plugin up to date along with your other community plugins.
 </Steps>
 
 :::tip[Installed it by hand before?]
-Earlier versions of these instructions used `.obsidian/plugins/obsidian-taskdn/` as the folder. Close Obsidian and rename that folder to `taskdn`. Your settings come with it, and Obsidian updates the plugin like any other community plugin from then on.
+Earlier versions of these instructions used `.obsidian/plugins/obsidian-taskdn/` as the folder. Close Obsidian and rename that folder to `taskdn`. Your settings come with it, and its updates appear in **Community plugins** like any other plugin's.
 :::
 
 ## Configuration
@@ -76,7 +76,7 @@ Open **Settings → Taskdn** to configure the plugin. Changes apply straight awa
 | Tasks directory | Folder containing your task files (default: `tasks`) |
 | Default status for new tasks | Status given to tasks converted from checklist items: `inbox`, `ready` or `icebox` (default: `inbox`) |
 | Show desktop app button | Adds a button to task widgets that opens the task in the [desktop app](/desktop/overview) (default: off) |
-| Ignored files | Task files that never render as widgets, one pattern per line. Paths are relative to the tasks directory and `*` is a wildcard, for example `archive/*` or `*-template` |
+| Ignored files | Task files that never render as widgets, one pattern per line, with `*` as a wildcard. A pattern containing `/` matches a path relative to the tasks directory (`archive/*`). One without matches a file name in any folder (`*-template`) |
 | Use task title as inline title | Show the `title` frontmatter instead of the filename in the inline title. Only appears when Obsidian's **Show inline title** is on |
 | Sync filename with task title | Also rename the file when you edit the inline title. Only appears when **Use task title as inline title** is on |
 
