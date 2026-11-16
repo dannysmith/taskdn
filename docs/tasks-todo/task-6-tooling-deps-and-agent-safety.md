@@ -14,6 +14,61 @@ Astro Editor is the reference throughout: `~/dev/astro-editor/`, especially `doc
 - [ ] Add `.github/dependabot.yml`. Without it, Dependabot's security updates treat the bun projects as npm and fail ("Set `package-ecosystem: "bun"` in your dependabot.yml"), so npm alerts such as `minimatch` in `tdn-cli` never get fix PRs. Declare `bun` for `tdn-cli`, `tdn-desktop` and `website`, `cargo` for both Rust workspaces, and `github-actions`. Decide whether to allow scheduled version-update PRs, or only security updates (`open-pull-requests-limit: 0`).
 - [ ] Update `check:all`, the versions listed in `tdn-desktop/AGENTS.md`, and `docs/developer/static-analysis.md`.
 
+### Phase 1 working notes
+
+Run with the `deps-update` skill (ported to `.claude/skills/deps-update/`). **Branch:** `desktop-deps-tooling`. **Status:** decisions made; working through the plan.
+
+**Research (2026-11-16):**
+
+- **No previous dependency doc** for the desktop app. Astro Editor's (`~/dev/astro-editor/docs/tasks-done/*dependency-updates*`) cover nearly every jump below and are the guide.
+- **Dependabot alerts:** `zip` 4.6.1 in `src-tauri/Cargo.lock` (#35 critical, #36 high, #37 moderate), only via `tauri-plugin-updater` 2.14.0. `cargo update` takes the updater to 2.14.1 and `zip` to 9.6.0, as in Astro Editor. Also #38 `minimatch` in `tdn-cli` (phase 4). No open Dependabot PRs.
+- **JS majors:**
+  - TypeScript 7, Vite 8, `@vitejs/plugin-react` 6, Vitest 5 and coverage 5, jsdom 31, jest-dom 7, `@types/node` 26.
+  - lucide 1 (used in 59 files), react-resizable-panels 4 (only `components/ui/resizable.tsx`), i18next 27 and react-i18next 18, shadcn 4 (we import `shadcn/tailwind.css`), knip 6, jscpd 5, ast-grep 0.51.
+  - `@dannysmith/datepicker` 0.1.4 → 0.1.6.
+- **Rust:**
+  - `cargo update` is all in range, except it would take `notify` 8.2.0 → 8.2.2.
+  - Majors available: `gray_matter` 0.3 (frontmatter parsing), `dirs` 7, and the specta trio (pinned at rc.22, rc.21 and 0.0.9; Astro Editor is on rc.26; the latest are rc.28, rc.29 and 0.0.15).
+  - `tauri-plugin-deep-link` is pinned at `=2.6.1` for plugins-workspace#3710, which closed on 2026-10-15; 2.6.3 is out.
+- **Constraints:**
+  - The `zod-validation-error` override came in with ESLint's React hooks plugin, so it can go with ESLint.
+  - `eslint-plugin-react-hooks` `~7.0.1` goes with ESLint too.
+  - i18n sets `fallbackLng: 'en'`, so i18next 27's default change doesn't affect us, but its stricter interpolation types may need code changes.
+- **What Astro Editor learned:**
+  - Do Oxlint and Oxfmt before TypeScript 7, since typescript-eslint is the only blocker. Reformat once, and add the commit to `.git-blame-ignore-revs`.
+  - Vite 8 needs `@rolldown/plugin-babel` for the React Compiler. Pin `@babel/core` to 7, or bun installs Babel 8 as a peer.
+  - jest-dom 7 needs `@testing-library/jest-dom/vitest` in the test setup.
+  - Vite 8.3 warns about `__dirname` in configs; use `import.meta.dirname`.
+  - Its `scripts/react-compiler-check.ts` fails `check:all` if the compiler silently skips a component. It applies here too: we use the compiler.
+
+**Plan:**
+
+1. [ ] Security: `tauri-plugin-updater` 2.14.1 (Rust and JS), `zip` 9.x.
+2. [ ] JS within ranges (Tauri JS plugins kept in step with their crates).
+3. [ ] Rust: `cargo update`, holding `notify`; unpin deep-link; decisions below on the specta trio, `dirs` and `gray_matter`.
+4. [ ] Oxlint and Oxfmt replace ESLint and Prettier: one reformat commit, then TypeScript 7.
+5. [ ] Vite 8, plugin-react 6, Vitest 5, jsdom, jest-dom, `@types/node`.
+6. [ ] App majors one at a time: lucide, react-resizable-panels, i18next and react-i18next, shadcn, datepicker.
+7. [ ] `codebase-hygiene` skill (knip 6, jscpd 5), `compiler:check`, ast-grep 0.51.
+8. [ ] `.github/dependabot.yml`, then docs: `check:all`, `tdn-desktop/AGENTS.md` versions, `static-analysis.md`.
+9. [ ] Finish: production build, audit, smoke test, PR.
+
+**Holds:**
+
+| Package       | Current | Latest | Why held                                                      |
+| ------------- | ------- | ------ | ------------------------------------------------------------- |
+| `notify`      | 8.2.0   | 8.2.2  | File watching changes go with the crash work (task 7)         |
+| `gray_matter` | 0.2.9   | 0.3.2  | Parses every task file; task 13 replaces it with `tdn-core`   |
+
+**Decisions (2026-11-16):**
+
+- specta: the latest matched set (tauri-specta rc.29 and what it needs), diffing the bindings; Astro Editor's rc.26 set is the fallback.
+- `dirs` 7: yes. `gray_matter` 0.3: held, since task 13 replaces the desktop's vault code with `tdn-core`.
+- `@dannysmith/datepicker` 0.1.6: yes, checked in the smoke test.
+- Dependabot: security updates only for bun and cargo (`open-pull-requests-limit: 0`), GitHub Actions monthly.
+
+**Issues:** none yet.
+
 ## Phase 2: Desktop dev identity
 
 Today a dev build uses the installed app's identifier (`is.danny.taskdn-desktop`). It reads Danny's real preferences and vault path, shares the single-instance lock and fights the installed app for the global shortcut.
