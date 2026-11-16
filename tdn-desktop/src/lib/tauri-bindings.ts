@@ -44,7 +44,8 @@ export type {
 
 /** What a command that returns a Rust `Result` resolves to. */
 export type Result<T, E> =
-  { status: 'ok'; data: T } | { status: 'error'; error: E }
+  | { status: 'ok'; data: T }
+  | { status: 'error'; error: E }
 
 /**
  * Helper to unwrap a Result type, throwing on error
