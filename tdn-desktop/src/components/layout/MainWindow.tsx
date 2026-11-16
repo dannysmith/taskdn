@@ -13,8 +13,7 @@ import { CommandPalette } from '@/components/command-palette/CommandPalette'
 import { QuickSearch } from '@/components/quick-search/QuickSearch'
 import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
 import { AgentBridge } from '@/components/agent-bridge/AgentBridge'
-import { Toaster } from 'sonner'
-import { useTheme } from '@/hooks/use-theme'
+import { AppToaster } from './AppToaster'
 import { useUIStore } from '@/store/ui-store'
 import { useMainWindowEventListeners } from '@/hooks/use-main-window-event-listeners'
 import { cn } from '@/lib/utils'
@@ -53,7 +52,6 @@ function syncVisibility(side: 'left' | 'right', sizePercent: number) {
 }
 
 export function MainWindow() {
-  const { theme } = useTheme()
   const leftSidebarVisible = useUIStore(state => state.leftSidebarVisible)
   const rightSidebarVisible = useUIStore(state => state.rightSidebarVisible)
 
@@ -134,24 +132,7 @@ export function MainWindow() {
       <QuickSearch />
       <PreferencesDialog />
       {import.meta.env.DEV && <AgentBridge />}
-      <Toaster
-        position="bottom-right"
-        theme={
-          theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : 'system'
-        }
-        className="toaster group"
-        toastOptions={{
-          classNames: {
-            toast:
-              'group toast group-[.toaster]:bg-background group-[.toaster]:text-foreground group-[.toaster]:border-border group-[.toaster]:shadow-lg',
-            description: 'group-[.toast]:text-muted-foreground',
-            actionButton:
-              'group-[.toast]:bg-primary group-[.toast]:text-primary-foreground',
-            cancelButton:
-              'group-[.toast]:bg-muted group-[.toast]:text-muted-foreground',
-          },
-        }}
-      />
+      <AppToaster />
     </div>
   )
 }

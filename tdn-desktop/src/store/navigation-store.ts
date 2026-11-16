@@ -22,8 +22,6 @@ export function selectionsEqual(
   switch (a.type) {
     case 'nav':
       return b.type === 'nav' && a.id === b.id
-    case 'dev-nav':
-      return b.type === 'dev-nav' && a.id === b.id
     case 'area':
       return b.type === 'area' && a.id === b.id
     case 'project':
@@ -40,7 +38,6 @@ export function selectionsEqual(
 function isSelectionValid(selection: Selection): boolean {
   switch (selection.type) {
     case 'nav':
-    case 'dev-nav':
     case 'no-area':
       // Always valid - these are static views
       return true

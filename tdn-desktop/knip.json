@@ -1,5 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/styleguide/main.tsx"],
   "project": ["src/**/*.{ts,tsx,css}"],
   "ignore": ["src/components/ui/**", "**/index.ts"],
   "ignoreDependencies": ["@tauri-apps/*", "@testing-library/*"],

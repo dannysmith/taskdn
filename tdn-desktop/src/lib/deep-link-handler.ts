@@ -28,12 +28,11 @@ import {
   type TaskStatus,
   type CreateTaskOptions,
 } from '@/lib/tauri-bindings'
-import type { NavId, DevNavId, Selection } from '@/types/navigation'
+import type { NavId, Selection } from '@/types/navigation'
 import { getSelectionForTask } from '@/lib/task-navigation'
 
 // Valid NavId values for runtime validation
 const validNavIds = new Set<string>(['today', 'this-week', 'inbox', 'calendar'])
-const validDevNavIds = new Set<string>(['component-reference'])
 
 // =============================================================================
 // Types
@@ -212,12 +211,6 @@ async function handleOpenView(view: string): Promise<boolean> {
   // Validate against known NavIds
   if (validNavIds.has(view)) {
     navigate({ type: 'nav', id: view as NavId })
-    return true
-  }
-
-  // Dev-only nav IDs
-  if (import.meta.env.DEV && validDevNavIds.has(view)) {
-    navigate({ type: 'dev-nav', id: view as DevNavId })
     return true
   }
 
