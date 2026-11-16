@@ -1,6 +1,6 @@
 ---
 // Download buttons for macOS and Windows desktop app
-// Uses container queries to stack buttons when space is limited
+// Stacks the buttons when there isn't room for both side by side
 ---
 
 <div class="download-buttons">
@@ -82,16 +82,11 @@
       var(--color-accent-hover, #205ea6)
     );
 
+    /* Side by side when both fit, stacked otherwise. 14rem fits the widest label. */
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
     gap: 0.75rem;
     width: 100%;
-    container-type: inline-size;
-
-    /* Stack when container is narrow */
-    @container (max-width: 380px) {
-      grid-template-columns: 1fr;
-    }
   }
 
   .download-btn {
