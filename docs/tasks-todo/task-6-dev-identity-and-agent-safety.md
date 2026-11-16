@@ -17,7 +17,7 @@ Today a dev build uses the installed app's identifier (`is.danny.taskdn-desktop`
   - skip the update check
   - show the slot and branch in the window title
   - start with the rendered demo test vault (`demo-vaults/demo`) as their vault
-- [ ] List each slot's app data folder in `.claude/settings.json`'s sandbox config so agents can reach the bridge file (Danny edits this file; agents can't write it).
+- [x] List each slot's app data folder in `.claude/settings.json`'s sandbox config so agents can reach the bridge file (Danny edits this file; agents can't write it).
 
 ### Plan
 
@@ -46,7 +46,7 @@ Work happens on the `desktop-dev-identity` branch. All paths below are in `tdn-d
 
 **Order of commits:** dev identity (conf, `tauri-dev.sh`, guard, prefs filename); slots and setup (`dev-slot.ts`, test, `setup.ts`, port, `wt.toml`); dev build behaviour (shortcut, update check, title, demo vault, CLI button); docs (`docs/developer/agent-tooling.md` started with the dev identity section, `data-persistence.md`, `keyboard-shortcuts.md`, `AGENTS.md`).
 
-**Progress:** Code and docs are committed on `desktop-dev-identity` and `bun run check:all` passes. Docs live in `tdn-desktop/docs/developer/agent-tooling.md`. Runtime checks passed: with the installed app, the main dev app and a slot 1 worktree (`../taskdn.slot-test`) all running, nothing under `is.danny.taskdn-desktop` changed from the dev builds, each app opened its own vault, and the installed and main dev apps both registered their shortcuts. Still to do: Danny creates the root `.claude/settings.json` (the file doesn't exist yet), presses both shortcuts in his smoke test, then the throwaway worktree is removed and the PR opened.
+**Progress:** Code and docs are committed on `desktop-dev-identity` and `bun run check:all` passes. Docs live in `tdn-desktop/docs/developer/agent-tooling.md`. Runtime checks passed: with the installed app, the main dev app and a slot 1 worktree all running, nothing under `is.danny.taskdn-desktop` changed from the dev builds, each app opened its own vault, and the installed and main dev apps both registered their shortcuts. The root `.claude/settings.json` now exists with the slot folders and the project's permissions. Phase 1 is done once its PR merges.
 
 **Checks before handing over:** `bun run check:all`; with the installed app running, start `tauri:dev` and confirm both run, both shortcuts open their own quick pane, the dev app opens the demo vault, and nothing under `~/Library/Application Support/is.danny.taskdn-desktop/` changes (compare modification times before and after); then a worktree on slot 1 alongside both.
 
