@@ -53,6 +53,10 @@ run_check "tdn-cli test:ts" "$PROJECT_ROOT/tdn-cli" bun run test:ts
 header "tdn-desktop: Full Check Suite"
 run_check "tdn-desktop check:all" "$PROJECT_ROOT/tdn-desktop" bun run check:all
 
+# Test vault toolkit and templates (local only; not run in CI)
+header "Test vaults: Toolkit & Templates"
+run_check "test:vaults" "$PROJECT_ROOT" bun run test:vaults
+
 # Summary
 echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${BLUE}  Summary${NC}"
