@@ -197,6 +197,18 @@ These definitions make "active" mean the same in every tool. What a tool shows, 
 5. A project is active if it has no status, or its status is not `done` or `dropped`.
 6. An area is active if it has no status, or its status matches `active` (§7.5).
 
+### 4.9 Sync Identifier
+
+`tdn-uid` is an OPTIONAL field on any entity. It exists solely so that sync tools can match an entity to its counterpart in another system across renames, archiving and title changes.
+
+1. `tdn-uid` is not an entity identifier. Implementations MUST NOT use it for any purpose other than sync (for example as a primary key, which fails for entities without one).
+2. Implementations other than sync tools MUST NOT add `tdn-uid`. Sync tools SHOULD add it only to the entities they sync.
+3. The value is an opaque string. Generated values SHOULD be UUIDs.
+4. Implementations MUST NOT change or remove an existing `tdn-uid`, except as rule 6 allows.
+5. References MUST NOT use `tdn-uid`.
+6. Values are not guaranteed to be unique, since copying a file copies its `tdn-uid`. A sync tool MAY replace a duplicated value.
+7. Writers that create an entity by duplicating another MUST NOT copy its `tdn-uid`.
+
 ---
 
 ## 5. Task Files

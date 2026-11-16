@@ -66,7 +66,7 @@ Go through these with Danny and record the answers here.
 - [x] **`uid`.** Reserve an optional field that tools must preserve, never change once set, and never use in references.
   - **Purpose: only for sync tools.** Two-way sync needs a key that survives renames, archive moves and title changes. The spec names one so sync tools don't invent different ones. It's not part of the core data model.
   - **Fully optional for conformance.** Most files will never have one, and a vault where some files have it and others don't is normal. A sync tool will most likely add it only to the files it syncs, when it syncs them.
-  - **Only sync tools add or use it.** Other implementations SHOULD NOT add it and SHOULD NOT use it to identify entities (e.g. the desktop's view state keys on paths, not on this). Every implementation MUST preserve it.
+  - **Only sync tools add or use it.** Other implementations MUST NOT add it and MUST NOT use it to identify entities (e.g. the desktop's view state keys on paths, not on this). Every implementation MUST preserve it. (Tightened from SHOULD NOT while drafting: Danny's concern is that agents and implementers will treat it as a primary key, and anything built that way breaks on entities without one.)
   - **Name:** `tdn-uid` (namespaced, so it signals Taskdn sync and won't clash with users' `id` or `uid` fields, e.g. TaskNotes v5 writes `id`; kebab-case to match the other fields).
   - **Value:** an opaque string; tools generating one SHOULD use a UUID. Readers never parse it.
   - **Once set, it MUST NOT change,** through renames, archive moves and edits.
