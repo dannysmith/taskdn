@@ -223,7 +223,7 @@ jobs:
         run: echo "version=${GITHUB_REF#refs/tags/tdn-cli-v}" >> "$GITHUB_OUTPUT"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: tdn-cli v${{ steps.version.outputs.version }}
           body_path: ${{ runner.temp }}/release-notes.md
@@ -249,7 +249,7 @@ jobs:
       - name: Trigger Homebrew update
         # Skip for pre-releases (versions containing '-', e.g., 1.0.0-beta)
         if: ${{ !contains(steps.version.outputs.version, '-') }}
-        uses: peter-evans/repository-dispatch@v3
+        uses: peter-evans/repository-dispatch@v4
         with:
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
           repository: dannysmith/homebrew-taproom
