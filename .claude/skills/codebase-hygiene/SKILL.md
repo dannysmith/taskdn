@@ -5,7 +5,7 @@ description: Find unused code and dependencies (knip) and duplicated code (jscpd
 
 # Codebase Hygiene
 
-Two tools, run from `tdn-desktop/`, together or separately depending on the request:
+Two tools, run from `tdn-desktop/` (paths below are relative to it), together or separately depending on the request:
 
 - **knip** (`bun run knip`): unused files, dependencies and exports. Config in `knip.json`.
 - **jscpd** (`bun run jscpd`): duplicated code in `src/` and `src-tauri/src/`. Config in `.jscpd.json`. It exits non-zero whenever it finds any duplication (the threshold is 0), and writes `jscpd-report/`, which is gitignored; delete it afterwards.

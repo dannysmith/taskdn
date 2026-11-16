@@ -67,14 +67,14 @@ Reading logs doesn't need the app running. Hot reloads leave bursts of `[TAURI] 
 - **Native UI can't be captured or driven:** menus, the folder picker, and native `confirm()` dialogs (the update prompt). Native dialogs wait for Danny, so don't trigger them; use `run` or the store-level actions instead
 - **Transparent areas come out white.** Snapshots show the webview only, so the vibrancy behind the main window and the quick pane's transparent edges are missing
 - **Synthetic input:** native menu accelerators don't fire from `key`; use `run`. Events are untrusted, so anything checking `isTrusted` ignores them. The global quick entry shortcut is native too; use `quick-entry`
-- **After editing `src/lib/agent-bridge/`, run `app reload`.** The API object is created once per page load. Also reload if HMR hasn't picked up a change
+- **After editing `tdn-desktop/src/lib/agent-bridge/`, run `app reload`.** The API object is created once per page load. Also reload if HMR hasn't picked up a change
 - **Refs go stale** when the page re-renders or reloads. Run `tree` again
 - **The window may be hidden behind others.** That's fine: snapshots still render. It's why `idle` doesn't wait on animation frames, and why every command runs inside `withFrames` (Base UI popups wait on frames to open, take focus and unmount). Plain `eval` doesn't, so drive popups with `click` and `key` rather than dispatching events from `eval`, or wrap the snippet in `await window.__agentBridge.withFrames(async () => …)`
 - **The quick pane must be open to shoot it.** `shot --window=quick-pane` says so if it isn't. `key escape --window=quick-pane` closes it
 
 ## How it works
 
-The internals, and how to add a command, are in `tdn-desktop/docs/developer/agent-tooling.md`. In short:
+The internals, and how to add a command, are in `tdn-desktop/docs/developer/agent-tooling.md`. In short (paths in `tdn-desktop/`):
 
 - `src-tauri/src/agent_bridge/`: debug-only HTTP server on `127.0.0.1` with a per-run token in `agent-bridge.json` in the dev app data folder. Endpoints are eval, native WKWebView snapshot, and window size, appearance and navigation, each for the main window or the quick pane
 - `src/lib/agent-bridge/`: the `window.__agentBridge` API. `page.ts` works on any page (the styleguide and quick pane use it as is); `api.ts` adds the Taskdn actions

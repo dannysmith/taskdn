@@ -106,7 +106,7 @@ Detects duplicated code blocks. Not in `check:all` - use periodically.
 bun run jscpd
 ```
 
-Use the `codebase-hygiene` skill (`.claude/skills/codebase-hygiene/`) for guided analysis and cleanup of both knip and jscpd findings.
+Use the `codebase-hygiene` skill (`.claude/skills/codebase-hygiene/` at the repo root) for guided analysis and cleanup of both knip and jscpd findings.
 
 ## CI Integration
 

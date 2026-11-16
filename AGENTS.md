@@ -100,3 +100,14 @@ bun run vault                               # all commands: list, new, shift, re
 The repo's `.claude/settings.json` sets `TASKDN_TASKS_DIR`, `TASKDN_PROJECTS_DIR` and `TASKDN_AREAS_DIR` to `demo-vaults/demo`, so `tdn` run by an agent anywhere in the repo, worktrees included, never reaches Danny's real vault. The variables beat a vault's own `.taskdn.json`, so `cd demo-vaults/<name> && tdn …` still uses the demo vault; use `bun run vault tdn <name> …` for any other vault. Personal task management through `tdn` doesn't work in sessions in this repo, which is intended.
 
 Re-render whenever you want a clean copy. Each template's README lists what it covers. When you need a vault shaped a particular way (a kind of user, a size, a scenario to test), use the `generate-persona-vault` skill: it invents a person and builds their vault with `bun run vault populate`, from JSON plans with relative dates. Rendered vaults open in Obsidian with the plugin linked from `~/dev/obsidian-taskdn`, and desktop dev builds (`bun run tauri:dev`) open `demo-vaults/demo` by default, rendering it first if it's missing. The toolkit lives in `scripts/vaults/`.
+
+## Repo Skills
+
+All Claude Code skills for working on this repo live in the root `.claude/skills/`, including product-specific ones, so a session finds them wherever it starts. Skills in a product's own `.claude/skills/` aren't picked up by sessions started at the repo root.
+
+- `deps-update` - Dependency update sessions for any product, tracked in a task doc
+- `generate-persona-vault` - Build a test vault for an invented person (see Test Vaults)
+- `app-control` - See and drive the running desktop dev app with `bun run app`
+- `codebase-hygiene` - knip and jscpd cleanup for the desktop app
+
+The skills in `tdn-claude-plugin/` are a product shipped to users, not tooling for this repo.
