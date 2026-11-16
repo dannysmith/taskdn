@@ -27,12 +27,12 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Large generated vault
   - [x] Replace `demo-vault/`, `dummy-demo-vault/` and the reset script
   - [x] Persona vault generator skill (#26)
-- [ ] **6. Tooling, deps and agent safety** (match Astro Editor) → `task-6-dev-identity-and-agent-safety.md`
+- [x] **6. Tooling, deps and agent safety** (match Astro Editor) → `tasks-done/task-2026-11-16-dev-identity-and-agent-safety.md`
   - [x] Desktop: dependencies, Oxlint and Oxfmt (#66) → `tasks-done/task-2026-11-16-desktop-dependencies-and-tooling.md`
-  - [x] Desktop: dev identity and worktree slots
-  - [x] Desktop: agent bridge, `bun run app`, styleguide, release logging
-  - [ ] Agents running `tdn` anywhere in the repo always hit a test vault
-  - [ ] Repo skills; website and CLI dependencies
+  - [x] Desktop: dev identity and worktree slots (#69)
+  - [x] Desktop: agent bridge, `bun run app`, styleguide, release logging (#70)
+  - [x] Agents running `tdn` anywhere in the repo always hit a test vault (#71)
+  - [x] Repo skills; website and CLI dependencies (#71)
 - [ ] **7. Desktop crash resilience** (the 1am "quit unexpectedly" crash) → `task-7-desktop-crash-resilience.md`
 - [ ] **8. Spec 1.1**
   - [ ] Deterministic reference resolution
@@ -61,6 +61,7 @@ The order for the work that came out of the November 2026 review. Each top-level
 - [ ] **12. CLI 2.0 build**
   - [ ] Build on `tdn-core` to the interface doc
   - [ ] Dynamic shell completions (#6)
+  - [ ] `tdn config` names the local `.taskdn.json` as the config file even when `TASKDN_*_DIR` override it
   - [ ] Evals against the baseline
   - [ ] Update `obsidian-inbox-assistant` and other consumers
   - [ ] Release 2.0
@@ -78,6 +79,9 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [ ] Undo (#31)
   - [ ] Multi-select (#29)
   - [ ] Code review, including pruning template-era developer docs
+  - [ ] A `codebase-hygiene` session with Danny. knip reported 2 unused dependencies (`@tanstack/react-query-devtools`; `next-themes`, used only by `ui/sonner.tsx`, which nothing imports), 11 unused exports and 7 unused exported types. `AreaCard` is now only used by the styleguide
+  - [ ] Issues found with `bun run app`: the No Area sidebar toggle has no accessible label; Base UI warns that a `TooltipTrigger` is passed as a `render` function; collapsed project and area notes show raw markdown (`**bold**`)
+  - [ ] On the next desktop dependency update, recheck `katex` 0.16 (low-severity advisory, comes in through Milkdown Crepe)
 - [ ] **17. Website rewrite** (#49)
   - [ ] Rewrite by hand once the CLI and skill have settled
   - [ ] Regenerate screenshots from a persona vault in both themes

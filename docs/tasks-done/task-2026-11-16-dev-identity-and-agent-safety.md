@@ -133,9 +133,9 @@ Work happens on the `desktop-agent-bridge` branch. Paths are in `tdn-desktop/`.
 
 Small and independent; do them whenever convenient.
 
-- [ ] A `codebase-hygiene` session on the desktop app with Danny. knip reports 2 unused dependencies (`@tanstack/react-query-devtools`; `next-themes`, used only by `ui/sonner.tsx`, which nothing imports), 11 unused exports and 7 unused exported types.
-- [ ] `tdn-desktop/sgconfig.yml` points at a `.ast-grep/test` folder that doesn't exist, so `ast-grep test` fails. Add rule tests or remove the entry.
-- [ ] `katex` 0.16 (low-severity advisory) comes in through Milkdown Crepe. Recheck on the next dependency update.
+- [x] A `codebase-hygiene` session on the desktop app with Danny. knip reports 2 unused dependencies (`@tanstack/react-query-devtools`; `next-themes`, used only by `ui/sonner.tsx`, which nothing imports), 11 unused exports and 7 unused exported types. Moved to roadmap item 16, with the issues `bun run app` turned up in phase 2.
+- [x] `tdn-desktop/sgconfig.yml` points at a `.ast-grep/test` folder that doesn't exist, so `ast-grep test` fails. Add rule tests or remove the entry. Entry removed.
+- [x] `katex` 0.16 (low-severity advisory) comes in through Milkdown Crepe. Recheck on the next dependency update. Moved to roadmap item 16 as a reminder.
 
 ## Done when
 

@@ -5,6 +5,3 @@ languageGlobs:
   typescript:
     - 'src/**/*.ts'
     - 'src/**/*.tsx'
-
-testConfigs:
-  - testDir: ./.ast-grep/test
