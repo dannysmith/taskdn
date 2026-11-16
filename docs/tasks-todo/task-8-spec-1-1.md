@@ -104,7 +104,7 @@ Go through these with Danny and record the answers here.
 - [ ] Move the meanings out of S2 into S1: what counts as active, `defer-until` is inclusive, `scheduled` never hides a task.
 - [ ] The decisions from phase 1 (`dropped`, `end-date`, area `type`, `uid`).
 - [ ] The smaller fixes from `spec-review.md` item 9: closing `---` followed by a newline, empty means absent, a conformance section, rule 11 (tools must offer configuration) moved out of the file format.
-- [ ] A short note recording the status alias design (see `view-state-identity-and-core.md`), for later.
+- [x] ~~A short note recording the status alias design (see `view-state-identity-and-core.md`), for later.~~ Dropped: aliases go into the spec when they're actually built.
 - [ ] Bump to 1.1.0 with a changelog entry.
 
 ### Phase 3: S2
