@@ -17,7 +17,7 @@ Taskdn Desktop is a desktop application for managing [S1-compliant](../tdn-specs
 ```bash
 bun install              # Install dependencies
 bun run tauri:dev        # Run development build
-bun run check:all        # Run all checks (TS, ESLint, Prettier, ast-grep, clippy, tests)
+bun run check:all        # Run all checks (TS, Oxlint, Oxfmt, ast-grep, React Compiler, clippy, tests)
 bun run test             # Run Vitest tests
 ```
 
@@ -78,9 +78,9 @@ const handleAction = () => {
 
 ### Static Analysis
 
-- **React Compiler**: Handles memoization automatically - no manual `useMemo`/`useCallback` needed
+- **React Compiler**: Handles memoization automatically - no manual `useMemo`/`useCallback` needed. `bun run compiler:check` fails if it skips a component (usually try/catch logic: move it into a plain function)
 - **ast-grep**: Enforces architecture patterns (e.g., no Zustand destructuring). See `docs/developer/static-analysis.md`
-- **Knip/jscpd**: Periodic cleanup tools. Use `/cleanup` command (Claude Code)
+- **Knip/jscpd**: Periodic cleanup tools. Use the `codebase-hygiene` skill (Claude Code)
 
 ### Event-Driven Bridge
 
@@ -129,7 +129,7 @@ i18n.t('key')                 // Or call directly for occasional use
 ### Documentation & Versions
 
 - **Context7 First**: Always use Context7 for framework docs before WebSearch
-- **Version Requirements**: Tauri v2.x, shadcn/ui v4.x, Tailwind v4.x, React 19.x, Zustand v5.x, Vite v7.x, Vitest v4.x
+- **Version Requirements**: Tauri v2.x, shadcn/ui v4.x, Tailwind v4.x, React 19.x, Zustand v5.x, Vite v8.x, Vitest v5.x, TypeScript v7.x
 
 ## Developer Documentation
 
@@ -142,15 +142,18 @@ Key documents:
 - `tauri-commands.md` - Adding new Rust commands
 - `static-analysis.md` - All linting tools and quality gates
 
-## Claude Code Commands & Agents
+## Claude Code Commands, Skills & Agents
 
 These are specific to Claude Code but documented here for context.
 
 ### Commands
 
 - `/check` - Check work against architecture, run `bun run check:all`, suggest commit message
-- `/cleanup` - Run static analysis (knip, jscpd, check:all), get structured recommendations
 - `/init` - One-time template initialization
+
+### Skills
+
+- `codebase-hygiene` - Find unused code (knip) and duplication (jscpd), review the findings and clean up what you approve
 
 ### Agents
 
@@ -159,4 +162,3 @@ Task-focused agents that leverage separate context for focused work:
 - `plan-checker` - Validate implementation plans against documented architecture
 - `docs-reviewer` - Review developer docs for accuracy and codebase consistency
 - `userguide-reviewer` - Review user guide against actual system features
-- `cleanup-analyzer` - Analyze static analysis output (used by `/cleanup`)

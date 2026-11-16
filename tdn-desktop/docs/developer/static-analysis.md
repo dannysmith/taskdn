@@ -7,10 +7,10 @@ All static analysis tools configured in this app and how to use them.
 | Tool           | Purpose                  | Command                  | In check:all |
 | -------------- | ------------------------ | ------------------------ | ------------ |
 | TypeScript     | Type checking            | `bun run typecheck`      | Yes          |
-| ESLint         | Syntax, style, TS rules  | `bun run lint`           | Yes          |
-| Prettier       | Code formatting          | `bun run format:check`   | Yes          |
+| Oxlint         | Syntax, style, TS rules  | `bun run lint`           | Yes          |
+| Oxfmt          | Code formatting          | `bun run format:check`   | Yes          |
 | ast-grep       | Architecture patterns    | `bun run ast:lint`       | Yes          |
-| React Compiler | Automatic memoization    | Build-time               | Yes          |
+| React Compiler | Every component compiles | `bun run compiler:check` | Yes          |
 | cargo fmt      | Rust formatting          | `bun run rust:fmt:check` | Yes          |
 | clippy         | Rust linting             | `bun run rust:clippy`    | Yes          |
 | Vitest         | Frontend tests           | `bun run test:run`       | Yes          |
@@ -27,31 +27,31 @@ bun run fix:all      # Auto-fix what can be fixed
 
 ## Tool Details
 
-### ESLint
+### Oxlint
 
-Handles syntax, style, and TypeScript-specific rules.
+Handles syntax, style and TypeScript rules, type-aware through tsgolint (`options.typeAware` in the config). It also runs the React Compiler's rules natively (`react/purity`, `react/set-state-in-effect` and so on). Warnings fail the check.
 
 ```bash
 bun run lint        # Check for issues
 bun run lint:fix    # Auto-fix issues
 ```
 
-Configuration in `eslint.config.js`.
+Configuration in `.oxlintrc.json`. Disable comments are `// oxlint-disable-next-line rule-name -- reason`. A suppressed `react-hooks/*` or `react/*` compiler rule makes the React Compiler skip the whole component, so fix the code instead where you can.
 
-### Prettier
+### Oxfmt
 
-Consistent code formatting.
+Consistent code formatting. Markdown and TOML aren't formatted: Oxfmt would lose the aligned comments in `Cargo.toml` and in TOML examples in the docs.
 
 ```bash
 bun run format:check   # Check formatting
 bun run format         # Fix formatting
 ```
 
-Configuration in `prettier.config.js`.
+Configuration in `.oxfmtrc.json`.
 
 ### ast-grep
 
-Enforces architectural patterns ESLint can't detect. Catches violations like Zustand destructuring and hooks in wrong directories.
+Enforces architectural patterns Oxlint can't detect. Catches violations like Zustand destructuring and hooks in wrong directories.
 
 ```bash
 bun run ast:lint    # Scan for violations
@@ -76,7 +76,7 @@ Handles memoization automatically at build time. You do **not** need to manually
 - `useCallback` for function references
 - `React.memo` for components
 
-The compiler analyzes code and adds memoization where beneficial.
+The compiler analyzes code and adds memoization where beneficial. It silently skips any component or hook it can't compile (try/finally, conditionals or `?.` inside a try/catch, and anything that breaks the Rules of React), so `bun run compiler:check` (`scripts/react-compiler-check.ts`) fails if anything in `src/` is skipped. The fix is usually to move async or try/catch logic out of the component into a plain function, or to handle errors on the promise.
 
 **Note:** The `getState()` pattern is still critical - it avoids store subscriptions, not memoization. See [state-management.md](./state-management.md).
 
@@ -85,7 +85,7 @@ The compiler analyzes code and adds memoization where beneficial.
 ```bash
 bun run rust:fmt:check   # Check formatting
 bun run rust:fmt         # Fix formatting
-bun run rust:clippy      # Lint with clippy
+bun run rust:clippy      # Lint with clippy (all targets, tests included)
 bun run rust:clippy:fix  # Auto-fix clippy warnings
 bun run rust:test        # Run Rust tests
 ```
@@ -106,7 +106,7 @@ Detects duplicated code blocks. Not in `check:all` - use periodically.
 bun run jscpd
 ```
 
-Use the `/cleanup` command for guided analysis and cleanup of both knip and jscpd findings.
+Use the `codebase-hygiene` skill (`.claude/skills/codebase-hygiene/`) for guided analysis and cleanup of both knip and jscpd findings.
 
 ## CI Integration
 
@@ -118,8 +118,8 @@ bun run check:all
 
 ## Adding New Rules
 
-**ESLint:** Add rules to `eslint.config.js`
+**Oxlint:** Add rules to `.oxlintrc.json`
 
 **ast-grep:** Create YAML files in `.ast-grep/rules/`. See [writing-ast-grep-rules.md](./writing-ast-grep-rules.md).
 
-**Prettier:** Modify `prettier.config.js`
+**Oxfmt:** Modify `.oxfmtrc.json`
