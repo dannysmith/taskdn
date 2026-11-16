@@ -109,35 +109,17 @@ export function useCreateTask() {
 ## File Locations
 
 ```
-~/Library/Application Support/com.myapp.app/  (macOS)
-├── preferences.json                          # App preferences (production)
-├── preferences.development.json              # App preferences (development)
-└── recovery/                                 # Emergency data
+~/Library/Application Support/is.danny.taskdn-desktop/  (macOS)
+├── preferences.json                                    # App preferences
+└── recovery/                                           # Emergency data
     └── *.json
 ```
 
-## Development vs Production Preferences
+## Development Preferences
 
-The app uses separate preferences files based on build mode:
+Dev builds have their own identifier, so they keep their preferences in their own app data folder (`is.danny.taskdn-desktop.dev`, or `.dev<n>` for a worktree's slot) and never see the installed app's. See [Agent Tooling](./agent-tooling.md#dev-identity).
 
-| Build Mode                        | Preferences File               |
-| --------------------------------- | ------------------------------ |
-| Development (`bun run tauri:dev`) | `preferences.development.json` |
-| Production (release builds)       | `preferences.json`             |
-
-This allows developers to:
-
-- Point development builds at test vaults ("Use Demo Vault" sets `demo-vaults/demo`, rendered with `bun run vault render demo`)
-- Keep production settings pointing at their real vault
-- Test different configurations without affecting production
-
-**First-time development setup:**
-
-1. Run `bun run tauri:dev`
-2. Open Preferences > Vault
-3. Click "Use Dummy Vault" to configure test directories
-
-The development preferences file will be created automatically on first save.
+Until a dev build saves preferences, it uses the checkout's rendered demo vault (`demo-vaults/demo` at the repo root), which `bun run tauri:dev` renders if it's missing. In dev builds, "Read from CLI" reads that vault's `.taskdn.json` rather than `~/.taskdn.json`, and "Use Demo Vault" switches back to it after choosing another vault.
 
 ## Atomic Write Pattern (Critical)
 

@@ -219,6 +219,7 @@ tauri-nspanel = { git = "https://github.com/ahkohd/tauri-nspanel", branch = "v2.
 ## Limitations
 
 - **Linux Wayland**: Global shortcuts are not supported
+- **Dev builds**: The default shortcut is `CommandOrControl+Alt+Shift+.`, so the installed app keeps `CommandOrControl+Shift+.`. Only the main checkout's dev app registers it; a worktree's dev app has no shortcut unless one is saved in its preferences. If another app holds the shortcut, the app still starts and logs a warning.
 - **Visual blur**: Native frosted glass blur is not available due to conflicts between `window-vibrancy` and `tauri-nspanel`. The current implementation uses CSS `backdrop-blur` with semi-transparent backgrounds.
 
 ## Alternative: Event-Driven Actions

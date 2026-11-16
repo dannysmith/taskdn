@@ -150,7 +150,7 @@ Add all secrets listed above to the repository.
 
 ### Behavior
 
-- Checks for updates 5 seconds after app launch
+- Checks for updates 5 seconds after app launch (release builds only; in dev builds use the menu item)
 - Shows confirmation dialog when update is available
 - Downloads and installs in background
 - Offers to restart when complete
