@@ -12,12 +12,14 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { join } from 'node:path'
+import { basename, join } from 'node:path'
 import { daysBetween } from './dates.ts'
 import { readMeta, writeMeta, type VaultMeta } from './meta.ts'
 import { isInsideVaultsDir } from './paths.ts'
 import { setUpVault } from './setup.ts'
 import { shiftVault } from './shift.ts'
+
+const COPY_SKIP = new Set(['.obsidian', '.claude'])
 
 /** Create an empty vault whose reference date is `referenceDate`. */
 export function newVault(vaultDir: string, referenceDate: string): string[] {
@@ -41,8 +43,9 @@ export function renderTemplate(
   const kept = clearVault(vaultDir)
   cpSync(templateDir, vaultDir, {
     recursive: true,
-    // A template opened in Obsidian gets its own .obsidian; the shared base replaces it
-    filter: (src) => !src.startsWith(join(templateDir, '.obsidian')),
+    // A template opened in Obsidian gets its own .obsidian, which the shared base
+    // replaces. Claude Code leaves empty .claude folders behind; git ignores them.
+    filter: (src) => !COPY_SKIP.has(basename(src)),
   })
   shiftVault(vaultDir, daysBetween(templateMeta.referenceDate, targetDate))
   restore(vaultDir, kept)

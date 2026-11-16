@@ -1,21 +1,13 @@
 /**
  * Makes a folder a usable vault for every Taskdn tool: entity folders, the
- * shared Obsidian config with the taskdn plugin enabled, a symlink to the
- * local plugin build, and a `.taskdn.json` so `tdn` run from the vault root
+ * shared Obsidian config with the taskdn plugin enabled, links to the local
+ * plugin build with per-vault settings, and a `.taskdn.json` so `tdn` run from the vault root
  * uses it. Safe to run again on an existing vault.
  */
 
-import {
-  cpSync,
-  existsSync,
-  lstatSync,
-  mkdirSync,
-  rmSync,
-  symlinkSync,
-  writeFileSync,
-} from 'node:fs'
+import { cpSync, existsSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { basename, join, relative } from 'node:path'
 import { entityDirs, type VaultMeta } from './meta.ts'
 import { OBSIDIAN_BASE_DIR } from './paths.ts'
 
@@ -33,15 +25,27 @@ export function setUpVault(vaultDir: string, meta: VaultMeta): string[] {
   // Shared config wins over whatever is there, except Obsidian's own state
   // files (workspace, cache), which the base doesn't include
   const obsidianDir = join(vaultDir, '.obsidian')
-  cpSync(OBSIDIAN_BASE_DIR, obsidianDir, { recursive: true })
+  cpSync(OBSIDIAN_BASE_DIR, obsidianDir, {
+    recursive: true,
+    filter: (src) => basename(src) !== '.claude',
+  })
 
+  // Link the plugin's build files rather than its folder, so each vault keeps
+  // its own data.json (settings) instead of writing into the plugin repo
   const pluginSource = obsidianPluginSource()
-  const pluginLink = join(obsidianDir, 'plugins', 'taskdn')
+  const pluginDir = join(obsidianDir, 'plugins', 'taskdn')
   if (existsSync(join(pluginSource, 'manifest.json'))) {
-    mkdirSync(join(obsidianDir, 'plugins'), { recursive: true })
-    if (existsSync(pluginLink) || isSymlink(pluginLink))
-      rmSync(pluginLink, { recursive: true, force: true })
-    symlinkSync(pluginSource, pluginLink, 'dir')
+    mkdirSync(pluginDir, { recursive: true })
+    for (const file of ['main.js', 'manifest.json', 'styles.css']) {
+      const link = join(pluginDir, file)
+      rmSync(link, { force: true })
+      symlinkSync(join(pluginSource, file), link)
+    }
+    const settings = {
+      tasksDirectory: relative(vaultDir, dirs.tasksDir),
+      useTaskTitleAsInlineTitle: true,
+    }
+    writeFileSync(join(pluginDir, 'data.json'), JSON.stringify(settings, null, 2) + '\n')
     if (!existsSync(join(pluginSource, 'main.js'))) {
       notes.push(`The Obsidian plugin at ${pluginSource} isn't built (no main.js)`)
     }
@@ -51,12 +55,4 @@ export function setUpVault(vaultDir: string, meta: VaultMeta): string[] {
 
   writeFileSync(join(vaultDir, '.taskdn.json'), JSON.stringify(dirs, null, 2) + '\n')
   return notes
-}
-
-function isSymlink(path: string): boolean {
-  try {
-    return lstatSync(path).isSymbolicLink()
-  } catch {
-    return false
-  }
 }

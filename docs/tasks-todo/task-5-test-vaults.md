@@ -44,7 +44,7 @@ A library under `scripts/vaults/lib/` with one job per module, and a thin CLI ov
 
 | Command                                   | What it does                                                                                       |
 | ----------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `vault new <name>`                        | Empty vault: entity folders, `.obsidian/` base, plugin symlink, `.taskdn.json`, `.vault.json`       |
+| `vault new <name>`                        | Empty vault: entity folders, `.obsidian/` base, plugin links, `.taskdn.json`, `.vault.json`         |
 | `vault render <template> [--as] [--date]` | Copy a template into `demo-vaults/`, shift its dates to the target day, then set it up as `new` does |
 | `vault shift <vault> (--to D \| --days N)` | Shift the dates of an existing vault in place                                                      |
 | `vault generate <name> [--size] [--seed]` | Build a large vault programmatically, deterministic for a given seed                               |
@@ -53,18 +53,19 @@ A library under `scripts/vaults/lib/` with one job per module, and a thin CLI ov
 
 Library pieces:
 
-- **Setup:** folders, `.obsidian/` base, `.taskdn.json` with absolute paths, plugin symlink. The plugin source defaults to `~/dev/obsidian-taskdn`, can be overridden with an env var, and is skipped with a note if missing.
+- **Setup:** folders, `.obsidian/` base, `.taskdn.json` with absolute paths, plugin build files linked in, with per-vault plugin settings. The plugin source defaults to `~/dev/obsidian-taskdn`, can be overridden with an env var, and is skipped with a note if missing.
 - **Date shifting:** pure functions over text, so they can be unit tested.
 - **Entity writers:** write an area, project or task with valid S1 frontmatter from a plain object. Used by `generate`, and available to persona generation.
 - **Report:** parses every entity and buckets it relative to the vault's reference date. Used by the CLI and by tests.
 
 ### Obsidian
 
-Every vault, template or rendered, opens in Obsidian with no setup:
+Every rendered vault opens in Obsidian with no setup. Templates carry no Obsidian config (their `.obsidian/` is gitignored) and are opened only to read them. Rendering sets up:
 
-- `.obsidian/` with `app.json`, `appearance.json`, `core-plugins.json` (Bases and Templates on, Templates pointed at `templates/`) and `community-plugins.json` enabling `taskdn`.
-- The plugin symlinked at `.obsidian/plugins/taskdn`, matching its manifest id.
-- `workspace*.json` gitignored in the templates. Rendering keeps an existing `workspace.json`, so Obsidian's layout survives re-renders.
+- `.obsidian/` from `scripts/vaults/obsidian-base/`: wikilinks, inline titles, Bases, Templates (pointed at `templates/`), Daily notes (into `day-notes/`) and `community-plugins.json` enabling `taskdn`. These match the website's setup steps.
+- A real `.obsidian/plugins/taskdn/` folder with `main.js`, `manifest.json` and `styles.css` symlinked from the local plugin build (`~/dev/obsidian-taskdn`, or `TASKDN_OBSIDIAN_PLUGIN_DIR`), as the plugin repo's own `test-vault` does. Linking the folder itself would make every vault share the plugin repo's `data.json`.
+- The vault's own plugin `data.json`: `tasksDirectory` from the vault's folders and `useTaskTitleAsInlineTitle` on.
+- Rendering keeps an existing `workspace.json`, so Obsidian's layout survives re-renders. Everything else in `.obsidian/` is rewritten.
 
 ## Phases
 
@@ -78,8 +79,8 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 
 ### Phase 2: Demo template
 
-- [ ] Move `demo-vault/` to `demo-vault-templates/demo/` and pick a reference date.
-- [ ] Plan and write the date layer, relative to the reference date (D):
+- [x] Move `demo-vault/` to `demo-vault-templates/demo/` and pick a reference date. It's 2026-01-15: every date moved +358 days so the old vault's "now" (2025-01-22) lands on it.
+- [x] Plan and write the date layer, relative to the reference date (D):
   - **Tasks:**
     - overdue (due D-1, D-3, D-10)
     - due today
@@ -96,13 +97,13 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
     - starting soon
     - done recently
     - paused
-- [ ] Content fixes:
+- [x] Content fixes:
   - one archived area;
   - replace the invalid `dropped` project status (the case moves to edge-cases);
   - remove weekdays, month names and years from titles and prose;
   - add a few ISO dates in bodies.
-- [ ] Complete the `.obsidian/` config as above, and check the plugin test document's links still resolve.
-- [ ] A README listing what the vault covers. A test renders the template at its reference date and checks the coverage with `vault report`, so the vault can't silently lose a case.
+- [x] Complete the `.obsidian/` config as above, and check the plugin test document's links still resolve. Project and area files are now named after their titles so links work in Obsidian (see Gotchas). Opened in Obsidian: it changed no files, and the plugin works in a rendered vault after trusting it once.
+- [x] A README listing what the vault covers. `demo-template.test.ts` renders the template on another date and checks the coverage with `vault report`, so the vault can't silently lose a case.
 
 ### Phase 3: Edge-case template
 
@@ -154,7 +155,7 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 - **Templates must never be written by a tool.** `tdn`, the desktop app or the plugin would stamp real dates on them and break the reference date. Always work on a rendered copy. Opening a template in Obsidian to read it is fine.
 - **Week-based views vary.** Dates shift by days, so what lands in "this week" depends on the weekday you render on. A spread of dates across two weeks either side keeps those views populated.
 - **Obsidian resolves links by filename, not title.** The demo template follows the starter vault: project and area files are named after their titles, so frontmatter links by title work in Obsidian as well as in Taskdn, and task files keep slugs and are linked by filename in note bodies. Generated vaults should do the same, so `writeProject` and `writeArea` should name files after titles rather than slugs. Task 8 decides how links resolve in general; the edge-case vault covers both styles in the meantime.
-- **Obsidian may ask once whether to trust the vault** before it enables the plugin. Check whether that can be avoided, and if not, note it in the README.
+- **Obsidian asks once whether to trust a new vault** (restricted mode) before it loads the plugin. The answer isn't kept in the vault's `.obsidian/` files, so it can't be preset. Re-rendering into the same folder probably doesn't ask again; check on the next re-render.
 - **Rendering over a vault that's open** in Obsidian or the desktop app replaces its files underneath them. That's acceptable; the command prints a reminder.
 - **Things import:** the script maps statuses and dates; check it still works against the rendered vault's new date layer.
 

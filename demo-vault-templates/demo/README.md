@@ -9,6 +9,8 @@ bun run vault render demo          # demo-vaults/demo, dated as if today were th
 cd demo-vaults/demo && tdn today --ai
 ```
 
+The rendered vault comes with Obsidian set up and the Taskdn plugin linked in from a local build (`~/dev/obsidian-taskdn`, or set `TASKDN_OBSIDIAN_PLUGIN_DIR`). Obsidian asks once whether to trust it before it loads the plugin.
+
 ## Dates
 
 Every date is written as if today were the reference date in `.vault.json` (2026-01-15). Rendering shifts every full ISO date, in frontmatter and in prose, so that day lands on today. Day note filenames move with them.
