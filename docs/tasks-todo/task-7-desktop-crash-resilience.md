@@ -4,7 +4,7 @@
 
 When Screen Time downtime starts at 1am, other apps lock properly, but Taskdn Desktop crashes with the macOS "Taskdn quit unexpectedly" dialog. Earlier notes also mention crashes after overnight App Nap suspension and after "Ignore for today". Find the cause and fix it, and make sure any future crash leaves a trace. This matters more once the app is meant to be always on (task 15).
 
-Depends on task 6: release logging (phase 3) so there's something to read, and the dev identity (phase 2) so test builds don't disturb the installed app.
+Depends on task 6: release logging (phase 2) so there's something to read, and the dev identity (phase 1) so test builds don't disturb the installed app.
 
 ## Already done
 
