@@ -1,6 +1,6 @@
 # Agent Tooling
 
-Dev builds are set up so that coding agents (and you) can run and test them without touching the installed app or a real vault. None of this ships in release builds.
+Dev builds are set up so that coding agents (and you) can run and test them without touching the installed app or a real vault, and can see and drive the running app from the terminal: screenshots, a UI outline, clicks and typing, a component styleguide and searchable logs. None of it ships in release builds. For day-to-day usage, see the `app-control` skill (`tdn-desktop/.claude/skills/app-control/SKILL.md`) or run `bun run app help`.
 
 ## Dev Identity
 
@@ -45,9 +45,40 @@ Worktrees go next to the main checkout, not inside it, or the main checkout's Vi
 
 The sandbox in the repo's `.claude/settings.json` lists each slot's app data folder (`is.danny.taskdn-desktop.dev` to `.dev4`) so agents in any slot can read and write their app's data. They're listed one by one because a `*` pattern there matches the folder but not the files inside it. Keep the list in step with `MAX_SLOT`.
 
-### Logs
+## Agent Bridge
 
-Dev logs go to `~/Library/Logs/is.danny.taskdn-desktop.dev/` (`.dev<n>` for a worktree's slot):
+Three parts, all debug-only:
 
-- **`Taskdn Dev.log`:** Rust `log` output and webview logging
+- **`src-tauri/src/agent_bridge/`**: an HTTP server on `127.0.0.1` (port 1422, or a random one if that's taken, as it is for every slot after the first) with endpoints for eval, snapshot, window (size, appearance and navigation) and health. On startup it writes `{ port, token, pid }` to `agent-bridge.json` in the app data folder, and removes it on exit. Requests must send the token in `x-agent-bridge-token`, so a web page open in a browser can't call it. Eval, snapshot and window act on the main window unless the request names another (`"window": "quick-pane"`).
+  - **Eval:** wraps the snippet in an async function. `eval_with_callback` can't await, so the result is stored on `window.__agentBridgeResults` and polled for.
+  - **Snapshots:** use `WKWebView.takeSnapshot`. It needs no Screen Recording permission, doesn't raise or focus the window, and works while the window is behind others. It captures the webview only, so native menus, dialogs, the vibrancy and the quick pane's transparent edges are missing. macOS only; elsewhere the endpoint returns an error.
+- **`src/lib/agent-bridge/`**: the `window.__agentBridge` API the CLI calls through eval:
+  - `page.ts` works on any page: theme, `idle`, shot mode (transitions and caret off while screenshotting), `tree` (built by `ui-tree.ts`, which summarises the Milkdown editor rather than walking it), `click`, `fill`, `type` and `key`. The quick pane (`src/quick-pane-main.tsx`) and the styleguide install it as is.
+  - `api.ts` adds Taskdn's actions for the main window: `state`, `view`, `task`, `run` and `commands`, `quickEntry`, `refreshVault` and `openVault`. They go through the same `commandContext`, stores and services the UI uses.
+  - `AgentBridge` (in `components/agent-bridge/`) installs it, and `MainWindow` renders that only when `import.meta.env.DEV`. Dev builds also copy `console.*` into the log file (`console.ts`), in every window.
+- **`scripts/app.ts`**: the `bun run app` CLI. `scripts/app-logs.ts` reads the logs, and `scripts/app-diff.ts` compares screenshots (pixelmatch). Shots go to `tdn-desktop/docs/tasks-todo/temporary/`, which is gitignored.
+
+To add an app action, add a method to `createAgentApi` (or `createPageApi` if it's useful on any page) and a CLI command that calls it with `callApi()` in `scripts/app.ts`. Prefer reusing app code (command palette commands, store actions, services) over simulating clicks.
+
+**Hidden windows:** when the dev window is behind other windows, WebKit stops `requestAnimationFrame`, throttles timers, and doesn't fire media-query changes or start transitions until it next renders. The bridge works around it:
+
+- `idle()` falls back to timeouts and finishes animations, and `shot` sets the page theme directly instead of relying on `prefers-color-scheme`.
+- Base UI waits for an animation frame before opening a popup from a click, moving focus into it and unmounting it after it closes, so the CLI runs every API call inside `withFrames()`: during the call, frame requests also fire from a short timeout. Outside bridge calls nothing changes.
+- `tree`, `click` and `fill` wait for idle first, because an overlay that has just opened sits at opacity 0 until its animation is finished.
+
+## Styleguide
+
+`styleguide.html` and `src/styleguide/` make up a second Vite entry. Vite only builds `index.html` and `quick-pane.html`, so it never ships (knip is told about it in `knip.json`). It shows the app's components in each state, with fake data. One section per page (`?section=<id>`) fits the dev window at its minimum size, so each can be screenshotted whole; overlays are rendered open on their own pages. `bun run app styleguide` shoots every section in both themes. The styleguide runs inside the dev app's webview, so Tauri calls work; it also opens in a browser at `localhost:1420/styleguide.html` (or the slot's port in a worktree).
+
+When you add or change a shared component, add it to a section in `src/styleguide/sections.tsx`.
+
+To check a change, shoot the sections before and after and compare them with `bun run app diff <before-dir> <after-dir>`. It matches shots by name (ignoring the timestamp), reports which are identical, and writes a diff image boxing what changed for the rest. Repeat snapshots of an unchanged page are pixel-identical, so it counts any changed pixel.
+
+## Logs
+
+Release logging (levels, rotation, where the installed app's log lives) is in [Logging](./logging.md). Dev logs go to `~/Library/Logs/is.danny.taskdn-desktop.dev/` (`.dev<n>` for a worktree's slot):
+
+- **`Taskdn Dev.log`:** Rust `log` output and webview logging, including `console.*` from every window, marked `[console]`. It rotates like the release log.
 - **`tauri-dev.log`:** the `tauri:dev` terminal output (Vite and cargo), replaced on each run
+
+`bun run app logs` searches both, and `bun run app logs --crashes` reads macOS crash reports. See the skill for the flags.

@@ -1,0 +1,81 @@
+---
+name: app-control
+description: See and drive the running Taskdn Desktop dev app with `bun run app`, using screenshots in light and dark mode, a UI outline, clicking and typing, views and tasks, command palette commands, the quick entry pane, test vaults, the component styleguide and searchable logs. Use whenever a change affects the desktop UI, when checking how something looks or behaves in the real app, when reproducing a bug, or when reading the app's logs.
+---
+
+# App control
+
+`bun run app` (run in `tdn-desktop/`) drives the dev app that Danny keeps running with `bun run tauri:dev`. It talks to a debug-only bridge inside the app over localhost, so it works from the sandbox, doesn't need the app focused and never steals focus. Run `bun run --silent app help` for every command and flag (`--silent` drops bun's script echo).
+
+**Never start the dev server.** If `app status` says the app isn't running, ask Danny to start `bun run tauri:dev` in your checkout (the error names it). After Rust changes, `tauri dev` rebuilds and restarts the app by itself; poll `app status` until it answers.
+
+**Worktrees:** every checkout has its own dev app (a dev slot), and `bun run app` always drives the one for the checkout it runs in, so you never drive another session's app. `app status` shows the slot, port and branch. The screenshots, the test vaults and the logs are this checkout's too.
+
+## The loop for UI work
+
+1. Get the app into the right state: `app view inbox`, `app view "Japan Trip"`, `app task "Call Dad"`, `app run toggle-right-sidebar`
+2. Make the change. Vite hot-reloads the frontend
+3. `app shot <name>` saves a PNG for each theme to `tdn-desktop/docs/tasks-todo/temporary/`. Read both images. Danny sees the same files
+4. Check behaviour with `app state` and `app tree` rather than more screenshots where you can. Both are much cheaper to read
+
+Always check light **and** dark (`shot` does both by default). Give shots descriptive names.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `status` | App, version, window size and theme, and the checkout's slot, port and branch |
+| `state` | View, open task, sidebars, open palettes and dialogs, theme, vault folders, task counts, toasts |
+| `tree` | Outline of the visible UI. Controls get `[n]` refs for `click @n` and `fill @n` |
+| `shot [name]` | Light and dark PNGs. `--theme=light\|dark`, `--size=WxH` |
+| `view <name>` | `today`, `this-week`, `inbox`, `calendar`, `no-area`, or an area or project by title or id |
+| `task <title\|id>` | Open a task in the detail panel. A unique part of the title will do |
+| `run <id>` / `run --list` | Command palette commands, including the generated area and project ones. The most robust way to do things |
+| `quick-entry` | Open the quick entry pane. Then add `--window=quick-pane` to `tree`, `click`, `fill`, `type`, `key`, `shot` and `eval` |
+| `type <text>` / `key <combo>` | Type into the focused field or notes editor; send `mod+k`, `escape`, `mod+shift+p` to the focused element |
+| `click @n \| <selector> \| --text=…` / `fill <target> <value>` | When no command does the job |
+| `resize WxH` | Logical pixels. The window's minimum is 1000x700 |
+| `goto <path>` / `reload` | Load another dev-server page (`goto /` returns to the app); reload the page and return to the same view and task |
+| `styleguide [section...]` | Shoot styleguide sections in both themes, then return to the app |
+| `reset` | Re-render `demo-vaults/demo` to today and rescan it |
+| `vault [name\|path]` | Switch to another rendered vault (`edge-cases`, a persona vault) or any folder with a `.taskdn.json`. No argument goes back to the demo vault |
+| `diff <a> <b>` | Pixel diff of two PNGs, or of two folders of shots matched by name. Writes diff images for pairs that differ |
+| `logs` / `logs --crashes` | See below |
+| `eval <js>` | Escape hatch: run JS in the page. `window.__agentBridge` holds the API the commands use |
+
+## Test vaults
+
+The dev app opens this checkout's `demo-vaults/demo` (rendered from `demo-vault-templates/demo` at the repo root), and it's yours to edit freely; `app reset` puts it back and moves its dates to today. Other templates and persona vaults are rendered with `bun run vault render <template>` or the `generate-persona-vault` skill, then opened with `app vault <name>`. Never point the dev app at Danny's real vault: dev builds have their own preferences (`~/Library/Application Support/is.danny.taskdn-desktop.dev`), and "Read from CLI" in Preferences reads the demo vault's `.taskdn.json`, not `~/.taskdn.json`.
+
+## Styleguide
+
+`localhost:1420/styleguide.html` (the slot's port in a worktree) shows the app's components in each state, one section per page (`?section=<id>`), overlays rendered open. Use `app styleguide` (or `app styleguide tasks menus`) when changing shared components. To compare, shoot a baseline first (`app styleguide --out=docs/tasks-todo/temporary/baseline`), make the change, shoot again, then run `app diff docs/tasks-todo/temporary/baseline docs/tasks-todo/temporary`. It pairs each baseline shot with the newest shot of the same name, reports which are the same and boxes what changed (in image pixels, 2x on retina). Repeat shots of an unchanged page are pixel-identical, so any difference is real; look at the diff image (`docs/tasks-todo/temporary/diff/`) and the new shot to judge it. After `goto /styleguide.html?section=…`, `tree`, `click` and `key` work there too. Sections live in `src/styleguide/sections.tsx`; add to them when adding components.
+
+## Logs
+
+When something misbehaves, read the logs before guessing:
+
+- `app logs` shows warnings and errors from the last 30 minutes, repeats collapsed
+- `--source=rust|js|dev`: Rust, the webview (including `console.*`, marked `[console]`), or the `tauri:dev` terminal (Vite and cargo, including compile errors)
+- `--level=debug`, `--since=2h`, `--grep=watcher`, `--limit=200`, `--full`
+- `logs --crashes` summarises macOS crash reports
+
+Reading logs doesn't need the app running. Hot reloads leave bursts of `[TAURI] Couldn't find callback id` warnings; they're harmless.
+
+## Limits and gotchas
+
+- **Native UI can't be captured or driven:** menus, the folder picker, and native `confirm()` dialogs (the update prompt). Native dialogs wait for Danny, so don't trigger them; use `run` or the store-level actions instead
+- **Transparent areas come out white.** Snapshots show the webview only, so the vibrancy behind the main window and the quick pane's transparent edges are missing
+- **Synthetic input:** native menu accelerators don't fire from `key`; use `run`. Events are untrusted, so anything checking `isTrusted` ignores them. The global quick entry shortcut is native too; use `quick-entry`
+- **After editing `src/lib/agent-bridge/`, run `app reload`.** The API object is created once per page load. Also reload if HMR hasn't picked up a change
+- **Refs go stale** when the page re-renders or reloads. Run `tree` again
+- **The window may be hidden behind others.** That's fine: snapshots still render. It's why `idle` doesn't wait on animation frames, and why every command runs inside `withFrames` (Base UI popups wait on frames to open, take focus and unmount). Plain `eval` doesn't, so drive popups with `click` and `key` rather than dispatching events from `eval`, or wrap the snippet in `await window.__agentBridge.withFrames(async () => …)`
+- **The quick pane must be open to shoot it.** `shot --window=quick-pane` says so if it isn't. `key escape --window=quick-pane` closes it
+
+## How it works
+
+The internals, and how to add a command, are in `tdn-desktop/docs/developer/agent-tooling.md`. In short:
+
+- `src-tauri/src/agent_bridge/`: debug-only HTTP server on `127.0.0.1` with a per-run token in `agent-bridge.json` in the dev app data folder. Endpoints are eval, native WKWebView snapshot, and window size, appearance and navigation, each for the main window or the quick pane
+- `src/lib/agent-bridge/`: the `window.__agentBridge` API. `page.ts` works on any page (the styleguide and quick pane use it as is); `api.ts` adds the Taskdn actions
+- `scripts/app.ts`, `scripts/app-logs.ts` and `scripts/app-diff.ts`: the CLI
