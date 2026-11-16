@@ -103,11 +103,11 @@ Work happens on the `desktop-agent-bridge` branch. Paths are in `tdn-desktop/`.
   Done on the `repo-agent-safety` branch. Settings `env` values are literal (no `~` or `$CLAUDE_PROJECT_DIR`), so the paths are absolute; on another machine they point nowhere and `tdn` shows an empty vault. The variables also beat a vault's own `.taskdn.json`, so `bun run vault tdn <vault> <args>` runs `tdn` on any other rendered vault. Both CLIs resolve to the demo vault from the repo root and `tdn-cli/`, inside and outside the sandbox, and the CLI's 685 TypeScript tests pass with the variables set. Noted for CLI 2.0: `tdn config` names the local `.taskdn.json` as the config file even when env vars override it.
 - [x] **Repo skills.** Cross-product skills live in the root `.claude/skills/` (`deps-update` and `generate-persona-vault` are there already). Convert `tdn-desktop/.claude/commands/` (`/check`, `/init`) to skills and drop the template-era agents nobody uses.
   Done on `repo-agent-safety`. `app-control` and `codebase-hygiene` moved to the root, because skills in `tdn-desktop/.claude/skills/` didn't show up in sessions started at the repo root. `/check` and `/init` were deleted rather than converted (asking for a check works as well, and `/init` was the template's one-time setup), along with the three template agents and `tdn-desktop/.claude/settings.local.json`. The root `AGENTS.md` lists the repo's skills.
-- [ ] **Website.** Dependency updates with the `deps-update` skill. Keep ESLint and Prettier (Astro Editor's website did too).
+- [x] **Website.** Dependency updates with the `deps-update` skill. Keep ESLint and Prettier (Astro Editor's website did too).
 
   **Website update** (`deps-update` skill), on `repo-agent-safety`. Merging deploys the website. Danny chose to hold Starlight 0.43 and include the Actions bumps, and to check with `bun run check` and a build per phase plus one browser smoke test, rather than page-by-page diffs.
 
-  Phases: [x] Astro 7.4.12, Starlight 0.42.11 and tooling minors (lock file regenerated to dedupe) [x] ESLint 10, `@eslint/js` 10, eslint-plugin-astro 3, TypeScript 6.0.3 (`baseUrl` dropped from `tsconfig.json`) [x] Actions bumps from #67 [ ] smoke test of the built site [ ] after merge: close #67 and #68
+  Phases: [x] Astro 7.4.12, Starlight 0.42.11 and tooling minors (lock file regenerated to dedupe) [x] ESLint 10, `@eslint/js` 10, eslint-plugin-astro 3, TypeScript 6.0.3 (`baseUrl` dropped from `tsconfig.json`) [x] Actions bumps from #67 [x] smoke test of the built site (homepage, getting started with its `@assets` and `@components` imports, dark mode, search) [ ] after merge: close #67 and #68
 
   Findings (`bun outdated`, `bun audit`, Astro Editor's November doc):
   - **Astro 7.4.2 → 7.4.12** fixes two advisories: XSS via dynamic tag names (low, ≤7.4.4) and an `@astrojs/node` image endpoint reading a sibling folder (moderate, ≤7.4.6; we're static, so not exposed). Starlight 0.42.6 → 0.42.11 and the tooling minors (prettier 3.10.1, prettier-plugin-astro 1.1.2, typescript-eslint 8.72.2) are Dependabot #68's website half.
@@ -116,7 +116,7 @@ Work happens on the `desktop-agent-bridge` branch. Paths are in `tdn-desktop/`.
   - **TypeScript 5.9 → 6.0.3**, not 7: `@astrojs/check` 0.9.12 (latest) only accepts 5 or 6. TS 6 deprecates `baseUrl`, which our `tsconfig.json` sets for its path aliases.
   - `minimatch` 3.x and 10.x stay as lint-only dev dependencies under eslint and typescript-eslint, which still require them.
   - **Dependabot #67** (Actions): `checkout` 4 → 7 (`sync-labels.yml`), `github-script` 7 → 9 (`cla.yml`; its one breaking change, no `require('@actions/github')`, doesn't affect our script), `action-gh-release` 2 → 3 and `repository-dispatch` 3 → 4 (`release-cli.yml`; Node 24 runtime only). The release workflow runs on tags, so PR CI can't test it.
-- [ ] **CLI.** Security-relevant dependency updates only, with the `deps-update` skill; its tooling is redone in the 2.0 rewrite. Includes Dependabot #38 (`minimatch`).
+- [x] **CLI.** Security-relevant dependency updates only, with the `deps-update` skill; its tooling is redone in the 2.0 rewrite. Includes Dependabot #38 (`minimatch`).
 
   **CLI security update** (`deps-update` skill), on `repo-agent-safety`. Status: done; Danny agreed to dismiss Dependabot #1 (glib) and leave PRs #67 and #68 for the website session.
 
