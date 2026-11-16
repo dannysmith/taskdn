@@ -7,8 +7,8 @@ use tauri::{AppHandle, Manager};
 
 use crate::types::{validate_string_input, validate_theme, AppPreferences};
 
-/// Gets the path to the preferences file.
-/// Uses a separate file in development mode to allow testing with different vaults.
+/// Gets the path to the preferences file. Dev builds have their own identifier,
+/// and so their own app data directory (see `dev_identity`).
 fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
     let app_data_dir = app
         .path()
@@ -19,14 +19,24 @@ fn get_preferences_path(app: &AppHandle) -> Result<PathBuf, String> {
     std::fs::create_dir_all(&app_data_dir)
         .map_err(|e| format!("Failed to create app data directory: {e}"))?;
 
-    // Use separate preferences file in development mode
-    let filename = if cfg!(debug_assertions) {
-        "preferences.development.json"
-    } else {
-        "preferences.json"
-    };
+    Ok(app_data_dir.join("preferences.json"))
+}
 
-    Ok(app_data_dir.join(filename))
+/// Preferences before any are saved. Debug builds open the checkout's demo vault,
+/// so a dev build never starts on a real vault.
+fn default_preferences() -> AppPreferences {
+    #[cfg(debug_assertions)]
+    {
+        let demo = super::config::get_demo_vault_paths();
+        AppPreferences {
+            tasks_dir: Some(demo.tasks_dir),
+            projects_dir: Some(demo.projects_dir),
+            areas_dir: Some(demo.areas_dir),
+            ..AppPreferences::default()
+        }
+    }
+    #[cfg(not(debug_assertions))]
+    AppPreferences::default()
 }
 
 /// Load the saved quick pane shortcut from preferences, returning None on any failure.
@@ -68,7 +78,7 @@ pub fn load_vault_dirs(app: &AppHandle) -> Option<VaultDirs> {
 fn load_preferences_sync(app: &AppHandle) -> Result<AppPreferences, ()> {
     let path = get_preferences_path(app).map_err(|_| ())?;
     if !path.exists() {
-        return Err(());
+        return Ok(default_preferences());
     }
     let contents = std::fs::read_to_string(&path)
         .inspect_err(|e| log::warn!("Failed to read preferences from {}: {e}", path.display()))
@@ -102,7 +112,7 @@ pub async fn load_preferences(app: AppHandle) -> Result<AppPreferences, String> 
 
     if !prefs_path.exists() {
         log::info!("Preferences file not found, using defaults");
-        return Ok(AppPreferences::default());
+        return Ok(default_preferences());
     }
 
     let contents = std::fs::read_to_string(&prefs_path).map_err(|e| {

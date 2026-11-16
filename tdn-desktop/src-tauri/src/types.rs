@@ -5,8 +5,14 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::sync::LazyLock;
 
-/// Default shortcut for the quick pane
-pub const DEFAULT_QUICK_PANE_SHORTCUT: &str = "CommandOrControl+Shift+.";
+/// Default shortcut for the quick pane. Dev builds use their own, so they can run
+/// alongside the installed app. Only the main checkout's dev app registers it by
+/// default; worktree slots have no shortcut unless one is saved in their preferences.
+pub const DEFAULT_QUICK_PANE_SHORTCUT: &str = if cfg!(debug_assertions) {
+    "CommandOrControl+Alt+Shift+."
+} else {
+    "CommandOrControl+Shift+."
+};
 
 /// Maximum size for recovery data files (10MB)
 pub const MAX_RECOVERY_DATA_BYTES: u32 = 10_485_760;
