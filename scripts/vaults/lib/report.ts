@@ -94,7 +94,7 @@ export function reportVault(vaultDir: string): VaultReport {
       deferredUntilToday: open.filter((t) => d(t, 'defer-until') === today).length,
       deferredFuture: open.filter((t) => (d(t, 'defer-until') ?? '') > today).length,
       completedLast7Days: tasks.filter((t) => within(d(t, 'completed-at'), -7, 0)).length,
-      orphans: tasks.filter((t) => !t.fm.projects && !t.fm.project && !t.fm.area).length,
+      orphans: tasks.filter((t) => !hasProject(t) && !t.fm.area).length,
     },
     projects: {
       total: projects.length,
@@ -138,6 +138,12 @@ function dateOf(value: unknown): string | undefined {
   if (typeof value !== 'string') return undefined
   const date = value.slice(0, 10)
   return isIsoDate(date) ? date : undefined
+}
+
+/** A task belongs to a project through `projects` (non-empty) or the singular `project`. */
+function hasProject(task: Entity): boolean {
+  const { projects, project } = task.fm
+  return (Array.isArray(projects) ? projects.length > 0 : Boolean(projects)) || Boolean(project)
 }
 
 function countBy(entities: Entity[], key: string): Record<string, number> {

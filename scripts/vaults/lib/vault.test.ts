@@ -10,7 +10,7 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, relative } from 'node:path'
 import { generateVault } from './generate.ts'
 import { readMeta, writeMeta } from './meta.ts'
 import { VAULTS_DIR } from './paths.ts'
@@ -92,7 +92,8 @@ describe('renderTemplate', () => {
     const pluginSource = join(templateDir, '..', `plugin-${crypto.randomUUID()}`)
     for (const file of ['main.js', 'manifest.json', 'styles.css', 'data.json'])
       write(pluginSource, file, file)
-    process.env.TASKDN_OBSIDIAN_PLUGIN_DIR = pluginSource
+    // Relative, as someone might set it; links must still resolve from inside the vault
+    process.env.TASKDN_OBSIDIAN_PLUGIN_DIR = relative(process.cwd(), pluginSource)
     try {
       renderTemplate(templateDir, vaultDir, '2026-02-01')
       const pluginDir = join(vaultDir, '.obsidian/plugins/taskdn')
@@ -114,6 +115,13 @@ describe('renderTemplate', () => {
     expect(() => renderTemplate(templateDir, join(tmpdir(), 'elsewhere'), '2026-02-01')).toThrow(
       /demo-vaults/,
     )
+  })
+
+  test('refuses to render a vault into or over its own source', () => {
+    renderTemplate(templateDir, vaultDir, '2026-02-01')
+    expect(() => renderTemplate(vaultDir, vaultDir, '2026-03-01')).toThrow(/overlap/)
+    expect(() => renderTemplate(vaultDir, join(vaultDir, 'inner'), '2026-03-01')).toThrow(/overlap/)
+    expect(readMeta(vaultDir).referenceDate).toBe('2026-02-01')
   })
 
   test('honours custom entity folders', () => {
@@ -179,6 +187,16 @@ describe('writers', () => {
     expect(readFileSync(join(vaultDir, 'projects/Launch v2.md'), 'utf8')).toContain(
       'title: "Launch: v2"',
     )
+    // Titles YAML would read as numbers stay strings
+    for (const title of ['1e3', '0x10', '1_000', '.5']) {
+      const file = writeTask(vaultDir, meta, {
+        title,
+        status: 'ready',
+        createdAt: '2026-01-10',
+        updatedAt: '2026-01-10',
+      })
+      expect(readFileSync(file, 'utf8')).toContain(`title: "${title}"`)
+    }
     // Same title again gets a numbered filename
     expect(writeArea(vaultDir, meta, { title: 'Work' })).toBe(join(vaultDir, 'areas/Work-1.md'))
   })
@@ -263,6 +281,11 @@ describe('reportVault', () => {
     })
     write(vaultDir, 'tasks/broken.md', '---\ntitle: Broken\nstatus: waiting\narea: [[Home]]\n---\n')
     write(vaultDir, 'tasks/bad.md', '---\ntitle: [unclosed\n---\n')
+    write(
+      vaultDir,
+      'tasks/no-projects.md',
+      '---\ntitle: Empty list\nstatus: ready\nprojects: []\n---\n',
+    )
 
     const r = reportVault(vaultDir)
     expect(r.tasks).toMatchObject({
@@ -274,7 +297,8 @@ describe('reportVault', () => {
       deferredUntilToday: 1,
       deferredFuture: 1,
       completedLast7Days: 1,
-      orphans: 1,
+      // "Orphan", plus the task whose projects list is empty
+      orphans: 2,
     })
     expect(r.projects.pastEndDate).toBe(1)
     expect(r.areas.byStatus).toEqual({ active: 1, archived: 1 })

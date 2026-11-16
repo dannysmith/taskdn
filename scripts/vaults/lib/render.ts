@@ -12,7 +12,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { basename, join } from 'node:path'
+import { basename, join, resolve, sep } from 'node:path'
 import { daysBetween } from './dates.ts'
 import { readMeta, writeMeta, type VaultMeta } from './meta.ts'
 import { isInsideVaultsDir } from './paths.ts'
@@ -40,6 +40,10 @@ export function renderTemplate(
   targetDate: string,
 ): string[] {
   const templateMeta = readMeta(templateDir)
+  const [from, to] = [resolve(templateDir), resolve(vaultDir)]
+  if (from === to || to.startsWith(from + sep) || from.startsWith(to + sep)) {
+    throw new Error(`can't render ${templateDir} into ${vaultDir}: they overlap`)
+  }
   const kept = clearVault(vaultDir)
   cpSync(templateDir, vaultDir, {
     recursive: true,

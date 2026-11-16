@@ -7,13 +7,16 @@
 
 import { cpSync, existsSync, mkdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { basename, join, relative } from 'node:path'
+import { basename, join, relative, resolve } from 'node:path'
 import { entityDirs, type VaultMeta } from './meta.ts'
 import { OBSIDIAN_BASE_DIR } from './paths.ts'
 
 /** The local build of the Obsidian plugin, linked into every vault. */
 export function obsidianPluginSource(): string {
-  return process.env.TASKDN_OBSIDIAN_PLUGIN_DIR ?? join(homedir(), 'dev', 'obsidian-taskdn')
+  // Absolute, because the symlinks made from it resolve from inside the vault
+  return resolve(
+    process.env.TASKDN_OBSIDIAN_PLUGIN_DIR ?? join(homedir(), 'dev', 'obsidian-taskdn'),
+  )
 }
 
 /** Returns notes worth showing the user (e.g. a missing plugin build). */

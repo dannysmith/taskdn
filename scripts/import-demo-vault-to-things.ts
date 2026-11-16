@@ -29,6 +29,7 @@ import { readdir, readFile } from "fs/promises";
 import { join, resolve } from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { entityDirs, readMeta } from "./vaults/lib/meta.ts";
 
 const execAsync = promisify(exec);
 
@@ -325,10 +326,12 @@ async function main() {
   // 1. Read all data
   console.log(`📂 Reading ${DEMO_VAULT}...\n`);
 
-  const areas = await readMarkdownFiles<AreaFrontmatter>(join(DEMO_VAULT, "areas"));
-  const projects = await readMarkdownFiles<ProjectFrontmatter>(join(DEMO_VAULT, "projects"));
-  const tasks = await readMarkdownFiles<TaskFrontmatter>(join(DEMO_VAULT, "tasks"));
-  const archivedTasks = await readMarkdownFiles<TaskFrontmatter>(join(DEMO_VAULT, "tasks", "archive"));
+  // Rendered vaults can put their folders anywhere (see .vault.json)
+  const { tasksDir, projectsDir, areasDir } = entityDirs(DEMO_VAULT, readMeta(DEMO_VAULT));
+  const areas = await readMarkdownFiles<AreaFrontmatter>(areasDir);
+  const projects = await readMarkdownFiles<ProjectFrontmatter>(projectsDir);
+  const tasks = await readMarkdownFiles<TaskFrontmatter>(tasksDir);
+  const archivedTasks = await readMarkdownFiles<TaskFrontmatter>(join(tasksDir, "archive"));
 
   console.log(`  Areas: ${areas.length}`);
   console.log(`  Projects: ${projects.length}`);

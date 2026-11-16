@@ -155,7 +155,8 @@ function yamlString(value: string): string {
   const plain =
     /^[A-Za-z0-9][\w .,'()/&+-]*$/.test(value) &&
     !/^(true|false|yes|no|null|~)$/i.test(value) &&
-    !/^[\d.]+$/.test(value)
+    // Anything YAML reads as a number: 1984, 1.5, 1e3, 1_000, 0x10, 0o17
+    !/^(\d[\d_]*(\.\d*)?(e[-+]?\d+)?|\.\d+|0x[\da-f]+|0o[0-7]+)$/i.test(value)
   const hasColonSpace = value.includes(': ') || value.endsWith(':')
   return plain && !hasColonSpace && value === value.trim() ? value : JSON.stringify(value)
 }
