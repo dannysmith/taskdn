@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { readMeta, writeMeta } from './meta.ts'
@@ -76,6 +85,28 @@ describe('renderTemplate', () => {
     writeFileSync(join(vaultDir, '.obsidian/workspace.json'), '{"mine":true}')
     renderTemplate(templateDir, vaultDir, '2026-03-01')
     expect(readFileSync(join(vaultDir, '.obsidian/workspace.json'), 'utf8')).toBe('{"mine":true}')
+  })
+
+  test('links the plugin build and gives the vault its own plugin settings', () => {
+    const pluginSource = join(templateDir, '..', `plugin-${crypto.randomUUID()}`)
+    for (const file of ['main.js', 'manifest.json', 'styles.css', 'data.json'])
+      write(pluginSource, file, file)
+    process.env.TASKDN_OBSIDIAN_PLUGIN_DIR = pluginSource
+    try {
+      renderTemplate(templateDir, vaultDir, '2026-02-01')
+      const pluginDir = join(vaultDir, '.obsidian/plugins/taskdn')
+      expect(lstatSync(pluginDir).isSymbolicLink()).toBe(false)
+      expect(realpathSync(join(pluginDir, 'main.js'))).toBe(
+        realpathSync(join(pluginSource, 'main.js')),
+      )
+      expect(JSON.parse(readFileSync(join(pluginDir, 'data.json'), 'utf8'))).toEqual({
+        tasksDirectory: 'tasks',
+        useTaskTitleAsInlineTitle: true,
+      })
+      expect(readFileSync(join(pluginSource, 'data.json'), 'utf8')).toBe('data.json')
+    } finally {
+      rmSync(pluginSource, { recursive: true, force: true })
+    }
   })
 
   test('refuses to write outside demo-vaults/', () => {
