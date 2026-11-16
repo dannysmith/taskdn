@@ -81,19 +81,17 @@ The meaning of an entity comes from what is written in its file. Readers don't t
 3. Frontmatter fields MAY appear in any order.
 4. The Markdown body MAY be empty.
 5. All date and datetime values MUST use ISO 8601 format.
-6. All enum values (such as `status`) are case-sensitive and MUST be lowercase.
-7. Tasks, projects and areas are each stored in their own directory. The three directories are independent: they need not be co-located, and they share no common root.
+6. Tasks, projects and areas are each stored in their own directory. The three directories are independent: they need not be co-located, and they share no common root.
 
 ### 3.2 Readers
 
 1. Readers MUST ignore unknown frontmatter fields. This allows users to add custom metadata without breaking compatibility.
 2. Readers MUST treat a field whose value is null, an empty string or an empty list as if the field were absent. A key with no value is null.
-3. Readers MUST NOT reject files with unrecognized status values. Unknown statuses SHOULD be preserved and MAY be displayed or filtered as the implementation sees fit.
-4. Readers MUST NOT depend on any filename convention. Users may name and rename files freely.
-5. Readers MUST accept a UTF-8 byte order mark at the start of a file, and CRLF line endings.
-6. Readers MUST interpret frontmatter with the YAML 1.2 core schema. Date-like values such as `2025-01-15` are strings, and readers MUST read dates and datetimes from their text, never from a date type a YAML library produces. Many YAML libraries default to YAML 1.1 behaviour, which turns unquoted dates into date objects and can shift datetimes to UTC, so they need configuring.
-7. Where this specification expects a string, readers MUST accept any scalar and read it as text. For example, `title: 1984` is the title "1984".
-8. Readers MUST read an unquoted wikilink as that wikilink. YAML parses `area: [[Work]]` as a list containing a list containing the string `Work`, and readers treat that value as `[[Work]]`, both as a field value and as an item in a list.
+3. Readers MUST NOT depend on any filename convention. Users may name and rename files freely.
+4. Readers MUST accept a UTF-8 byte order mark at the start of a file, and CRLF line endings.
+5. Readers MUST interpret frontmatter with the YAML 1.2 core schema. Date-like values such as `2025-01-15` are strings, and readers MUST read dates and datetimes from their text, never from a date type a YAML library produces. Many YAML libraries default to YAML 1.1 behaviour, which turns unquoted dates into date objects and can shift datetimes to UTC, so they need configuring.
+6. Where this specification expects a string, readers MUST accept any scalar and read it as text. For example, `title: 1984` is the title "1984".
+7. Readers MUST read an unquoted wikilink as that wikilink. YAML parses `area: [[Work]]` as a list containing a list containing the string `Work`, and readers treat that value as `[[Work]]`, both as a field value and as an item in a list.
 
 ### 3.3 Writers
 
@@ -142,6 +140,13 @@ Only the required fields decide whether a file is an entity. For every entity:
 2. Writers SHOULD set `updated-at` whenever they change a task.
 3. Writers MUST write a task's `projects` as a list with exactly one element. A writer that changes the project of a task that has a `project` field writes `projects` and removes `project`.
 
+### 4.5 Status
+
+1. Each entity type has a fixed set of status values (§5.5, §6.5, §7.5), and an entity's `status` MUST be one of them.
+2. Readers MUST match a status against these values ignoring case, and treating `_` and spaces as `-`. For example, `Ready` matches `ready`, and `IN_PROGRESS` and `In Progress` match `in-progress`.
+3. A status that matches none of the values is unknown, and the file doesn't conform. Readers MUST still treat the file as an entity with an unknown status, and SHOULD NOT treat that status as any of the defined values.
+4. Writers that set a status MUST write one of the values for its type, in lowercase.
+
 ---
 
 ## 5. Task Files
@@ -165,7 +170,7 @@ A file in the tasks directory is a task if it has both of these fields (§4.2).
 | Field    | Type   | Description                                                                      |
 | -------- | ------ | -------------------------------------------------------------------------------- |
 | `title`  | string | The title of the task.                                                           |
-| `status` | enum   | One of: `inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `dropped`, `done`. |
+| `status` | string | One of the task status values in §5.5.                                           |
 
 ### 5.4 Optional Frontmatter Fields
 
@@ -181,6 +186,8 @@ A file in the tasks directory is a task if it has both of these fields (§4.2).
 | `defer-until`  | date                     | Hide the task until this date. The task will not appear in active views until this date.                                           |
 
 ### 5.5 Status Values
+
+A task's `status` is one of these values (§4.5):
 
 | Status        | Description                                                                                 |
 | ------------- | ------------------------------------------------------------------------------------------- |
@@ -244,13 +251,15 @@ A file in the projects directory is a project if it has this field (§4.2).
 | Field         | Type                     | Description                                                              |
 | ------------- | ------------------------ | ------------------------------------------------------------------------ |
 | `area`        | file reference           | Reference to an Area file.                                               |
-| `status`      | enum                     | One of: `planning`, `ready`, `blocked`, `in-progress`, `paused`, `done`. |
+| `status`      | string                   | One of the project status values in §6.5.                                |
 | `description` | string                   | A short description, SHOULD be under 500 characters.                     |
 | `start-date`  | date                     | When work on the project began or will begin.                            |
 | `end-date`    | date                     | When the project was completed or is expected to complete.               |
 | `blocked-by`  | array of file references | Projects that must be completed before this one can start.               |
 
 ### 6.5 Status Values
+
+A project's `status` is one of these values (§4.5):
 
 | Status        | Description                                          |
 | ------------- | ---------------------------------------------------- |
@@ -305,18 +314,23 @@ A file in the areas directory is an area if it has this field (§4.2).
 
 | Field         | Type   | Description                                                              |
 | ------------- | ------ | ------------------------------------------------------------------------ |
-| `status`      | string | Recommended values: `active` or `archived`. See note below.              |
+| `status`      | string | One of the area status values in §7.5.                                   |
 | `type`        | string | Allows differentiation between area types (e.g., "client", "life-area"). |
 | `description` | string | A short description, SHOULD be under 500 characters.                     |
 
-### 7.5 Note on Area Status
+### 7.5 Status Values
 
-Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting or moving them.
+Unlike tasks and projects, areas do not have a workflow-based status. The `status` field exists solely to allow users to hide old or inactive areas without deleting or moving them. An area's `status` is one of these values (§4.5):
+
+| Status     | Description       |
+| ---------- | ----------------- |
+| `active`   | In use.           |
+| `archived` | No longer in use. |
 
 When displaying areas, implementations SHOULD:
 
-- Display areas with `status: active` or with no `status` field.
-- Hide areas with any other `status` value (e.g., `archived`).
+- Display areas with no `status`, or with a status that matches `active` (§4.5).
+- Hide areas with any other status, including `archived` and unknown values such as `paused`.
 
 ### 7.6 Example
 

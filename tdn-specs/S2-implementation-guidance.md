@@ -86,7 +86,7 @@ When reading files, implementations SHOULD handle malformed data gracefully:
 
 - If a file cannot be parsed as valid YAML, skip the file and MAY emit a warning.
 - If a required field is missing, treat the file as invalid and MAY emit a warning.
-- If a status value is not recognized, preserve it (per S1) and MAY display it distinctively.
+- If a status is unknown (S1 §4.5), SHOULD display it exactly as written, so the user can see and fix it, and MAY style it distinctively.
 
 Implementations SHOULD NOT crash or halt entirely when encountering individual malformed files. Partial results (valid files only) are preferable to complete failure.
 
