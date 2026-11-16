@@ -4,7 +4,7 @@ Small files that each test one awkward case: broken YAML, unknown statuses, ever
 
 ```bash
 bun run vault render edge-cases --date 2026-01-15   # demo-vaults/edge-cases, dates as written
-cd demo-vaults/edge-cases && tdn doctor
+bun run vault tdn edge-cases doctor
 ```
 
 Entity folders are in unusual places, set in `.vault.json`: tasks in `work/tasks/`, projects in `Projects & Plans/` (spaces and an ampersand) and areas in `areas/`. Rendering writes a `.taskdn.json` that matches. The reference date is 2026-01-15, as in the demo vault, and the same date rules apply.

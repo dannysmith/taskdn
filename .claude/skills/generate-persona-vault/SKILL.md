@@ -154,7 +154,7 @@ It fixes what it finds, by editing files directly (keeping the frontmatter valid
 
 ```bash
 bun run vault report <name>                  # date layer, statuses, links, problems
-cd demo-vaults/<name> && tdn doctor          # the one command run from inside the vault
+bun run vault tdn <name> doctor              # tdn on this vault, not the demo vault
 ```
 
 Fix any problems and unresolved entity links, unless they're deliberate. Check the report shows the date cases you meant to include.
@@ -163,8 +163,8 @@ Fix any problems and unresolved entity links, unless they're deliberate. Check t
 
 Tell the caller, briefly: who the persona is, the counts, anything notable you built in, and how to use it:
 
-- **CLI:** `cd demo-vaults/<name> && tdn today --ai`
+- **CLI:** `bun run vault tdn <name> today --ai` (plain `tdn` uses the demo vault in this repo)
 - **Obsidian:** the link from `bun run vault open <name>` (it asks once to trust the vault)
-- **Desktop app:** set the tasks, projects and areas folders in Preferences to the paths in the vault's `.taskdn.json`
+- **Desktop app:** `bun run app vault <name>` in `tdn-desktop/`, with the dev app running
 
 The vault is dated to its reference date. To move it to another day later, `bun run vault shift <name> --to YYYY-MM-DD`. To keep a vault for good, copy it into `demo-vault-templates/` without `.obsidian/`, `.taskdn.json` or `.plans/`; its `.vault.json` makes it a template that renders on any date.

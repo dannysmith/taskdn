@@ -91,9 +91,12 @@ Templates are committed in `demo-vault-templates/`. Never point `tdn`, the deskt
 
 ```bash
 bun run vault render demo                   # demo-vaults/demo, dated to today
-cd demo-vaults/demo && tdn today --ai       # rendered vaults include a .taskdn.json
+tdn today --ai                              # tdn uses demo-vaults/demo anywhere in this repo
+bun run vault tdn edge-cases doctor         # tdn on another rendered vault
 bun run vault generate big --size large     # 5,000 generated tasks in demo-vaults/big
 bun run vault                               # all commands: list, new, shift, report...
 ```
+
+The repo's `.claude/settings.json` sets `TASKDN_TASKS_DIR`, `TASKDN_PROJECTS_DIR` and `TASKDN_AREAS_DIR` to `demo-vaults/demo`, so `tdn` run by an agent anywhere in the repo, worktrees included, never reaches Danny's real vault. The variables beat a vault's own `.taskdn.json`, so `cd demo-vaults/<name> && tdn …` still uses the demo vault; use `bun run vault tdn <name> …` for any other vault. Personal task management through `tdn` doesn't work in sessions in this repo, which is intended.
 
 Re-render whenever you want a clean copy. Each template's README lists what it covers. When you need a vault shaped a particular way (a kind of user, a size, a scenario to test), use the `generate-persona-vault` skill: it invents a person and builds their vault with `bun run vault populate`, from JSON plans with relative dates. Rendered vaults open in Obsidian with the plugin linked from `~/dev/obsidian-taskdn`, and desktop dev builds (`bun run tauri:dev`) open `demo-vaults/demo` by default, rendering it first if it's missing. The toolkit lives in `scripts/vaults/`.

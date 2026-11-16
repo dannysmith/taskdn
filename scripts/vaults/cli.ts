@@ -4,8 +4,8 @@
  * demo-vaults/ (gitignored). Run with no command for help.
  */
 
-import { existsSync, readdirSync } from 'node:fs'
-import { relative } from 'node:path'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join, relative, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 import { daysBetween, isIsoDate, localToday } from './lib/dates.ts'
 import { META_FILE, readMeta } from './lib/meta.ts'
@@ -39,10 +39,39 @@ const HELP = `Usage: bun run vault <command>
                                          Move every date in a vault
   report <vault> [--json]                What the vault covers, relative to its reference date
   open <vault>                           Print the obsidian:// link
+  tdn <vault> <args>...                  Run tdn on the vault, e.g. \`tdn edge-cases doctor\`. In this
+                                         repo TASKDN_*_DIR point tdn at demo-vaults/demo; this sets
+                                         them to the vault's folders instead
 
 A <vault> is a name in demo-vaults/ or a path. Re-rendering or regenerating a vault replaces it
 (keeping Obsidian's workspace layout). Never point a tool at a template: work on
 a rendered copy.`
+
+// Everything after the vault goes to tdn as is, so this runs before option parsing
+if (process.argv[2] === 'tdn') runTdn(process.argv.slice(3))
+
+/**
+ * Runs the installed `tdn` on a vault, with TASKDN_*_DIR set from its
+ * .taskdn.json. The repo's Claude settings set those variables to the demo
+ * vault, and they beat a .taskdn.json in the current folder.
+ */
+function runTdn([vault, ...args]: string[]): never {
+  if (!vault) fail('missing <vault>, e.g. `bun run vault tdn edge-cases doctor`')
+  const dir = existingVault(vault)
+  const configFile = join(dir, '.taskdn.json')
+  if (!existsSync(configFile)) fail(`${dir} has no .taskdn.json`)
+  const config = JSON.parse(readFileSync(configFile, 'utf8')) as Record<string, string>
+  const result = Bun.spawnSync(['tdn', ...args], {
+    env: {
+      ...process.env,
+      TASKDN_TASKS_DIR: resolve(dir, config.tasksDir ?? 'tasks'),
+      TASKDN_PROJECTS_DIR: resolve(dir, config.projectsDir ?? 'projects'),
+      TASKDN_AREAS_DIR: resolve(dir, config.areasDir ?? 'areas'),
+    },
+    stdio: ['inherit', 'inherit', 'inherit'],
+  })
+  process.exit(result.exitCode)
+}
 
 const { positionals, values } = parseArgs({
   args: process.argv.slice(2),
@@ -87,7 +116,8 @@ function created(dir: string, notes: string[]) {
   const meta = readMeta(dir)
   console.log(`Vault ready: ${relative(REPO_ROOT, dir)} (reference date ${meta.referenceDate})`)
   for (const note of notes) console.log(`  Note: ${note}`)
-  console.log(`  tdn:      cd ${relative(process.cwd(), dir) || '.'} && tdn context --ai`)
+  const vault = isInsideVaultsDir(dir) ? relative(VAULTS_DIR, dir) : dir
+  console.log(`  tdn:      bun run vault tdn ${vault} context --ai`)
   console.log(`  Obsidian: ${obsidianLink(dir)}`)
 }
 

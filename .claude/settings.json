@@ -1,4 +1,9 @@
 {
+  "env": {
+    "TASKDN_TASKS_DIR": "/Users/danny/dev/taskdn/demo-vaults/demo/tasks",
+    "TASKDN_PROJECTS_DIR": "/Users/danny/dev/taskdn/demo-vaults/demo/projects",
+    "TASKDN_AREAS_DIR": "/Users/danny/dev/taskdn/demo-vaults/demo/areas"
+  },
   "permissions": {
     "allow": [
       "Bash(bun run *)",
