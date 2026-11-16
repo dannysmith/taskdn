@@ -12,7 +12,7 @@
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, isAbsolute, join, normalize } from 'node:path'
+import { dirname, isAbsolute, join, normalize, relative } from 'node:path'
 import { addDays, isIsoDate } from './dates.ts'
 import { readMeta } from './meta.ts'
 import { isInsideVaultsDir } from './paths.ts'
@@ -39,7 +39,8 @@ export interface VaultPlan {
 export interface PopulateResult {
   areas: number
   projects: number
-  tasks: number
+  /** Each task's path within the vault, for linking to it by filename */
+  taskFiles: string[]
   notes: number
 }
 
@@ -67,7 +68,9 @@ export function populateVault(vaultDir: string, plan: VaultPlan): PopulateResult
   const text = (value: string | undefined): string | undefined =>
     value?.replace(TOKEN, (_, token: string) => date(token, `{{${token}}}`)!)
 
+  onlyKnown(plan, PLAN_FIELDS, 'plan')
   const areas: AreaInput[] = (plan.areas ?? []).map((area, i) => {
+    onlyKnown(area, AREA_FIELDS, `areas[${i}]`)
     need(area.title, `areas[${i}].title`)
     return {
       ...area,
@@ -79,6 +82,7 @@ export function populateVault(vaultDir: string, plan: VaultPlan): PopulateResult
 
   const projects: ProjectInput[] = (plan.projects ?? []).map((project, i) => {
     const at = `projects[${i}]`
+    onlyKnown(project, PROJECT_FIELDS, at)
     need(project.title, `${at}.title`)
     return {
       ...project,
@@ -92,6 +96,7 @@ export function populateVault(vaultDir: string, plan: VaultPlan): PopulateResult
 
   const tasks: TaskInput[] = (plan.tasks ?? []).map((task, i) => {
     const at = `tasks[${i}]`
+    onlyKnown(task, TASK_FIELDS, at)
     need(task.title, `${at}.title`)
     need(task.status, `${at}.status`)
     need(task.createdAt, `${at}.createdAt`)
@@ -111,6 +116,7 @@ export function populateVault(vaultDir: string, plan: VaultPlan): PopulateResult
   })
 
   const notes = (plan.notes ?? []).map((note, i) => {
+    onlyKnown(note, NOTE_FIELDS, `notes[${i}]`)
     need(note.path, `notes[${i}].path`)
     need(note.body, `notes[${i}].body`)
     const path = normalize(text(note.path)!)
@@ -122,17 +128,35 @@ export function populateVault(vaultDir: string, plan: VaultPlan): PopulateResult
 
   for (const area of areas) writeArea(vaultDir, meta, area)
   for (const project of projects) writeProject(vaultDir, meta, project)
-  for (const task of tasks) writeTask(vaultDir, meta, task)
+  const taskFiles = tasks.map((task) => relative(vaultDir, writeTask(vaultDir, meta, task)))
   for (const note of notes) {
     mkdirSync(dirname(note.path), { recursive: true })
     writeFileSync(note.path, note.body)
   }
 
-  return {
-    areas: areas.length,
-    projects: projects.length,
-    tasks: tasks.length,
-    notes: notes.length,
+  return { areas: areas.length, projects: projects.length, taskFiles, notes: notes.length }
+}
+
+// The fields a plan may use. Anything else is almost certainly a typo, and
+// would otherwise be dropped without a word.
+const PLAN_FIELDS = ['areas', 'projects', 'tasks', 'notes']
+const AREA_FIELDS = ['title', 'status', 'type', 'description', 'body', 'filename']
+const PROJECT_FIELDS = [
+  ...['title', 'status', 'area', 'startDate', 'endDate', 'blockedBy'],
+  ...['description', 'body', 'filename'],
+]
+const TASK_FIELDS = [
+  ...['title', 'status', 'createdAt', 'updatedAt', 'completedAt', 'due', 'scheduled'],
+  ...['deferUntil', 'project', 'area', 'archived', 'body', 'filename'],
+]
+const NOTE_FIELDS = ['path', 'body']
+
+function onlyKnown(value: object, fields: string[], where: string) {
+  const unknown = Object.keys(value).filter((key) => !fields.includes(key))
+  if (unknown.length) {
+    throw new Error(
+      `${where}: unknown field "${unknown[0]}" (expected one of ${fields.join(', ')})`,
+    )
   }
 }
 

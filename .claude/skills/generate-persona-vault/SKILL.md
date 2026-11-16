@@ -63,7 +63,7 @@ Describe areas, projects, tasks and other notes as JSON plans, then load them:
 bun run vault populate <name> demo-vaults/<name>/.plans/01-areas-projects.json
 ```
 
-Keep plans in the vault's `.plans/` folder, numbered in order. Each run adds to the vault, and the whole plan is checked before anything is written, so a mistake leaves the vault unchanged. Areas and projects go first, since tasks link to them.
+Keep plans in the vault's `.plans/` folder, numbered in order, as a record of how the vault was built. Each run adds to the vault. A plan's fields and dates are checked before any of it is written, so a typo leaves the vault unchanged; run plan files one at a time so you know which one failed. Areas and projects go first, since tasks link to them. `populate` lists the file it wrote for each task: use those names when linking to tasks from bodies.
 
 ```json
 {
@@ -105,11 +105,19 @@ Keep plans in the vault's `.plans/` folder, numbered in order. Each run adds to 
 }
 ```
 
-**Fields.** Areas: `title`, `status` (`active` or `archived`), `type`, `description`, `body`. Projects: `title`, `status` (`planning`, `ready`, `in-progress`, `paused`, `blocked`, `done`), `area`, `startDate`, `endDate`, `blockedBy`, `description`, `body`. Tasks: `title`, `status` (`inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `done`, `dropped`), `createdAt` (all three required), `updatedAt` (defaults to `completedAt`, then `createdAt`), `completedAt`, `due`, `scheduled`, `deferUntil`, `project`, `area`, `archived`, `body`. Notes: `path` and `body`, for anything else, like day notes or meeting notes.
+**Fields.** Anything not listed here is rejected as a typo.
 
-**Dates** are relative to the vault's reference date: `D`, `D+3`, `D-10`, or `D+1T17:00` with a time. Inside titles, descriptions, bodies and note paths, write `{{D+3}}`. Never write a weekday, month name or year in titles or prose: those can't move when the vault is shifted to a new date.
+- **Areas:** `title` (required), `status` (`active` or `archived`), `type` (free text, e.g. `life-area`, `client`, `business`), `description`, `body`.
+- **Projects:** `title` (required), `status` (`planning`, `ready`, `in-progress`, `paused`, `blocked`, `done`), `area`, `startDate`, `endDate`, `blockedBy`, `description`, `body`.
+- **Tasks:** `title`, `status` (`inbox`, `icebox`, `ready`, `in-progress`, `blocked`, `done`, `dropped`) and `createdAt` are required. Then `updatedAt` (defaults to `completedAt`, then `createdAt`), `completedAt` (give it to every `done` and `dropped` task), `due`, `scheduled`, `deferUntil`, `project`, `area`, `archived` (puts it in `tasks/archive/`), `body`.
+- **Notes:** `path` and `body`, for anything else, like day notes or meeting notes.
+- Areas, projects and tasks also take `filename` (without `.md`) to override the default name. Rarely needed.
 
-**Links.** `project`, `area` and `blockedBy` take exact titles. Project and area files are named after their titles; task files get a slug of the title (`Choose worktop samples` → `choose-worktop-samples.md`). In bodies, link tasks by filename (`[[choose-worktop-samples]]`), projects and areas by title, and people or places freely (`[[Sam]]`), since links to notes that don't exist are normal in Obsidian.
+**Dates** are relative to the vault's reference date: `D`, `D+3`, `D-10`, or `D+1T17:00` with a time. Inside titles, descriptions, bodies and note paths, write `{{D+3}}`. Give times only to `createdAt`, `updatedAt` and `completedAt`: `tdn doctor` currently rejects a time on `due`, so put appointment times in the body.
+
+**Nothing that can't move.** The vault gets shifted to new dates, so titles and prose must not depend on when "now" is: no weekdays, month names, years, seasons or holidays ("winter feed", "Christmas market", "next year"), and nothing that only makes sense at one time of year. Use `{{D+n}}` dates or neutral wording.
+
+**Links.** `project`, `area` and `blockedBy` take exact titles. Project and area files are named after their titles; task files get a slug of the title (`Choose worktop samples` → `choose-worktop-samples.md`). In bodies, link tasks by the filename `populate` printed (`[[choose-worktop-samples]]`), so links that point at other tasks go in a later plan. Link projects and areas by title, and people or places freely (`[[Sam]]`), since links to notes that don't exist are normal in Obsidian.
 
 **Batches.** For medium and bigger vaults, hand tasks to subagents: one per area or group of projects, each writing its own numbered plan file and running `populate` on it. Give each one `persona.md`, `vault-plan.md`, this section of the skill, and the exact project and area titles it may use.
 
@@ -121,11 +129,7 @@ Keep plans in the vault's `.plans/` folder, numbered in order. Each run adds to 
 - **Texture.** Notes, checklists and links in some bodies; a few orphan tasks with no project or area; some inbox clutter; blocked tasks that say what they're waiting for. Day notes if they use Obsidian.
 - **Valid by default.** Only spec statuses and well-formed files, unless the instructions ask for mess. For deliberately broken files, see `demo-vault-templates/edge-cases/`.
 
-## 5. Review
-
-Hand the vault to a fresh subagent to review critically against `persona.md`: does it read like this person's real system? Look for repetitive or generic titles, impossible dates, projects with no tasks, statuses that contradict bodies, and anything that breaks the persona's constraints. It fixes what it finds, by adding a plan or editing files carefully so the frontmatter stays valid.
-
-## 6. Write the playbook
+## 5. Write the playbook
 
 `playbook.md`: scenarios to try with this vault, written for this persona and for what the vault is for. Cover each tool, weighted towards their preferred one. For example:
 
@@ -134,11 +138,23 @@ Hand the vault to a fresh subagent to review critically against `persona.md`: do
 - "In Obsidian, open yesterday's day note and tick off a task from its link."
 - "`tdn list --project \"Kitchen Refit\"`: is anything blocked?"
 
+## 6. Review
+
+Hand the vault to a fresh subagent to review critically against `persona.md`, and wait for it to finish. Does it read like this person's real system? Look for:
+
+- repetitive or generic titles, and titles that don't sound like them
+- impossible or inconsistent dates, and anything that depends on the time of year
+- projects with no tasks, and statuses that contradict bodies
+- real-world details that don't fit where and how they live: laws, services, money, spelling, institutions
+- anything that breaks the persona's constraints, and playbook scenarios the vault can't support
+
+It fixes what it finds, by editing files directly (keeping the frontmatter valid) or adding a plan. Plans are a record of the build, so they don't need to match later edits.
+
 ## 7. Check
 
 ```bash
 bun run vault report <name>                  # date layer, statuses, links, problems
-cd demo-vaults/<name> && tdn doctor
+cd demo-vaults/<name> && tdn doctor          # the one command run from inside the vault
 ```
 
 Fix any problems and unresolved entity links, unless they're deliberate. Check the report shows the date cases you meant to include.
@@ -151,4 +167,4 @@ Tell the caller, briefly: who the persona is, the counts, anything notable you b
 - **Obsidian:** the link from `bun run vault open <name>` (it asks once to trust the vault)
 - **Desktop app:** set the tasks, projects and areas folders in Preferences to the paths in the vault's `.taskdn.json`
 
-The vault is dated to its reference date. To move it to another day later, `bun run vault shift <name> --to YYYY-MM-DD`. To rebuild it, `bun run vault new` a fresh one and populate it from the same `.plans/`. To keep a vault for good, copy it into `demo-vault-templates/` without `.obsidian/`, `.taskdn.json` or `.plans/`; its `.vault.json` makes it a template that renders on any date.
+The vault is dated to its reference date. To move it to another day later, `bun run vault shift <name> --to YYYY-MM-DD`. To keep a vault for good, copy it into `demo-vault-templates/` without `.obsidian/`, `.taskdn.json` or `.plans/`; its `.vault.json` makes it a template that renders on any date.

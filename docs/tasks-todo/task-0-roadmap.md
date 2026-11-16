@@ -21,12 +21,12 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Write local timestamps with an offset everywhere
   - [x] Fix `tdn show "Title"` examples in the skill and website
   - [x] Release through the new workflow
-- [ ] **5. Test vaults** → `task-5-test-vaults.md` (done, #64), `task-5-persona-vault-skill.md`
+- [x] **5. Test vaults** → `task-5-test-vaults.md` (#64), `task-5-persona-vault-skill.md`
   - [x] Vault toolkit (`bun run vault`): set up, render, shift dates, generate, report
   - [x] `demo` and `edge-cases` templates in `demo-vault-templates/`, rendered into gitignored `demo-vaults/`
   - [x] Large generated vault
   - [x] Replace `demo-vault/`, `dummy-demo-vault/` and the reset script
-  - [ ] Persona vault generator skill (#26) → `task-5-persona-vault-skill.md`
+  - [x] Persona vault generator skill (#26)
 - [ ] **6. Tooling, deps and agent safety** (match Astro Editor) → `task-6-tooling-deps-and-agent-safety.md`
   - [ ] Desktop: dependencies, Oxlint and Oxfmt
   - [ ] Desktop: dev identity and worktree slots
@@ -87,6 +87,7 @@ The order for the work that came out of the November 2026 review. Each top-level
 
 Unnumbered for the future:
 
+- [ ] CLI 1.0.3, if 2.0 is far off: `tdn doctor` rejects things S1 allows: datetimes in `due` (`isValidIsoDate` in `tdn-cli/src/commands/doctor.ts`) and area statuses other than `active` or `archived`. The edge-cases README lists both. Until then, test vaults avoid times on `due`
 - [ ] Swift native app experiment, written from the spec alone as a test of it
 - [ ] Status aliases (e.g. treat `new` as Inbox)
 - [ ] Publish `tdn-core`: crates.io, plus a WASM or NAPI package for TypeScript
