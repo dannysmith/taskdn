@@ -12,7 +12,7 @@ describe('identityFor', () => {
       slot: 0,
       identifier: 'is.danny.taskdn-desktop.dev',
       productName: 'Taskdn Dev',
-      port: 1420,
+      port: 1520,
       title: 'Taskdn (Dev · main)',
     })
   })
@@ -22,7 +22,7 @@ describe('identityFor', () => {
       slot: 2,
       identifier: 'is.danny.taskdn-desktop.dev2',
       productName: 'Taskdn Dev 2',
-      port: 1440,
+      port: 1540,
       title: 'Taskdn (Dev 2 · quick-entry)',
     })
   })

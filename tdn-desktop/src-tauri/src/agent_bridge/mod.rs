@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 use tauri::{AppHandle, LogicalSize, Manager, Theme, WebviewWindow};
 use tiny_http::{Header, Method, Request, Response, Server};
 
-const PREFERRED_PORT: u16 = 1422;
+const PREFERRED_PORT: u16 = 1522;
 const TOKEN_HEADER: &str = "x-agent-bridge-token";
 const INFO_FILE: &str = "agent-bridge.json";
 const DEFAULT_EVAL_TIMEOUT_MS: u64 = 10_000;

@@ -40,14 +40,14 @@ export default defineConfig(async () => ({
   // 2. tauri expects a fixed port, fail if that port is not available. `tauri:dev`
   // sets it per dev slot (scripts/dev-slot.ts), so each worktree gets its own
   server: {
-    port: Number(process.env.TASKDN_DEV_PORT ?? 1420),
+    port: Number(process.env.TASKDN_DEV_PORT ?? 1520),
     strictPort: true,
     host: host || false,
     hmr: host
       ? {
           protocol: 'ws',
           host,
-          port: 1421,
+          port: 1521,
         }
       : undefined,
     watch: {

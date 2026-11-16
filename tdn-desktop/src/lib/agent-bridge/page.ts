@@ -257,7 +257,9 @@ export function createPageApi(deps: PageApiDeps) {
       }
       // insertText goes through the browser's editing path, so React and
       // ProseMirror see ordinary input events
-      document.execCommand('insertText', false, text)
+      if (!document.execCommand('insertText', false, text)) {
+        throw new Error(`Couldn't type into ${describe(el)}`)
+      }
       await idle()
       return describe(el)
     },

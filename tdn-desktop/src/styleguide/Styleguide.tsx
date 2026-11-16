@@ -1,6 +1,6 @@
 import type React from 'react'
 import { useEffect, useRef } from 'react'
-import { queryClient } from '@/lib/query-client'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Theme } from '@/lib/theme-context'
 import { useTheme } from '@/hooks/use-theme'
 import { createPageApi } from '@/lib/agent-bridge/page'
@@ -98,6 +98,7 @@ export function Styleguide() {
   const params = new URLSearchParams(window.location.search)
   const section = SECTIONS.find(s => s.id === params.get('section'))
   const { theme, setTheme } = useTheme()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     const requested = params.get('theme') as Theme | null
@@ -120,7 +121,7 @@ export function Styleguide() {
     return () => {
       delete window.__agentBridge
     }
-  }, [])
+  }, [queryClient])
 
   return (
     <TooltipProvider>

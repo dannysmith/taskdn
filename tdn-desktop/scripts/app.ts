@@ -154,12 +154,13 @@ async function bridgeInfo(): Promise<BridgeInfo> {
       'agent-bridge.json'
     )
   )
-  if (!(await file.exists())) {
-    throw new Error(
-      `the dev app isn't running. Start it with \`bun run tauri:dev\` in ${path.join(checkoutRoot, 'tdn-desktop')}`
-    )
-  }
-  bridge = (await file.json()) as BridgeInfo
+  const notRunning = `the dev app isn't running. Start it with \`bun run tauri:dev\` in ${path.join(checkoutRoot, 'tdn-desktop')}`
+  if (!(await file.exists())) throw new Error(notRunning)
+  const info = (await file.json()) as BridgeInfo
+  // A dev app that crashed or was killed leaves its file behind, and its port
+  // may now belong to another app's bridge
+  if (!isRunning(info.pid)) throw new Error(notRunning)
+  bridge = info
   return bridge
 }
 
@@ -557,7 +558,10 @@ const commands: Record<string, () => Promise<void>> = {
           'Make one with `bun run vault render <template>` at the repo root'
       )
     }
-    const dirs = (await config.json()) as VaultDirs
+    // Only the folders: the dev app keeps its own ignore patterns
+    const { tasksDir, projectsDir, areasDir } =
+      (await config.json()) as VaultDirs
+    const dirs: VaultDirs = { tasksDir, projectsDir, areasDir }
     const state = await callApi<{ counts: Record<string, number> }>(
       'openVault',
       dirs
