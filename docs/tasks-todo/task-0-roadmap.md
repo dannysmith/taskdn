@@ -1,6 +1,6 @@
 # Roadmap
 
-The order for the work that came out of the November 2026 review. Each top-level item is roughly one session or PR. Items 1–6 have their own task docs; later items get docs when we get closer to them. Items below the line don't get numbers yet. Background and reasoning are in `docs/tasks-todo/temporary/` (`taskdn-review.md`, `spec-review.md`, `view-state-identity-and-core.md`).
+The order for the work that came out of the November 2026 review. Each top-level item is roughly one session or PR. Items 1–13 have their own task docs; later items get docs when we get closer to them. There is no item 7: the desktop crash task was dropped for lack of evidence. Items below the line don't get numbers yet. Background and reasoning are in `docs/tasks-todo/temporary/` (`taskdn-review.md`, `spec-review.md`, `view-state-identity-and-core.md`).
 
 - [x] **1. Housekeeping** (on main) → `task-1-housekeeping.md`
   - [x] Fix stale docs and pointers
@@ -33,7 +33,7 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Desktop: agent bridge, `bun run app`, styleguide, release logging (#70)
   - [x] Agents running `tdn` anywhere in the repo always hit a test vault (#71)
   - [x] Repo skills; website and CLI dependencies (#71)
-- [ ] **8. Spec 1.1**
+- [ ] **8. Spec 1.1** → `task-8-spec-1-1.md`
   - [ ] Deterministic reference resolution
   - [ ] Links that resolve in Obsidian: the CLI names files `japan-trip.md` but writes links as `[[Japan Trip]]`, and Obsidian matches links to filenames, not titles. Either name project and area files after their titles (as the starter vault does) or write links by filename
   - [ ] Open statuses: unknown values are kept and surfaced, never dropped
@@ -43,28 +43,28 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [ ] Smaller fixes from `spec-review.md`
   - [ ] Decide: project `dropped` status, area `type`
   - [ ] JSON schemas and website spec pages
-- [ ] **9. CLI eval harness and baseline** (#27)
+- [ ] **9. CLI eval harness and baseline** (#27) → `task-9-cli-eval-harness.md`
   - [ ] Headless `claude -p` runs against a rendered test vault, with ground truth computed by script
   - [ ] Baseline scores for the current CLI
-- [ ] **10. CLI 2.0 design**
+- [ ] **10. CLI 2.0 design** → `task-10-cli-2-design.md`
   - [ ] Prior art: Beads (`bd`), Backlog.md
   - [ ] Guessability study: record what a cold agent tries to run
   - [ ] "What do you want" interview; Claude Code transcripts if Danny agrees then
   - [ ] Decide Rust or TypeScript for the CLI
   - [ ] Interface doc
-- [ ] **11. `tdn-core` crate**
+- [ ] **11. `tdn-core` crate** → `task-11-tdn-core.md`
   - [ ] Extract from the CLI's Rust core into its own product dir
   - [ ] Pure functions over strings; file IO in a thin layer
   - [ ] Implements Spec 1.1; conformance tests run against the test vaults
   - [ ] Shared `~/.taskdn/config.json` and `TASKDN_HOME`
-- [ ] **12. CLI 2.0 build**
+- [ ] **12. CLI 2.0 build** → `task-12-cli-2-build.md`
   - [ ] Build on `tdn-core` to the interface doc
   - [ ] Dynamic shell completions (#6)
   - [ ] `tdn config` names the local `.taskdn.json` as the config file even when `TASKDN_*_DIR` override it
   - [ ] Evals against the baseline
   - [ ] Update `obsidian-inbox-assistant` and other consumers
   - [ ] Release 2.0
-- [ ] **13. Desktop on `tdn-core`**
+- [ ] **13. Desktop on `tdn-core`** → `task-13-desktop-on-tdn-core.md`
   - [ ] Replace the desktop's own vault code with `tdn-core`
   - [ ] Read the shared config
   - [ ] Move ordering and Today headings from localStorage to `~/.taskdn/state/`; `tdn today` reads them
