@@ -55,22 +55,28 @@ export function TaskDetailPanel() {
     }
   }, [])
 
-  // When pendingFocusField changes, open the corresponding field or focus title
+  // A pending request to open a field's popover/dropdown is applied during
+  // render; the effect below focuses the title (a DOM side effect) and clears
+  // the request
+  if (
+    pendingFocusField &&
+    pendingFocusField !== 'title' &&
+    openField !== pendingFocusField
+  ) {
+    setOpenField(pendingFocusField)
+  }
+
   React.useEffect(() => {
-    if (pendingFocusField) {
-      if (pendingFocusField === 'title') {
-        // Focus the title textarea and select all text
-        const textarea = titleTextareaRef.current
-        if (textarea) {
-          textarea.focus()
-          textarea.select()
-        }
-      } else {
-        // Open the corresponding popover/dropdown
-        setOpenField(pendingFocusField)
+    if (!pendingFocusField) return
+    if (pendingFocusField === 'title') {
+      // Focus the title textarea and select all text
+      const textarea = titleTextareaRef.current
+      if (textarea) {
+        textarea.focus()
+        textarea.select()
       }
-      clearPendingFocus()
     }
+    clearPendingFocus()
   }, [pendingFocusField, clearPendingFocus])
 
   // Handler to close a field (clears openField when popover/dropdown closes)

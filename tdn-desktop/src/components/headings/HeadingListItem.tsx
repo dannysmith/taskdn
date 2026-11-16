@@ -57,12 +57,16 @@ export function HeadingListItem({
 
   const colorConfig = headingColorConfig[heading.color]
 
-  // Sync editValue with heading.title when heading changes
-  React.useEffect(() => {
-    if (!isEditing) {
-      setEditValue(heading.title)
-    }
-  }, [heading.title, isEditing])
+  // Outside an edit, keep the draft in step with the title. Adjusting state
+  // during render (rather than in an effect) avoids an extra render
+  const [synced, setSynced] = React.useState({
+    title: heading.title,
+    isEditing,
+  })
+  if (synced.title !== heading.title || synced.isEditing !== isEditing) {
+    setSynced({ title: heading.title, isEditing })
+    if (!isEditing) setEditValue(heading.title)
+  }
 
   // Focus input when entering edit mode
   React.useEffect(() => {
