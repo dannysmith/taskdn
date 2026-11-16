@@ -197,14 +197,14 @@ describe('shortcuts', () => {
     const originalNavigator = global.navigator
 
     afterEach(() => {
-      Object.defineProperty(global, 'navigator', {
+      Object.defineProperty(globalThis, 'navigator', {
         value: originalNavigator,
         writable: true,
       })
     })
 
     function mockPlatform(platform: string) {
-      Object.defineProperty(global, 'navigator', {
+      Object.defineProperty(globalThis, 'navigator', {
         value: { platform },
         writable: true,
       })

@@ -1,3 +1,4 @@
+/// <reference types="node" />
 /**
  * Test helpers for vault data
  *
@@ -25,7 +26,7 @@ import * as os from 'node:os'
  * Path to the static test fixtures vault
  */
 export const FIXTURE_VAULT_PATH = path.resolve(
-  __dirname,
+  import.meta.dirname,
   '../fixtures/vault'
 ) as string
 
