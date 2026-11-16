@@ -34,12 +34,12 @@ This specification only gives wikilinks a meaning in reference fields (§4.6).
 
 ### ISO 8601
 
-An international standard for date and time representation. This specification uses:
+An international standard for date and time representation. This specification uses these forms of it:
 
-- **Date:** `YYYY-MM-DD` (e.g., `2025-01-15`)
-- **DateTime:** `YYYY-MM-DDTHH:MM` or `YYYY-MM-DDTHH:MM:SS` (e.g., `2025-01-15T14:30` or `2025-01-15T14:30:00`). The space-separated form `YYYY-MM-DD HH:MM` or `YYYY-MM-DD HH:MM:SS` is also valid.
+- **Date:** `YYYY-MM-DD` (e.g., `2025-01-15`).
+- **Datetime:** a date, then `T` or a space, then `HH:MM`, optionally followed by seconds (`:SS`), a fraction of a second (`.` and one or more digits), and an offset (`Z`, `+HH:MM` or `-HH:MM`), in that order. For example: `2025-01-15T14:30`, `2025-01-15 14:30:00`, `2025-01-15T14:30:00.123Z` or `2025-01-15T14:30:00+01:00`.
 
-Datetime values SHOULD be interpreted as local time. Timezone suffixes (`Z`, `+HH:MM`, `-HH:MM`) MAY be present and SHOULD be preserved by implementations, but implementations MAY ignore timezone information when displaying or processing dates.
+§4.7 defines what dates and datetimes mean.
 
 ### File Reference
 
@@ -78,7 +78,7 @@ The meaning of an entity comes from what is written in its file. Readers don't t
    3. The YAML block MUST be terminated with a line containing exactly `---`, followed by a newline or the end of the file.
 3. Frontmatter fields MAY appear in any order.
 4. The Markdown body MAY be empty.
-5. All date and datetime values MUST use ISO 8601 format.
+5. Date and datetime values MUST use the ISO 8601 forms defined in §1.
 6. Tasks, projects and areas are each stored in their own directory. The three directories are independent: they need not be co-located, and they share no common root.
 
 ### 3.2 Readers
@@ -171,6 +171,17 @@ Four fields refer to other entities: a task's `area` and `projects`, and a proje
 4. A reference that matches more than one entity at the same step is ambiguous. Readers SHOULD NOT assume which entity it refers to. They MAY instead show the matches, or ask the user to choose.
 5. A reference that matches no entity is dangling. Dangling references are valid.
 6. Writers MAY write a reference in any of the forms above, quoted (§3.3). S2 recommends one.
+
+### 4.7 Dates and Times
+
+Date fields hold one of two kinds of value. **Timestamps** (`created-at`, `updated-at` and `completed-at`) record when something happened. **User dates** (`due`, `scheduled`, `defer-until`, `start-date` and `end-date`) are the user's plan.
+
+1. A date is a calendar date with no time zone: `due: 2026-01-16` means 16 January wherever the user is.
+2. A datetime without an offset is a local wall-clock time: `due: 2026-01-16T15:00` means 3pm wherever the user is. Readers MUST NOT read it as UTC.
+3. A datetime with an offset is that exact instant. `Z` means UTC.
+4. In a field whose type is "date", readers MUST accept a datetime and use its date part as written: `scheduled: 2026-01-16T09:00` means 16 January.
+5. Writers SHOULD write timestamps as datetimes to the second, with the local offset: `2026-01-15T14:30:00+01:00`.
+6. Writers SHOULD NOT add an offset to user dates.
 
 ---
 

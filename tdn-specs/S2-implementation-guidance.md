@@ -65,10 +65,10 @@ If a file contains multiple projects, use the first one. Validation commands SHO
 
 Dates SHOULD use ISO 8601 format when stored or output:
 
-| Field Type                                              | Format                | Example               |
-| ------------------------------------------------------- | --------------------- | --------------------- |
-| Date fields (due, scheduled, defer-until)               | `YYYY-MM-DD`          | `2025-12-20`          |
-| Timestamp fields (created-at, updated-at, completed-at) | `YYYY-MM-DDTHH:MM:SS` | `2025-12-15T14:30:00` |
+| Field Type                                                     | Format                      | Example                     |
+| -------------------------------------------------------------- | --------------------------- | --------------------------- |
+| User dates (due, scheduled, defer-until, start-date, end-date) | `YYYY-MM-DD`                | `2025-12-20`                |
+| Timestamps (created-at, updated-at, completed-at)              | `YYYY-MM-DDTHH:MM:SS±HH:MM` | `2025-12-15T14:30:00+01:00` |
 
 ### 4.2 Input Formats
 
