@@ -35,7 +35,7 @@ A repo skill that has Claude build a realistic test vault for an invented person
 1. Write the persona: name, job, where they live, a description of them, how they manage tasks and what their day looks like, a short summary, and hard constraints from the knobs (e.g. "no more than 5 active projects").
 2. `bun run vault new <name>`, with the name based on the persona.
 3. Write `persona.md`, then `vault-plan.md` with the areas and projects and the reasoning behind them.
-4. Create areas and projects, then tasks, through a small script that calls the writers (dates relative to the vault's reference date). Large vaults use a subagent for tasks.
+4. Describe areas, projects, tasks and notes as JSON plans with dates relative to the reference date (`D+3`, `{{D-1}}` in text), and load them with `bun run vault populate`. Large vaults split tasks across subagents, one plan file each.
 5. A subagent reviews everything critically for realism and consistency and fixes what it finds.
 6. Write `playbook.md`: scenarios to try in each tool, e.g. "Do a weekly review in the desktop app: are the right tasks surfaced?"
 7. Check with `bun run vault report` and `tdn doctor`; fix any problems.
@@ -43,7 +43,7 @@ A repo skill that has Claude build a realistic test vault for an invented person
 
 ## Phases
 
-- [ ] Write the skill.
+- [x] Write the skill, plus `vault populate` so Claude writes data rather than code. The skill takes freeform instructions that override all its defaults, so other sessions can ask for exactly the vault they need.
 - [ ] Generate one persona vault end to end and review it together. A library of personas isn't needed yet.
 - [ ] Document it in `AGENTS.md`'s test vaults section, and close #26.
 

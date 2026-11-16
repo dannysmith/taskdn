@@ -96,4 +96,4 @@ bun run vault generate big --size large     # 5,000 generated tasks in demo-vaul
 bun run vault                               # all commands: list, new, shift, report...
 ```
 
-Re-render whenever you want a clean copy. Each template's README lists what it covers. Rendered vaults open in Obsidian with the plugin linked from `~/dev/obsidian-taskdn`, and the desktop app's "Use Demo Vault" button (debug builds) points at `demo-vaults/demo`. The toolkit lives in `scripts/vaults/`.
+Re-render whenever you want a clean copy. Each template's README lists what it covers. When you need a vault shaped a particular way (a kind of user, a size, a scenario to test), use the `generate-persona-vault` skill: it invents a person and builds their vault with `bun run vault populate`, from JSON plans with relative dates. Rendered vaults open in Obsidian with the plugin linked from `~/dev/obsidian-taskdn`, and the desktop app's "Use Demo Vault" button (debug builds) points at `demo-vaults/demo`. The toolkit lives in `scripts/vaults/`.
