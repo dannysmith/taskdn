@@ -12,6 +12,7 @@ import { MainWindowContent } from './MainWindowContent'
 import { CommandPalette } from '@/components/command-palette/CommandPalette'
 import { QuickSearch } from '@/components/quick-search/QuickSearch'
 import { PreferencesDialog } from '@/components/preferences/PreferencesDialog'
+import { AgentBridge } from '@/components/agent-bridge/AgentBridge'
 import { Toaster } from 'sonner'
 import { useTheme } from '@/hooks/use-theme'
 import { useUIStore } from '@/store/ui-store'
@@ -132,6 +133,7 @@ export function MainWindow() {
       <CommandPalette />
       <QuickSearch />
       <PreferencesDialog />
+      {import.meta.env.DEV && <AgentBridge />}
       <Toaster
         position="bottom-right"
         theme={

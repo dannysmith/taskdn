@@ -25,3 +25,6 @@ jscpd-report
 *.njsproj
 *.sln
 *.sw?
+
+# Screenshots and working files (bun run app shot)
+docs/tasks-todo/temporary/
