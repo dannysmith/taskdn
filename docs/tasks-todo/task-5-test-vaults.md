@@ -153,7 +153,7 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 
 - **Templates must never be written by a tool.** `tdn`, the desktop app or the plugin would stamp real dates on them and break the reference date. Always work on a rendered copy. Opening a template in Obsidian to read it is fine.
 - **Week-based views vary.** Dates shift by days, so what lands in "this week" depends on the weekday you render on. A spread of dates across two weeks either side keeps those views populated.
-- **Link style is tied to Spec 1.1.** The demo template links by title, which works in the CLI and desktop but not in Obsidian, which resolves filenames. Task 8 decides how links resolve, so revisit the demo's links then. The edge-case vault covers both styles in the meantime.
+- **Obsidian resolves links by filename, not title.** The demo template follows the starter vault: project and area files are named after their titles, so frontmatter links by title work in Obsidian as well as in Taskdn, and task files keep slugs and are linked by filename in note bodies. Generated vaults should do the same, so `writeProject` and `writeArea` should name files after titles rather than slugs. Task 8 decides how links resolve in general; the edge-case vault covers both styles in the meantime.
 - **Obsidian may ask once whether to trust the vault** before it enables the plugin. Check whether that can be avoided, and if not, note it in the README.
 - **Rendering over a vault that's open** in Obsidian or the desktop app replaces its files underneath them. That's acceptable; the command prints a reminder.
 - **Things import:** the script maps statuses and dates; check it still works against the rendered vault's new date layer.

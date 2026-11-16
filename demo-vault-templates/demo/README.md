@@ -31,6 +31,8 @@ day-notes/    Daily notes, named by date
 templates/    Obsidian templates, plus Bases definitions in templates/bases/
 ```
 
+Project and area files are named after their titles, as Obsidian users usually name notes, so `[[Japan Trip]]` resolves in Obsidian as well as in Taskdn. Task files use slugs, as the CLI and the Obsidian plugin create them.
+
 `obsidian-dashboard.md` shows the Bases views. `Obsidian Plugin Test Document.md` shows every way the Obsidian plugin renders task links.
 
 ## Coverage
@@ -60,6 +62,6 @@ Relative to the reference date (D):
 | Projects starting soon       | Side Hustle App (D+10), Newsletter Setup (D+7)                                 |
 | Blocked by another project   | Garden Renovation, blocked by Home Office Setup                                |
 | Archived area                | Volunteering                                                                   |
-| Title differs from filename  | Most files, e.g. `book-dentist.md` is "Book dentist appointment"               |
+| Title differs from filename  | Most tasks, e.g. `book-dentist.md` is "Book dentist appointment"               |
 | Links by title and filename  | Frontmatter links by title; the plugin test document and day notes by filename |
-| Links to notes that don't exist | People and places, e.g. `[[Sarah Chen]]`, `[[River Loop Route]]`            |
+| Links to missing notes       | People and places, e.g. `[[Sarah Chen]]`, `[[River Loop Route]]`               |
