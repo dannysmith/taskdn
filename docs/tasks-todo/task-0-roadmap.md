@@ -21,12 +21,12 @@ The order for the work that came out of the November 2026 review. Each top-level
   - [x] Write local timestamps with an offset everywhere
   - [x] Fix `tdn show "Title"` examples in the skill and website
   - [x] Release through the new workflow
-- [ ] **5. Test vaults** → `task-5-test-vaults.md`
+- [ ] **5. Test vaults** → `task-5-test-vaults.md` (done, #64), `task-5-persona-vault-skill.md`
   - [x] Vault toolkit (`bun run vault`): set up, render, shift dates, generate, report
   - [x] `demo` and `edge-cases` templates in `demo-vault-templates/`, rendered into gitignored `demo-vaults/`
   - [x] Large generated vault
   - [x] Replace `demo-vault/`, `dummy-demo-vault/` and the reset script
-  - [ ] Persona vault generator skill (#26)
+  - [ ] Persona vault generator skill (#26) → `task-5-persona-vault-skill.md`
 - [ ] **6. Tooling, deps and agent safety** (match Astro Editor) → `task-6-tooling-deps-and-agent-safety.md`
   - [ ] Desktop: dependencies, Oxlint and Oxfmt
   - [ ] Desktop: dev identity and worktree slots

@@ -69,7 +69,7 @@ Every rendered vault opens in Obsidian with no setup. Templates carry no Obsidia
 
 ## Phases
 
-Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch and PR after the rest is merged.
+Phases 1–5 went in one PR (#64). Phase 6 became its own task.
 
 ### Phase 1: Toolkit
 
@@ -143,14 +143,7 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 
 ### Phase 6: Persona generator (#26)
 
-- [ ] A repo skill, `.claude/skills/generate-test-vault/`. Its steps:
-  1. Pick a persona from the knobs in #26: tech-savviness, preferred tool, number of areas, number of active projects, length of use, task granularity.
-  2. `vault new`.
-  3. Write areas, projects and tasks with dates relative to the vault's reference date, using the date-layer checklist from phase 2.
-  4. Add `persona.md` and a `playbook.md` of things to try.
-  5. Check the result with `vault report` and `tdn doctor`.
-- [ ] Generated vaults stay in `demo-vaults/`. One worth keeping can be committed to `demo-vault-templates/`.
-- [ ] Generate one persona vault end to end to prove the skill works. A library of personas isn't needed yet. Close #26.
+Moved to its own task, `task-5-persona-vault-skill.md`, after phases 1–5 merged in #64.
 
 ## Gotchas
 
@@ -166,4 +159,3 @@ Phases 1–5 can be one PR, or two if it gets large. Phase 6 gets its own branch
 - `bun run vault render demo` produces a vault in which the desktop app's Today, overdue and newly-available views, and the CLI's `today` and `context`, all have content whatever today's date is. It opens in Obsidian with the plugin working.
 - The edge-case and generated vaults work the same way.
 - The old demo vault and reset script are gone, and the docs point at the new setup.
-- A persona vault has been generated end to end with the skill.
